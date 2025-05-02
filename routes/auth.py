@@ -66,6 +66,10 @@ def register():
         )
         new_user.set_password(password)
         
+        # Save user first to get ID
+        db.session.add(new_user)
+        db.session.flush()  # Get ID without committing
+        
         # If the user is a teacher, create a free trial subscription
         if role == Role.TEACHER:
             # Get the premium plan (highest level)
@@ -86,10 +90,10 @@ def register():
                 db.session.add(premium_plan)
                 db.session.flush()  # Get ID without committing
             
-            # Create trial subscription
+            # Create trial subscription with explicit user_id
             trial_days = 14  # 2 weeks trial
             trial_subscription = Subscription(
-                user_id=new_user.id,
+                user_id=new_user.id,  # Now user_id is available
                 plan_id=premium_plan.id,
                 start_date=datetime.utcnow(),
                 end_date=datetime.utcnow() + timedelta(days=trial_days),
@@ -98,7 +102,7 @@ def register():
             )
             db.session.add(trial_subscription)
         
-        db.session.add(new_user)
+        # Finally commit all changes
         db.session.commit()
         
         flash('تم إنشاء الحساب بنجاح. يمكنك الآن تسجيل الدخول', 'success')
