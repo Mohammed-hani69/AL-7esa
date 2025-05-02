@@ -2,58 +2,81 @@ import os
 import requests
 import json
 import logging
-from firebase_admin import credentials, auth, initialize_app
 
-# Initialize Firebase Admin SDK
-try:
-    # Initialize Firebase Admin SDK with credentials from environment variables
-    firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "")
-    firebase_api_key = os.environ.get("FIREBASE_API_KEY", "")
-    
-    if firebase_project_id and firebase_api_key:
-        # For production, you would use a service account JSON file
-        # For simplicity, we'll use the project ID and API key directly
-        cred = credentials.Certificate({
-            "type": "service_account",
-            "project_id": firebase_project_id,
-            # In a real app, you'd have proper credentials from a service account JSON file
-        })
-        firebase_app = initialize_app(cred)
-        firebase_initialized = True
-    else:
-        firebase_initialized = False
-        logging.warning("Firebase credentials not found. Some features may not work.")
-except Exception as e:
-    firebase_initialized = False
-    logging.error(f"Failed to initialize Firebase: {str(e)}")
+# Initialize Firebase for client-side authentication
+firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "")
+firebase_api_key = os.environ.get("FIREBASE_API_KEY", "")
+firebase_app_id = os.environ.get("FIREBASE_APP_ID", "")
+
+# Flag to track if Firebase is initialized
+firebase_initialized = False
+
+# We won't use Firebase Admin SDK for this application
+# Instead, we'll use the Firebase client SDK for authentication
+# Firebase Admin SDK would require a service account JSON file
+if firebase_project_id and firebase_api_key and firebase_app_id:
+    # Mark as initialized if we have the necessary credentials
+    firebase_initialized = True
+    logging.info("Firebase credentials found. Client-side authentication enabled.")
+else:
+    logging.warning("Firebase credentials not found. Some features may not work.")
 
 def verify_firebase_token(id_token):
     """
-    Verify the Firebase ID token and return the decoded token
+    Verify the Firebase ID token through the Firebase REST API
     """
-    if not firebase_initialized:
+    if not firebase_initialized or not firebase_api_key:
         logging.error("Firebase not initialized. Cannot verify token.")
         return None
     
     try:
-        # Verify the ID token
-        decoded_token = auth.verify_id_token(id_token)
-        return decoded_token
+        # Using the Firebase Auth REST API to verify token
+        # In a production app, you'd use a more robust method
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={firebase_api_key}"
+        payload = {"idToken": id_token}
+        response = requests.post(url, json=payload)
+        
+        if response.status_code == 200:
+            user_data = response.json().get('users', [])
+            if user_data:
+                return {
+                    'uid': user_data[0].get('localId'),
+                    'phone_number': user_data[0].get('phoneNumber'),
+                    'email': user_data[0].get('email')
+                }
+        
+        logging.error(f"Error verifying token: {response.text}")
+        return None
     except Exception as e:
         logging.error(f"Error verifying Firebase token: {str(e)}")
         return None
 
 def get_firebase_user(uid):
     """
-    Get user information from Firebase Auth
+    Get user information from Firebase Auth using REST API
     """
-    if not firebase_initialized:
+    if not firebase_initialized or not firebase_api_key:
         logging.error("Firebase not initialized. Cannot get user.")
         return None
     
     try:
-        user = auth.get_user(uid)
-        return user
+        # Get user info using the REST API
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={firebase_api_key}"
+        payload = {"localId": [uid]}
+        response = requests.post(url, json=payload)
+        
+        if response.status_code == 200:
+            user_data = response.json().get('users', [])
+            if user_data:
+                return {
+                    'uid': user_data[0].get('localId'),
+                    'phone_number': user_data[0].get('phoneNumber'),
+                    'email': user_data[0].get('email'),
+                    'display_name': user_data[0].get('displayName')
+                }
+            
+        logging.error(f"Error getting user: {response.text}")
+        return None
     except Exception as e:
         logging.error(f"Error getting Firebase user: {str(e)}")
         return None
