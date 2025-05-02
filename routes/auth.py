@@ -203,6 +203,10 @@ def complete_registration():
             firebase_uid=session.get('firebase_uid')
         )
         
+        # Save user first to get ID
+        db.session.add(new_user)
+        db.session.flush()  # Get ID without committing
+        
         # If the user is a teacher, create a free trial subscription
         if role == Role.TEACHER:
             # Get the premium plan (highest level)
@@ -223,18 +227,19 @@ def complete_registration():
                 db.session.add(premium_plan)
                 db.session.flush()  # Get ID without committing
             
-            # Create trial subscription
+            # Create trial subscription with explicit user_id
             trial_days = 14  # 2 weeks trial
             trial_subscription = Subscription(
+                user_id=new_user.id,  # Set user_id explicitly
                 plan_id=premium_plan.id,
                 start_date=datetime.utcnow(),
                 end_date=datetime.utcnow() + timedelta(days=trial_days),
                 is_active=True,
                 is_trial=True
             )
-            new_user.subscriptions.append(trial_subscription)
+            db.session.add(trial_subscription)
         
-        db.session.add(new_user)
+        # Finally commit all changes
         db.session.commit()
         
         # Clear session data
