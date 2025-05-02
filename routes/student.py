@@ -105,7 +105,7 @@ def join_classroom():
             # Paid classroom, redirect to payment
             return redirect(url_for('student.payment', classroom_id=classroom.id))
     
-    return render_template('classroom/join.html')
+    return render_template('student/join.html')
 
 @student_bp.route('/payment/<int:classroom_id>')
 @login_required
@@ -124,7 +124,7 @@ def payment(classroom_id):
         flash('أنت مسجل بالفعل في هذا الفصل', 'info')
         return redirect(url_for('student.classroom', classroom_id=classroom.id))
     
-    return render_template('classroom/payment.html', classroom=classroom)
+    return render_template('student/payment.html', classroom=classroom)
 
 @student_bp.route('/process_payment/<int:classroom_id>', methods=['POST'])
 @login_required
@@ -197,7 +197,7 @@ def classroom(classroom_id):
                 has_chat = True
                 break
     
-    return render_template('classroom/student_view.html',
+    return render_template('student/student_view.html',
                            classroom=classroom,
                            enrollment=enrollment,
                            contents=contents,
@@ -232,7 +232,7 @@ def assignments(classroom_id):
     # Create a map of assignment ID to submission for easy lookup
     submission_map = {sub.assignment_id: sub for sub in submissions}
     
-    return render_template('classroom/student_assignments.html',
+    return render_template('student/student_assignments.html',
                            classroom=classroom,
                            enrollment=enrollment,
                            assignments=assignments,
@@ -289,7 +289,7 @@ def view_assignment(classroom_id, assignment_id):
         
         return redirect(url_for('student.assignments', classroom_id=classroom.id))
     
-    return render_template('classroom/view_assignment.html',
+    return render_template('student/view_assignment.html',
                            classroom=classroom,
                            assignment=assignment,
                            submission=submission)
@@ -323,7 +323,7 @@ def quizzes(classroom_id):
     # Current time for quiz availability check
     now = datetime.utcnow()
     
-    return render_template('classroom/student_quizzes.html',
+    return render_template('student/student_quizzes.html',
                            classroom=classroom,
                            enrollment=enrollment,
                            quizzes=quizzes,
@@ -441,7 +441,7 @@ def start_quiz(classroom_id, quiz_id):
         flash('تم تسليم الاختبار بنجاح', 'success')
         return redirect(url_for('student.view_quiz_result', classroom_id=classroom.id, quiz_id=quiz.id))
     
-    return render_template('classroom/take_quiz.html',
+    return render_template('student/take_quiz.html',
                            classroom=classroom,
                            quiz=quiz,
                            questions=questions,
@@ -483,7 +483,7 @@ def view_quiz_result(classroom_id, quiz_id):
     answers = QuizAnswer.query.filter_by(attempt_id=attempt.id).all()
     answer_map = {ans.question_id: ans for ans in answers}
     
-    return render_template('classroom/quiz_result.html',
+    return render_template('student/quiz_result.html',
                            classroom=classroom,
                            quiz=quiz,
                            attempt=attempt,
