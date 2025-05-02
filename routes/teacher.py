@@ -136,7 +136,7 @@ def create_classroom():
         flash(f'تم إنشاء الفصل الدراسي بنجاح. كود الفصل: {code}', 'success')
         return redirect(url_for('teacher.classroom', classroom_id=new_classroom.id))
     
-    return render_template('classroom/create.html')
+    return render_template('teacher/create.html')
 
 @teacher_bp.route('/classroom/<int:classroom_id>')
 @login_required
@@ -172,7 +172,7 @@ def classroom(classroom_id):
     if plan and plan.has_chat:
         can_use_chat = True
     
-    return render_template('classroom/view.html',
+    return render_template('teacher/view.html',
                            classroom=classroom,
                            contents=contents,
                            enrollments=enrollments,
@@ -272,7 +272,7 @@ def assignments(classroom_id):
     # Get assignments
     assignments = Assignment.query.filter_by(classroom_id=classroom.id).order_by(Assignment.created_at.desc()).all()
     
-    return render_template('classroom/assignments.html',
+    return render_template('teacher/assignments.html',
                            classroom=classroom,
                            assignments=assignments)
 
@@ -317,7 +317,7 @@ def create_assignment(classroom_id):
         flash('تم إنشاء الواجب بنجاح', 'success')
         return redirect(url_for('teacher.assignments', classroom_id=classroom.id))
     
-    return render_template('classroom/create_assignment.html', classroom=classroom)
+    return render_template('teacher/create_assignment.html', classroom=classroom)
 
 @teacher_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/submissions')
 @login_required
@@ -345,7 +345,7 @@ def assignment_submissions(classroom_id, assignment_id):
         if enrollment.user_id not in submitted_student_ids
     ]
     
-    return render_template('classroom/assignment_submissions.html',
+    return render_template('teacher/assignment_submissions.html',
                            classroom=classroom,
                            assignment=assignment,
                            submissions=submissions,
