@@ -181,6 +181,19 @@ def classroom(classroom_id):
                            assistant=assistant,
                            can_use_chat=can_use_chat)
 
+@teacher_bp.route('/classroom/<int:classroom_id>/live')
+@login_required
+@teacher_required
+def live_classroom(classroom_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    
+    # Ensure the teacher owns this classroom
+    if classroom.teacher_id != current_user.id:
+        flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+    
+    return render_template('teacher/live_class.html', classroom=classroom)
+
 @teacher_bp.route('/classroom/<int:classroom_id>/add_content', methods=['POST'])
 @login_required
 @teacher_required
