@@ -1,0 +1,30 @@
+{% extends 'student/layout.html' %}
+
+{% block title %}الانضمام إلى فصل دراسي{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">الانضمام إلى فصل دراسي</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('student.join_classroom') }}">
+                        {{ form.hidden_tag() if form }}
+                        <div class="form-group mb-3">
+                            <label for="classroom_code" class="form-label">رمز الفصل الدراسي</label>
+                            <input type="text" class="form-control" id="classroom_code" name="classroom_code" required>
+                            <small class="form-text text-muted">أدخل الرمز الذي أعطاك إياه المعلم.</small>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">انضمام</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
