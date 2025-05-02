@@ -1,0 +1,146 @@
+<!-- Sidebar -->
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+    <!-- Sidebar - Brand -->
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('index') }}">
+        <div class="sidebar-brand-icon">
+            <i class="fas fa-school"></i>
+        </div>
+        <div class="sidebar-brand-text mx-3">الحصة</div>
+    </a>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider my-0">
+
+    <!-- Dashboard -->
+    {% if current_user.is_authenticated %}
+        {% if current_user.role == 'admin' %}
+            <!-- Admin Nav Items -->
+            <li class="nav-item {{ 'active' if request.path == url_for('admin.dashboard') else '' }}">
+                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+            <li class="nav-item {{ 'active' if request.path == url_for('admin.users') else '' }}">
+                <a class="nav-link" href="{{ url_for('admin.users') }}">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>المستخدمين</span>
+                </a>
+            </li>
+            <li class="nav-item {{ 'active' if request.path == url_for('admin.subscriptions') else '' }}">
+                <a class="nav-link" href="{{ url_for('admin.subscriptions') }}">
+                    <i class="fas fa-fw fa-credit-card"></i>
+                    <span>الإشتراكات</span>
+                </a>
+            </li>
+            <li class="nav-item {{ 'active' if request.path == url_for('admin.classrooms') else '' }}">
+                <a class="nav-link" href="{{ url_for('admin.classrooms') }}">
+                    <i class="fas fa-fw fa-school"></i>
+                    <span>الفصول الدراسية</span>
+                </a>
+            </li>
+            <li class="nav-item {{ 'active' if request.path == url_for('admin.notifications') else '' }}">
+                <a class="nav-link" href="{{ url_for('admin.notifications') }}">
+                    <i class="fas fa-fw fa-bell"></i>
+                    <span>الإشعارات</span>
+                </a>
+            </li>
+            <li class="nav-item {{ 'active' if request.path == url_for('admin.settings') else '' }}">
+                <a class="nav-link" href="{{ url_for('admin.settings') }}">
+                    <i class="fas fa-fw fa-cog"></i>
+                    <span>الإعدادات</span>
+                </a>
+            </li>
+        {% elif current_user.role == 'teacher' %}
+            <!-- Teacher Nav Items -->
+            <li class="nav-item {{ 'active' if request.path == url_for('teacher.dashboard') else '' }}">
+                <a class="nav-link" href="{{ url_for('teacher.dashboard') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+            <!-- Classrooms Collapse Menu -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseClassrooms"
+                   aria-expanded="true" aria-controls="collapseClassrooms">
+                    <i class="fas fa-fw fa-school"></i>
+                    <span>الفصول الدراسية</span>
+                </a>
+                <div id="collapseClassrooms" class="collapse" aria-labelledby="headingClassrooms"
+                     data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">إدارة الفصول:</h6>
+                        <a class="collapse-item" href="{{ url_for('teacher.dashboard') }}">جميع الفصول</a>
+                        <a class="collapse-item" href="{{ url_for('teacher.create_classroom') }}">إنشاء فصل جديد</a>
+                    </div>
+                </div>
+            </li>
+        {% elif current_user.role == 'assistant' %}
+            <!-- Assistant Nav Items -->
+            <li class="nav-item {{ 'active' if request.path == url_for('assistant.dashboard') else '' }}">
+                <a class="nav-link" href="{{ url_for('assistant.dashboard') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+        {% elif current_user.role == 'student' %}
+            <!-- Student Nav Items -->
+            <li class="nav-item {{ 'active' if request.path == url_for('student.dashboard') else '' }}">
+                <a class="nav-link" href="{{ url_for('student.dashboard') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('student.join_classroom') }}">
+                    <i class="fas fa-fw fa-plus-circle"></i>
+                    <span>الانضمام إلى فصل</span>
+                </a>
+            </li>
+        {% endif %}
+    {% endif %}
+
+    <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- Profile and Logout -->
+    {% if current_user.is_authenticated %}
+        <li class="nav-item {{ 'active' if request.path == url_for('auth.profile') else '' }}">
+            <a class="nav-link" href="{{ url_for('auth.profile') }}">
+                <i class="fas fa-fw fa-user"></i>
+                <span>الملف الشخصي</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                <i class="fas fa-fw fa-sign-out-alt"></i>
+                <span>تسجيل الخروج</span>
+            </a>
+        </li>
+    {% else %}
+        <!-- Login/Register -->
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                <i class="fas fa-fw fa-sign-in-alt"></i>
+                <span>تسجيل الدخول</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('auth.register') }}">
+                <i class="fas fa-fw fa-user-plus"></i>
+                <span>إنشاء حساب</span>
+            </a>
+        </li>
+    {% endif %}
+
+    <!-- Divider -->
+    <hr class="sidebar-divider d-none d-md-block">
+
+    <!-- Sidebar Toggler (Sidebar) -->
+    <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+    </div>
+
+</ul>
+<!-- End of Sidebar -->
