@@ -398,7 +398,7 @@ def quizzes(classroom_id):
     # Get quizzes
     quizzes = Quiz.query.filter_by(classroom_id=classroom.id).order_by(Quiz.created_at.desc()).all()
     
-    return render_template('classroom/quizzes.html',
+    return render_template('teacher/quizzes.html',
                            classroom=classroom,
                            quizzes=quizzes)
 
@@ -455,7 +455,7 @@ def create_quiz(classroom_id):
         flash('تم إنشاء الاختبار بنجاح. قم بإضافة الأسئلة الآن', 'success')
         return redirect(url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=new_quiz.id))
     
-    return render_template('classroom/create_quiz.html', classroom=classroom)
+    return render_template('teacher/create_quiz.html', classroom=classroom)
 
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -472,7 +472,7 @@ def edit_quiz(classroom_id, quiz_id):
     # Get existing questions
     questions = QuizQuestion.query.filter_by(quiz_id=quiz.id).order_by(QuizQuestion.position).all()
     
-    return render_template('classroom/edit_quiz.html',
+    return render_template('teacher/edit_quiz.html',
                            classroom=classroom,
                            quiz=quiz,
                            questions=questions)
