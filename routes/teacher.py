@@ -572,7 +572,7 @@ def students(classroom_id):
     # Get enrollments with students
     enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom.id).all()
     
-    return render_template('classroom/students.html',
+    return render_template('teacher/students.html',
                            classroom=classroom,
                            enrollments=enrollments)
 

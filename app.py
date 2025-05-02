@@ -34,6 +34,11 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Initialize database
 db.init_app(app)
 
+# Add custom Jinja filters
+@app.template_filter('slice')
+def slice_filter(value, start, end):
+    return value[start:end]
+
 # Configure login manager
 login_manager = LoginManager()
 login_manager.init_app(app)

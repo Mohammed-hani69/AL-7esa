@@ -101,7 +101,7 @@
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="notificationsDropdown">
                                 <h6 class="dropdown-header">الإشعارات</h6>
                                 {% if current_user.notifications %}
-                                    {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true)|list[:5] %}
+                                    {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true)|slice(0, 5) %}
                                     <a class="dropdown-item {{ '' if notification.is_read else 'font-weight-bold' }}" href="#">
                                         <span class="small text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
                                         <p class="mb-0">{{ notification.message }}</p>

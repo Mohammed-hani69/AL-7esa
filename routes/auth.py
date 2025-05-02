@@ -296,4 +296,4 @@ def profile():
         flash('تم تحديث الملف الشخصي بنجاح', 'success')
         return redirect(url_for('auth.profile'))
     
-    return render_template('auth/profile.html')
+    return render_template('auth/profile.html', now=datetime.utcnow())
