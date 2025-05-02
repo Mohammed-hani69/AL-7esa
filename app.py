@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager
+from flask_socketio import SocketIO
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -69,5 +70,11 @@ with app.app_context():
 def favicon():
     return app.send_static_file('img/favicon.ico')
 
+# Initialize SocketIO
+socketio = SocketIO(app, cors_allowed_origins="*")
+
 # Import routes 
 from routes import *
+
+# Import socket events
+from streaming import *
