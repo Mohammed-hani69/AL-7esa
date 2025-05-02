@@ -1,0 +1,128 @@
+{% extends "layout.html" %}
+
+{% block title %}لوحة تحكم الطالب - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">لوحة تحكم الطالب</h1>
+        <a href="{{ url_for('student.join_classroom') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>الانضمام إلى فصل
+        </a>
+    </div>
+    
+    <!-- Enrolled Classrooms -->
+    <div class="mb-4">
+        <h5 class="text-gray-800 mb-3">فصولك الدراسية</h5>
+        
+        {% if enrollments %}
+            <div class="row">
+                {% for enrollment in enrollments %}
+                    {% set classroom = enrollment.classroom %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card classroom-card shadow-sm" style="border-top: 4px solid {{ classroom.color }};">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ classroom.name }}</h5>
+                                <p class="card-text">{{ classroom.subject }} | {{ classroom.grade }}</p>
+                                <div class="mb-3">
+                                    <span class="badge badge-{{ 'success' if classroom.is_free else 'primary' }}">
+                                        {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
+                                    </span>
+                                    <span class="points-badge float-end">{{ enrollment.points }} نقطة</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">المعلم: {{ classroom.teacher.name }}</small>
+                                    <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">
+                                        عرض الفصل
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 bg-light rounded mb-4">
+                <i class="fas fa-school fa-3x text-gray-400 mb-3"></i>
+                <h5>لم تنضم إلى أي فصل دراسي بعد</h5>
+                <p>استخدم كود الفصل المقدم من معلمك للانضمام</p>
+                <a href="{{ url_for('student.join_classroom') }}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>الانضمام إلى فصل
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="row">
+        <!-- Upcoming Assignments -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">الواجبات القادمة</h6>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_assignments %}
+                        <div class="list-group">
+                            {% for assignment in upcoming_assignments %}
+                                <a href="{{ url_for('student.view_assignment', classroom_id=assignment.classroom_id, assignment_id=assignment.id) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ assignment.title }}</h5>
+                                        <small class="text-danger">{{ assignment.due_date.strftime('%Y-%m-%d') }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ assignment.description|truncate(100) }}</p>
+                                    <small>{{ assignment.classroom.name }} | {{ assignment.classroom.subject }}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-tasks fa-3x text-gray-300 mb-2"></i>
+                            <p>لا توجد واجبات قادمة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upcoming Quizzes -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">الاختبارات القادمة</h6>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_quizzes %}
+                        <div class="list-group">
+                            {% for quiz in upcoming_quizzes %}
+                                <a href="{{ url_for('student.quizzes', classroom_id=quiz.classroom_id) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ quiz.title }}</h5>
+                                        <small class="text-danger">
+                                            {% if quiz.start_time and quiz.end_time %}
+                                                {{ quiz.start_time.strftime('%Y-%m-%d') }}
+                                                إلى
+                                                {{ quiz.end_time.strftime('%Y-%m-%d') }}
+                                            {% elif quiz.end_time %}
+                                                ينتهي {{ quiz.end_time.strftime('%Y-%m-%d') }}
+                                            {% else %}
+                                                متاح الآن
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <p class="mb-1">{{ quiz.description|truncate(100) }}</p>
+                                    <small>{{ quiz.classroom.name }} | {{ quiz.classroom.subject }}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-question-circle fa-3x text-gray-300 mb-2"></i>
+                            <p>لا توجد اختبارات قادمة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

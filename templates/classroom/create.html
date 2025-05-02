@@ -1,0 +1,150 @@
+{% extends "layout.html" %}
+
+{% block title %}إنشاء فصل جديد - الحصة{% endblock %}
+
+{% block head_extra %}
+<script defer src="{{ url_for('static', filename='js/classroom.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">إنشاء فصل دراسي جديد</h1>
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-right me-2"></i>العودة للوحة التحكم
+        </a>
+    </div>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">بيانات الفصل</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('teacher.create_classroom') }}">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="name">اسم الفصل</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="subject">المادة</label>
+                            <input type="text" class="form-control" id="subject" name="subject" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="grade">المرحلة الدراسية</label>
+                            <select class="form-control" id="grade" name="grade" required>
+                                <option value="">-- اختر المرحلة --</option>
+                                <option value="أول ابتدائي">أول ابتدائي</option>
+                                <option value="ثاني ابتدائي">ثاني ابتدائي</option>
+                                <option value="ثالث ابتدائي">ثالث ابتدائي</option>
+                                <option value="رابع ابتدائي">رابع ابتدائي</option>
+                                <option value="خامس ابتدائي">خامس ابتدائي</option>
+                                <option value="سادس ابتدائي">سادس ابتدائي</option>
+                                <option value="أول متوسط">أول متوسط</option>
+                                <option value="ثاني متوسط">ثاني متوسط</option>
+                                <option value="ثالث متوسط">ثالث متوسط</option>
+                                <option value="أول ثانوي">أول ثانوي</option>
+                                <option value="ثاني ثانوي">ثاني ثانوي</option>
+                                <option value="ثالث ثانوي">ثالث ثانوي</option>
+                                <option value="جامعي">جامعي</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="academic_year">العام الدراسي</label>
+                            <select class="form-control" id="academic_year" name="academic_year" required>
+                                <option value="">-- اختر العام الدراسي --</option>
+                                <option value="2023-2024">2023-2024</option>
+                                <option value="2024-2025">2024-2025</option>
+                                <option value="2025-2026">2025-2026</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="description">وصف الفصل (اختياري)</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>لون الفصل</label>
+                    <div class="d-flex flex-wrap mb-2">
+                        <div class="color-option me-2 mb-2" data-color="#3498db" style="background-color: #3498db; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;"></div>
+                        <div class="color-option me-2 mb-2" data-color="#2ecc71" style="background-color: #2ecc71; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;"></div>
+                        <div class="color-option me-2 mb-2" data-color="#e74c3c" style="background-color: #e74c3c; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;"></div>
+                        <div class="color-option me-2 mb-2" data-color="#f39c12" style="background-color: #f39c12; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;"></div>
+                        <div class="color-option me-2 mb-2" data-color="#9b59b6" style="background-color: #9b59b6; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;"></div>
+                        <div class="color-option me-2 mb-2" data-color="#1abc9c" style="background-color: #1abc9c; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;"></div>
+                        <div class="color-option me-2 mb-2" data-color="#34495e" style="background-color: #34495e; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;"></div>
+                    </div>
+                    <input type="hidden" id="classroom-color" name="color" value="#3498db">
+                </div>
+                
+                <div class="form-group mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="is_free" name="is_free" checked>
+                        <label class="form-check-label" for="is_free">
+                            فصل مجاني
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="paid-options d-none">
+                    <div class="card card-body bg-light mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="price">سعر الفصل (ريال)</label>
+                                    <input type="number" class="form-control" id="price" name="price" min="1" value="99">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="duration_days">مدة الاشتراك (بالأيام)</label>
+                                    <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" value="30">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="fas fa-plus-circle me-2"></i>إنشاء الفصل
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize color picker
+        initClassroomColorPicker();
+        
+        // Toggle paid options
+        const isFreeCheckbox = document.getElementById('is_free');
+        const paidOptions = document.querySelector('.paid-options');
+        
+        isFreeCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                paidOptions.classList.add('d-none');
+            } else {
+                paidOptions.classList.remove('d-none');
+            }
+        });
+    });
+</script>
+{% endblock %}

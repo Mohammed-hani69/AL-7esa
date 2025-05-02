@@ -1,0 +1,168 @@
+{% extends "layout.html" %}
+
+{% block title %}لوحة تحكم المعلم - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">لوحة تحكم المعلم</h1>
+        
+        {% if can_create_classroom %}
+            <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
+            </a>
+        {% else %}
+            <button class="btn btn-secondary" disabled>
+                <i class="fas fa-plus-circle me-2"></i>لا يمكن إنشاء فصول إضافية
+            </button>
+        {% endif %}
+    </div>
+    
+    <!-- Subscription Status -->
+    <div class="card mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">حالة الاشتراك</h6>
+        </div>
+        <div class="card-body">
+            {% if subscription %}
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5>{{ subscription.plan.name }}</h5>
+                        <p class="mb-0">
+                            {% if subscription.is_trial %}
+                                <span class="badge badge-warning">فترة تجريبية</span>
+                            {% endif %}
+                            تاريخ الانتهاء: {{ subscription.end_date.strftime('%Y-%m-%d') }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-end">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check-circle text-success me-2"></i>عدد الفصول المتاح: {{ subscription.plan.max_classrooms }}</li>
+                                {% if subscription.plan.has_chat %}
+                                    <li><i class="fas fa-check-circle text-success me-2"></i>محادثات الفصل</li>
+                                {% else %}
+                                    <li><i class="fas fa-times-circle text-danger me-2"></i>محادثات الفصل</li>
+                                {% endif %}
+                                
+                                {% if subscription.plan.allow_assistant %}
+                                    <li><i class="fas fa-check-circle text-success me-2"></i>مساعدين</li>
+                                {% else %}
+                                    <li><i class="fas fa-times-circle text-danger me-2"></i>مساعدين</li>
+                                {% endif %}
+                                
+                                {% if subscription.plan.advanced_analytics %}
+                                    <li><i class="fas fa-check-circle text-success me-2"></i>تحليلات متقدمة</li>
+                                {% else %}
+                                    <li><i class="fas fa-times-circle text-danger me-2"></i>تحليلات متقدمة</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <p class="mb-1">ليس لديك اشتراك فعال حالياً.</p>
+                    <p class="mb-0">قم بترقية حسابك للوصول إلى كافة المميزات.</p>
+                </div>
+                <a href="#subscription-plans" class="btn btn-primary">اشترك الآن</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Classrooms -->
+    <div class="mb-4">
+        <h5 class="text-gray-800 mb-3">فصولك الدراسية</h5>
+        
+        {% if classrooms %}
+            <div class="row">
+                {% for classroom in classrooms %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card classroom-card shadow-sm" style="border-top: 4px solid {{ classroom.color }};">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ classroom.name }}</h5>
+                                <p class="card-text">{{ classroom.subject }} | {{ classroom.grade }}</p>
+                                <div class="mb-3">
+                                    <span class="badge badge-{{ 'success' if classroom.is_free else 'primary' }}">
+                                        {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
+                                    </span>
+                                    <small class="text-muted">كود الفصل: {{ classroom.code }}</small>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ classroom.enrollments|length }} طالب</small>
+                                    <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">
+                                        عرض الفصل
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 bg-light rounded mb-4">
+                <i class="fas fa-school fa-3x text-gray-400 mb-3"></i>
+                <h5>لا يوجد لديك فصول دراسية بعد</h5>
+                <p>قم بإنشاء فصلك الدراسي الأول للبدء</p>
+                <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Subscription Plans -->
+    <div id="subscription-plans" class="mb-4">
+        <h5 class="text-gray-800 mb-3">باقات الاشتراك</h5>
+        
+        <div class="row">
+            {% for plan in plans %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-{{ 'primary' if loop.index == 1 else 'success' if loop.index == 2 else 'info' }} text-white text-center">
+                            <h5 class="my-1">{{ plan.name }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="display-5 text-center mb-3">{{ plan.price }} ريال</div>
+                            <p class="text-center text-muted">لمدة {{ plan.duration_days }} يوم</p>
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    عدد الفصول: {{ plan.max_classrooms }}
+                                </li>
+                                <li class="mb-2">
+                                    {% if plan.has_chat %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-times-circle text-danger me-2"></i>
+                                    {% endif %}
+                                    محادثات الفصل
+                                </li>
+                                <li class="mb-2">
+                                    {% if plan.allow_assistant %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-times-circle text-danger me-2"></i>
+                                    {% endif %}
+                                    تعيين مساعد
+                                </li>
+                                <li class="mb-2">
+                                    {% if plan.advanced_analytics %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-times-circle text-danger me-2"></i>
+                                    {% endif %}
+                                    تحليلات متقدمة
+                                </li>
+                            </ul>
+                            <div class="text-center">
+                                <button class="btn btn-outline-primary">اشترك الآن</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

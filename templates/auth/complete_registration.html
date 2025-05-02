@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}إكمال التسجيل - الحصة{% endblock %}
+
+{% block public_content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3>إكمال بيانات التسجيل</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h4>منصة الحصة</h4>
+                        <p class="text-muted">أكمل بياناتك للمتابعة</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('auth.complete_registration') }}">
+                        <div class="form-group mb-3">
+                            <label for="name">الاسم الكامل</label>
+                            <input type="text" id="name" name="name" class="form-control" value="{{ name }}" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="phone">رقم الهاتف</label>
+                            <input type="tel" id="phone" class="form-control" value="{{ phone }}" readonly dir="ltr">
+                            <small class="form-text text-muted">تم التحقق من هذا الرقم</small>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>نوع الحساب</label>
+                            <div class="d-flex justify-content-between">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="role" id="role-student" value="student" checked>
+                                    <label class="form-check-label" for="role-student">طالب</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="role" id="role-teacher" value="teacher">
+                                    <label class="form-check-label" for="role-teacher">معلم</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="role" id="role-assistant" value="assistant">
+                                    <label class="form-check-label" for="role-assistant">مساعد</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3 teacher-info d-none">
+                            <div class="alert alert-info">
+                                <p><strong>معلومات للمعلمين:</strong></p>
+                                <p>ستحصل على فترة تجريبية مجانية لمدة 14 يوم تشمل جميع مميزات المنصة.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary w-100">إكمال التسجيل</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show/hide teacher info based on selected role
+        const roleTeacher = document.getElementById('role-teacher');
+        const teacherInfo = document.querySelector('.teacher-info');
+        
+        roleTeacher.addEventListener('change', function() {
+            if (this.checked) {
+                teacherInfo.classList.remove('d-none');
+            } else {
+                teacherInfo.classList.add('d-none');
+            }
+        });
+        
+        const roles = document.querySelectorAll('input[name="role"]');
+        roles.forEach(role => {
+            if (role.id !== 'role-teacher') {
+                role.addEventListener('change', function() {
+                    if (this.checked) {
+                        teacherInfo.classList.add('d-none');
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

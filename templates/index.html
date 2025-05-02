@@ -1,0 +1,160 @@
+{% extends "layout.html" %}
+
+{% block title %}الحصة - منصة تعليمية متكاملة{% endblock %}
+
+{% block public_content %}
+<div class="landing-hero">
+    <div class="container">
+        <h1 class="fade-in">منصة الحصة</h1>
+        <p class="slide-in">منصة تعليمية حديثة تمكّن المعلم من إنشاء وإدارة الفصول الدراسية الرقمية بسهولة، مع دعم كامل للتفاعل، الواجبات، المسابقات، إدارة الطلاب، والتقييمات.</p>
+        <div class="mt-4">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg me-2">تسجيل الدخول</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">إنشاء حساب جديد</a>
+        </div>
+    </div>
+</div>
+
+<div class="landing-features bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">ميزات المنصة</h2>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                    <h3>فصول دراسية افتراضية</h3>
+                    <p>إنشاء فصول دراسية افتراضية مع إمكانية التحكم الكامل في المحتوى والطلاب والواجبات.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon"><i class="fas fa-book"></i></div>
+                    <h3>محتوى تعليمي متنوع</h3>
+                    <p>إضافة محتوى متنوع للفصول الدراسية مثل الملفات، الصور، الصوت، الفيديو، والنصوص.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon"><i class="fas fa-tasks"></i></div>
+                    <h3>واجبات وامتحانات</h3>
+                    <p>إنشاء واجبات واختبارات وكويزات وتقييم أداء الطلاب ومتابعة تقدمهم.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon"><i class="fas fa-comments"></i></div>
+                    <h3>تواصل مباشر</h3>
+                    <p>التواصل بين المعلم والطلاب من خلال محادثات الفصل والإشعارات.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon"><i class="fas fa-user-friends"></i></div>
+                    <h3>مساعدي المعلم</h3>
+                    <p>إمكانية تعيين مساعد للمعلم للمساعدة في إدارة الفصل وتقييم الواجبات.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                    <h3>تحليلات وإحصائيات</h3>
+                    <p>متابعة أداء الطلاب من خلال تحليلات ورسوم بيانية توضح مستوى التقدم.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="landing-pricing py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">باقات الاشتراك</h2>
+        
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4>الباقة الأساسية</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="display-4 text-center mb-4">99 ريال</div>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> فصل واحد فقط</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> واجبات واختبارات</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> محتوى تعليمي</li>
+                            <li class="mb-2"><i class="fas fa-times text-danger me-2"></i> بدون محادثات</li>
+                            <li class="mb-2"><i class="fas fa-times text-danger me-2"></i> بدون مساعد</li>
+                        </ul>
+                        <div class="text-center">
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">اشترك الآن</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white text-center">
+                        <h4>الباقة المتقدمة</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="display-4 text-center mb-4">199 ريال</div>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> فصول متعددة</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> واجبات واختبارات</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> محتوى تعليمي</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> محادثات الفصل</li>
+                            <li class="mb-2"><i class="fas fa-times text-danger me-2"></i> بدون مساعد</li>
+                        </ul>
+                        <div class="text-center">
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-success">اشترك الآن</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4 mx-auto">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white text-center">
+                        <h4>الباقة الكاملة</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="display-4 text-center mb-4">299 ريال</div>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> فصول غير محدودة</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> واجبات واختبارات</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> محتوى تعليمي</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> محادثات الفصل</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> تعيين مساعد</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> تحليلات متقدمة</li>
+                        </ul>
+                        <div class="text-center">
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-info">اشترك الآن</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="landing-cta py-5 bg-primary text-white text-center">
+    <div class="container">
+        <h2 class="mb-4">ابدأ الآن مجانًا!</h2>
+        <p class="lead mb-4">سجل كمعلم واحصل على فترة تجريبية لمدة 14 يوم بكافة المميزات</p>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">سجل الآن</a>
+    </div>
+</div>
+
+<footer class="py-4 bg-dark text-white">
+    <div class="container text-center">
+        <p>&copy; 2023 منصة الحصة. جميع الحقوق محفوظة.</p>
+    </div>
+</footer>
+{% endblock %}

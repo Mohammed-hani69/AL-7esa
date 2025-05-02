@@ -1,0 +1,132 @@
+{% extends "layout.html" %}
+
+{% block title %}تسجيل الدخول - الحصة{% endblock %}
+
+{% block head_extra %}
+<script defer src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}
+
+{% block public_content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3>تسجيل الدخول</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h4>منصة الحصة</h4>
+                        <p class="text-muted">منصة تعليمية متكاملة للمدارس والدروس الخصوصية</p>
+                    </div>
+                    
+                    <ul class="nav nav-tabs mb-4" id="authTabs" role="tablist">
+                        <li class="nav-item w-50 text-center">
+                            <a class="nav-link active" id="phone-tab" data-toggle="tab" href="#phone-auth" role="tab">
+                                <i class="fas fa-mobile-alt me-2"></i>تسجيل الدخول برقم الهاتف
+                            </a>
+                        </li>
+                        <li class="nav-item w-50 text-center">
+                            <a class="nav-link" id="password-tab" data-toggle="tab" href="#password-auth" role="tab">
+                                <i class="fas fa-key me-2"></i>تسجيل الدخول بكلمة المرور
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="authTabsContent">
+                        <!-- Phone Authentication -->
+                        <div class="tab-pane fade show active" id="phone-auth" role="tabpanel">
+                            <div id="phone-auth-step-1">
+                                <div class="form-group mb-3">
+                                    <label for="phone">رقم الهاتف</label>
+                                    <input type="tel" id="phone" class="form-control" placeholder="أدخل رقم الهاتف" dir="ltr">
+                                    <small class="form-text text-muted">مثال: +966512345678</small>
+                                </div>
+                                
+                                <div id="recaptcha-container" class="mb-3"></div>
+                                
+                                <button id="auth-submit-btn" class="btn btn-primary w-100">
+                                    إرسال رمز التحقق
+                                </button>
+                            </div>
+                            
+                            <div id="phone-auth-step-2" class="d-none">
+                                <div class="form-group mb-3">
+                                    <label for="verification-code">رمز التحقق</label>
+                                    <input type="text" id="verification-code" class="form-control" placeholder="أدخل رمز التحقق">
+                                    <small class="form-text text-muted">أدخل الرمز المرسل إلى هاتفك</small>
+                                </div>
+                                
+                                <button id="verify-code-btn" class="btn btn-primary w-100" onclick="verifyCode('verification-code', 'verify-code-btn')">
+                                    تحقق
+                                </button>
+                                
+                                <button class="btn btn-link w-100 mt-2" onclick="document.getElementById('phone-auth-step-1').classList.remove('d-none'); document.getElementById('phone-auth-step-2').classList.add('d-none');">
+                                    العودة
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Password Authentication -->
+                        <div class="tab-pane fade" id="password-auth" role="tabpanel">
+                            <form method="POST" action="{{ url_for('auth.login') }}">
+                                <div class="form-group mb-3">
+                                    <label for="login-phone">رقم الهاتف</label>
+                                    <input type="tel" id="login-phone" name="phone" class="form-control" required dir="ltr">
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="login-password">كلمة المرور</label>
+                                    <input type="password" id="login-password" name="password" class="form-control" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <button type="submit" class="btn btn-primary w-100">تسجيل الدخول</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p>ليس لديك حساب؟ <a href="{{ url_for('auth.register') }}">إنشاء حساب جديد</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Setup tabs functionality
+        const tabLinks = document.querySelectorAll('.nav-link');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all tabs
+                tabLinks.forEach(tab => tab.classList.remove('active'));
+                tabPanes.forEach(pane => {
+                    pane.classList.remove('show');
+                    pane.classList.remove('active');
+                });
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Show corresponding tab content
+                const tabId = this.getAttribute('href').substring(1);
+                document.getElementById(tabId).classList.add('show');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Initialize phone auth
+        initPhoneAuth('phone', 'recaptcha-container', 'auth-submit-btn');
+    });
+</script>
+{% endblock %}

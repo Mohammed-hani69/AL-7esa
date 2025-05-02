@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+
+{% block title %}الملف الشخصي - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">الملف الشخصي</h1>
+    
+    <div class="row">
+        <div class="col-lg-4">
+            <!-- Profile picture and info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">صورة الملف الشخصي</h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if current_user.profile_picture %}
+                        <img src="{{ current_user.profile_picture }}" class="img-profile rounded-circle mb-3" width="150" height="150" alt="{{ current_user.name }}">
+                    {% else %}
+                        <div class="mb-3">
+                            <i class="fas fa-user-circle text-gray-300" style="font-size: 150px;"></i>
+                        </div>
+                    {% endif %}
+                    <h5 class="mb-0">{{ current_user.name }}</h5>
+                    <p class="text-muted">
+                        {% if current_user.role == 'student' %}
+                            <span class="badge badge-success">طالب</span>
+                        {% elif current_user.role == 'teacher' %}
+                            <span class="badge badge-primary">معلم</span>
+                        {% elif current_user.role == 'assistant' %}
+                            <span class="badge badge-info">مساعد</span>
+                        {% elif current_user.role == 'admin' %}
+                            <span class="badge badge-danger">مدير</span>
+                        {% endif %}
+                    </p>
+                    <p class="text-muted">
+                        <i class="fas fa-phone me-1"></i> {{ current_user.phone }}
+                    </p>
+                    {% if current_user.role == 'teacher' %}
+                        {% set active_sub = None %}
+                        {% for sub in current_user.subscriptions %}
+                            {% if sub.is_active and sub.end_date > now %}
+                                {% set active_sub = sub %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if active_sub %}
+                            <div class="alert alert-info">
+                                <p class="mb-1"><strong>الاشتراك الحالي:</strong> {{ active_sub.plan.name }}</p>
+                                <p class="mb-0">
+                                    {% if active_sub.is_trial %}
+                                        <span class="badge badge-warning">فترة تجريبية</span>
+                                    {% endif %}
+                                    ينتهي في {{ active_sub.end_date.strftime('%Y-%m-%d') }}
+                                </p>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <p class="mb-0">ليس لديك اشتراك فعال حالياً</p>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <!-- Profile edit form -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">تعديل الملف الشخصي</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('auth.profile') }}" enctype="multipart/form-data">
+                        <div class="form-group mb-3">
+                            <label for="name">الاسم الكامل</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ current_user.name }}" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="phone">رقم الهاتف</label>
+                            <input type="tel" class="form-control" id="phone" value="{{ current_user.phone }}" readonly dir="ltr">
+                            <small class="form-text text-muted">لا يمكن تغيير رقم الهاتف الأساسي</small>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="alt_phone">رقم هاتف بديل (اختياري)</label>
+                            <input type="tel" class="form-control" id="alt_phone" name="alt_phone" value="{{ current_user.alt_phone or '' }}" dir="ltr">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="email">البريد الإلكتروني (اختياري)</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email or '' }}">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="address">العنوان (اختياري)</label>
+                            <input type="text" class="form-control" id="address" name="address" value="{{ current_user.address or '' }}">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="interests">الاهتمامات (اختياري)</label>
+                            <textarea class="form-control" id="interests" name="interests" rows="3">{{ current_user.interests or '' }}</textarea>
+                            <small class="form-text text-muted">اكتب اهتماماتك مفصولة بفواصل</small>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="profile_picture">صورة الملف الشخصي (اختياري)</label>
+                            <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary px-4">حفظ التغييرات</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

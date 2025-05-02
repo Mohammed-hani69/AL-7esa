@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+
+{% block title %}الواجبات - {{ classroom.name }} - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">الواجبات - {{ classroom.name }}</h1>
+        <div>
+            <a href="{{ url_for('teacher.create_assignment', classroom_id=classroom.id) }}" class="btn btn-primary me-2">
+                <i class="fas fa-plus-circle me-1"></i>إنشاء واجب جديد
+            </a>
+            <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right me-1"></i>العودة للفصل
+            </a>
+        </div>
+    </div>
+    
+    <!-- Assignments List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">جميع الواجبات</h6>
+        </div>
+        <div class="card-body">
+            {% if assignments %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>عنوان الواجب</th>
+                                <th>تاريخ التسليم</th>
+                                <th>النقاط</th>
+                                <th>التسليمات</th>
+                                <th>التاريخ</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in assignments %}
+                                <tr>
+                                    <td>{{ assignment.title }}</td>
+                                    <td>
+                                        {% if assignment.due_date %}
+                                            <span class="text-danger">{{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
+                                        {% else %}
+                                            <span class="text-muted">غير محدد</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ assignment.points }}</td>
+                                    <td>
+                                        <span class="badge badge-info">
+                                            {{ assignment.submissions|length }} / {{ classroom.enrollments|length }}
+                                        </span>
+                                    </td>
+                                    <td>{{ assignment.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('teacher.assignment_submissions', classroom_id=classroom.id, assignment_id=assignment.id) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye me-1"></i>عرض التسليمات
+                                        </a>
+                                        <button class="btn btn-sm btn-danger ms-1" onclick="deleteAssignment({{ assignment.id }}, '{{ assignment.title }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-tasks fa-3x text-gray-300 mb-3"></i>
+                    <h5>لا توجد واجبات بعد</h5>
+                    <p>قم بإنشاء أول واجب للطلاب</p>
+                    <a href="{{ url_for('teacher.create_assignment', classroom_id=classroom.id) }}" class="btn btn-primary mt-2">
+                        <i class="fas fa-plus-circle me-2"></i>إنشاء واجب جديد
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Assignment Tips -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">نصائح للواجبات</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5>أنواع الواجبات التي يمكنك إنشاؤها:</h5>
+                    <ul>
+                        <li>مسائل رياضية أو تدريبات محددة</li>
+                        <li>أبحاث وتقارير</li>
+                        <li>مشروعات صغيرة</li>
+                        <li>تلخيص معلومات من الكتاب</li>
+                        <li>تمارين تطبيقية على الدروس</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6">
+                    <h5>نصائح لإنشاء واجبات فعالة:</h5>
+                    <ul>
+                        <li>جعل الواجب محدداً وواضحاً</li>
+                        <li>تحديد وقت مناسب للتسليم</li>
+                        <li>ربط الواجب بأهداف التعلم</li>
+                        <li>تقديم تغذية راجعة سريعة للطلاب</li>
+                        <li>تحديد معايير التقييم مسبقاً</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-lightbulb me-2"></i>
+                يمكنك تقييم الواجبات وإعطاء النقاط للطلاب بناءً على جودة إجاباتهم، مما يساعد على تحفيزهم وتشجيعهم على المشاركة.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function deleteAssignment(assignmentId, assignmentTitle) {
+        if (confirm(`هل أنت متأكد من حذف الواجب "${assignmentTitle}"؟ سيتم حذف جميع التسليمات المرتبطة به.`)) {
+            // Create a form to submit the delete request
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/teacher/classroom/{{ classroom.id }}/assignment/${assignmentId}/delete`;
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ classroom.name }} - مساعد المعلم - الحصة{% endblock %}
+
+{% block head_extra %}
+<script defer src="{{ url_for('static', filename='js/classroom.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" id="classroom-data" data-classroom-id="{{ classroom.id }}">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ classroom.name }}</h1>
+        <div>
+            <a href="{{ url_for('assistant.dashboard') }}" class="btn btn-sm btn-secondary me-2">
+                <i class="fas fa-arrow-right me-1"></i>العودة للوحة التحكم
+            </a>
+        </div>
+    </div>
+    
+    <!-- Classroom Info Card -->
+    <div class="row mb-4">
+        <div class="col-xl-8">
+            <div class="card shadow" style="border-top: 4px solid {{ classroom.color }};">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="text-primary">معلومات الفصل</h5>
+                            <div class="mb-2">
+                                <span class="text-muted">المادة:</span>
+                                <span class="ms-2">{{ classroom.subject }}</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="text-muted">المرحلة:</span>
+                                <span class="ms-2">{{ classroom.grade }}</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="text-muted">العام الدراسي:</span>
+                                <span class="ms-2">{{ classroom.academic_year }}</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="text-muted">المعلم:</span>
+                                <span class="ms-2">{{ teacher.name }}</span>
+                            </div>
+                            {% if classroom.description %}
+                                <div class="mb-2">
+                                    <span class="text-muted">الوصف:</span>
+                                    <p class="mt-1">{{ classroom.description }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 border-start">
+                            <h5 class="text-primary">كود الفصل</h5>
+                            <div class="classroom-code" id="classroom-code">{{ classroom.code }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">الروابط السريعة</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="btn btn-success btn-block">
+                                <i class="fas fa-tasks me-1"></i>الواجبات
+                            </a>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <a href="{{ url_for('assistant.students', classroom_id=classroom.id) }}" class="btn btn-primary btn-block">
+                                <i class="fas fa-user-graduate me-1"></i>الطلاب
+                            </a>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <a href="{{ url_for('assistant.chat', classroom_id=classroom.id) }}" class="btn btn-warning btn-block">
+                                <i class="fas fa-comments me-1"></i>المحادثة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Student Activity -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">نشاط الطلاب</h6>
+            <a href="{{ url_for('assistant.students', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">إدارة الطلاب</a>
+        </div>
+        <div class="card-body">
+            {% if enrollments %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>الطالب</th>
+                                <th>النقاط</th>
+                                <th>الحالة</th>
+                                <th>تاريخ الانضمام</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enrollment in enrollments %}
+                                <tr>
+                                    <td>
+                                        {{ enrollment.user.name }}
+                                        <span class="student-status student-inactive ms-2" 
+                                              data-student-id="{{ enrollment.user.id }}"></span>
+                                    </td>
+                                    <td>
+                                        <span class="points-badge">{{ enrollment.points }}</span>
+                                    </td>
+                                    <td>
+                                        {% if enrollment.is_active %}
+                                            <span class="badge badge-success">مفعل</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">معطل</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-user-graduate fa-3x text-gray-300 mb-3"></i>
+                    <h5>لا يوجد طلاب في الفصل بعد</h5>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Assignments Overview -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">الواجبات</h6>
+            <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">عرض الكل</a>
+        </div>
+        <div class="card-body">
+            {% if assignments %}
+                <div class="list-group">
+                    {% for assignment in assignments %}
+                        <a href="{{ url_for('assistant.assignment_submissions', classroom_id=classroom.id, assignment_id=assignment.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ assignment.title }}</h5>
+                                {% if assignment.due_date %}
+                                    <small class="text-danger">ينتهي: {{ assignment.due_date.strftime('%Y-%m-%d') }}</small>
+                                {% endif %}
+                            </div>
+                            <p class="mb-1">{{ assignment.description|truncate(100) }}</p>
+                            <div class="d-flex justify-content-between">
+                                <small>النقاط: {{ assignment.points }}</small>
+                                <small>
+                                    <span class="badge badge-info">
+                                        {{ assignment.submissions|length }} تسليم من أصل {{ enrollments|length }} طالب
+                                    </span>
+                                </small>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-tasks fa-3x text-gray-300 mb-2"></i>
+                    <p>لا توجد واجبات بعد</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Guide for Assistants -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">دليل المساعد</h6>
+        </div>
+        <div class="card-body">
+            <h5>مهام مساعد المعلم في الفصل:</h5>
+            <ul>
+                <li class="mb-2">تقييم واجبات الطلاب وتقديم الملاحظات</li>
+                <li class="mb-2">الإشراف على محادثات الفصل وإدارتها</li>
+                <li class="mb-2">متابعة نشاط الطلاب وتقدمهم</li>
+                <li class="mb-2">مساعدة المعلم في الإجابة على أسئلة الطلاب</li>
+            </ul>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <span>يمكنك تقييم واجبات الطلاب من خلال الضغط على الواجب المطلوب ثم الانتقال لصفحة المراجعة والتقييم.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Track active students
+        trackActiveStudents();
+    });
+</script>
+{% endblock %}

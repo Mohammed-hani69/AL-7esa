@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+
+{% block title %}لوحة تحكم المساعد - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">لوحة تحكم المساعد</h1>
+    
+    <!-- Assigned Classrooms -->
+    <div class="mb-4">
+        <h5 class="text-gray-800 mb-3">الفصول المُسندة إليك</h5>
+        
+        {% if classrooms %}
+            <div class="row">
+                {% for classroom in classrooms %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card classroom-card shadow-sm" style="border-top: 4px solid {{ classroom.color }};">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ classroom.name }}</h5>
+                                <p class="card-text">{{ classroom.subject }} | {{ classroom.grade }}</p>
+                                <div class="mb-3">
+                                    <span class="badge badge-{{ 'success' if classroom.is_free else 'primary' }}">
+                                        {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
+                                    </span>
+                                    <small class="text-muted">كود الفصل: {{ classroom.code }}</small>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">المعلم: {{ classroom.teacher.name }}</small>
+                                    <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">
+                                        عرض الفصل
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 bg-light rounded">
+                <i class="fas fa-user-friends fa-3x text-gray-400 mb-3"></i>
+                <h5>لم يتم تعيينك كمساعد في أي فصل بعد</h5>
+                <p>ستظهر هنا الفصول التي تمت إضافتك إليها كمساعد للمعلم</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">دور المساعد</h6>
+                </div>
+                <div class="card-body">
+                    <h5>مهام مساعد المعلم:</h5>
+                    <ul class="mb-4">
+                        <li>مساعدة المعلم في إدارة الفصل الدراسي</li>
+                        <li>تقييم واجبات الطلاب</li>
+                        <li>الإشراف على محادثات الفصل ومناقشات الطلاب</li>
+                        <li>متابعة الاختبارات والمسابقات</li>
+                        <li>الإجابة على استفسارات الطلاب</li>
+                    </ul>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span>لتصبح مساعداً في فصل جديد، يجب على المعلم إضافتك باستخدام رقم هاتفك المسجل في النظام.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">روابط سريعة</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6 mb-3">
+                            <a href="{{ url_for('auth.profile') }}" class="card bg-light text-center p-3 h-100">
+                                <i class="fas fa-user fa-2x text-primary mb-2"></i>
+                                <h6>الملف الشخصي</h6>
+                                <small class="text-muted">تحديث بياناتك الشخصية</small>
+                            </a>
+                        </div>
+                        
+                        {% if classrooms %}
+                        <div class="col-lg-6 mb-3">
+                            <a href="{{ url_for('assistant.classroom', classroom_id=classrooms[0].id) }}" class="card bg-light text-center p-3 h-100">
+                                <i class="fas fa-tasks fa-2x text-success mb-2"></i>
+                                <h6>الواجبات</h6>
+                                <small class="text-muted">تقييم واجبات الطلاب</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <a href="{{ url_for('assistant.students', classroom_id=classrooms[0].id) }}" class="card bg-light text-center p-3 h-100">
+                                <i class="fas fa-user-graduate fa-2x text-info mb-2"></i>
+                                <h6>الطلاب</h6>
+                                <small class="text-muted">متابعة الطلاب وأدائهم</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <a href="{{ url_for('assistant.chat', classroom_id=classrooms[0].id) }}" class="card bg-light text-center p-3 h-100">
+                                <i class="fas fa-comments fa-2x text-warning mb-2"></i>
+                                <h6>المحادثات</h6>
+                                <small class="text-muted">إدارة محادثات الفصل</small>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

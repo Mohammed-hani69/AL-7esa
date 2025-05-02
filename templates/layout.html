@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}الحصة - منصة تعليمية متكاملة{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
+    <!-- Bootstrap RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.rtl.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rtl.css') }}">
+    
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.20.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.20.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.20.0/firebase-database-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.20.0/firebase-messaging-compat.js"></script>
+    
+    <!-- Firebase config values from server -->
+    <input type="hidden" id="firebase-api-key" value="{{ firebase_api_key | default('') }}">
+    <input type="hidden" id="firebase-project-id" value="{{ firebase_project_id | default('') }}">
+    <input type="hidden" id="firebase-app-id" value="{{ firebase_app_id | default('') }}">
+    <input type="hidden" id="firebase-messaging-sender-id" value="{{ messaging_sender_id | default('') }}">
+    <input type="hidden" id="firebase-measurement-id" value="{{ measurement_id | default('') }}">
+    
+    <!-- Custom JavaScript -->
+    <script defer src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    {% if current_user.is_authenticated %}
+        <div class="wrapper">
+            <!-- Sidebar -->
+            {% include 'components/sidebar.html' %}
+            
+            <div class="content-wrapper">
+                <!-- Navbar -->
+                {% include 'components/navbar.html' %}
+                
+                <!-- Main Content -->
+                <div class="main-content container-fluid">
+                    <!-- Alerts Container -->
+                    <div id="alerts-container">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                        {{ message }}
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    
+                    <!-- Page Content -->
+                    {% block content %}{% endblock %}
+                </div>
+                
+                <!-- Footer -->
+                {% include 'components/footer.html' %}
+            </div>
+        </div>
+    {% else %}
+        <!-- Alerts Container for non-authenticated pages -->
+        <div id="alerts-container" class="container mt-3">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <!-- Page Content for non-authenticated users -->
+        {% block public_content %}{% endblock %}
+    {% endif %}
+    
+    <!-- Additional JavaScript based on the page -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>
