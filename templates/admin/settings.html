@@ -1,0 +1,147 @@
+{% extends "layout.html" %}
+
+{% block title %}الإعدادات - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <h1 class="h3 mb-4 text-gray-800">إعدادات النظام</h1>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <!-- Basic Settings -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">الإعدادات العامة</h6>
+                </div>
+                <div class="card-body">
+                    <form id="generalSettingsForm" action="{{ url_for('admin.settings') }}" method="post">
+                        <input type="hidden" name="type" value="general">
+                        <div class="form-group">
+                            <label for="siteName">اسم الموقع</label>
+                            <input type="text" class="form-control" id="siteName" name="site_name" value="{{ config.SITE_NAME }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="siteDescription">وصف الموقع</label>
+                            <textarea class="form-control" id="siteDescription" name="site_description" rows="3">{{ config.SITE_DESCRIPTION }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="contactEmail">البريد الإلكتروني للتواصل</label>
+                            <input type="email" class="form-control" id="contactEmail" name="contact_email" value="{{ config.CONTACT_EMAIL }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="contactPhone">رقم الهاتف للتواصل</label>
+                            <input type="text" class="form-control" id="contactPhone" name="contact_phone" value="{{ config.CONTACT_PHONE }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="mainCurrency">العملة الأساسية</label>
+                            <select class="form-control" id="mainCurrency" name="currency">
+                                <option value="SAR" {% if config.PAYMENT_CURRENCY == 'SAR' %}selected{% endif %}>ريال سعودي (SAR)</option>
+                                <option value="USD" {% if config.PAYMENT_CURRENCY == 'USD' %}selected{% endif %}>دولار أمريكي (USD)</option>
+                                <option value="AED" {% if config.PAYMENT_CURRENCY == 'AED' %}selected{% endif %}>درهم إماراتي (AED)</option>
+                                <option value="KWD" {% if config.PAYMENT_CURRENCY == 'KWD' %}selected{% endif %}>دينار كويتي (KWD)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">حفظ الإعدادات</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <!-- System Preferences -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">إعدادات النظام</h6>
+                </div>
+                <div class="card-body">
+                    <form id="systemSettingsForm" action="{{ url_for('admin.settings') }}" method="post">
+                        <input type="hidden" name="type" value="system">
+                        <div class="form-group">
+                            <label for="trialDays">عدد أيام الفترة التجريبية</label>
+                            <input type="number" class="form-control" id="trialDays" name="trial_days" value="{{ config.DEFAULT_TRIAL_DAYS }}" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="maxUploadSize">الحد الأقصى لحجم الملفات (ميجابايت)</label>
+                            <input type="number" class="form-control" id="maxUploadSize" name="max_upload_size" value="{{ config.MAX_CONTENT_LENGTH // (1024 * 1024) }}" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="enableRegistration" name="enable_registration" {% if config.ENABLE_REGISTRATION %}checked{% endif %}>
+                                <label class="custom-control-label" for="enableRegistration">تفعيل التسجيل للمستخدمين الجدد</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="enableMaintenance" name="enable_maintenance" {% if config.MAINTENANCE_MODE %}checked{% endif %}>
+                                <label class="custom-control-label" for="enableMaintenance">تفعيل وضع الصيانة</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">حفظ الإعدادات</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Firebase Configuration -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">إعدادات Firebase</h6>
+                </div>
+                <div class="card-body">
+                    <form id="firebaseSettingsForm" action="{{ url_for('admin.settings') }}" method="post">
+                        <input type="hidden" name="type" value="firebase">
+                        <div class="form-group">
+                            <label for="firebaseApiKey">API Key</label>
+                            <input type="text" class="form-control" id="firebaseApiKey" name="firebase_api_key" value="{{ config.FIREBASE_API_KEY }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="firebaseProjectId">Project ID</label>
+                            <input type="text" class="form-control" id="firebaseProjectId" name="firebase_project_id" value="{{ config.FIREBASE_PROJECT_ID }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="firebaseAppId">App ID</label>
+                            <input type="text" class="form-control" id="firebaseAppId" name="firebase_app_id" value="{{ config.FIREBASE_APP_ID }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary">حفظ الإعدادات</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Success message based on URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const saved = urlParams.get('saved');
+        if (saved === 'true') {
+            const alertsContainer = document.getElementById('alerts-container');
+            if (alertsContainer) {
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success alert-dismissible fade show';
+                alert.innerHTML = `
+                    تم حفظ الإعدادات بنجاح
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                `;
+                
+                alertsContainer.appendChild(alert);
+                
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => {
+                    alert.classList.remove('show');
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 150);
+                }, 5000);
+            }
+        }
+    });
+</script>
+{% endblock %}

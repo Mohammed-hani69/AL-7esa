@@ -1,0 +1,262 @@
+{% extends "layout.html" %}
+
+{% block title %}إدارة الفصول الدراسية - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <h1 class="h3 mb-2 text-gray-800">إدارة الفصول الدراسية</h1>
+    <p class="mb-4">عرض وإدارة جميع الفصول الدراسية في النظام.</p>
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">الفصول الدراسية</h6>
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    تصفية
+                </button>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="{{ url_for('admin.classrooms') }}">جميع الفصول</a>
+                    <a class="dropdown-item" href="{{ url_for('admin.classrooms', is_free='true') }}">الفصول المجانية</a>
+                    <a class="dropdown-item" href="{{ url_for('admin.classrooms', is_free='false') }}">الفصول المدفوعة</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{{ url_for('admin.classrooms', sort='newest') }}">الأحدث</a>
+                    <a class="dropdown-item" href="{{ url_for('admin.classrooms', sort='oldest') }}">الأقدم</a>
+                    <a class="dropdown-item" href="{{ url_for('admin.classrooms', sort='students') }}">الأكثر طلاباً</a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="classroomsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>الكود</th>
+                            <th>الاسم</th>
+                            <th>المادة</th>
+                            <th>المستوى</th>
+                            <th>المعلم</th>
+                            <th>عدد الطلاب</th>
+                            <th>النوع</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>الكود</th>
+                            <th>الاسم</th>
+                            <th>المادة</th>
+                            <th>المستوى</th>
+                            <th>المعلم</th>
+                            <th>عدد الطلاب</th>
+                            <th>النوع</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        {% for classroom in classrooms %}
+                        <tr>
+                            <td>{{ classroom.code }}</td>
+                            <td>{{ classroom.name }}</td>
+                            <td>{{ classroom.subject }}</td>
+                            <td>{{ classroom.grade }}</td>
+                            <td>{{ classroom.teacher.name }}</td>
+                            <td>{{ classroom.enrollments|length }}</td>
+                            <td>
+                                {% if classroom.is_free %}
+                                <span class="badge badge-success">مجاني</span>
+                                {% else %}
+                                <span class="badge badge-info">مدفوع ({{ classroom.price }} {{ currency }})</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ classroom.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        إجراءات
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#viewClassroomModal" data-id="{{ classroom.id }}">
+                                            <i class="fas fa-eye fa-sm fa-fw mr-2 text-gray-400"></i>
+                                            عرض التفاصيل
+                                        </a>
+                                        <a class="dropdown-item" href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" target="_blank">
+                                            <i class="fas fa-external-link-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                            الانتقال إلى الفصل
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item text-danger" href="#" onclick="confirmDelete({{ classroom.id }}, '{{ classroom.name }}')">
+                                            <i class="fas fa-trash fa-sm fa-fw mr-2 text-gray-400"></i>
+                                            حذف الفصل
+                                        </a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- View Classroom Modal -->
+<div class="modal fade" id="viewClassroomModal" tabindex="-1" role="dialog" aria-labelledby="viewClassroomModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewClassroomModalLabel">تفاصيل الفصل الدراسي</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center" id="classroomModalLoader">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">جاري التحميل...</span>
+                    </div>
+                </div>
+                <div id="classroomModalContent" class="d-none">
+                    <!-- Classroom details will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Classroom Form (Hidden) -->
+<form id="deleteClassroomForm" action="{{ url_for('admin.delete_classroom') }}" method="post" style="display: none;">
+    <input type="hidden" id="deleteClassroomId" name="classroom_id">
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#classroomsTable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
+            },
+            "order": [[ 7, "desc" ]]
+        });
+        
+        // Classroom Modal
+        $('#viewClassroomModal').on('show.bs.modal', function (event) {
+            const button = $(event.relatedTarget);
+            const classroomId = button.data('id');
+            const modal = $(this);
+            
+            $('#classroomModalLoader').removeClass('d-none');
+            $('#classroomModalContent').addClass('d-none');
+            
+            // Load classroom details via AJAX (sample - would be replaced with actual AJAX call)
+            setTimeout(() => {
+                $('#classroomModalLoader').addClass('d-none');
+                $('#classroomModalContent').removeClass('d-none').html(`
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <img src="/static/img/classroom-default.jpg" class="img-fluid rounded mb-3" style="max-width: 200px;">
+                            <h5>فصل الرياضيات المتقدمة</h5>
+                            <p class="badge badge-primary">المرحلة الثانوية</p>
+                        </div>
+                        <div class="col-md-8">
+                            <h6 class="font-weight-bold">معلومات الفصل</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th width="40%">كود الفصل</th>
+                                            <td>MATH101</td>
+                                        </tr>
+                                        <tr>
+                                            <th>المعلم</th>
+                                            <td>أ. محمد أحمد</td>
+                                        </tr>
+                                        <tr>
+                                            <th>المساعد</th>
+                                            <td>أ. سارة محمد</td>
+                                        </tr>
+                                        <tr>
+                                            <th>المادة</th>
+                                            <td>الرياضيات</td>
+                                        </tr>
+                                        <tr>
+                                            <th>العام الدراسي</th>
+                                            <td>2023-2024</td>
+                                        </tr>
+                                        <tr>
+                                            <th>النوع</th>
+                                            <td><span class="badge badge-info">مدفوع (100 ريال)</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <h6 class="font-weight-bold mt-4">الإحصائيات</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-left-primary shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">الطلاب</div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">24</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-users fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-left-success shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">المحتويات</div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">18</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-book fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6 class="font-weight-bold">وصف الفصل</h6>
+                            <p>هذا الفصل مخصص لدراسة الرياضيات المتقدمة للمرحلة الثانوية، ويشمل مواضيع التفاضل والتكامل والمعادلات التفاضلية وغيرها من المواضيع المتقدمة في الرياضيات.</p>
+                        </div>
+                    </div>
+                `);
+            }, 1000);
+        });
+    });
+    
+    // Confirm classroom deletion
+    function confirmDelete(classroomId, classroomName) {
+        if (confirm(`هل أنت متأكد من حذف الفصل "${classroomName}"؟\nسيتم حذف جميع المحتويات والمهام والاختبارات المرتبطة بهذا الفصل.`)) {
+            $('#deleteClassroomId').val(classroomId);
+            $('#deleteClassroomForm').submit();
+        }
+    }
+</script>
+{% endblock %}

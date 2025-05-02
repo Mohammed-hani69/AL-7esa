@@ -1,0 +1,218 @@
+{% extends "layout.html" %}
+
+{% block title %}إدارة الاشتراكات - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">إدارة الاشتراكات</h1>
+        <a href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#newPlanModal">
+            <i class="fas fa-plus fa-sm text-white-50"></i> إضافة باقة جديدة
+        </a>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Subscription Plans -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <!-- Card Header -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">باقات الاشتراك</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    {% for plan in plans %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title">{{ plan.name }}</h5>
+                                <div>
+                                    <a href="{{ url_for('admin.edit_subscription_plan', plan_id=plan.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('admin.delete_subscription_plan', plan_id=plan.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذه الباقة؟')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <h6 class="card-subtitle mb-2 text-muted">{{ plan.price }} ريال / {{ plan.duration_days }} يوم</h6>
+                            <p class="card-text">{{ plan.description }}</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-school"></i> عدد الفصول: {{ plan.max_classrooms }}
+                                    </small>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        {% if plan.has_chat %}
+                                        <i class="fas fa-check text-success"></i>
+                                        {% else %}
+                                        <i class="fas fa-times text-danger"></i>
+                                        {% endif %}
+                                        خدمة الدردشة
+                                    </small>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        {% if plan.allow_assistant %}
+                                        <i class="fas fa-check text-success"></i>
+                                        {% else %}
+                                        <i class="fas fa-times text-danger"></i>
+                                        {% endif %}
+                                        تعيين مساعد
+                                    </small>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        {% if plan.advanced_analytics %}
+                                        <i class="fas fa-check text-success"></i>
+                                        {% else %}
+                                        <i class="fas fa-times text-danger"></i>
+                                        {% endif %}
+                                        تحليلات متقدمة
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Subscriptions -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <!-- Card Header -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">الاشتراكات النشطة</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="activeSubsTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>المستخدم</th>
+                                    <th>الباقة</th>
+                                    <th>تاريخ البدء</th>
+                                    <th>تاريخ الانتهاء</th>
+                                    <th>النوع</th>
+                                    <th>الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in active_subs %}
+                                <tr>
+                                    <td>{{ sub.user.name }}</td>
+                                    <td>{{ sub.plan.name }}</td>
+                                    <td>{{ sub.start_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ sub.end_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% if sub.is_trial %}
+                                        <span class="badge badge-info">تجريبي</span>
+                                        {% else %}
+                                        <span class="badge badge-success">مدفوع</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if sub.end_date < now %}
+                                        <span class="badge badge-danger">منتهي</span>
+                                        {% else %}
+                                        <span class="badge badge-success">نشط</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Plan Modal -->
+<div class="modal fade" id="newPlanModal" tabindex="-1" role="dialog" aria-labelledby="newPlanModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newPlanModalLabel">إضافة باقة جديدة</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <form action="{{ url_for('admin.new_subscription_plan') }}" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="name">اسم الباقة</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">وصف الباقة</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="price">السعر (ريال)</label>
+                            <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="duration_days">المدة (أيام)</label>
+                            <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="max_classrooms">الحد الأقصى لعدد الفصول</label>
+                        <input type="number" class="form-control" id="max_classrooms" name="max_classrooms" min="1" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="has_chat" name="has_chat">
+                                <label class="custom-control-label" for="has_chat">خدمة الدردشة</label>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="allow_assistant" name="allow_assistant">
+                                <label class="custom-control-label" for="allow_assistant">تعيين مساعد</label>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="advanced_analytics" name="advanced_analytics">
+                                <label class="custom-control-label" for="advanced_analytics">تحليلات متقدمة</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#activeSubsTable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
+            },
+            "order": [[ 3, "asc" ]]
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,251 @@
+{% extends "layout.html" %}
+
+{% block title %}إدارة المستخدمين - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <h1 class="h3 mb-2 text-gray-800">إدارة المستخدمين</h1>
+    <p class="mb-4">إدارة جميع المستخدمين في النظام، مع إمكانية تعليق وتفعيل الحسابات.</p>
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">قائمة المستخدمين</h6>
+            <div class="btn-group">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    تصفية <i class="fas fa-filter"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item" href="{{ url_for('admin.users') }}">الجميع</a>
+                    <a class="dropdown-item" href="{{ url_for('admin.users', role='admin') }}">المدراء</a>
+                    <a class="dropdown-item" href="{{ url_for('admin.users', role='teacher') }}">المعلمون</a>
+                    <a class="dropdown-item" href="{{ url_for('admin.users', role='assistant') }}">المساعدون</a>
+                    <a class="dropdown-item" href="{{ url_for('admin.users', role='student') }}">الطلاب</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{{ url_for('admin.users', status='active') }}">النشطون</a>
+                    <a class="dropdown-item" href="{{ url_for('admin.users', status='inactive') }}">المعلقون</a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="usersTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>رقم الهاتف</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الدور</th>
+                            <th>تاريخ التسجيل</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>رقم الهاتف</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الدور</th>
+                            <th>تاريخ التسجيل</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.name }}</td>
+                            <td>{{ user.phone }}</td>
+                            <td>{{ user.email if user.email else 'غير متوفر' }}</td>
+                            <td>
+                                {% if user.role == 'admin' %}
+                                <span class="badge badge-danger">مدير</span>
+                                {% elif user.role == 'teacher' %}
+                                <span class="badge badge-primary">معلم</span>
+                                {% elif user.role == 'assistant' %}
+                                <span class="badge badge-info">مساعد</span>
+                                {% else %}
+                                <span class="badge badge-secondary">طالب</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="badge badge-success">نشط</span>
+                                {% else %}
+                                <span class="badge badge-danger">معلق</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        إجراءات
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#viewUserModal" data-id="{{ user.id }}">
+                                            <i class="fas fa-eye fa-sm fa-fw mr-2 text-gray-400"></i>
+                                            عرض التفاصيل
+                                        </a>
+                                        {% if user.role == 'student' %}
+                                        <a class="dropdown-item" href="{{ url_for('admin.assign_trial', user_id=user.id) }}">
+                                            <i class="fas fa-gift fa-sm fa-fw mr-2 text-gray-400"></i>
+                                            منح فترة تجريبية
+                                        </a>
+                                        {% endif %}
+                                        {% if user.is_active %}
+                                        <a class="dropdown-item text-danger" href="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" onclick="return confirm('هل أنت متأكد من تعليق حساب {{ user.name }}؟')">
+                                            <i class="fas fa-ban fa-sm fa-fw mr-2 text-gray-400"></i>
+                                            تعليق الحساب
+                                        </a>
+                                        {% else %}
+                                        <a class="dropdown-item text-success" href="{{ url_for('admin.toggle_user_status', user_id=user.id) }}">
+                                            <i class="fas fa-check fa-sm fa-fw mr-2 text-gray-400"></i>
+                                            تفعيل الحساب
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- View User Modal -->
+<div class="modal fade" id="viewUserModal" tabindex="-1" role="dialog" aria-labelledby="viewUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewUserModalLabel">تفاصيل المستخدم</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center" id="userModalLoader">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">جاري التحميل...</span>
+                    </div>
+                </div>
+                <div id="userModalContent" class="d-none">
+                    <!-- User details will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#usersTable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
+            },
+            "order": [[ 4, "desc" ]]
+        });
+        
+        // User Modal
+        $('#viewUserModal').on('show.bs.modal', function (event) {
+            const button = $(event.relatedTarget);
+            const userId = button.data('id');
+            const modal = $(this);
+            
+            $('#userModalLoader').removeClass('d-none');
+            $('#userModalContent').addClass('d-none');
+            
+            // Load user details via AJAX (sample)
+            setTimeout(() => {
+                $('#userModalLoader').addClass('d-none');
+                $('#userModalContent').removeClass('d-none').html(`
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <img src="/static/img/default-profile.png" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
+                            <h5>محمد أحمد</h5>
+                            <p class="badge badge-primary">معلم</p>
+                        </div>
+                        <div class="col-md-8">
+                            <h6 class="font-weight-bold">معلومات شخصية</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th width="40%">رقم الهاتف</th>
+                                            <td>+966 55 123 4567</td>
+                                        </tr>
+                                        <tr>
+                                            <th>البريد الإلكتروني</th>
+                                            <td>mohammed@example.com</td>
+                                        </tr>
+                                        <tr>
+                                            <th>العنوان</th>
+                                            <td>الرياض، المملكة العربية السعودية</td>
+                                        </tr>
+                                        <tr>
+                                            <th>تاريخ التسجيل</th>
+                                            <td>2023-05-15</td>
+                                        </tr>
+                                        <tr>
+                                            <th>حالة الحساب</th>
+                                            <td><span class="badge badge-success">نشط</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <h6 class="font-weight-bold mt-4">الإحصائيات</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-left-primary shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">الفصول</div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">5</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-school fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-left-success shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">الطلاب</div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">42</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-users fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }, 1000);
+        });
+    });
+</script>
+{% endblock %}

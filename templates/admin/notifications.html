@@ -1,0 +1,170 @@
+{% extends "layout.html" %}
+
+{% block title %}إدارة الإشعارات - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">إدارة الإشعارات</h1>
+        <a href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#sendNotificationModal">
+            <i class="fas fa-paper-plane fa-sm text-white-50"></i> إرسال إشعار جديد
+        </a>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-xl-12 col-lg-12">
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">سجل الإشعارات</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">خيارات:</div>
+                            <a class="dropdown-item" href="{{ url_for('admin.notifications') }}">عرض الكل</a>
+                            <a class="dropdown-item" href="{{ url_for('admin.notifications', type='admin') }}">إشعارات المدراء</a>
+                            <a class="dropdown-item" href="{{ url_for('admin.notifications', type='teacher') }}">إشعارات المعلمين</a>
+                            <a class="dropdown-item" href="{{ url_for('admin.notifications', type='student') }}">إشعارات الطلاب</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{{ url_for('admin.notifications', days=7) }}">آخر 7 أيام</a>
+                            <a class="dropdown-item" href="{{ url_for('admin.notifications', days=30) }}">آخر 30 يوم</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="notificationsTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>العنوان</th>
+                                    <th>الرسالة</th>
+                                    <th>المستخدم</th>
+                                    <th>الدور</th>
+                                    <th>تاريخ الإرسال</th>
+                                    <th>حالة القراءة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for notification in notifications %}
+                                <tr>
+                                    <td>{{ notification.title }}</td>
+                                    <td>{{ notification.message }}</td>
+                                    <td>{{ notification.user.name }}</td>
+                                    <td>
+                                        {% if notification.user.role == 'admin' %}
+                                        <span class="badge badge-danger">مدير</span>
+                                        {% elif notification.user.role == 'teacher' %}
+                                        <span class="badge badge-primary">معلم</span>
+                                        {% elif notification.user.role == 'assistant' %}
+                                        <span class="badge badge-info">مساعد</span>
+                                        {% else %}
+                                        <span class="badge badge-secondary">طالب</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        {% if notification.is_read %}
+                                        <span class="badge badge-success">تمت القراءة</span>
+                                        {% else %}
+                                        <span class="badge badge-warning">غير مقروءة</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Send Notification Modal -->
+<div class="modal fade" id="sendNotificationModal" tabindex="-1" role="dialog" aria-labelledby="sendNotificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sendNotificationModalLabel">إرسال إشعار جديد</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <form action="{{ url_for('admin.send_notification') }}" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="notificationTitle">عنوان الإشعار</label>
+                        <input type="text" class="form-control" id="notificationTitle" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="notificationMessage">نص الإشعار</label>
+                        <textarea class="form-control" id="notificationMessage" name="message" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="notificationType">إرسال إلى</label>
+                        <select class="form-control" id="notificationType" name="type" required>
+                            <option value="all">جميع المستخدمين</option>
+                            <option value="admin">المدراء فقط</option>
+                            <option value="teacher">المعلمين فقط</option>
+                            <option value="assistant">المساعدين فقط</option>
+                            <option value="student">الطلاب فقط</option>
+                        </select>
+                    </div>
+                    <div class="form-group userSelect d-none">
+                        <label for="userId">اختر مستخدم محدد</label>
+                        <select class="form-control" id="userId" name="user_id">
+                            <option value="">-- اختر مستخدم --</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.name }} ({{ user.phone }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="sendPush" name="send_push">
+                            <label class="custom-control-label" for="sendPush">إرسال كإشعار فوري (Firebase)</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">إرسال</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#notificationsTable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
+            },
+            "order": [[ 4, "desc" ]],
+            "pageLength": 25
+        });
+        
+        // Show user select when specific user option is selected
+        $('#notificationType').change(function() {
+            if ($(this).val() === 'specific') {
+                $('.userSelect').removeClass('d-none');
+            } else {
+                $('.userSelect').addClass('d-none');
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -60,7 +60,7 @@ window.initPhoneAuth = (phoneInputId, recaptchaContainerId, submitBtnId) => {
 };
 
 // Verify confirmation code
-const verifyCode = async (codeInputId, verifyBtnId) => {
+window.verifyCode = async (codeInputId, verifyBtnId) => {
   const codeInput = document.getElementById(codeInputId);
   const verifyBtn = document.getElementById(verifyBtnId);
   
@@ -100,7 +100,7 @@ const verifyCode = async (codeInputId, verifyBtnId) => {
 };
 
 // Verify token with server
-const verifyTokenWithServer = async (idToken) => {
+window.verifyTokenWithServer = async (idToken) => {
   try {
     const response = await fetch('/auth/verify-token', {
       method: 'POST',
@@ -131,7 +131,7 @@ const verifyTokenWithServer = async (idToken) => {
 };
 
 // Logout function
-const logout = async () => {
+window.logout = async () => {
   try {
     // Initialize Firebase if not already done
     initFirebase();
