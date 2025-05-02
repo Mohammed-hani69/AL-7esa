@@ -53,6 +53,19 @@ def dashboard():
                            upcoming_assignments=upcoming_assignments,
                            upcoming_quizzes=upcoming_quizzes)
 
+@student_bp.route('/classrooms')
+@login_required
+@student_required
+def classrooms():
+    # Get student's enrolled classrooms
+    enrollments = ClassroomEnrollment.query.filter_by(
+        user_id=current_user.id, 
+        is_active=True
+    ).all()
+    
+    return render_template('student/classrooms.html',
+                           enrollments=enrollments)
+
 @student_bp.route('/join', methods=['GET', 'POST'])
 @login_required
 @student_required

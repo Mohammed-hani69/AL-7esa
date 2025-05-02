@@ -1,0 +1,57 @@
+{% extends 'student/layout.html' %}
+
+{% block title %}الفصول الدراسية{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">الفصول الدراسية</h1>
+        <a href="{{ url_for('student.join_classroom') }}" class="btn btn-primary">
+            <i class="fas fa-plus ml-1"></i> انضمام إلى فصل
+        </a>
+    </div>
+    
+    {% if enrollments %}
+        <div class="row">
+            {% for enrollment in enrollments %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm" {% if enrollment.classroom.color %}style="border-top: 3px solid {{ enrollment.classroom.color }};"{% endif %}>
+                        {% if enrollment.classroom.image %}
+                            <img src="{{ enrollment.classroom.image }}" class="card-img-top" alt="{{ enrollment.classroom.name }}">
+                        {% else %}
+                            <div class="classroom-banner" style="height: 120px; background-color: {{ enrollment.classroom.color|default('#6c757d') }};">
+                                <h5 class="text-white text-center py-5">{{ enrollment.classroom.subject }}</h5>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body">
+                            <h5 class="card-title">{{ enrollment.classroom.name }}</h5>
+                            <p class="card-text text-muted mb-1">{{ enrollment.classroom.subject }}</p>
+                            <p class="card-text small">
+                                <span class="badge badge-primary">{{ enrollment.classroom.grade }}</span>
+                                <span class="badge badge-secondary">{{ enrollment.classroom.academic_year }}</span>
+                            </p>
+                            <p class="card-text mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-user ml-1"></i> المعلم: {{ enrollment.classroom.teacher.name }}
+                                </small>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <a href="{{ url_for('student.classroom', classroom_id=enrollment.classroom.id) }}" class="btn btn-sm btn-outline-primary">دخول الفصل</a>
+                                <span class="text-success">
+                                    <i class="fas fa-award ml-1"></i> {{ enrollment.points }} نقطة
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle ml-1"></i>
+            لم تنضم بعد إلى أي فصل دراسي. استخدم زر "انضمام إلى فصل" للبدء.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
