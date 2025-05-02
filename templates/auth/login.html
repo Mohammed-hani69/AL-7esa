@@ -126,8 +126,8 @@
         });
         
         // Initialize phone auth (using the global function from auth.js)
-        if (typeof initPhoneAuth === 'function') {
-            initPhoneAuth('phone', 'recaptcha-container', 'auth-submit-btn');
+        if (window.initPhoneAuth) {
+            window.initPhoneAuth('phone', 'recaptcha-container', 'auth-submit-btn');
         }
     });
 </script>

@@ -1,7 +1,8 @@
 // Auth related functionality
 
 // Initialize phone authentication
-const initPhoneAuth = (phoneInputId, recaptchaContainerId, submitBtnId) => {
+// Using window object to declare globally
+window.initPhoneAuth = (phoneInputId, recaptchaContainerId, submitBtnId) => {
   const phoneInput = document.getElementById(phoneInputId);
   const submitBtn = document.getElementById(submitBtnId);
   
