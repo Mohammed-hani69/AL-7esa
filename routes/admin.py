@@ -34,14 +34,22 @@ def dashboard():
     # Get recent payments
     recent_payments = Payment.query.order_by(Payment.created_at.desc()).limit(10).all()
     
-    return render_template('dashboard/admin.html',
-                           users_count=users_count,
-                           teachers_count=teachers_count,
-                           students_count=students_count,
-                           classrooms_count=classrooms_count,
-                           active_subscriptions=active_subscriptions,
+    # Sample data for enrollment chart
+    now = datetime.utcnow()
+    enrollment_dates = [(now - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(30, 0, -1)]
+    enrollment_counts = [0] * 30  # Will be populated with actual data in a real implementation
+    
+    return render_template('admin/dashboard.html',
+                           user_count=users_count,
+                           teacher_count=teachers_count,
+                           student_count=students_count,
+                           classroom_count=classrooms_count,
+                           subscription_count=active_subscriptions,
                            recent_users=recent_users,
-                           recent_payments=recent_payments)
+                           recent_payments=recent_payments,
+                           enrollment_dates=enrollment_dates,
+                           enrollment_counts=enrollment_counts,
+                           revenue=0)
 
 @admin_bp.route('/users')
 @login_required

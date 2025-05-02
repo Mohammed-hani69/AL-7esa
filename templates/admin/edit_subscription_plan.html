@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ 'تعديل باقة اشتراك' if plan else 'إضافة باقة اشتراك جديدة' }} - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <h1 class="h3 mb-4 text-gray-800">{{ 'تعديل باقة اشتراك' if plan else 'إضافة باقة اشتراك جديدة' }}</h1>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">{{ plan.name if plan else 'باقة جديدة' }}</h6>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('admin.edit_subscription_plan', plan_id=plan.id) if plan else url_for('admin.new_subscription_plan') }}" method="post">
+                        <div class="form-group">
+                            <label for="name">اسم الباقة</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ plan.name if plan else '' }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">وصف الباقة</label>
+                            <textarea class="form-control" id="description" name="description" rows="3">{{ plan.description if plan else '' }}</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="price">السعر (ريال)</label>
+                                <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" value="{{ plan.price if plan else '0.00' }}" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="duration_days">المدة (أيام)</label>
+                                <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" value="{{ plan.duration_days if plan else '30' }}" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="max_classrooms">الحد الأقصى لعدد الفصول</label>
+                            <input type="number" class="form-control" id="max_classrooms" name="max_classrooms" min="1" value="{{ plan.max_classrooms if plan else '1' }}" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="has_chat" name="has_chat" {% if plan and plan.has_chat %}checked{% endif %}>
+                                    <label class="custom-control-label" for="has_chat">خدمة الدردشة</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="allow_assistant" name="allow_assistant" {% if plan and plan.allow_assistant %}checked{% endif %}>
+                                    <label class="custom-control-label" for="allow_assistant">تعيين مساعد</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="advanced_analytics" name="advanced_analytics" {% if plan and plan.advanced_analytics %}checked{% endif %}>
+                                    <label class="custom-control-label" for="advanced_analytics">تحليلات متقدمة</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-10">
+                                <button type="submit" class="btn btn-primary">حفظ</button>
+                                <a href="{{ url_for('admin.subscriptions') }}" class="btn btn-secondary">إلغاء</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">معلومات</h6>
+                </div>
+                <div class="card-body">
+                    <p>يمكنك تعديل باقات الاشتراك بما يتناسب مع احتياجات المستخدمين.</p>
+                    <p>الميزات المتاحة:</p>
+                    <ul>
+                        <li><strong>خدمة الدردشة:</strong> تتيح للمعلمين والطلاب التواصل عبر الدردشة داخل الفصل.</li>
+                        <li><strong>تعيين مساعد:</strong> تتيح للمعلم تعيين مساعد له في الفصل.</li>
+                        <li><strong>تحليلات متقدمة:</strong> توفر إحصائيات وتحليلات متقدمة عن أداء الطلاب.</li>
+                    </ul>
+                    {% if plan %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> تم إنشاء هذه الباقة بتاريخ {{ plan.created_at.strftime('%Y-%m-%d') }}
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> تعديل الباقة لن يؤثر على الاشتراكات النشطة الحالية.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
