@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}تعديل باقة اشتراك - الحصة{% endblock %}
+{% block title %}إضافة باقة اشتراك جديدة - الحصة{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,48 +8,48 @@
         <div class="col-xl-8">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">{% if plan %}تعديل باقة "{{ plan.name }}"{% else %}إضافة باقة اشتراك جديدة{% endif %}</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">إضافة باقة اشتراك جديدة</h6>
                 </div>
                 <div class="card-body">
-                    <form action="{% if plan %}{{ url_for('admin.edit_subscription_plan', plan_id=plan.id) }}{% else %}{{ url_for('admin.new_subscription_plan') }}{% endif %}" method="post">
+                    <form action="{{ url_for('admin.new_subscription_plan') }}" method="post">
                         <div class="form-group">
                             <label for="name">اسم الباقة <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" name="name" value="{{ plan.name if plan else '' }}" required>
+                            <input type="text" class="form-control" id="name" name="name" required>
                         </div>
                         <div class="form-group">
                             <label for="description">وصف الباقة</label>
-                            <textarea class="form-control" id="description" name="description" rows="3">{{ plan.description if plan else '' }}</textarea>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="price">السعر (ريال) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" value="{{ plan.price if plan else '0' }}" required>
+                                <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" required>
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="duration_days">المدة (أيام) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" value="{{ plan.duration_days if plan else 30 }}" required>
+                                <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" value="30" required>
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="max_classrooms">الحد الأقصى لعدد الفصول <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="max_classrooms" name="max_classrooms" min="1" value="{{ plan.max_classrooms if plan else 5 }}" required>
+                            <input type="number" class="form-control" id="max_classrooms" name="max_classrooms" min="1" value="5" required>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-4">
                                 <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="has_chat" name="has_chat" {% if plan and plan.has_chat %}checked{% endif %}>
+                                    <input type="checkbox" class="custom-control-input" id="has_chat" name="has_chat">
                                     <label class="custom-control-label" for="has_chat">خدمة الدردشة</label>
                                 </div>
                             </div>
                             <div class="form-group col-md-4">
                                 <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="allow_assistant" name="allow_assistant" {% if plan and plan.allow_assistant %}checked{% endif %}>
+                                    <input type="checkbox" class="custom-control-input" id="allow_assistant" name="allow_assistant">
                                     <label class="custom-control-label" for="allow_assistant">تعيين مساعد</label>
                                 </div>
                             </div>
                             <div class="form-group col-md-4">
                                 <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="advanced_analytics" name="advanced_analytics" {% if plan and plan.advanced_analytics %}checked{% endif %}>
+                                    <input type="checkbox" class="custom-control-input" id="advanced_analytics" name="advanced_analytics">
                                     <label class="custom-control-label" for="advanced_analytics">تحليلات متقدمة</label>
                                 </div>
                             </div>

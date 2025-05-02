@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block title %}تأكيد حذف الفصل - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">تأكيد حذف الفصل</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+                        <h4 class="mb-3">هل أنت متأكد من حذف هذا الفصل؟</h4>
+                        <p>أنت على وشك حذف الفصل الدراسي <strong>{{ classroom.name }}</strong>.</p>
+                        <div class="alert alert-danger">
+                            <p>هذا الإجراء لا يمكن التراجع عنه وسيؤدي إلى:</p>
+                            <ul class="text-right mb-0">
+                                <li>حذف جميع المحتويات الدراسية المرتبطة بالفصل</li>
+                                <li>حذف جميع الواجبات والاختبارات والتسليمات</li>
+                                <li>حذف جميع سجلات الطلاب المسجلين في الفصل</li>
+                                <li>حذف جميع المحادثات ضمن الفصل</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <form action="{{ url_for('admin.delete_classroom') }}" method="post">
+                        <input type="hidden" name="classroom_id" value="{{ classroom.id }}">
+                        <div class="form-group text-center">
+                            <a href="{{ url_for('admin.classrooms') }}" class="btn btn-secondary mr-2">
+                                <i class="fas fa-times"></i> إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> تأكيد الحذف
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -114,7 +114,10 @@ def subscriptions():
     # Get active subscriptions
     active_subs = Subscription.query.filter(Subscription.end_date > datetime.utcnow()).order_by(Subscription.start_date.desc()).all()
     
-    return render_template('admin/subscriptions.html', plans=plans, active_subs=active_subs)
+    # Get current time for template
+    now = datetime.utcnow()
+    
+    return render_template('admin/subscriptions.html', plans=plans, active_subs=active_subs, now=now)
 
 @admin_bp.route('/subscription_plan/new', methods=['GET', 'POST'])
 @login_required
@@ -349,7 +352,35 @@ def classrooms():
     # Get all teachers for the filter dropdown
     teachers = User.query.filter_by(role=Role.TEACHER).all()
     
-    return render_template('admin/classrooms.html', classrooms=classrooms, teachers=teachers)
+    return render_template('admin/classrooms.html', classrooms=classrooms, teachers=teachers, currency="ريال")
+
+@admin_bp.route('/classroom/<int:classroom_id>/confirm_delete')
+@login_required
+@admin_required
+def confirm_delete_classroom(classroom_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    return render_template('admin/delete_classroom_confirm.html', classroom=classroom)
+
+@admin_bp.route('/classroom/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_classroom():
+    classroom_id = request.form.get('classroom_id', type=int)
+    if not classroom_id:
+        flash('معرف الفصل غير صالح', 'danger')
+        return redirect(url_for('admin.classrooms'))
+    
+    classroom = Classroom.query.get_or_404(classroom_id)
+    
+    # Save the classroom name for the flash message
+    classroom_name = classroom.name
+    
+    # Delete the classroom (will cascade delete all related records)
+    db.session.delete(classroom)
+    db.session.commit()
+    
+    flash(f'تم حذف الفصل "{classroom_name}" بنجاح', 'success')
+    return redirect(url_for('admin.classrooms'))
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required

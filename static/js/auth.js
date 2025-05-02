@@ -148,7 +148,7 @@ window.logout = async () => {
 };
 
 // Show alert message
-const showAlert = (message, type = 'info') => {
+window.showAlert = (message, type = 'info') => {
   const alertsContainer = document.getElementById('alerts-container');
   if (!alertsContainer) return;
   

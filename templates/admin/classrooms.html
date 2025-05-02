@@ -89,7 +89,7 @@
                                             الانتقال إلى الفصل
                                         </a>
                                         <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item text-danger" href="#" onclick="confirmDelete({{ classroom.id }}, '{{ classroom.name }}')">
+                                        <a class="dropdown-item text-danger" href="{{ url_for('admin.confirm_delete_classroom', classroom_id=classroom.id) }}">
                                             <i class="fas fa-trash fa-sm fa-fw mr-2 text-gray-400"></i>
                                             حذف الفصل
                                         </a>
