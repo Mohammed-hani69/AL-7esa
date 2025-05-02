@@ -96,11 +96,13 @@ a:hover {
   flex: 1;
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .main-content {
   flex: 1;
   padding: 2rem;
+  margin-top: 4.5rem;
 }
 
 /* Sidebar */
@@ -123,6 +125,16 @@ a:hover {
 
 .sidebar-toggled .sidebar-brand-text {
   display: none;
+}
+
+@media (min-width: 769px) {
+  .wrapper {
+    padding-right: 250px;
+  }
+  
+  .sidebar-toggled .wrapper {
+    padding-right: 6.5rem;
+  }
 }
 
 .sidebar-brand {
@@ -731,6 +743,8 @@ input:checked + .slider:after {
   
   .topbar {
     right: 0;
+    left: 0;
+    width: 100%;
     position: relative;
   }
   
@@ -738,8 +752,13 @@ input:checked + .slider:after {
     right: 0;
   }
   
+  .wrapper {
+    padding-right: 0 !important;
+  }
+
   .main-content {
     padding: 1rem;
+    margin-top: 0;
   }
   
   .landing-hero h1 {
