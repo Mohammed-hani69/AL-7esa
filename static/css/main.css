@@ -101,8 +101,8 @@ a:hover {
 
 .main-content {
   flex: 1;
-  padding: 2rem;
-  margin-top: 4.5rem;
+  padding: 1.5rem;
+  margin-top: 3.5rem;
 }
 
 /* Sidebar */
@@ -115,7 +115,7 @@ a:hover {
   bottom: 0;
   right: 0;
   z-index: 100;
-  padding-top: 4.5rem;
+  padding-top: 3.5rem;
   transition: all 0.3s ease;
 }
 
@@ -180,7 +180,7 @@ a:hover {
 
 /* Topbar */
 .topbar {
-  height: 4.5rem;
+  height: 3.5rem;
   background-color: var(--header-bg);
   box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
   position: fixed;
