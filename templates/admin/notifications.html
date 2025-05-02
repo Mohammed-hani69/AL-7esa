@@ -4,39 +4,22 @@
 
 {% block content %}
 <div class="container-fluid">
-
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">إدارة الإشعارات</h1>
-        <a href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#sendNotificationModal">
-            <i class="fas fa-paper-plane fa-sm text-white-50"></i> إرسال إشعار جديد
-        </a>
+        <button type="button" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#sendNotificationModal">
+            <i class="fas fa-bell fa-sm text-white-50"></i> إرسال إشعار جديد
+        </button>
     </div>
 
     <!-- Content Row -->
     <div class="row">
-        <div class="col-xl-12 col-lg-12">
+        <!-- Recent Notifications Table -->
+        <div class="col-12">
             <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">سجل الإشعارات</h6>
-                    <div class="dropdown no-arrow">
-                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                            <div class="dropdown-header">خيارات:</div>
-                            <a class="dropdown-item" href="{{ url_for('admin.notifications') }}">عرض الكل</a>
-                            <a class="dropdown-item" href="{{ url_for('admin.notifications', type='admin') }}">إشعارات المدراء</a>
-                            <a class="dropdown-item" href="{{ url_for('admin.notifications', type='teacher') }}">إشعارات المعلمين</a>
-                            <a class="dropdown-item" href="{{ url_for('admin.notifications', type='student') }}">إشعارات الطلاب</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{{ url_for('admin.notifications', days=7) }}">آخر 7 أيام</a>
-                            <a class="dropdown-item" href="{{ url_for('admin.notifications', days=30) }}">آخر 30 يوم</a>
-                        </div>
-                    </div>
+                    <h6 class="m-0 font-weight-bold text-primary">الإشعارات الأخيرة</h6>
                 </div>
-                <!-- Card Body -->
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="notificationsTable" width="100%" cellspacing="0">
@@ -44,35 +27,23 @@
                                 <tr>
                                     <th>العنوان</th>
                                     <th>الرسالة</th>
-                                    <th>المستخدم</th>
-                                    <th>الدور</th>
+                                    <th>المستلم</th>
                                     <th>تاريخ الإرسال</th>
-                                    <th>حالة القراءة</th>
+                                    <th>الحالة</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for notification in notifications %}
                                 <tr>
                                     <td>{{ notification.title }}</td>
-                                    <td>{{ notification.message }}</td>
+                                    <td>{{ notification.message|truncate(100) }}</td>
                                     <td>{{ notification.user.name }}</td>
-                                    <td>
-                                        {% if notification.user.role == 'admin' %}
-                                        <span class="badge badge-danger">مدير</span>
-                                        {% elif notification.user.role == 'teacher' %}
-                                        <span class="badge badge-primary">معلم</span>
-                                        {% elif notification.user.role == 'assistant' %}
-                                        <span class="badge badge-info">مساعد</span>
-                                        {% else %}
-                                        <span class="badge badge-secondary">طالب</span>
-                                        {% endif %}
-                                    </td>
                                     <td>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                     <td>
                                         {% if notification.is_read %}
-                                        <span class="badge badge-success">تمت القراءة</span>
+                                        <span class="badge badge-success">مقروء</span>
                                         {% else %}
-                                        <span class="badge badge-warning">غير مقروءة</span>
+                                        <span class="badge badge-warning">غير مقروء</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -85,11 +56,85 @@
         </div>
     </div>
 
+    <!-- Statistics Row -->
+    <div class="row">
+        <!-- Total Notifications Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                إجمالي الإشعارات</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ notifications|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bell fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unread Notifications Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                إشعارات غير مقروءة</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ notifications|selectattr('is_read', 'equalto', false)|list|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bell-slash fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Notifications Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                إشعارات اليوم</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ notifications|selectattr('created_at', 'ge', now.replace(hour=0, minute=0, second=0))|list|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recipient Types Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                فئات المستلمين</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">4</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Send Notification Modal -->
 <div class="modal fade" id="sendNotificationModal" tabindex="-1" role="dialog" aria-labelledby="sendNotificationModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="sendNotificationModalLabel">إرسال إشعار جديد</h5>
@@ -100,42 +145,67 @@
             <form action="{{ url_for('admin.send_notification') }}" method="post">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="notificationTitle">عنوان الإشعار</label>
-                        <input type="text" class="form-control" id="notificationTitle" name="title" required>
+                        <label for="title">عنوان الإشعار <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" required>
                     </div>
                     <div class="form-group">
-                        <label for="notificationMessage">نص الإشعار</label>
-                        <textarea class="form-control" id="notificationMessage" name="message" rows="4" required></textarea>
+                        <label for="message">نص الإشعار <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="notificationType">إرسال إلى</label>
-                        <select class="form-control" id="notificationType" name="type" required>
-                            <option value="all">جميع المستخدمين</option>
-                            <option value="admin">المدراء فقط</option>
-                            <option value="teacher">المعلمين فقط</option>
-                            <option value="assistant">المساعدين فقط</option>
-                            <option value="student">الطلاب فقط</option>
+                        <label>المستلمون <span class="text-danger">*</span></label>
+                        <div class="custom-control custom-radio">
+                            <input type="radio" id="recipient_all" name="recipient_type" value="all" class="custom-control-input" checked>
+                            <label class="custom-control-label" for="recipient_all">جميع المستخدمين</label>
+                        </div>
+                        <div class="custom-control custom-radio">
+                            <input type="radio" id="recipient_role" name="recipient_type" value="role" class="custom-control-input">
+                            <label class="custom-control-label" for="recipient_role">حسب الصلاحية</label>
+                        </div>
+                        <div class="custom-control custom-radio">
+                            <input type="radio" id="recipient_user" name="recipient_type" value="user" class="custom-control-input">
+                            <label class="custom-control-label" for="recipient_user">مستخدم محدد</label>
+                        </div>
+                        <div class="custom-control custom-radio">
+                            <input type="radio" id="recipient_phone" name="recipient_type" value="phone" class="custom-control-input">
+                            <label class="custom-control-label" for="recipient_phone">رقم هاتف محدد</label>
+                        </div>
+                    </div>
+                    
+                    <!-- Role Selection (Hidden by default) -->
+                    <div class="form-group role-options" style="display: none;">
+                        <label for="role">اختر الصلاحية</label>
+                        <select class="form-control" id="role" name="role">
+                            <option value="student">طالب</option>
+                            <option value="teacher">معلم</option>
+                            <option value="assistant">مساعد</option>
+                            <option value="admin">مسؤول</option>
                         </select>
                     </div>
-                    <div class="form-group userSelect d-none">
-                        <label for="userId">اختر مستخدم محدد</label>
-                        <select class="form-control" id="userId" name="user_id">
+                    
+                    <!-- User Selection (Hidden by default) -->
+                    <div class="form-group user-options" style="display: none;">
+                        <label for="user_id">اختر المستخدم</label>
+                        <select class="form-control" id="user_id" name="user_id">
+                            <!-- This would be populated dynamically -->
                             <option value="">-- اختر مستخدم --</option>
                             {% for user in users %}
                             <option value="{{ user.id }}">{{ user.name }} ({{ user.phone }})</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="form-group">
-                        <div class="custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" id="sendPush" name="send_push">
-                            <label class="custom-control-label" for="sendPush">إرسال كإشعار فوري (Firebase)</label>
-                        </div>
+                    
+                    <!-- Phone Input (Hidden by default) -->
+                    <div class="form-group phone-options" style="display: none;">
+                        <label for="phone">رقم الهاتف</label>
+                        <input type="text" class="form-control" id="phone" name="phone" placeholder="مثال: 0555555555">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-primary">إرسال</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> إرسال
+                    </button>
                 </div>
             </form>
         </div>
@@ -153,16 +223,19 @@
             language: {
                 url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
             },
-            "order": [[ 4, "desc" ]],
-            "pageLength": 25
+            "order": [[ 3, "desc" ]]
         });
         
-        // Show user select when specific user option is selected
-        $('#notificationType').change(function() {
-            if ($(this).val() === 'specific') {
-                $('.userSelect').removeClass('d-none');
-            } else {
-                $('.userSelect').addClass('d-none');
+        // Show/hide recipient options based on selection
+        $('input[name="recipient_type"]').change(function() {
+            $('.role-options, .user-options, .phone-options').hide();
+            
+            if ($(this).val() === 'role') {
+                $('.role-options').show();
+            } else if ($(this).val() === 'user') {
+                $('.user-options').show();
+            } else if ($(this).val() === 'phone') {
+                $('.phone-options').show();
             }
         });
     });

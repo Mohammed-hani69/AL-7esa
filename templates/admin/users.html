@@ -2,124 +2,237 @@
 
 {% block title %}إدارة المستخدمين - الحصة{% endblock %}
 
+{% block styles %}
+<link href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
-
     <!-- Page Heading -->
-    <h1 class="h3 mb-2 text-gray-800">إدارة المستخدمين</h1>
-    <p class="mb-4">إدارة جميع المستخدمين في النظام، مع إمكانية تعليق وتفعيل الحسابات.</p>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">إدارة المستخدمين</h1>
+        <a href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#addUserModal">
+            <i class="fas fa-user-plus fa-sm text-white-50"></i> إضافة مستخدم
+        </a>
+    </div>
 
-    <!-- DataTales Example -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">قائمة المستخدمين</h6>
-            <div class="btn-group">
-                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    تصفية <i class="fas fa-filter"></i>
-                </button>
-                <div class="dropdown-menu dropdown-menu-right">
-                    <a class="dropdown-item" href="{{ url_for('admin.users') }}">الجميع</a>
-                    <a class="dropdown-item" href="{{ url_for('admin.users', role='admin') }}">المدراء</a>
-                    <a class="dropdown-item" href="{{ url_for('admin.users', role='teacher') }}">المعلمون</a>
-                    <a class="dropdown-item" href="{{ url_for('admin.users', role='assistant') }}">المساعدون</a>
-                    <a class="dropdown-item" href="{{ url_for('admin.users', role='student') }}">الطلاب</a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="{{ url_for('admin.users', status='active') }}">النشطون</a>
-                    <a class="dropdown-item" href="{{ url_for('admin.users', status='inactive') }}">المعلقون</a>
+    <!-- Users Filters Row -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">تصفية المستخدمين</h6>
                 </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" id="usersTable" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>الاسم</th>
-                            <th>رقم الهاتف</th>
-                            <th>البريد الإلكتروني</th>
-                            <th>الدور</th>
-                            <th>تاريخ التسجيل</th>
-                            <th>الحالة</th>
-                            <th>الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tfoot>
-                        <tr>
-                            <th>الاسم</th>
-                            <th>رقم الهاتف</th>
-                            <th>البريد الإلكتروني</th>
-                            <th>الدور</th>
-                            <th>تاريخ التسجيل</th>
-                            <th>الحالة</th>
-                            <th>الإجراءات</th>
-                        </tr>
-                    </tfoot>
-                    <tbody>
-                        {% for user in users %}
-                        <tr>
-                            <td>{{ user.name }}</td>
-                            <td>{{ user.phone }}</td>
-                            <td>{{ user.email if user.email else 'غير متوفر' }}</td>
-                            <td>
-                                {% if user.role == 'admin' %}
-                                <span class="badge badge-danger">مدير</span>
-                                {% elif user.role == 'teacher' %}
-                                <span class="badge badge-primary">معلم</span>
-                                {% elif user.role == 'assistant' %}
-                                <span class="badge badge-info">مساعد</span>
-                                {% else %}
-                                <span class="badge badge-secondary">طالب</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
-                            <td>
-                                {% if user.is_active %}
-                                <span class="badge badge-success">نشط</span>
-                                {% else %}
-                                <span class="badge badge-danger">معلق</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        إجراءات
-                                    </button>
-                                    <div class="dropdown-menu dropdown-menu-right">
-                                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#viewUserModal" data-id="{{ user.id }}">
-                                            <i class="fas fa-eye fa-sm fa-fw mr-2 text-gray-400"></i>
-                                            عرض التفاصيل
-                                        </a>
-                                        {% if user.role == 'student' %}
-                                        <a class="dropdown-item" href="{{ url_for('admin.assign_trial', user_id=user.id) }}">
-                                            <i class="fas fa-gift fa-sm fa-fw mr-2 text-gray-400"></i>
-                                            منح فترة تجريبية
-                                        </a>
-                                        {% endif %}
-                                        {% if user.is_active %}
-                                        <a class="dropdown-item text-danger" href="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" onclick="return confirm('هل أنت متأكد من تعليق حساب {{ user.name }}؟')">
-                                            <i class="fas fa-ban fa-sm fa-fw mr-2 text-gray-400"></i>
-                                            تعليق الحساب
-                                        </a>
-                                        {% else %}
-                                        <a class="dropdown-item text-success" href="{{ url_for('admin.toggle_user_status', user_id=user.id) }}">
-                                            <i class="fas fa-check fa-sm fa-fw mr-2 text-gray-400"></i>
-                                            تفعيل الحساب
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div class="card-body">
+                    <form action="{{ url_for('admin.users') }}" method="get">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="role">الصلاحية</label>
+                                <select class="form-control" id="role" name="role">
+                                    <option value="">الكل</option>
+                                    <option value="student" {% if role == 'student' %}selected{% endif %}>طالب</option>
+                                    <option value="teacher" {% if role == 'teacher' %}selected{% endif %}>معلم</option>
+                                    <option value="assistant" {% if role == 'assistant' %}selected{% endif %}>مساعد</option>
+                                    <option value="admin" {% if role == 'admin' %}selected{% endif %}>مسؤول</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="status">الحالة</label>
+                                <select class="form-control" id="status" name="status">
+                                    <option value="">الكل</option>
+                                    <option value="active" {% if status == 'active' %}selected{% endif %}>نشط</option>
+                                    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>معطل</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="search">بحث</label>
+                                <input type="text" class="form-control" id="search" name="search" placeholder="اسم، بريد إلكتروني، رقم هاتف..." value="{{ search }}">
+                            </div>
+                        </div>
+                        <div class="form-row justify-content-end">
+                            <div class="form-group col-md-3">
+                                <button type="submit" class="btn btn-primary btn-block">
+                                    <i class="fas fa-search"></i> بحث
+                                </button>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <a href="{{ url_for('admin.users') }}" class="btn btn-secondary btn-block">
+                                    <i class="fas fa-redo"></i> إعادة تعيين
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Users Table Row -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">قائمة المستخدمين</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="usersDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="usersDropdown">
+                            <div class="dropdown-header">إجراءات:</div>
+                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#exportUsersModal">
+                                <i class="fas fa-download fa-sm fa-fw mr-2 text-gray-400"></i>
+                                تصدير المستخدمين
+                            </a>
+                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#importUsersModal">
+                                <i class="fas fa-upload fa-sm fa-fw mr-2 text-gray-400"></i>
+                                استيراد المستخدمين
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#bulkActionsModal">
+                                <i class="fas fa-tasks fa-sm fa-fw mr-2 text-gray-400"></i>
+                                إجراءات جماعية
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="usersTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>البريد الإلكتروني</th>
+                                    <th>الصلاحية</th>
+                                    <th>تاريخ التسجيل</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users.items %}
+                                <tr>
+                                    <td>{{ user.name }}</td>
+                                    <td>{{ user.phone }}</td>
+                                    <td>{{ user.email or '-' }}</td>
+                                    <td>
+                                        {% if user.role == 'student' %}
+                                        <span class="badge badge-info">طالب</span>
+                                        {% elif user.role == 'teacher' %}
+                                        <span class="badge badge-primary">معلم</span>
+                                        {% elif user.role == 'assistant' %}
+                                        <span class="badge badge-success">مساعد</span>
+                                        {% elif user.role == 'admin' %}
+                                        <span class="badge badge-danger">مسؤول</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% if user.is_active %}
+                                        <span class="badge badge-success">نشط</span>
+                                        {% else %}
+                                        <span class="badge badge-secondary">معطل</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown no-arrow">
+                                            <a class="dropdown-toggle btn btn-sm btn-light" href="#" role="button" id="dropdownMenuLink{{ user.id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v fa-sm fa-fw"></i>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink{{ user.id }}">
+                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#viewUserModal" data-id="{{ user.id }}" data-name="{{ user.name }}">
+                                                    <i class="fas fa-eye fa-sm fa-fw mr-2 text-gray-400"></i>
+                                                    عرض التفاصيل
+                                                </a>
+                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#editUserModal" data-id="{{ user.id }}">
+                                                    <i class="fas fa-edit fa-sm fa-fw mr-2 text-gray-400"></i>
+                                                    تعديل
+                                                </a>
+                                                <div class="dropdown-divider"></div>
+                                                {% if user.role == 'teacher' %}
+                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#assignTrialModal" data-id="{{ user.id }}" data-name="{{ user.name }}">
+                                                    <i class="fas fa-gift fa-sm fa-fw mr-2 text-gray-400"></i>
+                                                    تعيين فترة تجريبية
+                                                </a>
+                                                {% endif %}
+                                                <a class="dropdown-item" href="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" onclick="return confirm('هل أنت متأكد من تغيير حالة المستخدم؟')">
+                                                    <i class="fas fa-{% if user.is_active %}ban{% else %}check{% endif %} fa-sm fa-fw mr-2 text-gray-400"></i>
+                                                    {% if user.is_active %}تعطيل{% else %}تفعيل{% endif %}
+                                                </a>
+                                                {% if user.role != 'admin' %}
+                                                <a class="dropdown-item text-danger" href="#" onclick="return confirm('هل أنت متأكد من حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء!')">
+                                                    <i class="fas fa-trash fa-sm fa-fw mr-2 text-gray-400"></i>
+                                                    حذف
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="d-flex justify-content-center mt-4">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {% if users.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin.users', page=users.prev_num, role=role, status=status, search=search) }}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for page_num in users.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                                    {% if page_num %}
+                                        {% if users.page == page_num %}
+                                        <li class="page-item active">
+                                            <a class="page-link" href="{{ url_for('admin.users', page=page_num, role=role, status=status, search=search) }}">{{ page_num }}</a>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.users', page=page_num, role=role, status=status, search=search) }}">{{ page_num }}</a>
+                                        </li>
+                                        {% endif %}
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#">...</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if users.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin.users', page=users.next_num, role=role, status=status, search=search) }}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- View User Modal -->
+<!-- User Details Modal -->
 <div class="modal fade" id="viewUserModal" tabindex="-1" role="dialog" aria-labelledby="viewUserModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -145,6 +258,36 @@
         </div>
     </div>
 </div>
+
+<!-- Assign Trial Modal -->
+<div class="modal fade" id="assignTrialModal" tabindex="-1" role="dialog" aria-labelledby="assignTrialModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assignTrialModalLabel">تعيين فترة تجريبية</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <form action="" method="post" id="assignTrialForm">
+                <div class="modal-body">
+                    <p class="mb-3">أنت على وشك تعيين فترة تجريبية للمستخدم <strong id="trialUserName"></strong>.</p>
+                    <div class="form-group">
+                        <label for="trial_days">مدة الفترة التجريبية (أيام)</label>
+                        <input type="number" class="form-control" id="trial_days" name="trial_days" value="14" min="1" max="30" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">تعيين</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Additional modals for adding, editing, importing, exporting users would go here -->
+
 {% endblock %}
 
 {% block scripts %}
@@ -152,91 +295,119 @@
 <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
 <script>
     $(document).ready(function() {
-        // Initialize DataTable
+        // Initialize the datatables
         $('#usersTable').DataTable({
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
-            },
-            "order": [[ 4, "desc" ]]
+            "paging": false,  // Disable default paging since we're using Flask-SQLAlchemy pagination
+            "ordering": true,
+            "info": false,
+            "searching": false,  // Disable default search since we have our own search form
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
+            }
         });
         
-        // User Modal
+        // View User Modal
         $('#viewUserModal').on('show.bs.modal', function (event) {
             const button = $(event.relatedTarget);
             const userId = button.data('id');
+            const userName = button.data('name');
             const modal = $(this);
+            
+            modal.find('.modal-title').text('تفاصيل المستخدم: ' + userName);
             
             $('#userModalLoader').removeClass('d-none');
             $('#userModalContent').addClass('d-none');
             
-            // Load user details via AJAX (sample)
+            // Load user details via AJAX (sample - would be replaced with actual AJAX call)
             setTimeout(() => {
                 $('#userModalLoader').addClass('d-none');
                 $('#userModalContent').removeClass('d-none').html(`
                     <div class="row">
                         <div class="col-md-4 text-center mb-3">
-                            <img src="/static/img/default-profile.png" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
-                            <h5>محمد أحمد</h5>
+                            <img src="/static/img/user-default.jpg" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
+                            <h5>${userName}</h5>
                             <p class="badge badge-primary">معلم</p>
                         </div>
                         <div class="col-md-8">
-                            <h6 class="font-weight-bold">معلومات شخصية</h6>
+                            <h6 class="font-weight-bold">معلومات المستخدم</h6>
                             <div class="table-responsive">
                                 <table class="table table-bordered">
                                     <tbody>
                                         <tr>
                                             <th width="40%">رقم الهاتف</th>
-                                            <td>+966 55 123 4567</td>
+                                            <td>+966555555555</td>
                                         </tr>
                                         <tr>
                                             <th>البريد الإلكتروني</th>
-                                            <td>mohammed@example.com</td>
-                                        </tr>
-                                        <tr>
-                                            <th>العنوان</th>
-                                            <td>الرياض، المملكة العربية السعودية</td>
+                                            <td>user@example.com</td>
                                         </tr>
                                         <tr>
                                             <th>تاريخ التسجيل</th>
-                                            <td>2023-05-15</td>
+                                            <td>2025-03-15</td>
                                         </tr>
                                         <tr>
-                                            <th>حالة الحساب</th>
-                                            <td><span class="badge badge-success">نشط</span></td>
+                                            <th>آخر تسجيل دخول</th>
+                                            <td>2025-05-01 14:30</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                             
-                            <h6 class="font-weight-bold mt-4">الإحصائيات</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="card border-left-primary shadow h-100 py-2">
-                                        <div class="card-body">
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col mr-2">
-                                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">الفصول</div>
-                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">5</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <i class="fas fa-school fa-2x text-gray-300"></i>
-                                                </div>
-                                            </div>
+                            <h6 class="font-weight-bold mt-4">اشتراكات المستخدم</h6>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> اشتراك فعال: <strong>الباقة الذهبية</strong>
+                                <br>
+                                <small>تاريخ الانتهاء: 2025-06-15</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">الفصول</h6>
+                            <div class="list-group">
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">الرياضيات المتقدمة</h6>
+                                        <small class="text-muted">5 طلاب</small>
+                                    </div>
+                                    <p class="mb-1">المرحلة الثانوية</p>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">الفيزياء</h6>
+                                        <small class="text-muted">8 طلاب</small>
+                                    </div>
+                                    <p class="mb-1">المرحلة الثانوية</p>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">الإحصائيات</h6>
+                            <div class="card border-left-primary shadow h-100 py-2 mb-3">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                عدد الفصول</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">2</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="card border-left-success shadow h-100 py-2">
-                                        <div class="card-body">
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col mr-2">
-                                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">الطلاب</div>
-                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">42</div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <i class="fas fa-users fa-2x text-gray-300"></i>
-                                                </div>
-                                            </div>
+                            </div>
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                إجمالي الطلاب</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">13</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-users fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -245,6 +416,20 @@
                     </div>
                 `);
             }, 1000);
+        });
+        
+        // Assign Trial Modal
+        $('#assignTrialModal').on('show.bs.modal', function (event) {
+            const button = $(event.relatedTarget);
+            const userId = button.data('id');
+            const userName = button.data('name');
+            const modal = $(this);
+            
+            modal.find('#trialUserName').text(userName);
+            
+            // Update the form action
+            const formAction = "{{ url_for('admin.assign_trial', user_id=0) }}".replace('0', userId);
+            modal.find('#assignTrialForm').attr('action', formAction);
         });
     });
 </script>

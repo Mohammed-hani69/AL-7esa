@@ -244,7 +244,13 @@ def notifications():
     # Get recent notifications
     recent_notifications = Notification.query.order_by(Notification.created_at.desc()).limit(50).all()
     
-    return render_template('admin/notifications.html', notifications=recent_notifications)
+    # Get all users for the notification form
+    users = User.query.order_by(User.name).all()
+    
+    # Get current time for template
+    now = datetime.utcnow()
+    
+    return render_template('admin/notifications.html', notifications=recent_notifications, users=users, now=now)
 
 @admin_bp.route('/send_notification', methods=['POST'])
 @login_required
@@ -393,4 +399,7 @@ def settings():
         flash('تم حفظ الإعدادات بنجاح', 'success')
         return redirect(url_for('admin.settings'))
     
-    return render_template('admin/settings.html')
+    # Get current time for template
+    now = datetime.utcnow()
+    
+    return render_template('admin/settings.html', now=now)

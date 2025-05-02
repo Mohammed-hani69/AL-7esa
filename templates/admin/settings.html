@@ -1,147 +1,211 @@
 {% extends "layout.html" %}
 
-{% block title %}الإعدادات - الحصة{% endblock %}
+{% block title %}إعدادات النظام - الحصة{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-
     <!-- Page Heading -->
-    <h1 class="h3 mb-4 text-gray-800">إعدادات النظام</h1>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">إعدادات النظام</h1>
+    </div>
 
+    <!-- Content Row -->
     <div class="row">
-        <div class="col-lg-6">
-            <!-- Basic Settings -->
+        <div class="col-xl-8">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">الإعدادات العامة</h6>
                 </div>
                 <div class="card-body">
-                    <form id="generalSettingsForm" action="{{ url_for('admin.settings') }}" method="post">
-                        <input type="hidden" name="type" value="general">
+                    <form action="{{ url_for('admin.settings') }}" method="post">
                         <div class="form-group">
-                            <label for="siteName">اسم الموقع</label>
-                            <input type="text" class="form-control" id="siteName" name="site_name" value="{{ config.SITE_NAME }}" required>
+                            <label for="system_name">اسم النظام</label>
+                            <input type="text" class="form-control" id="system_name" name="system_name" value="الحصة" required>
                         </div>
                         <div class="form-group">
-                            <label for="siteDescription">وصف الموقع</label>
-                            <textarea class="form-control" id="siteDescription" name="site_description" rows="3">{{ config.SITE_DESCRIPTION }}</textarea>
+                            <label for="system_description">وصف النظام</label>
+                            <textarea class="form-control" id="system_description" name="system_description" rows="3">منصة تعليمية متكاملة لإدارة العملية التعليمية بكفاءة</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="default_language">اللغة الافتراضية</label>
+                                <select class="form-control" id="default_language" name="default_language">
+                                    <option value="ar" selected>العربية</option>
+                                    <option value="en">الإنجليزية</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="default_currency">العملة الافتراضية</label>
+                                <select class="form-control" id="default_currency" name="default_currency">
+                                    <option value="SAR" selected>ريال سعودي (SAR)</option>
+                                    <option value="USD">دولار أمريكي (USD)</option>
+                                    <option value="EUR">يورو (EUR)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="trial_days">فترة التجربة المجانية (أيام)</label>
+                                <input type="number" class="form-control" id="trial_days" name="trial_days" value="14" min="0" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="max_file_size">الحد الأقصى لحجم الملفات (ميجابايت)</label>
+                                <input type="number" class="form-control" id="max_file_size" name="max_file_size" value="16" min="1" required>
+                            </div>
+                        </div>
+                        <hr>
+                        <h6 class="font-weight-bold mb-3">إعدادات المظهر</h6>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="primary_color">اللون الرئيسي</label>
+                                <input type="color" class="form-control" id="primary_color" name="primary_color" value="#4e73df">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="secondary_color">اللون الثانوي</label>
+                                <input type="color" class="form-control" id="secondary_color" name="secondary_color" value="#1cc88a">
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="contactEmail">البريد الإلكتروني للتواصل</label>
-                            <input type="email" class="form-control" id="contactEmail" name="contact_email" value="{{ config.CONTACT_EMAIL }}">
+                            <label for="logo_url">رابط الشعار</label>
+                            <input type="text" class="form-control" id="logo_url" name="logo_url" value="/static/img/logo.png">
+                        </div>
+                        <hr>
+                        <h6 class="font-weight-bold mb-3">إعدادات التواصل</h6>
+                        <div class="form-group">
+                            <label for="contact_email">البريد الإلكتروني للتواصل</label>
+                            <input type="email" class="form-control" id="contact_email" name="contact_email" value="support@alhesa.com">
                         </div>
                         <div class="form-group">
-                            <label for="contactPhone">رقم الهاتف للتواصل</label>
-                            <input type="text" class="form-control" id="contactPhone" name="contact_phone" value="{{ config.CONTACT_PHONE }}">
+                            <label for="contact_phone">رقم الهاتف للتواصل</label>
+                            <input type="text" class="form-control" id="contact_phone" name="contact_phone" value="+966 55 555 5555">
                         </div>
-                        <div class="form-group">
-                            <label for="mainCurrency">العملة الأساسية</label>
-                            <select class="form-control" id="mainCurrency" name="currency">
-                                <option value="SAR" {% if config.PAYMENT_CURRENCY == 'SAR' %}selected{% endif %}>ريال سعودي (SAR)</option>
-                                <option value="USD" {% if config.PAYMENT_CURRENCY == 'USD' %}selected{% endif %}>دولار أمريكي (USD)</option>
-                                <option value="AED" {% if config.PAYMENT_CURRENCY == 'AED' %}selected{% endif %}>درهم إماراتي (AED)</option>
-                                <option value="KWD" {% if config.PAYMENT_CURRENCY == 'KWD' %}selected{% endif %}>دينار كويتي (KWD)</option>
-                            </select>
+                        <div class="form-group text-center mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> حفظ الإعدادات
+                            </button>
                         </div>
-                        <button type="submit" class="btn btn-primary">حفظ الإعدادات</button>
                     </form>
                 </div>
             </div>
         </div>
-
-        <div class="col-lg-6">
-            <!-- System Preferences -->
+        <div class="col-xl-4">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">إعدادات النظام</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">إعدادات متقدمة</h6>
                 </div>
                 <div class="card-body">
-                    <form id="systemSettingsForm" action="{{ url_for('admin.settings') }}" method="post">
-                        <input type="hidden" name="type" value="system">
-                        <div class="form-group">
-                            <label for="trialDays">عدد أيام الفترة التجريبية</label>
-                            <input type="number" class="form-control" id="trialDays" name="trial_days" value="{{ config.DEFAULT_TRIAL_DAYS }}" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="maxUploadSize">الحد الأقصى لحجم الملفات (ميجابايت)</label>
-                            <input type="number" class="form-control" id="maxUploadSize" name="max_upload_size" value="{{ config.MAX_CONTENT_LENGTH // (1024 * 1024) }}" min="1" required>
-                        </div>
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="enableRegistration" name="enable_registration" {% if config.ENABLE_REGISTRATION %}checked{% endif %}>
-                                <label class="custom-control-label" for="enableRegistration">تفعيل التسجيل للمستخدمين الجدد</label>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="enableMaintenance" name="enable_maintenance" {% if config.MAINTENANCE_MODE %}checked{% endif %}>
-                                <label class="custom-control-label" for="enableMaintenance">تفعيل وضع الصيانة</label>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">حفظ الإعدادات</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Firebase Configuration -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">إعدادات Firebase</h6>
-                </div>
-                <div class="card-body">
-                    <form id="firebaseSettingsForm" action="{{ url_for('admin.settings') }}" method="post">
-                        <input type="hidden" name="type" value="firebase">
-                        <div class="form-group">
-                            <label for="firebaseApiKey">API Key</label>
-                            <input type="text" class="form-control" id="firebaseApiKey" name="firebase_api_key" value="{{ config.FIREBASE_API_KEY }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="firebaseProjectId">Project ID</label>
-                            <input type="text" class="form-control" id="firebaseProjectId" name="firebase_project_id" value="{{ config.FIREBASE_PROJECT_ID }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="firebaseAppId">App ID</label>
-                            <input type="text" class="form-control" id="firebaseAppId" name="firebase_app_id" value="{{ config.FIREBASE_APP_ID }}">
-                        </div>
-                        <button type="submit" class="btn btn-primary">حفظ الإعدادات</button>
-                    </form>
+                    <div class="mb-3">
+                        <button class="btn btn-warning btn-block mb-2" data-toggle="modal" data-target="#clearCacheModal">
+                            <i class="fas fa-broom"></i> مسح ذاكرة التخزين المؤقت
+                        </button>
+                        <small class="text-muted">مسح جميع البيانات المخزنة مؤقتًا على الخادم لتحديث واجهة المستخدم</small>
+                    </div>
+                    <div class="mb-3">
+                        <button class="btn btn-info btn-block mb-2" data-toggle="modal" data-target="#backupModal">
+                            <i class="fas fa-download"></i> إنشاء نسخة احتياطية
+                        </button>
+                        <small class="text-muted">إنشاء نسخة احتياطية كاملة من قاعدة البيانات والملفات المرفوعة</small>
+                    </div>
+                    <div class="mb-3">
+                        <button class="btn btn-danger btn-block mb-2" data-toggle="modal" data-target="#maintenanceModal">
+                            <i class="fas fa-tools"></i> وضع الصيانة
+                        </button>
+                        <small class="text-muted">تفعيل وضع الصيانة لمنع المستخدمين من الوصول إلى النظام مؤقتًا</small>
+                    </div>
+                    <hr>
+                    <div>
+                        <h6 class="font-weight-bold mb-3">معلومات النظام</h6>
+                        <p class="mb-1">الإصدار: <span class="font-weight-bold">1.0.0</span></p>
+                        <p class="mb-1">تاريخ آخر تحديث: <span class="font-weight-bold">{{ now.strftime('%Y-%m-%d') }}</span></p>
+                        <p class="mb-1">حالة قاعدة البيانات: <span class="badge badge-success">متصلة</span></p>
+                        <p class="mb-1">مساحة التخزين المستخدمة: <span class="font-weight-bold">1.2 جيجابايت</span></p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    $(document).ready(function() {
-        // Success message based on URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const saved = urlParams.get('saved');
-        if (saved === 'true') {
-            const alertsContainer = document.getElementById('alerts-container');
-            if (alertsContainer) {
-                const alert = document.createElement('div');
-                alert.className = 'alert alert-success alert-dismissible fade show';
-                alert.innerHTML = `
-                    تم حفظ الإعدادات بنجاح
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                `;
-                
-                alertsContainer.appendChild(alert);
-                
-                // Auto-dismiss after 5 seconds
-                setTimeout(() => {
-                    alert.classList.remove('show');
-                    setTimeout(() => {
-                        alert.remove();
-                    }, 150);
-                }, 5000);
-            }
-        }
-    });
-</script>
+<!-- Clear Cache Modal -->
+<div class="modal fade" id="clearCacheModal" tabindex="-1" role="dialog" aria-labelledby="clearCacheModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clearCacheModalLabel">تأكيد مسح ذاكرة التخزين المؤقت</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من رغبتك في مسح ذاكرة التخزين المؤقت؟ سيؤدي هذا إلى تحديث واجهة المستخدم وإعادة تحميل البيانات من قاعدة البيانات.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">إلغاء</button>
+                <a class="btn btn-warning" href="#">
+                    <i class="fas fa-broom"></i> تأكيد المسح
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Modal -->
+<div class="modal fade" id="backupModal" tabindex="-1" role="dialog" aria-labelledby="backupModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="backupModalLabel">إنشاء نسخة احتياطية</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>سيتم إنشاء نسخة احتياطية كاملة من قاعدة البيانات والملفات المرفوعة. هذه العملية قد تستغرق بعض الوقت حسب حجم البيانات.</p>
+                <div class="form-group">
+                    <label for="backup_description">وصف النسخة الاحتياطية (اختياري)</label>
+                    <input type="text" class="form-control" id="backup_description" placeholder="مثال: نسخة قبل تحديث النظام">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">إلغاء</button>
+                <a class="btn btn-info" href="#">
+                    <i class="fas fa-download"></i> بدء النسخ الاحتياطي
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Maintenance Mode Modal -->
+<div class="modal fade" id="maintenanceModal" tabindex="-1" role="dialog" aria-labelledby="maintenanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="maintenanceModalLabel">تفعيل وضع الصيانة</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> تحذير: تفعيل وضع الصيانة سيمنع جميع المستخدمين من الوصول إلى النظام باستثناء المسؤولين.
+                </div>
+                <div class="form-group">
+                    <label for="maintenance_message">رسالة الصيانة للمستخدمين</label>
+                    <textarea class="form-control" id="maintenance_message" rows="3">نعتذر، النظام قيد الصيانة حاليًا. يرجى المحاولة لاحقًا.</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="maintenance_duration">مدة الصيانة المتوقعة (دقائق)</label>
+                    <input type="number" class="form-control" id="maintenance_duration" value="30" min="5">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">إلغاء</button>
+                <a class="btn btn-danger" href="#">
+                    <i class="fas fa-tools"></i> تفعيل وضع الصيانة
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
