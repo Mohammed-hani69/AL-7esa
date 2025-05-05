@@ -27,13 +27,17 @@
 
 /* تنسيقات عامة للوحة التحكم */
 .dashboard-container {
-    padding: 1.5rem;
+    padding: 1.75rem;
     width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
 }
 
 /* تضبيط الصفحة بما يناسب السايدبار */
 .teacher-dashboard {
     width: 100%;
+    min-height: calc(100vh - 4.25rem);
+    padding-bottom: 2rem;
 }
 
 /* العنوان الرئيسي والترحيب */
@@ -781,14 +785,38 @@
 @media (min-width: 992px) {
     .dashboard-container {
         /* تعديل التنسيق ليتوافق مع مساحة السايدبار */
-        padding: 1.5rem;
+        padding: 1.75rem 2rem;
+    }
+    
+    .content-wrapper.expanded .dashboard-container {
+        padding: 1.75rem 2.5rem;
     }
 }
 
 /* عند طي السايدبار أو على الشاشات الصغيرة */
-@media (max-width: 992px) {
+@media (max-width: 991.98px) {
+    .dashboard-container {
+        padding: 1.5rem;
+    }
+    
     .sidebar.collapsed + .content-wrapper .dashboard-container {
         /* زيادة المساحة عند طي السايدبار */
-        padding: 1.5rem;
+        padding: 1.5rem 2rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .dashboard-container {
+        padding: 1.25rem 1rem;
+    }
+    
+    .dashboard-header {
+        margin-bottom: 1.25rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .dashboard-container {
+        padding: 1rem 0.75rem;
     }
 }
