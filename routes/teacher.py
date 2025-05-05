@@ -116,6 +116,99 @@ def dashboard():
                            subscription_days_left=subscription_days_left,
                            has_active_subscription=has_active_sub)
 
+@teacher_bp.route('/subscribe/<int:plan_id>', methods=['POST'])
+@login_required
+@teacher_required
+def subscribe_to_plan(plan_id):
+    """
+    مسار لاشتراك المعلم في باقة محددة
+    """
+    # التحقق من وجود الباقة
+    plan = SubscriptionPlan.query.get_or_404(plan_id)
+    
+    # في التطبيق الفعلي، هنا سيتم معالجة عملية الدفع الإلكتروني
+    # ولكن لأغراض العرض، سنقوم بإنشاء اشتراك مباشرةً
+
+    # التحقق من وجود اشتراك نشط وتحديثه
+    active_sub = Subscription.query.filter(
+        Subscription.user_id == current_user.id,
+        Subscription.end_date > datetime.utcnow(),
+        Subscription.is_active == True
+    ).first()
+    
+    if active_sub:
+        # إلغاء تفعيل الاشتراك الحالي
+        active_sub.is_active = False
+        db.session.commit()
+    
+    # إنشاء اشتراك جديد
+    new_subscription = Subscription(
+        user_id=current_user.id,
+        plan_id=plan.id,
+        start_date=datetime.utcnow(),
+        end_date=datetime.utcnow() + timedelta(days=plan.duration_days),
+        is_active=True,
+        is_trial=False
+    )
+    
+    # إنشاء سجل دفع
+    payment = Payment(
+        user_id=current_user.id,
+        subscription_id=new_subscription.id,
+        amount=plan.price,
+        currency='SAR',  # عملة الريال السعودي
+        payment_method='credit_card',  # طريقة الدفع الافتراضية
+        status='success'  # حالة الدفع
+    )
+    
+    # حفظ البيانات في قاعدة البيانات
+    db.session.add(new_subscription)
+    db.session.add(payment)
+    db.session.commit()
+    
+    flash(f'تم الاشتراك في باقة {plan.name} بنجاح!', 'success')
+    return redirect(url_for('teacher.dashboard'))
+
+@teacher_bp.route('/renew_subscription', methods=['POST'])
+@login_required
+@teacher_required
+def renew_subscription():
+    """
+    مسار لتجديد الاشتراك الحالي
+    """
+    # الحصول على الاشتراك الحالي
+    active_sub = Subscription.query.filter(
+        Subscription.user_id == current_user.id,
+        Subscription.is_active == True
+    ).first()
+    
+    if not active_sub:
+        flash('لا يوجد اشتراك نشط لتجديده', 'warning')
+        return redirect(url_for('teacher.dashboard'))
+    
+    # تجديد الاشتراك لنفس المدة
+    plan = active_sub.plan
+    
+    # تحديث تاريخ الانتهاء
+    new_end_date = datetime.utcnow() + timedelta(days=plan.duration_days)
+    active_sub.end_date = new_end_date
+    
+    # إنشاء سجل دفع
+    payment = Payment(
+        user_id=current_user.id,
+        subscription_id=active_sub.id,
+        amount=plan.price,
+        currency='SAR',  # عملة الريال السعودي
+        payment_method='credit_card',  # طريقة الدفع الافتراضية
+        status='success'  # حالة الدفع
+    )
+    
+    db.session.add(payment)
+    db.session.commit()
+    
+    flash(f'تم تجديد اشتراكك في باقة {plan.name} بنجاح!', 'success')
+    return redirect(url_for('teacher.dashboard'))
+
 """
 إدارة الفصول الدراسية
 إنشاء وتعديل وحذف الفصول
