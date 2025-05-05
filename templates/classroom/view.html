@@ -1,19 +1,22 @@
-{% extends "layout.html" %}
+{% extends "teacher/layout.html" %}
 
 {% block title %}{{ classroom.name }} - الحصة{% endblock %}
 
-{% block head_extra %}
-<script defer src="{{ url_for('static', filename='js/classroom.js') }}"></script>
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/classroom/classroom.css') }}">
 {% endblock %}
 
-{% block content %}
-<div class="teacher-dashboard">
+{% block teacher_content %}
+<div class="classroom-container">
     <div class="content-header">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
             <h1>{{ classroom.name }}</h1>
-            <div class="d-flex align-items-center">
-                <div class="classroom-code me-3" id="classroom-code">{{ classroom.code }}</div>
-                <button class="btn btn-light btn-sm" onclick="copyClassroomCode('{{ classroom.code }}')">
+            <div class="d-flex align-items-center mt-2 mt-md-0">
+                <div class="classroom-code me-3" id="classroom-code" onclick="copyClassroomCode('{{ classroom.code }}')">
+                    {{ classroom.code }}
+                    <span class="copy-tooltip">انقر للنسخ</span>
+                </div>
+                <button class="btn btn-light" onclick="copyClassroomCode('{{ classroom.code }}')">
                     <i class="fas fa-copy"></i>
                 </button>
             </div>
@@ -26,24 +29,32 @@
         <div class="col-md-4">
             <div class="classroom-info-card card h-100">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">معلومات الفصل</h5>
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>معلومات الفصل</h5>
                 </div>
                 <div class="card-body">
                     <div class="classroom-info-item">
-                        <i class="fas fa-users me-2"></i>
-                        <span>عدد الطلاب: {{ classroom.students|length }}</span>
+                        <i class="fas fa-users"></i>
+                        <span>عدد الطلاب: <strong>{{ classroom.students|length }}</strong></span>
                     </div>
                     <div class="classroom-info-item">
-                        <i class="fas fa-calendar-alt me-2"></i>
-                        <span>تاريخ الإنشاء: {{ classroom.created_at.strftime('%Y-%m-%d') }}</span>
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>تاريخ الإنشاء: <strong>{{ classroom.created_at.strftime('%Y-%m-%d') }}</strong></span>
                     </div>
                     <div class="classroom-info-item">
-                        <i class="fas fa-tag me-2"></i>
-                        <span>النوع: {{ 'مجاني' if classroom.is_free else 'مدفوع' }}</span>
+                        <i class="fas fa-tag"></i>
+                        <span>النوع: <strong>{{ 'مجاني' if classroom.is_free else 'مدفوع' }}</strong></span>
+                    </div>
+                    <div class="classroom-info-item">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>عدد الاختبارات: <strong>{{ classroom.quizzes|length if classroom.quizzes else 0 }}</strong></span>
+                    </div>
+                    <div class="classroom-info-item">
+                        <i class="fas fa-tasks"></i>
+                        <span>عدد الواجبات: <strong>{{ classroom.assignments|length if classroom.assignments else 0 }}</strong></span>
                     </div>
 
-                    <div class="classroom-status {{ 'free' if classroom.is_free else 'paid' }} mt-3">
-                        {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
+                    <div class="classroom-status {{ 'free' if classroom.is_free else 'paid' }} mt-4">
+                        {{ 'فصل مجاني' if classroom.is_free else 'فصل مدفوع' }}
                     </div>
                 </div>
             </div>
@@ -53,49 +64,49 @@
         <div class="col-md-8">
             <div class="classroom-actions-card card h-100">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">إدارة الفصل</h5>
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>إدارة الفصل</h5>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('teacher.create_assignment', classroom_id=classroom.id) }}" class="btn btn-success btn-block w-100">
-                                <i class="fas fa-clipboard-check me-1"></i>إضافة واجب
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('teacher.create_assignment', classroom_id=classroom.id) }}" class="btn btn-success w-100">
+                                <i class="fas fa-clipboard-check me-2"></i>إضافة واجب
                             </a>
                         </div>
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="btn btn-secondary btn-block w-100">
-                                <i class="fas fa-tasks me-1"></i>الواجبات
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="btn btn-secondary w-100">
+                                <i class="fas fa-tasks me-2"></i>الواجبات
                             </a>
                         </div>
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="btn btn-info btn-block w-100">
-                                <i class="fas fa-question-circle me-1"></i>الاختبارات
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="btn btn-info w-100">
+                                <i class="fas fa-question-circle me-2"></i>الاختبارات
                             </a>
                         </div>
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-primary btn-block w-100">
-                                <i class="fas fa-user-graduate me-1"></i>الطلاب
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-primary w-100">
+                                <i class="fas fa-user-graduate me-2"></i>الطلاب
                             </a>
                         </div>
-                        <div class="col-6 mb-2">
+                        <div class="col-md-6 mb-3">
                             {% if can_use_chat %}
-                                <a href="#chat-section" class="btn btn-warning btn-block w-100">
-                                    <i class="fas fa-comments me-1"></i>المحادثة
+                                <a href="#chat-section" class="btn btn-warning w-100">
+                                    <i class="fas fa-comments me-2"></i>المحادثة
                                 </a>
                             {% else %}
-                                <button class="btn btn-secondary btn-block w-100" disabled>
-                                    <i class="fas fa-comments me-1"></i>المحادثة
+                                <button class="btn btn-secondary w-100" disabled>
+                                    <i class="fas fa-comments me-2"></i>المحادثة
                                 </button>
                             {% endif %}
                         </div>
-                        <div class="col-6 mb-2">
+                        <div class="col-md-6 mb-3">
                             {% if can_use_live_class %}
-                                <a href="{{ url_for('teacher.live_class', classroom_id=classroom.id) }}" class="btn btn-danger btn-block w-100">
-                                    <i class="fas fa-video me-1"></i>فصل مباشر
+                                <a href="{{ url_for('teacher.live_class', classroom_id=classroom.id) }}" class="btn btn-danger w-100">
+                                    <i class="fas fa-video me-2"></i>فصل مباشر
                                 </a>
                             {% else %}
-                                <button class="btn btn-secondary btn-block w-100" disabled>
-                                    <i class="fas fa-video me-1"></i>فصل مباشر
+                                <button class="btn btn-secondary w-100" disabled data-bs-toggle="tooltip" data-bs-placement="top" title="غير متاح في خطتك الحالية">
+                                    <i class="fas fa-video me-2"></i>فصل مباشر
                                 </button>
                             {% endif %}
                         </div>
@@ -109,9 +120,14 @@
     <div class="dashboard-section mt-4">
         <div class="dashboard-section-header">
             <h2 class="dashboard-section-title">الطلاب المسجلين</h2>
-            <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-outline-primary">
-                إدارة الطلاب
-            </a>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#inviteStudentModal">
+                    <i class="fas fa-user-plus me-1"></i> دعوة طالب
+                </button>
+                <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-cog me-1"></i> إدارة الطلاب
+                </a>
+            </div>
         </div>
 
         <div class="student-list">
@@ -124,6 +140,7 @@
                                 <th>الاسم</th>
                                 <th>رقم الهاتف</th>
                                 <th>تاريخ الانضمام</th>
+                                <th>الحالة</th>
                                 <th>الإجراءات</th>
                             </tr>
                         </thead>
@@ -131,17 +148,36 @@
                             {% for student in classroom.students %}
                                 <tr>
                                     <td>{{ loop.index }}</td>
-                                    <td>{{ student.name }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="student-avatar me-2">
+                                                {% if student.profile_picture %}
+                                                <img src="{{ student.profile_picture }}" alt="{{ student.name }}" class="student-img">
+                                                {% else %}
+                                                <div class="avatar-placeholder">{{ student.name[0] }}</div>
+                                                {% endif %}
+                                            </div>
+                                            {{ student.name }}
+                                        </div>
+                                    </td>
                                     <td>{{ student.phone }}</td>
                                     <td>{{ student.joined_at.strftime('%Y-%m-%d') }}</td>
                                     <td>
+                                        <span class="status-badge {{ 'active' if student.is_active else 'inactive' }}">
+                                            {{ 'نشط' if student.is_active else 'غير نشط' }}
+                                        </span>
+                                    </td>
+                                    <td>
                                         <div class="student-actions">
-                                            <a href="#" class="btn btn-sm btn-info">
+                                            <a href="{{ url_for('teacher.view_student', classroom_id=classroom.id, student_id=student.id) }}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="عرض الطالب">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="#" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-trash"></i>
+                                            <a href="{{ url_for('teacher.message_student', classroom_id=classroom.id, student_id=student.id) }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="مراسلة">
+                                                <i class="fas fa-envelope"></i>
                                             </a>
+                                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#removeStudentModal{{ student.id }}" title="إزالة الطالب">
+                                                <i class="fas fa-user-minus"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -150,8 +186,13 @@
                     </table>
                 </div>
             {% else %}
-                <div class="text-center py-4">
-                    <p>لا يوجد طلاب مسجلين في هذا الفصل</p>
+                <div class="text-center py-5 empty-state">
+                    <i class="fas fa-user-graduate fa-3x mb-3 text-muted"></i>
+                    <h5>لا يوجد طلاب مسجلين في هذا الفصل بعد</h5>
+                    <p class="text-muted mb-4">يمكنك مشاركة رمز الفصل مع الطلاب للانضمام، أو دعوتهم مباشرة</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inviteStudentModal">
+                        <i class="fas fa-user-plus me-2"></i>دعوة طالب
+                    </button>
                 </div>
             {% endif %}
         </div>
@@ -161,6 +202,7 @@
     <div class="dashboard-section mt-4">
         <div class="dashboard-section-header">
             <h2 class="dashboard-section-title">النشاط الأخير</h2>
+            <a href="#" class="btn btn-sm btn-outline-secondary">عرض كل الأنشطة</a>
         </div>
 
         <div class="row">
@@ -185,10 +227,40 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="text-center py-4">
-                        <p class="text-muted">لا توجد أنشطة حديثة في هذا الفصل</p>
+                    <div class="text-center py-4 empty-state">
+                        <i class="fas fa-history fa-3x mb-3 text-muted"></i>
+                        <h5>لا توجد أنشطة حديثة في هذا الفصل</h5>
+                        <p class="text-muted">ستظهر هنا الأنشطة بمجرد حدوثها</p>
                     </div>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal لدعوة طالب -->
+    <div class="modal fade" id="inviteStudentModal" tabindex="-1" aria-labelledby="inviteStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="inviteStudentModalLabel">دعوة طالب</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="inviteStudentForm">
+                        <div class="mb-3">
+                            <label for="studentPhone" class="form-label">رقم هاتف الطالب</label>
+                            <input type="text" class="form-control" id="studentPhone" placeholder="أدخل رقم الهاتف" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="inviteMessage" class="form-label">رسالة الدعوة (اختياري)</label>
+                            <textarea class="form-control" id="inviteMessage" rows="3" placeholder="أدخل رسالة للطالب"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary">إرسال الدعوة</button>
+                </div>
             </div>
         </div>
     </div>
@@ -198,47 +270,162 @@
 function copyClassroomCode(code) {
     navigator.clipboard.writeText(code)
         .then(() => {
-            alert('تم نسخ رمز الفصل الدراسي: ' + code);
+            // إنشاء إشعار نجاح مؤقت
+            const notification = document.createElement('div');
+            notification.className = 'copy-notification';
+            notification.textContent = 'تم نسخ رمز الفصل بنجاح: ' + code;
+            document.body.appendChild(notification);
+            
+            // إزالة الإشعار بعد ثانيتين
+            setTimeout(() => {
+                notification.classList.add('hide');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 2000);
         })
         .catch(err => {
             console.error('فشل في نسخ النص: ', err);
+            alert('فشل نسخ الرمز، يرجى المحاولة مرة أخرى.');
         });
 }
-</script>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize content upload functionality
-        initContentUpload();
-        
-        // Initialize classroom code copy button
-        initClassroomCodeCopy();
-        
-        // Track active students
-        trackActiveStudents();
-        
-        // Setup modal functionality
-        const modalToggles = document.querySelectorAll('[data-toggle="modal"]');
-        const modals = document.querySelectorAll('.modal');
-        
-        modalToggles.forEach(toggle => {
-            toggle.addEventListener('click', function() {
-                const target = this.getAttribute('data-target');
-                document.querySelector(target).classList.add('show');
-                document.querySelector(target).style.display = 'block';
-            });
+document.addEventListener('DOMContentLoaded', function() {
+    // تفعيل tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // تفعيل modals
+    const modalTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="modal"]'));
+    modalTriggerList.map(function (modalTriggerEl) {
+        return new bootstrap.Modal(document.querySelector(modalTriggerEl.getAttribute('data-bs-target')));
+    });
+    
+    // إضافة أنماط للجدول عند تمرير الماوس
+    const tableRows = document.querySelectorAll('.student-table tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.classList.add('highlight');
         });
-        
-        const closeButtons = document.querySelectorAll('.modal .close, .modal .btn-secondary');
-        closeButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const modal = this.closest('.modal');
-                modal.classList.remove('show');
-                modal.style.display = 'none';
-            });
+        row.addEventListener('mouseleave', function() {
+            this.classList.remove('highlight');
         });
     });
+});
 </script>
+
+<style>
+/* أنماط إضافية للصفحة */
+.copy-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--success-color);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.copy-notification.hide {
+    animation: slideOut 0.3s ease;
+}
+
+@keyframes slideOut {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(20px); opacity: 0; }
+}
+
+.empty-state {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 1rem;
+    padding: 2rem;
+}
+
+.copy-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.classroom-code:hover .copy-tooltip {
+    opacity: 1;
+}
+
+.avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.student-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-badge.active {
+    background-color: rgba(28, 200, 138, 0.15);
+    color: var(--success-color);
+}
+
+.status-badge.inactive {
+    background-color: rgba(246, 194, 62, 0.15);
+    color: var(--warning-color);
+}
+
+.student-table tr.highlight {
+    background-color: rgba(78, 115, 223, 0.05);
+}
+
+/* تحسين مظهر الـ modal */
+.modal-content {
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.modal-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-bottom: none;
+}
+
+.modal-footer {
+    border-top: none;
+    padding: 1rem 1.5rem 1.5rem;
+}
+</style>
 {% endblock %}
