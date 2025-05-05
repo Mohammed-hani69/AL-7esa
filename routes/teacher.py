@@ -254,10 +254,18 @@ def add_content(classroom_id):
             return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
     else:
         # Handle file upload
-        if 'content_file' in request.files:
-            file = request.files['content_file']
+        if 'content_file' not in request.files:
+            flash('لم يتم تحديد ملف', 'danger')
+            return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
             
-            if file and file.filename:
+        file = request.files['content_file']
+        
+        if file.filename == '':
+            flash('لم يتم اختيار ملف', 'danger')
+            return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+            
+        if file:
+            try:
                 # Create upload directory if it doesn't exist
                 upload_dir = os.path.join('static', 'uploads', 'classroom_content', str(classroom_id))
                 if not os.path.exists(upload_dir):
@@ -274,27 +282,36 @@ def add_content(classroom_id):
                 
                 # Store the relative path to the file
                 content_url = f"/{upload_dir}/{saved_filename}"
-            else:
-                flash('لم يتم تحديد ملف', 'danger')
+                
+                print(f"تم حفظ الملف في: {file_path}")
+                print(f"URL المحتوى: {content_url}")
+            except Exception as e:
+                print(f"خطأ في تحميل الملف: {e}")
+                flash(f'حدث خطأ أثناء تحميل الملف: {e}', 'danger')
                 return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
         else:
-            flash('لم يتم تحديد ملف', 'danger')
+            flash('الملف غير صالح', 'danger')
             return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
     
-    # Create content
-    new_content = ClassroomContent(
-        classroom_id=classroom.id,
-        title=title,
-        description=description,
-        content_type=content_type,
-        content_url=content_url,
-        content_text=content_text
-    )
-    
-    db.session.add(new_content)
-    db.session.commit()
-    
-    flash('تم إضافة المحتوى بنجاح', 'success')
+    try:
+        # Create content
+        new_content = ClassroomContent(
+            classroom_id=classroom.id,
+            title=title,
+            description=description,
+            content_type=content_type,
+            content_url=content_url,
+            content_text=content_text
+        )
+        
+        db.session.add(new_content)
+        db.session.commit()
+        
+        flash('تم إضافة المحتوى بنجاح', 'success')
+    except Exception as e:
+        print(f"خطأ في حفظ المحتوى في قاعدة البيانات: {e}")
+        flash(f'حدث خطأ أثناء حفظ المحتوى: {e}', 'danger')
+        
     return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
 @teacher_bp.route('/classroom/<int:classroom_id>/delete_content/<int:content_id>', methods=['POST'])
