@@ -379,12 +379,18 @@ def add_content(classroom_id):
             flash('لم يتم اختيار ملف', 'danger')
             return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
-        if file:
+        if file and allowed_file(file.filename):
             try:
+                # طباعة معلومات تصحيح للملف
+                print(f"محاولة تحميل ملف: {file.filename}, النوع: {file.content_type}")
                 # Create upload directory if it doesn't exist
                 upload_dir = os.path.join('static', 'uploads', 'classroom_content', str(classroom_id))
                 if not os.path.exists(upload_dir):
-                    os.makedirs(upload_dir)
+                    try:
+                        os.makedirs(upload_dir, exist_ok=True)
+                        print(f"تم إنشاء مجلد التحميل بنجاح: {upload_dir}")
+                    except Exception as e:
+                        print(f"خطأ في إنشاء مجلد التحميل: {e}")
 
                 # Generate a secure filename with timestamp to avoid conflicts
                 filename = secure_filename(file.filename)
@@ -394,11 +400,16 @@ def add_content(classroom_id):
                 # Save the file
                 file_path = os.path.join(upload_dir, saved_filename)
                 file.save(file_path)
-
+                
+                # التحقق من نجاح حفظ الملف
+                if os.path.exists(file_path):
+                    print(f"تم حفظ الملف بنجاح في: {file_path}")
+                    print(f"حجم الملف: {os.path.getsize(file_path)} بايت")
+                else:
+                    print(f"فشل في حفظ الملف، الملف غير موجود: {file_path}")
+                
                 # Store the relative path to the file
                 content_url = f"/{upload_dir}/{saved_filename}"
-
-                print(f"تم حفظ الملف في: {file_path}")
                 print(f"URL المحتوى: {content_url}")
             except Exception as e:
                 print(f"خطأ في تحميل الملف: {e}")
