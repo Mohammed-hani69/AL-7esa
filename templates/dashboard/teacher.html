@@ -204,7 +204,7 @@
                                         <h6 class="mb-0">{{ subscription.plan.name }}</h6>
                                         <small class="text-muted">{{ subscription.plan.description }}</small>
                                     </div>
-                                    <span class="badge bg-{{ 'success' if subscription_days_left > 0 else 'danger' }}">
+                                    <span class="badge bg-{{ 'success' if subscription_days_left and subscription_days_left > 0 else 'danger' }}">
                                         {% if subscription_days_left > 0 %}
                                             متبقي {{ subscription_days_left }} يوم
                                         {% else %}
