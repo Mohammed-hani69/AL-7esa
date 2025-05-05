@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from app import db
 from models import QuizAnswer, QuizAttempt, User, Role, Classroom, ClassroomEnrollment, ClassroomContent, ContentType
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizQuestionOption
-from models import Subscription, SubscriptionPlan, ChatSettings, ChatParticipant
+from models import Subscription, SubscriptionPlan, ChatSettings, ChatParticipant, Payment
 
 teacher_bp = Blueprint('teacher', __name__)
 
