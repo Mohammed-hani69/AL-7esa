@@ -246,9 +246,33 @@ def add_content(classroom_id):
     if content_type == ContentType.TEXT:
         content_text = request.form.get('content_text', '')
     else:
-        # Here you would typically upload the file to Firebase Storage
-        # and get the URL, but we'll just use a placeholder for now
-        content_url = f"/static/uploads/{content_type}_{classroom_id}_{datetime.utcnow().timestamp()}"
+        # Handle file upload
+        if 'content_file' in request.files:
+            file = request.files['content_file']
+            
+            if file and file.filename:
+                # Create upload directory if it doesn't exist
+                upload_dir = os.path.join('static', 'uploads', 'classroom_content', str(classroom_id))
+                if not os.path.exists(upload_dir):
+                    os.makedirs(upload_dir)
+                
+                # Generate a secure filename with timestamp to avoid conflicts
+                filename = secure_filename(file.filename)
+                timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+                saved_filename = f"{timestamp}_{filename}"
+                
+                # Save the file
+                file_path = os.path.join(upload_dir, saved_filename)
+                file.save(file_path)
+                
+                # Store the relative path to the file
+                content_url = f"/{upload_dir}/{saved_filename}"
+            else:
+                flash('لم يتم تحديد ملف', 'danger')
+                return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+        else:
+            flash('لم يتم تحديد ملف', 'danger')
+            return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
     
     # Create content
     new_content = ClassroomContent(

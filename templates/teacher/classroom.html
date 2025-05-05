@@ -297,8 +297,32 @@
                     
                     <div id="text-content" class="content-input">
                         <div class="form-group">
-                            <label for="content_text">المحتوى</label>
+                            <label for="content_text">المحتوى النصي</label>
                             <textarea class="form-control" id="content_text" name="content_text" rows="5"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div id="image-content" class="content-input d-none">
+                        <div class="form-group">
+                            <label for="content_image">الصورة</label>
+                            <input type="file" class="form-control" id="content_image" name="content_file" accept="image/*">
+                            <small class="form-text text-muted">يمكنك رفع الصور بصيغة JPG, PNG, GIF</small>
+                        </div>
+                    </div>
+                    
+                    <div id="video-content" class="content-input d-none">
+                        <div class="form-group">
+                            <label for="content_video">الفيديو</label>
+                            <input type="file" class="form-control" id="content_video" name="content_file" accept="video/*">
+                            <small class="form-text text-muted">يمكنك رفع الفيديوهات بصيغة MP4, WebM</small>
+                        </div>
+                    </div>
+                    
+                    <div id="audio-content" class="content-input d-none">
+                        <div class="form-group">
+                            <label for="content_audio">الصوت</label>
+                            <input type="file" class="form-control" id="content_audio" name="content_file" accept="audio/*">
+                            <small class="form-text text-muted">يمكنك رفع الملفات الصوتية بصيغة MP3, WAV</small>
                         </div>
                     </div>
                     
@@ -306,6 +330,7 @@
                         <div class="form-group">
                             <label for="content_file">الملف</label>
                             <input type="file" class="form-control" id="content_file" name="content_file">
+                            <small class="form-text text-muted">يمكنك رفع أي نوع من الملفات</small>
                         </div>
                     </div>
                 </div>
@@ -325,15 +350,38 @@
         // Initialize content type switcher
         const contentType = document.getElementById('content_type');
         const textContent = document.getElementById('text-content');
+        const imageContent = document.getElementById('image-content');
+        const videoContent = document.getElementById('video-content');
+        const audioContent = document.getElementById('audio-content');
         const fileContent = document.getElementById('file-content');
         
+        // Hide all content types initially except text
+        const hideAllContentTypes = () => {
+            const contentInputs = document.querySelectorAll('.content-input');
+            contentInputs.forEach(input => input.classList.add('d-none'));
+        };
+        
         contentType.addEventListener('change', function() {
-            if (this.value === 'text') {
-                textContent.classList.remove('d-none');
-                fileContent.classList.add('d-none');
-            } else {
-                textContent.classList.add('d-none');
-                fileContent.classList.remove('d-none');
+            hideAllContentTypes();
+            
+            switch(this.value) {
+                case 'text':
+                    textContent.classList.remove('d-none');
+                    break;
+                case 'image':
+                    imageContent.classList.remove('d-none');
+                    break;
+                case 'video':
+                    videoContent.classList.remove('d-none');
+                    break;
+                case 'audio':
+                    audioContent.classList.remove('d-none');
+                    break;
+                case 'file':
+                    fileContent.classList.remove('d-none');
+                    break;
+                default:
+                    textContent.classList.remove('d-none');
             }
         });
         
