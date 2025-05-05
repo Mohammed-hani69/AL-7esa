@@ -3,203 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}الحصة - منصة إدارة التعليم{% endblock %}</title>
+    <title>{% block title %}الحصة - منصة تعليمية متكاملة{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced-layout.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced-dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced-classroom.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced-forms.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced-auth.css') }}">
     {% block styles %}{% endblock %}
 </head>
 <body>
-    {% if current_user.is_authenticated %}
-    <div class="wrapper">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-brand">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" width="30" height="30" class="d-inline-block align-top me-2" alt="الحصة" onerror="this.src='https://via.placeholder.com/30?text=AL'">
-                <span class="sidebar-brand-text">الحصة</span>
-            </div>
-
-            <hr class="sidebar-divider">
-
-            <ul class="nav-list">
-                {% if current_user.role == 'admin' %}
-                <!-- روابط المسؤول -->
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}" href="{{ url_for('admin.dashboard') }}">
-                        <i class="fas fa-tachometer-alt me-2"></i>
-                        <span>لوحة التحكم</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.users' else '' }}" href="{{ url_for('admin.users') }}">
-                        <i class="fas fa-users me-2"></i>
-                        <span>المستخدمين</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.subscriptions' else '' }}" href="{{ url_for('admin.subscriptions') }}">
-                        <i class="fas fa-credit-card me-2"></i>
-                        <span>الاشتراكات</span>
-                    </a>
-                </li>
-
-                {% elif current_user.role == 'teacher' %}
-                <!-- روابط المعلم -->
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if request.endpoint == 'teacher.dashboard' else '' }}" href="{{ url_for('teacher.dashboard') }}">
-                        <i class="fas fa-tachometer-alt me-2"></i>
-                        <span>لوحة التحكم</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if 'classroom' in request.endpoint else '' }}" href="{{ url_for('teacher.dashboard') }}">
-                        <i class="fas fa-chalkboard me-2"></i>
-                        <span>الفصول</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if 'students' in request.endpoint else '' }}" href="{{ url_for('teacher.dashboard') }}">
-                        <i class="fas fa-user-graduate me-2"></i>
-                        <span>الطلاب</span>
-                    </a>
-                </li>
-
-                {% elif current_user.role == 'assistant' %}
-                <!-- روابط المساعد -->
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if request.endpoint == 'assistant.dashboard' else '' }}" href="{{ url_for('assistant.dashboard') }}">
-                        <i class="fas fa-tachometer-alt me-2"></i>
-                        <span>لوحة التحكم</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if 'classroom' in request.endpoint else '' }}" href="{{ url_for('assistant.classrooms') }}">
-                        <i class="fas fa-chalkboard me-2"></i>
-                        <span>الفصول</span>
-                    </a>
-                </li>
-
-                {% elif current_user.role == 'student' %}
-                <!-- روابط الطالب -->
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if request.endpoint == 'student.dashboard' else '' }}" href="{{ url_for('student.dashboard') }}">
-                        <i class="fas fa-tachometer-alt me-2"></i>
-                        <span>لوحة التحكم</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if 'classroom' in request.endpoint else '' }}" href="{{ url_for('student.classrooms') }}">
-                        <i class="fas fa-chalkboard me-2"></i>
-                        <span>الفصول</span>
-                    </a>
-                </li>
-                {% endif %}
-
-                <hr class="sidebar-divider">
-
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if request.endpoint == 'auth.profile' else '' }}" href="{{ url_for('auth.profile') }}">
-                        <i class="fas fa-user-circle me-2"></i>
-                        <span>الملف الشخصي</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.logout') }}">
-                        <i class="fas fa-sign-out-alt me-2"></i>
-                        <span>تسجيل الخروج</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        <div class="content-wrapper">
-            <!-- Navbar -->
-            <div class="topbar">
-                <nav class="navbar">
-                    <button id="sidebarToggleBtn" class="btn">
-                        <i class="fas fa-bars"></i>
-                    </button>
-
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-bell"></i>
-                                {% if current_user.notifications|selectattr('is_read', 'equalto', false)|list|length > 0 %}
-                                <span class="badge bg-danger badge-counter">{{ current_user.notifications|selectattr('is_read', 'equalto', false)|list|length }}</span>
-                                {% endif %}
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown">
-                                <h6 class="dropdown-header">الإشعارات</h6>
-                                {% if current_user.notifications %}
-                                    {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true)|slice(0, 5) %}
-                                    <a class="dropdown-item {{ '' if notification.is_read else 'fw-bold' }}" href="#">
-                                        <span class="small text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
-                                        <p class="mb-0">{{ notification.message }}</p>
-                                    </a>
-                                    {% endfor %}
-                                {% else %}
-                                    <a class="dropdown-item text-center" href="#">لا توجد إشعارات</a>
-                                {% endif %}
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item text-center small text-muted" href="#">عرض كل الإشعارات</a>
-                            </div>
-                        </li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="me-2 d-none d-lg-inline text-gray-600 small">{{ current_user.name }}</span>
-                                {% if current_user.profile_picture %}
-                                <img class="img-profile rounded-circle" src="{{ current_user.profile_picture }}" width="32" height="32" alt="{{ current_user.name }}">
-                                {% else %}
-                                <img class="img-profile rounded-circle" src="{{ url_for('static', filename='img/default-profile.png') }}" width="32" height="32" alt="{{ current_user.name }}" onerror="this.src='https://via.placeholder.com/32?text=User'">
-                                {% endif %}
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
-                                    <i class="fas fa-user-circle me-2"></i>
-                                    الملف الشخصي
-                                </a>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-cogs me-2"></i>
-                                    الإعدادات
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                    <i class="fas fa-sign-out-alt me-2"></i>
-                                    تسجيل الخروج
-                                </a>
-                            </div>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-
-            <!-- Main Content -->
-            <div class="main-content">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-
-                {% block content %}{% endblock %}
-            </div>
-        </div>
-    </div>
-    {% else %}
-    <!-- محتوى للمستخدمين غير المسجلين -->
     <div class="main-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -214,46 +26,12 @@
             {% endif %}
         {% endwith %}
 
-        {% block public_content %}{% endblock %}
+        {% block content %}{% endblock %}
     </div>
-    {% endif %}
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // تبديل القائمة الجانبية
-            const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-            if (sidebarToggleBtn) {
-                const sidebar = document.querySelector('.sidebar');
-                sidebarToggleBtn.addEventListener('click', function() {
-                    sidebar.classList.toggle('show');
-                });
-            }
-
-            // وظائف القائمة المنسدلة
-            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-            dropdownToggles.forEach(toggle => {
-                toggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const dropdownMenu = this.nextElementSibling;
-                    if (dropdownMenu) {
-                        dropdownMenu.classList.toggle('show');
-                    }
-                });
-            });
-
-            // إغلاق القائمة المنسدلة عند النقر خارجها
-            document.addEventListener('click', function(e) {
-                if (!e.target.matches('.dropdown-toggle')) {
-                    const dropdowns = document.querySelectorAll('.dropdown-menu.show');
-                    dropdowns.forEach(dropdown => {
-                        dropdown.classList.remove('show');
-                    });
-                }
-            });
-        });
-    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
