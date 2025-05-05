@@ -177,11 +177,11 @@
                                         <div class="col-lg-6">
                                             <div class="join-form">
                                                 <h4 class="mb-4">انضم برمز الفصل</h4>
-                                                <form method="POST" action="{{ url_for('student.join') }}">
+                                                <form method="POST" action="{{ url_for('student.join_classroom') }}">
                                                     <div class="mb-4">
                                                         <label for="classCode" class="form-label">رمز الفصل</label>
                                                         <div class="input-group">
-                                                            <input type="text" class="form-control form-control-lg" id="classCode" name="code" placeholder="أدخل رمز الفصل" required>
+                                                            <input type="text" class="form-control form-control-lg" id="classCode" name="classroom_code" placeholder="أدخل رمز الفصل" required>
                                                             <button class="btn btn-primary" type="submit">انضمام</button>
                                                         </div>
                                                         <div class="form-text">رمز الفصل هو رمز من 6-8 أحرف أو أرقام يمكنك الحصول عليه من المعلم.</div>
@@ -191,7 +191,7 @@
                                                 <hr class="my-4">
                                                 
                                                 <h4 class="mb-4">ابحث عن فصل</h4>
-                                                <form method="GET" action="{{ url_for('student.join') }}">
+                                                <form method="GET" action="{{ url_for('student.join_classroom') }}">
                                                     <div class="mb-3">
                                                         <label for="searchTerm" class="form-label">ابحث باسم المعلم أو المادة</label>
                                                         <div class="input-group">
