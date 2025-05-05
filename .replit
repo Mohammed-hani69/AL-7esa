@@ -10,7 +10,7 @@ run = ["sh", "-c", "gunicorn --bind 0.0.0.0:5000 main:app"]
 build = ["sh", "-c", "python -m flask db upgrade"]
 
 [workflows]
-runButton = "Run Flask App"
+runButton = "تشغيل_التطبيق"
 
 [[workflows.workflow]]
 name = "Project"
@@ -59,6 +59,31 @@ args = "pip install -r requirements.txt"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python -m flask db upgrade"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python main.py"
+
+[[workflows.workflow]]
+name = "تشغيل_التطبيق"
+author = 42307871
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install -r requirements.txt"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "flask db init || true"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "flask db migrate || true"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "flask db upgrade || true"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
