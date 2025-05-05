@@ -303,8 +303,8 @@
                     
                     <div id="image-content" class="content-input d-none">
                         <div class="form-group">
-                            <label for="content_image">الصورة</label>
-                            <input type="file" class="form-control" id="content_image" name="content_file" accept="image/*">
+                            <label for="content_image">الصورة <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="content_image" name="content_file" accept="image/*" required>
                             <small class="form-text text-muted">يمكنك رفع الصور بصيغة JPG, PNG, GIF (الحد الأقصى 5 ميجابايت)</small>
                             <div class="mt-2 image-preview-container">
                                 <img id="image-preview" class="img-fluid d-none" alt="معاينة الصورة">
@@ -314,8 +314,8 @@
                     
                     <div id="video-content" class="content-input d-none">
                         <div class="form-group">
-                            <label for="content_video">الفيديو</label>
-                            <input type="file" class="form-control" id="content_video" name="content_file" accept="video/*">
+                            <label for="content_video">الفيديو <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="content_video" name="content_file" accept="video/*" required>
                             <small class="form-text text-muted">يمكنك رفع الفيديوهات بصيغة MP4, WebM (الحد الأقصى 50 ميجابايت)</small>
                             <div class="mt-2">
                                 <video id="video-preview" class="d-none" style="max-width: 100%; max-height: 200px;" controls></video>
@@ -325,8 +325,8 @@
                     
                     <div id="audio-content" class="content-input d-none">
                         <div class="form-group">
-                            <label for="content_audio">الصوت</label>
-                            <input type="file" class="form-control" id="content_audio" name="content_file" accept="audio/*">
+                            <label for="content_audio">الصوت <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="content_audio" name="content_file" accept="audio/*" required>
                             <small class="form-text text-muted">يمكنك رفع الملفات الصوتية بصيغة MP3, WAV (الحد الأقصى 20 ميجابايت)</small>
                             <div class="mt-2">
                                 <audio id="audio-preview" class="d-none w-100" controls></audio>
@@ -336,8 +336,8 @@
                     
                     <div id="file-content" class="content-input d-none">
                         <div class="form-group">
-                            <label for="content_file">الملف</label>
-                            <input type="file" class="form-control" id="content_file" name="content_file">
+                            <label for="content_file">الملف <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="content_file" name="content_file" required>
                             <small class="form-text text-muted">يمكنك رفع أي نوع من الملفات مثل PDF, DOCX, XLSX (الحد الأقصى 20 ميجابايت)</small>
                             <div class="mt-2 file-info d-none">
                                 <div class="alert alert-info">
@@ -531,14 +531,21 @@
                         break;
                 }
                 
-                if (!fileInput.files || !fileInput.files[0]) {
-                    alert('يرجى اختيار ملف');
+                if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+                    alert('يرجى اختيار ملف للرفع. نوع المحتوى المحدد يتطلب ملفاً.');
                     isValid = false;
                 }
             }
             
             if (!isValid) {
                 e.preventDefault();
+            } else {
+                // إظهار رسالة حالة الرفع
+                if (selectedType !== 'text') {
+                    const submitBtn = contentForm.querySelector('button[type="submit"]');
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري رفع الملف...';
+                    submitBtn.disabled = true;
+                }
             }
         });
     });

@@ -369,15 +369,16 @@ def add_content(classroom_id):
             return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
     else:
         # Handle file upload
-        if 'content_file' not in request.files:
-            flash('لم يتم تحديد ملف', 'danger')
-            return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+        if content_type != ContentType.TEXT:
+            if 'content_file' not in request.files:
+                flash('لم يتم تحديد ملف', 'danger')
+                return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
-        file = request.files['content_file']
+            file = request.files['content_file']
 
-        if file.filename == '':
-            flash('لم يتم اختيار ملف', 'danger')
-            return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+            if file.filename == '':
+                flash('لم يتم اختيار ملف. الرجاء اختيار ملف صالح', 'danger')
+                return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
         if file and allowed_file(file.filename):
             try:
