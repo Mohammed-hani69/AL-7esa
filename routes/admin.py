@@ -114,10 +114,13 @@ def subscriptions():
     # Get active subscriptions
     active_subs = Subscription.query.filter(Subscription.end_date > datetime.utcnow()).order_by(Subscription.start_date.desc()).all()
     
+    # Get all subscriptions for the comprehensive table
+    all_subscriptions = Subscription.query.order_by(Subscription.start_date.desc()).all()
+    
     # Get current time for template
     now = datetime.utcnow()
     
-    return render_template('admin/subscriptions.html', plans=plans, active_subs=active_subs, now=now)
+    return render_template('admin/subscriptions.html', plans=plans, active_subs=active_subs, all_subscriptions=all_subscriptions, now=now)
 
 @admin_bp.route('/subscription_plan/new', methods=['GET', 'POST'])
 @login_required
@@ -190,6 +193,20 @@ def delete_subscription_plan(plan_id):
     db.session.commit()
     
     flash('تم حذف باقة الاشتراك بنجاح', 'success')
+    return redirect(url_for('admin.subscriptions'))
+
+@admin_bp.route('/subscription/<int:subscription_id>/cancel', methods=['GET'])
+@login_required
+@admin_required
+def cancel_subscription(subscription_id):
+    subscription = Subscription.query.get_or_404(subscription_id)
+    
+    # Set end date to now to effectively cancel the subscription
+    subscription.end_date = datetime.utcnow()
+    subscription.is_active = False
+    db.session.commit()
+    
+    flash(f'تم إلغاء اشتراك {subscription.user.name} في باقة {subscription.plan.name} بنجاح', 'success')
     return redirect(url_for('admin.subscriptions'))
 
 @admin_bp.route('/assign_trial/<int:user_id>', methods=['POST'])
