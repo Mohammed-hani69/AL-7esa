@@ -1,0 +1,129 @@
+
+/* ملف أنماط صفحات الطلاب */
+.classrooms-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.classroom-card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 200px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.classroom-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.classroom-card-header {
+    padding: 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    height: 80px;
+    display: flex;
+    align-items: center;
+}
+
+.classroom-card-body {
+    padding: 1rem;
+    flex-grow: 1;
+    background-color: var(--card-bg);
+}
+
+.classroom-card .classroom-subject {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.8;
+}
+
+.classroom-card .classroom-name {
+    font-size: 1.25rem;
+    margin-bottom: 0;
+}
+
+.classroom-card .teacher-name {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.classroom-card .classroom-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: auto;
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+
+/* أنماط صفحة الانضمام للفصل */
+.join-classroom {
+    max-width: 500px;
+    margin: 3rem auto;
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 0.15rem 1.75rem 0 var(--shadow-color);
+}
+
+.join-classroom h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.join-classroom .form-control {
+    text-align: center;
+    letter-spacing: 2px;
+    font-size: 1.5rem;
+    height: 4rem;
+}
+
+/* أنماط صفحة عرض الاختبار */
+.quiz-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.question-card {
+    background-color: var(--card-bg);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0.15rem 1.75rem 0 var(--shadow-color);
+}
+
+.question-number {
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.question-text {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.quiz-options label {
+    display: block;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quiz-options label:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.quiz-navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+}

@@ -19,6 +19,41 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/rtl.css') }}">
     
+    <!-- صفحات القالب -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar-custom.css') }}">
+    
+    <!-- ملفات CSS المنفصلة حسب نوع الصفحة -->
+    {% if current_user.is_authenticated %}
+        {% if current_user.role == 'admin' %}
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin.css') }}">
+        {% elif current_user.role == 'teacher' %}
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher/teacher.css') }}">
+        {% elif current_user.role == 'student' %}
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/student/student.css') }}">
+        {% elif current_user.role == 'assistant' %}
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher/teacher.css') }}">
+        {% endif %}
+    {% else %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/auth/auth.css') }}">
+    {% endif %}
+    
+    <!-- ملفات CSS للصفحات الخاصة -->
+    {% if 'classroom' in request.path %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/classroom/classroom.css') }}">
+    {% endif %}
+    
+    {% if 'chat' in request.path %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/classroom/classroom.css') }}">
+    {% endif %}
+    
+    {% if 'live' in request.path %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/classroom/classroom.css') }}">
+    {% endif %}
+    
+    {% if 'dashboard' in request.path %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/dashboard.css') }}">
+    {% endif %}
+    
     <!-- Firebase SDK -->
     <script defer src="https://www.gstatic.com/firebasejs/9.20.0/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/9.20.0/firebase-auth-compat.js"></script>
