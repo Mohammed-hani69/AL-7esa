@@ -298,7 +298,8 @@
                     <div id="text-content" class="content-input">
                         <div class="form-group">
                             <label for="content_text">المحتوى النصي</label>
-                            <textarea class="form-control" id="content_text" name="content_text" rows="5"></textarea>
+                            <textarea class="form-control" id="content_text" name="content_text" rows="5" placeholder="أدخل المحتوى النصي هنا..."></textarea>
+                            <small class="form-text text-muted">يمكنك كتابة نص منسق، شرح، أو تعليمات للطلاب</small>
                         </div>
                     </div>
                     
@@ -306,7 +307,10 @@
                         <div class="form-group">
                             <label for="content_image">الصورة</label>
                             <input type="file" class="form-control" id="content_image" name="content_file" accept="image/*">
-                            <small class="form-text text-muted">يمكنك رفع الصور بصيغة JPG, PNG, GIF</small>
+                            <small class="form-text text-muted">يمكنك رفع الصور بصيغة JPG, PNG, GIF (الحد الأقصى 5 ميجابايت)</small>
+                            <div class="mt-2 image-preview-container">
+                                <img id="image-preview" class="img-fluid d-none" alt="معاينة الصورة">
+                            </div>
                         </div>
                     </div>
                     
@@ -314,7 +318,10 @@
                         <div class="form-group">
                             <label for="content_video">الفيديو</label>
                             <input type="file" class="form-control" id="content_video" name="content_file" accept="video/*">
-                            <small class="form-text text-muted">يمكنك رفع الفيديوهات بصيغة MP4, WebM</small>
+                            <small class="form-text text-muted">يمكنك رفع الفيديوهات بصيغة MP4, WebM (الحد الأقصى 50 ميجابايت)</small>
+                            <div class="mt-2">
+                                <video id="video-preview" class="d-none" style="max-width: 100%; max-height: 200px;" controls></video>
+                            </div>
                         </div>
                     </div>
                     
@@ -322,7 +329,10 @@
                         <div class="form-group">
                             <label for="content_audio">الصوت</label>
                             <input type="file" class="form-control" id="content_audio" name="content_file" accept="audio/*">
-                            <small class="form-text text-muted">يمكنك رفع الملفات الصوتية بصيغة MP3, WAV</small>
+                            <small class="form-text text-muted">يمكنك رفع الملفات الصوتية بصيغة MP3, WAV (الحد الأقصى 20 ميجابايت)</small>
+                            <div class="mt-2">
+                                <audio id="audio-preview" class="d-none w-100" controls></audio>
+                            </div>
                         </div>
                     </div>
                     
@@ -330,7 +340,12 @@
                         <div class="form-group">
                             <label for="content_file">الملف</label>
                             <input type="file" class="form-control" id="content_file" name="content_file">
-                            <small class="form-text text-muted">يمكنك رفع أي نوع من الملفات</small>
+                            <small class="form-text text-muted">يمكنك رفع أي نوع من الملفات مثل PDF, DOCX, XLSX (الحد الأقصى 20 ميجابايت)</small>
+                            <div class="mt-2 file-info d-none">
+                                <div class="alert alert-info">
+                                    <span id="file-name"></span> - <span id="file-size"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -385,6 +400,92 @@
             }
         });
         
+        // File Previews
+        // Image Preview
+        const imageInput = document.getElementById('content_image');
+        const imagePreview = document.getElementById('image-preview');
+        
+        imageInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.remove('d-none');
+                }
+                
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                imagePreview.classList.add('d-none');
+            }
+        });
+        
+        // Video Preview
+        const videoInput = document.getElementById('content_video');
+        const videoPreview = document.getElementById('video-preview');
+        
+        videoInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    videoPreview.src = e.target.result;
+                    videoPreview.classList.remove('d-none');
+                }
+                
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                videoPreview.classList.add('d-none');
+            }
+        });
+        
+        // Audio Preview
+        const audioInput = document.getElementById('content_audio');
+        const audioPreview = document.getElementById('audio-preview');
+        
+        audioInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    audioPreview.src = e.target.result;
+                    audioPreview.classList.remove('d-none');
+                }
+                
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                audioPreview.classList.add('d-none');
+            }
+        });
+        
+        // File Info
+        const fileInput = document.getElementById('content_file');
+        const fileInfo = document.querySelector('.file-info');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                fileName.textContent = file.name;
+                
+                // Format file size
+                let size = file.size;
+                const units = ['بايت', 'كيلوبايت', 'ميجابايت', 'جيجابايت'];
+                let unitIndex = 0;
+                
+                while (size > 1024 && unitIndex < units.length - 1) {
+                    size /= 1024;
+                    unitIndex++;
+                }
+                
+                fileSize.textContent = `${size.toFixed(2)} ${units[unitIndex]}`;
+                fileInfo.classList.remove('d-none');
+            } else {
+                fileInfo.classList.add('d-none');
+            }
+        });
+        
         // Initialize classroom code copy button
         const copyBtn = document.getElementById('copy-code-btn');
         const classroomCode = document.getElementById('classroom-code');
@@ -397,6 +498,50 @@
                         copyBtn.innerHTML = '<i class="fas fa-copy me-1"></i>نسخ الكود';
                     }, 2000);
                 });
+        });
+        
+        // Form validation before submit
+        const contentForm = document.querySelector('form[action*="add_content"]');
+        
+        contentForm.addEventListener('submit', function(e) {
+            const selectedType = contentType.value;
+            let isValid = true;
+            
+            // Validate based on content type
+            if (selectedType === 'text') {
+                const contentText = document.getElementById('content_text').value;
+                if (!contentText.trim()) {
+                    alert('يرجى إدخال المحتوى النصي');
+                    isValid = false;
+                }
+            } else {
+                // For file-based content
+                let fileInput;
+                
+                switch(selectedType) {
+                    case 'image':
+                        fileInput = document.getElementById('content_image');
+                        break;
+                    case 'video':
+                        fileInput = document.getElementById('content_video');
+                        break;
+                    case 'audio':
+                        fileInput = document.getElementById('content_audio');
+                        break;
+                    case 'file':
+                        fileInput = document.getElementById('content_file');
+                        break;
+                }
+                
+                if (!fileInput.files || !fileInput.files[0]) {
+                    alert('يرجى اختيار ملف');
+                    isValid = false;
+                }
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+            }
         });
     });
 </script>

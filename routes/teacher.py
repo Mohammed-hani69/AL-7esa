@@ -235,6 +235,10 @@ def add_content(classroom_id):
     description = request.form.get('description', '')
     content_type = request.form.get('content_type')
     
+    if not title:
+        flash('يجب إدخال عنوان المحتوى', 'danger')
+        return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+    
     if content_type not in [ContentType.FILE, ContentType.IMAGE, ContentType.AUDIO, ContentType.VIDEO, ContentType.TEXT]:
         flash('نوع المحتوى غير صالح', 'danger')
         return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
@@ -245,6 +249,9 @@ def add_content(classroom_id):
     
     if content_type == ContentType.TEXT:
         content_text = request.form.get('content_text', '')
+        if not content_text.strip():
+            flash('يجب إدخال محتوى نصي', 'danger')
+            return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
     else:
         # Handle file upload
         if 'content_file' in request.files:
