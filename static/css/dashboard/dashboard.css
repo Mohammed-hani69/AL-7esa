@@ -4,62 +4,243 @@
     padding: 1.5rem;
 }
 
-.dashboard-card {
-    border-radius: 0.5rem;
-    border: none;
-    box-shadow: 0 0.15rem 1.75rem 0 var(--shadow-color);
+/* القسم الرئيسي في لوحة التحكم */
+.dashboard-section {
+    margin-bottom: 2.5rem;
+}
+
+.dashboard-section-header {
     margin-bottom: 1.5rem;
+}
+
+.dashboard-section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+.dashboard-section-title:after {
+    content: '';
+    position: absolute;
+    bottom: -0.5rem;
+    right: 0;
+    width: 3rem;
+    height: 3px;
+    background-color: var(--primary-color);
+    border-radius: 1.5px;
+}
+
+/* بطاقات الإحصائيات */
+.stat-card {
+    background-color: var(--card-bg);
+    border-radius: 0.8rem;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0.1rem 0.75rem rgba(0,0,0,0.05);
     transition: all 0.3s ease;
 }
 
-.dashboard-card:hover {
+.stat-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1);
 }
 
-.dashboard-card-header {
-    background-color: var(--primary-color);
-    color: white;
-    border-radius: 0.5rem 0.5rem 0 0;
-    padding: 1rem;
-}
-
-.dashboard-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background-color: var(--card-bg);
-    border-radius: 0.5rem;
-    padding: 1.25rem;
-    position: relative;
-    overflow: hidden;
+.stat-card.primary {
     border-right: 4px solid var(--primary-color);
 }
 
+.stat-card.success {
+    border-right: 4px solid var(--success-color);
+}
+
+.stat-card.info {
+    border-right: 4px solid var(--info-color);
+}
+
+.stat-card.warning {
+    border-right: 4px solid var(--warning-color);
+}
+
+.stat-card.danger {
+    border-right: 4px solid var(--danger-color);
+}
+
 .stat-card h3 {
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--dark-color);
 }
 
 .stat-card .stat-value {
-    font-size: 2rem;
+    font-size: 2.25rem;
     font-weight: 700;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--dark-color);
 }
 
 .stat-card .stat-icon {
     position: absolute;
-    left: 1rem;
-    bottom: 1rem;
-    font-size: 3rem;
-    opacity: 0.2;
+    left: 1.25rem;
+    bottom: 1.25rem;
+    font-size: 3.5rem;
+    opacity: 0.15;
+}
+
+.stat-card.primary .stat-icon {
+    color: var(--primary-color);
+}
+
+.stat-card.success .stat-icon {
+    color: var(--success-color);
+}
+
+.stat-card.info .stat-icon {
+    color: var(--info-color);
+}
+
+.stat-card.warning .stat-icon {
+    color: var(--warning-color);
+}
+
+.stat-card.danger .stat-icon {
+    color: var(--danger-color);
+}
+
+/* بطاقات الفصول */
+.classroom-card {
+    border: none;
+    border-radius: 0.8rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.classroom-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1);
+}
+
+.classroom-card .card-header {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 1rem 1.25rem;
+}
+
+.classroom-card .card-title {
+    font-weight: 600;
+}
+
+.classroom-info {
+    margin-bottom: 1.25rem;
+}
+
+.classroom-info > div {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.classroom-info i {
+    margin-left: 0.5rem;
+    width: 1.25rem;
+    text-align: center;
+    color: var(--dark-color);
+    opacity: 0.6;
+}
+
+.classroom-subject .badge {
+    margin-left: 0.5rem;
+}
+
+/* النشاطات */
+.activity-timeline {
+    position: relative;
+}
+
+.activity-item {
+    position: relative;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.activity-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.activity-icon i {
+    font-size: 0.5rem;
+}
+
+.activity-text {
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.activity-time {
+    font-size: 0.8rem;
+    color: var(--dark-color);
+    opacity: 0.6;
+}
+
+/* الأزرار */
+.btn-teacher {
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-teacher:hover {
+    background-color: #3a5fc8;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.1);
 }
 
 /* أنماط الرسوم البيانية */
 .chart-container {
     height: 300px;
     margin-bottom: 2rem;
+}
+
+/* تجاوب */
+@media (max-width: 992px) {
+    .stat-card .stat-value {
+        font-size: 1.75rem;
+    }
+    
+    .stat-card .stat-icon {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-section-title {
+        font-size: 1.25rem;
+    }
+    
+    .stat-card {
+        padding: 1.25rem;
+    }
+    
+    .stat-card h3 {
+        font-size: 0.9rem;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .stat-card .stat-icon {
+        font-size: 2rem;
+    }
 }

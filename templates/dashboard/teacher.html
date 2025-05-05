@@ -1,22 +1,23 @@
+
 {% extends "layout.html" %}
 
 {% block title %}لوحة تحكم المعلم - الحصة{% endblock %}
 
 {% block content %}
 <div class="teacher-dashboard">
-    <div class="content-header">
-        <h1>لوحة تحكم المعلم</h1>
-        <p class="content-description">مرحباً {{ current_user.name }}، مرحباً بك في لوحة التحكم الخاصة بك.</p>
+    <div class="content-header mb-4">
+        <h1 class="mb-2">لوحة تحكم المعلم</h1>
+        <p class="content-description text-muted">مرحباً {{ current_user.name }}، مرحباً بك في لوحة التحكم الخاصة بك.</p>
     </div>
 
     <!-- إحصائيات سريعة -->
-    <div class="dashboard-section">
-        <div class="dashboard-section-header">
+    <div class="dashboard-section mb-5">
+        <div class="dashboard-section-header mb-3">
             <h2 class="dashboard-section-title">إحصائيات سريعة</h2>
         </div>
         <div class="row g-3">
             <div class="col-xl-3 col-md-6">
-                <div class="stat-card primary">
+                <div class="stat-card primary h-100">
                     <h3>إجمالي الطلاب</h3>
                     <div class="stat-value">{{ total_students }}</div>
                     <div class="stat-icon">
@@ -26,7 +27,7 @@
             </div>
 
             <div class="col-xl-3 col-md-6">
-                <div class="stat-card success">
+                <div class="stat-card success h-100">
                     <h3>الفصول الدراسية</h3>
                     <div class="stat-value">{{ classrooms|length }}</div>
                     <div class="stat-icon">
@@ -36,7 +37,7 @@
             </div>
 
             <div class="col-xl-3 col-md-6">
-                <div class="stat-card info">
+                <div class="stat-card info h-100">
                     <h3>الاختبارات النشطة</h3>
                     <div class="stat-value">{{ active_quizzes }}</div>
                     <div class="stat-icon">
@@ -46,7 +47,7 @@
             </div>
 
             <div class="col-xl-3 col-md-6">
-                <div class="stat-card warning">
+                <div class="stat-card warning h-100">
                     <h3>الواجبات المعلقة</h3>
                     <div class="stat-value">{{ pending_submissions }}</div>
                     <div class="stat-icon">
@@ -58,9 +59,9 @@
     </div>
 
     <!-- الخطة الحالية والفصول -->
-    <div class="dashboard-section">
-        <div class="dashboard-section-header">
-            <h2 class="dashboard-section-title">الفصول الدراسية</h2>
+    <div class="dashboard-section mb-5">
+        <div class="dashboard-section-header d-flex justify-content-between align-items-center mb-4">
+            <h2 class="dashboard-section-title mb-0">الفصول الدراسية</h2>
             {% if can_create_classroom %}
                 <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher">
                     <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
@@ -74,38 +75,46 @@
 
         {% if classrooms %}
             <div class="classroom-grid">
-                {% for classroom in classrooms %}
-                    <div class="classroom-card">
-                        <div class="classroom-card-header">
-                            <h5>{{ classroom.name }}</h5>
-                            <div class="classroom-code">{{ classroom.code }}</div>
-                        </div>
-                        <div class="classroom-card-body">
-                            <div class="classroom-status {{ 'free' if classroom.is_free else 'paid' }}">
-                                {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
-                            </div>
-                            <div class="classroom-meta">
-                                <div class="classroom-meta-item">
-                                    <i class="fas fa-users"></i>
-                                    <span>{{ classroom.students|length }} طالب</span>
+                <div class="row g-4">
+                    {% for classroom in classrooms %}
+                        <div class="col-lg-4 col-md-6">
+                            <div class="classroom-card card h-100 shadow-sm">
+                                <div class="card-header py-3 bg-light">
+                                    <h5 class="card-title mb-0 text-primary">{{ classroom.name }}</h5>
                                 </div>
-                                <div class="classroom-meta-item">
-                                    <i class="fas fa-calendar-alt"></i>
-                                    <span>تاريخ الإنشاء: {{ classroom.created_at.strftime('%Y-%m-%d') }}</span>
+                                <div class="card-body">
+                                    <div class="classroom-info mb-3">
+                                        <div class="classroom-subject mb-2">
+                                            <span class="badge bg-primary">{{ classroom.subject }}</span>
+                                            <span class="badge bg-secondary">{{ classroom.grade }}</span>
+                                        </div>
+                                        <div class="classroom-code mb-2">
+                                            <i class="fas fa-key"></i>
+                                            <span>كود الفصل: <strong>{{ classroom.code }}</strong></span>
+                                        </div>
+                                        <div class="classroom-students mb-2">
+                                            <i class="fas fa-user-graduate"></i>
+                                            <span>عدد الطلاب: <strong>{{ classroom.students|length }}</strong></span>
+                                        </div>
+                                        <div class="classroom-date">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            <span>تاريخ الإنشاء: {{ classroom.created_at.strftime('%Y-%m-%d') }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="classroom-actions d-grid gap-2">
+                                        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-primary">
+                                            <i class="fas fa-eye me-2"></i>
+                                            عرض الفصل
+                                        </a>
+                                        <button class="btn btn-light" onclick="copyClassroomCode('{{ classroom.code }}')">
+                                            <i class="fas fa-copy me-2"></i>نسخ كود الفصل
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="classroom-actions">
-                                <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-primary">
-                                    <i class="fas fa-eye"></i>
-                                    عرض الفصل
-                                </a>
-                                <button class="btn btn-light" onclick="copyClassroomCode('{{ classroom.code }}')">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                            </div>
                         </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
         {% else %}
             <div class="text-center py-5 bg-light rounded">
@@ -119,52 +128,126 @@
         {% endif %}
     </div>
 
-    <!-- الفعاليات الأخيرة -->
+    <!-- آخر النشاطات والمهام -->
     <div class="dashboard-section">
-        <div class="dashboard-section-header">
-            <h2 class="dashboard-section-title">الفعاليات الأخيرة</h2>
-        </div>
-
         <div class="row">
-            <div class="col-lg-12">
-                {% if recent_activities %}
-                    <div class="activity-list">
-                        {% for activity in recent_activities %}
-                            <div class="activity-card">
-                                <div class="activity-card-header">
-                                    <div class="activity-icon">
-                                        <i class="fas fa-{{ activity.icon }}"></i>
+            <div class="col-lg-7">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header py-3 bg-light">
+                        <h2 class="h5 mb-0 text-primary">آخر النشاطات</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if activities %}
+                            <div class="activity-timeline">
+                                {% for activity in activities %}
+                                    <div class="activity-item d-flex mb-3 pb-3 border-bottom">
+                                        <div class="activity-icon me-3">
+                                            <i class="fas fa-circle text-primary"></i>
+                                        </div>
+                                        <div class="activity-content">
+                                            <div class="activity-text">{{ activity.description }}</div>
+                                            <div class="activity-time text-muted small">{{ activity.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div class="activity-title">{{ activity.title }}</div>
-                                        <div class="activity-time">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
-                                    </div>
-                                </div>
-                                <div class="activity-card-body">
-                                    {{ activity.description }}
-                                </div>
+                                {% endfor %}
                             </div>
-                        {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted">لا توجد أنشطة حديثة.</p>
+                            </div>
+                        {% endif %}
                     </div>
-                {% else %}
-                    <div class="text-center py-4">
-                        <p class="text-muted">لا توجد أنشطة حديثة</p>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header py-3 bg-light">
+                        <h2 class="h5 mb-0 text-primary">آخر المهام</h2>
                     </div>
-                {% endif %}
+                    <div class="card-body">
+                        {% if recent_assignments %}
+                            <div class="list-group">
+                                {% for assignment in recent_assignments %}
+                                    <a href="#" class="list-group-item list-group-item-action border-0 border-bottom py-3">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ assignment.title }}</h6>
+                                            <small class="text-muted">{{ assignment.due_date.strftime('%m/%d') }}</small>
+                                        </div>
+                                        <p class="mb-1 small">{{ assignment.classroom.name }}</p>
+                                        <small class="text-muted">
+                                            <span class="badge bg-{{ 'success' if assignment.is_active else 'secondary' }}">
+                                                {{ 'نشط' if assignment.is_active else 'منتهي' }}
+                                            </span>
+                                        </small>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted">لا توجد مهام حديثة.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- معلومات الاشتراك -->
+                <div class="card shadow-sm">
+                    <div class="card-header py-3 bg-light">
+                        <h2 class="h5 mb-0 text-primary">معلومات الاشتراك</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if subscription %}
+                            <div class="subscription-info">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h6 class="mb-0">{{ subscription.plan.name }}</h6>
+                                        <small class="text-muted">{{ subscription.plan.description }}</small>
+                                    </div>
+                                    <span class="badge bg-{{ 'success' if subscription_days_left > 0 else 'danger' }}">
+                                        {% if subscription_days_left > 0 %}
+                                            متبقي {{ subscription_days_left }} يوم
+                                        {% else %}
+                                            منتهي
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                <div class="progress mb-3" style="height: 5px;">
+                                    {% set progress = (subscription_days_left / subscription.plan.duration_days) * 100 %}
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ progress }}%;" 
+                                        aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                
+                                {% if subscription_days_left <= 7 %}
+                                    <div class="alert alert-warning py-2 small mb-0">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        اشتراكك على وشك الانتهاء، قم بتجديده لتجنب انقطاع الخدمة
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-3">
+                                <p class="text-muted">ليس لديك اشتراك نشط.</p>
+                                <a href="#" class="btn btn-primary btn-sm">اشترك الآن</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function copyClassroomCode(code) {
-    navigator.clipboard.writeText(code)
-        .then(() => {
-            alert('تم نسخ رمز الفصل الدراسي: ' + code);
-        })
-        .catch(err => {
-            console.error('فشل في نسخ النص: ', err);
-        });
-}
+    function copyClassroomCode(code) {
+        navigator.clipboard.writeText(code)
+            .then(() => {
+                alert('تم نسخ كود الفصل بنجاح');
+            })
+            .catch(err => {
+                console.error('فشل نسخ الكود: ', err);
+            });
+    }
 </script>
 {% endblock %}
