@@ -1,45 +1,45 @@
 
 {% extends "layout.html" %}
 
-{% block title %}الرئيسية - منصة الحصة التعليمية{% endblock %}
+{% block title %}منصة الحصة التعليمية - الصفحة الرئيسية{% endblock %}
 
 {% block public_content %}
-<div class="landing-container">
-    <!-- Hero Section -->
-    <section class="landing-hero">
+<main class="container-fluid p-0">
+    <!-- قسم Hero -->
+    <section class="landing-hero py-5">
         <div class="container py-5">
             <div class="row align-items-center">
                 <div class="col-lg-6">
-                    <h1 class="hero-title mb-4">منصة <span class="text-gradient">الحصة</span> التعليمية</h1>
-                    <p class="hero-description mb-4">منصة تعليمية متكاملة تجمع بين المعلمين والطلاب في بيئة تفاعلية لتحقيق أفضل النتائج التعليمية.</p>
+                    <h1 class="hero-title mb-4">منصة <span class="text-gradient">الحصة التعليمية</span></h1>
+                    <p class="hero-description mb-4">بيئة تعليمية متكاملة تجمع بين المعلمين والطلاب في مكان واحد، مع أدوات فعالة للتعلم الرقمي وإدارة الصفوف الافتراضية.</p>
                     <div class="hero-buttons">
-                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-3 btn-glow">ابدأ الآن مجاناً</a>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-3 btn-glow">سجل الآن</a>
                         <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg">تسجيل الدخول</a>
                     </div>
                     <div class="hero-stats mt-4">
-                        <div class="stat-item me-4">
+                        <div class="stat-item">
                             <i class="fas fa-users stat-icon"></i>
-                            <span>+10,000 طالب ومعلم</span>
-                        </div>
-                        <div class="stat-item me-4">
-                            <i class="fas fa-graduation-cap stat-icon"></i>
-                            <span>+500 فصل دراسي</span>
+                            <span>أكثر من 5000 طالب</span>
                         </div>
                         <div class="stat-item">
-                            <i class="fas fa-star stat-icon"></i>
-                            <span>4.8/5 تقييم</span>
+                            <i class="fas fa-chalkboard-teacher stat-icon"></i>
+                            <span>أكثر من 200 معلم</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-book stat-icon"></i>
+                            <span>أكثر من 500 فصل دراسي</span>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-6">
-                    <div class="hero-image-container">
+                    <div class="hero-image-container position-relative">
                         <div class="hero-shapes">
                             <div class="shape shape-1"></div>
                             <div class="shape shape-2"></div>
                             <div class="shape shape-3"></div>
                         </div>
                         <div class="hero-animation">
-                            <i class="fas fa-chalkboard-teacher hero-icon"></i>
+                            <i class="fas fa-laptop-code hero-icon"></i>
                         </div>
                     </div>
                 </div>
@@ -47,44 +47,77 @@
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="landing-features">
+    <!-- قسم الميزات -->
+    <section class="landing-features py-5">
         <div class="container py-5">
             <div class="text-center mb-5">
-                <h2 class="highlight-text mb-3">لماذا تختار منصة الحصة؟</h2>
-                <p class="lead">نقدم لك مجموعة متكاملة من الأدوات والميزات التي تساعدك على تحقيق أهدافك التعليمية</p>
+                <h2 class="mb-3">ميزات <span class="highlight-text">منصة الحصة</span></h2>
+                <p class="lead">اكتشف الميزات التي تجعل منصتنا الخيار الأمثل للتعليم الرقمي</p>
             </div>
-            <div class="row">
-                <div class="col-lg-4 mb-4">
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
                     <div class="feature-card">
                         <div class="feature-icon">
                             <i class="fas fa-video"></i>
                         </div>
                         <div class="feature-content">
-                            <h3>دروس تفاعلية مباشرة</h3>
-                            <p>حصص مباشرة بالصوت والصورة مع إمكانية التفاعل والمشاركة بين المعلم والطلاب.</p>
+                            <h3>حصص مباشرة</h3>
+                            <p>نقدم تجربة تعليمية مباشرة عبر خاصية البث المباشر مع إمكانيات التفاعل الكاملة بين المعلم والطلاب.</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-4 mb-4">
+                <div class="col-md-6 col-lg-4">
                     <div class="feature-card">
                         <div class="feature-icon">
                             <i class="fas fa-tasks"></i>
                         </div>
                         <div class="feature-content">
-                            <h3>اختبارات وواجبات متنوعة</h3>
-                            <p>أدوات متنوعة لإنشاء الاختبارات والواجبات بأنواع مختلفة من الأسئلة وتصحيحها تلقائياً.</p>
+                            <h3>الواجبات والاختبارات</h3>
+                            <p>نظام متكامل لإنشاء وتوزيع وتقييم الواجبات والاختبارات مع تقارير متقدمة عن مستوى الطلاب.</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-4 mb-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>تواصل فعال</h3>
+                            <p>منصة محادثات متكاملة تتيح التواصل بين المعلم والطلاب وبين الطلاب أنفسهم لتعزيز بيئة التعلم.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
                     <div class="feature-card">
                         <div class="feature-icon">
                             <i class="fas fa-chart-line"></i>
                         </div>
                         <div class="feature-content">
-                            <h3>متابعة تقدم الطلاب</h3>
-                            <p>تقارير وإحصائيات دقيقة لمتابعة تقدم الطلاب ومستوى أدائهم بشكل مستمر.</p>
+                            <h3>متابعة التقدم</h3>
+                            <p>تقارير تحليلية شاملة تتيح للمعلمين متابعة تقدم الطلاب وتحديد نقاط القوة والضعف.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>محتوى تعليمي غني</h3>
+                            <p>إمكانية إضافة ومشاركة مختلف أنواع المحتوى التعليمي مثل الفيديوهات والملفات والصور.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>تجربة متوافقة</h3>
+                            <p>تصميم متجاوب يعمل على جميع الأجهزة سواء الحاسب أو الهاتف الذكي أو الجهاز اللوحي.</p>
                         </div>
                     </div>
                 </div>
@@ -92,18 +125,65 @@
         </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="landing-cta">
-        <div class="container py-5 text-center text-white">
+    <!-- قسم الإنجازات -->
+    <section class="achievements-section py-5">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="mb-3">إنجازاتنا <span class="highlight-text">بالأرقام</span></h2>
+                <p class="lead">ما حققناه معاً خلال مسيرتنا في دعم العملية التعليمية</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="achievement-card text-center">
+                        <div class="achievement-icon mb-3">
+                            <i class="fas fa-user-graduate fa-3x text-primary"></i>
+                        </div>
+                        <div class="achievement-number mb-2">5000+</div>
+                        <div class="achievement-text">طالب مسجل</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="achievement-card text-center">
+                        <div class="achievement-icon mb-3">
+                            <i class="fas fa-chalkboard-teacher fa-3x text-success"></i>
+                        </div>
+                        <div class="achievement-number mb-2">200+</div>
+                        <div class="achievement-text">معلم متميز</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="achievement-card text-center">
+                        <div class="achievement-icon mb-3">
+                            <i class="fas fa-book-open fa-3x text-info"></i>
+                        </div>
+                        <div class="achievement-number mb-2">500+</div>
+                        <div class="achievement-text">فصل دراسي</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="achievement-card text-center">
+                        <div class="achievement-icon mb-3">
+                            <i class="fas fa-clock fa-3x text-warning"></i>
+                        </div>
+                        <div class="achievement-number mb-2">10000+</div>
+                        <div class="achievement-text">ساعة تعلم</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- دعوة للاشتراك -->
+    <section class="landing-cta text-white text-center">
+        <div class="container py-5">
             <div class="cta-content">
-                <h2 class="cta-title">ابدأ رحلتك التعليمية اليوم</h2>
-                <p class="cta-description">انضم إلى آلاف المعلمين والطلاب واستمتع بتجربة تعليمية فريدة</p>
-                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg btn-pulse">سجل الآن مجاناً</a>
-                
+                <h2 class="cta-title mb-4">انضم إلى منصة الحصة اليوم</h2>
+                <p class="cta-description">وابدأ رحلتك التعليمية في بيئة رقمية متكاملة</p>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg btn-pulse mt-3">سجل الآن مجاناً</a>
                 <div class="cta-features">
                     <div class="cta-feature-item">
                         <i class="fas fa-check-circle me-2"></i>
-                        <span>بداية مجانية</span>
+                        <span>فترة تجريبية مجانية</span>
                     </div>
                     <div class="cta-feature-item">
                         <i class="fas fa-check-circle me-2"></i>
@@ -111,11 +191,35 @@
                     </div>
                     <div class="cta-feature-item">
                         <i class="fas fa-check-circle me-2"></i>
-                        <span>إلغاء الاشتراك في أي وقت</span>
+                        <span>تحديثات مستمرة</span>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-</div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // إظهار عناصر الصفحة بتأثير متحرك عند التمرير
+        const revealElements = document.querySelectorAll('.feature-card, .achievement-card');
+        
+        const revealOnScroll = function() {
+            for (let i = 0; i < revealElements.length; i++) {
+                const windowHeight = window.innerHeight;
+                const elementTop = revealElements[i].getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < windowHeight - elementVisible) {
+                    revealElements[i].classList.add('animated', 'fadeInUp');
+                }
+            }
+        };
+        
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // تشغيل الدالة عند تحميل الصفحة
+    });
+</script>
 {% endblock %}

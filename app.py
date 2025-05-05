@@ -26,23 +26,10 @@ class Base(DeclarativeBase):
 # Initialize SQLAlchemy
 db = SQLAlchemy(model_class=Base)
 
-"""
-إعداد تطبيق Flask
-تكوين قاعدة البيانات وإعداد الجلسات ونظام المصادقة
-"""
-
 # Create Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "al-hesa-default-secret")
+app.config.from_object(Config)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-
-# Configure database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///al-7esa.db")
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
-    "pool_pre_ping": True,
-}
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Initialize database
 db.init_app(app)
@@ -95,33 +82,6 @@ from models import User
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-"""
-تسجيل وحدات المسارات (Blueprints)
-تنظيم مسارات التطبيق في وحدات منفصلة
-"""
-
-# Import and register blueprints
-from routes import main_bp
-from routes.auth import auth_bp
-from routes.admin import admin_bp
-from routes.teacher import teacher_bp
-from routes.student import student_bp
-from routes.assistant import assistant_bp
-
-# Create upload directories
-def create_upload_directories():
-    upload_dirs = [
-        'static/uploads',
-        'static/uploads/classroom_content',
-        'static/uploads/profile_pictures',
-        'static/uploads/chat_images'
-    ]
-
-    for directory in upload_dirs:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-            print(f"Created directory: {directory}")
-
 # Create upload directories
 def create_upload_directories():
     upload_dirs = [
@@ -136,22 +96,8 @@ def create_upload_directories():
             os.makedirs(directory)
             print(f"Created directory: {directory}")
 
-# Register blueprints
-def register_blueprints(app):
-    app.register_blueprint(main_bp)
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(teacher_bp, url_prefix='/teacher')
-    app.register_blueprint(student_bp, url_prefix='/student')
-    app.register_blueprint(assistant_bp, url_prefix='/assistant')
-    
-    # Create upload directories
-    create_upload_directories()
-
-
-# Create tables
-with app.app_context():
-    db.create_all()
+# Create upload directories
+create_upload_directories()
 
 # Route for favicon
 @app.route('/favicon.ico')
@@ -161,34 +107,32 @@ def favicon():
 # Initialize SocketIO
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-"""
-معالجة الأخطاء والاستثناءات
-تعريف الصفحات المخصصة للأخطاء مثل 404 و500
-"""
+# Import and register blueprints
+from routes import main_bp
+from routes.auth import auth_bp
+from routes.admin import admin_bp
+from routes.teacher import teacher_bp
+from routes.student import student_bp
+from routes.assistant import assistant_bp
 
-# Import routes 
-from routes import *
+# Register blueprints
+app.register_blueprint(main_bp)
+app.register_blueprint(auth_bp)
+app.register_blueprint(admin_bp, url_prefix='/admin')
+app.register_blueprint(teacher_bp, url_prefix='/teacher')
+app.register_blueprint(student_bp, url_prefix='/student')
+app.register_blueprint(assistant_bp, url_prefix='/assistant')
+
+# Create tables
+with app.app_context():
+    db.create_all()
 
 # Import socket events
 from streaming import *
 
-# تشغيل التطبيق
-def create_app(config_class=Config):
-    app = Flask(__name__)
-    app.config.from_object(config_class)
-
-    # Create necessary upload directories
-    create_upload_directories()
-
-    db.init_app(app)
-    migrate.init_app(app, db)
-    login_manager.init_app(app)
-    register_blueprints(app)
-    return app
-
-if __name__ == '__main__':
-    create_app().run(debug=True)
-
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def internal_server_error(error):
