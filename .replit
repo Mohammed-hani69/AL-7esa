@@ -75,18 +75,6 @@ args = "pip install -r requirements.txt"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -m flask db init || true"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python -m flask db migrate || true"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python -m flask db upgrade || true"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
 args = "python main.py"
 
 [[workflows.workflow]]

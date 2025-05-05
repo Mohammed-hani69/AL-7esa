@@ -7,13 +7,14 @@ import os
 import logging
 from datetime import datetime
 
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager
 from flask_socketio import SocketIO
+from config import Config
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
