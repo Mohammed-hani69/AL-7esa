@@ -2,7 +2,7 @@ modules = ["web", "python-3.11", "nodejs-20"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["iana-etc", "libmysqlclient", "openssl", "postgresql"]
+packages = ["iana-etc", "libmysqlclient", "openssl", "postgresql", "pkg-config"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -10,7 +10,7 @@ run = ["sh", "-c", "gunicorn --bind 0.0.0.0:5000 main:app"]
 build = ["sh", "-c", "python -m flask db upgrade"]
 
 [workflows]
-runButton = "Start Application"
+runButton = "Run Flask App"
 
 [[workflows.workflow]]
 name = "Project"
@@ -46,6 +46,23 @@ args = "python -m flask db upgrade"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "gunicorn --bind 0.0.0.0:5000 --workers 4 main:app"
+
+[[workflows.workflow]]
+name = "Run Flask App"
+author = 42307871
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install -r requirements.txt"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -m flask db upgrade"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python main.py"
 
 [[ports]]
 localPort = 5000
