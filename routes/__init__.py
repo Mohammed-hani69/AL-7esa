@@ -1,18 +1,15 @@
-from flask import render_template, redirect, url_for
+"""
+منصة الحصة التعليمية - ملف المسارات الرئيسي
+يحتوي على مسارات الصفحة الرئيسية والصفحات العامة
+"""
+
+from flask import render_template, redirect, url_for, request
 from flask_login import current_user
 from app import app
 
 @app.route('/')
 def index():
-    if current_user.is_authenticated:
-        if current_user.role == 'admin':
-            return redirect(url_for('admin.dashboard'))
-        elif current_user.role == 'teacher':
-            return redirect(url_for('teacher.dashboard'))
-        elif current_user.role == 'student':
-            return redirect(url_for('student.dashboard'))
-        elif current_user.role == 'assistant':
-            return redirect(url_for('assistant.dashboard'))
+    """عرض الصفحة الرئيسية"""
     return render_template('index.html')
 
 @app.errorhandler(404)
