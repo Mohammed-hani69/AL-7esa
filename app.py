@@ -116,7 +116,7 @@ from routes.student import student_bp
 from routes.assistant import assistant_bp
 
 # Register blueprints
-app.register_blueprint(main_bp)
+app.register_blueprint(main_bp, name="main")
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(teacher_bp, url_prefix='/teacher')
