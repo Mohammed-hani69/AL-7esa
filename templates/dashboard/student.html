@@ -170,167 +170,189 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- ترحيب لوحة التحكم -->
-    <div class="dashboard-welcome shadow">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="mb-3">مرحباً، {{ current_user.name }}!</h2>
-                <p class="mb-2">مرحباً بك في لوحة تحكم الطالب الخاصة بك. من هنا يمكنك الوصول إلى فصولك الدراسية ومتابعة تقدمك.</p>
-            </div>
-            <div class="d-none d-md-block">
-                <i class="fas fa-user-graduate fa-4x text-white-50"></i>
-            </div>
-        </div>
+<div class="container-fluid dashboard-container">
+    <!-- ترويسة لوحة التحكم -->
+    <div class="content-header mb-4">
+        <h1 class="mb-2">لوحة تحكم الطالب</h1>
+        <p class="content-description text-muted">مرحباً {{ current_user.name }}، مرحباً بك في لوحة التحكم الخاصة بك.</p>
     </div>
 
-    <!-- إحصائيات الطالب -->
-    <div class="dashboard-stats">
-        <div class="stat-card primary">
-            <div class="stat-icon">
-                <i class="fas fa-chalkboard"></i>
-            </div>
-            <h3>{{ enrollments|length }}</h3>
-            <p>الفصول المسجلة</p>
+    <!-- إحصائيات سريعة -->
+    <div class="dashboard-section mb-5">
+        <div class="dashboard-section-header mb-3">
+            <h2 class="dashboard-section-title">إحصائيات سريعة</h2>
         </div>
-
-        <div class="stat-card success">
-            <div class="stat-icon">
-                <i class="fas fa-tasks"></i>
+        <div class="row g-3">
+            <div class="col-xl-4 col-md-6">
+                <div class="stat-card primary h-100">
+                    <h3>الفصول المسجلة</h3>
+                    <div class="stat-value">{{ enrollments|length }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-chalkboard"></i>
+                    </div>
+                </div>
             </div>
-            <h3>{{ upcoming_assignments|length }}</h3>
-            <p>الواجبات القادمة</p>
-        </div>
 
-        <div class="stat-card info">
-            <div class="stat-icon">
-                <i class="fas fa-question-circle"></i>
+            <div class="col-xl-4 col-md-6">
+                <div class="stat-card success h-100">
+                    <h3>الواجبات القادمة</h3>
+                    <div class="stat-value">{{ upcoming_assignments|length }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                </div>
             </div>
-            <h3>{{ upcoming_quizzes|length }}</h3>
-            <p>الاختبارات المتاحة</p>
+
+            <div class="col-xl-4 col-md-6">
+                <div class="stat-card info h-100">
+                    <h3>الاختبارات المتاحة</h3>
+                    <div class="stat-value">{{ upcoming_quizzes|length }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- الفصول الدراسية -->
-    <div class="card shadow mb-4">
-        <div class="card-header">
-            <h6 class="m-0 font-weight-bold text-primary">فصولك الدراسية</h6>
-            <a href="{{ url_for('student.join_classroom') }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus-circle me-1"></i>الانضمام إلى فصل
-            </a>
+    <div class="dashboard-section mb-5">
+        <div class="dashboard-section-header mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="dashboard-section-title">فصولك الدراسية</h2>
+                <a href="{{ url_for('student.join_classroom') }}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle ml-1"></i> الانضمام إلى فصل
+                </a>
+            </div>
         </div>
-        <div class="card-body">
-            {% if enrollments %}
-                <div class="row">
-                    {% for enrollment in enrollments %}
-                        {% set classroom = enrollment.classroom %}
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="card classroom-card" style="border-top-color: {{ classroom.color }};">
-                                <div class="card-body">
-                                    <h5 class="card-title mb-2">{{ classroom.name }}</h5>
-                                    <p class="card-text text-muted mb-3">{{ classroom.subject }} | {{ classroom.grade }}</p>
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="badge bg-{{ 'success' if classroom.is_free else 'primary' }}">
+
+        {% if enrollments %}
+            <div class="row g-3">
+                {% for enrollment in enrollments %}
+                    {% set classroom = enrollment.classroom %}
+                    <div class="col-xl-4 col-md-6">
+                        <div class="classroom-card card h-100" style="border-top: 4px solid {{ classroom.color|default('var(--primary-color)') }};">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">{{ classroom.name }}</h5>
+                                <div class="classroom-info">
+                                    <div>
+                                        <i class="fas fa-book"></i>
+                                        <span>{{ classroom.subject }}</span>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-graduation-cap"></i>
+                                        <span>{{ classroom.grade }}</span>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-user-tie"></i>
+                                        <span>{{ classroom.teacher.name }}</span>
+                                    </div>
+                                    <div class="classroom-subject">
+                                        <i class="fas fa-tag"></i>
+                                        <span class="badge {{ 'bg-success' if classroom.is_free else 'bg-primary' }}">
                                             {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
                                         </span>
-                                        <span class="text-primary">
-                                            <i class="fas fa-user-tie me-1"></i>{{ classroom.teacher.name }}
-                                        </span>
                                     </div>
-                                    <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn btn-primary w-100">
-                                        دخول الفصل
-                                    </a>
                                 </div>
+                                <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn btn-teacher w-100 mt-3">
+                                    <i class="fas fa-arrow-left ml-1"></i> دخول الفصل
+                                </a>
                             </div>
                         </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-5">
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 card">
+                <div class="card-body">
                     <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
                     <h5>لم تنضم إلى أي فصول بعد</h5>
                     <p class="text-muted">قم بالانضمام إلى فصل دراسي للبدء في رحلتك التعليمية</p>
                     <a href="{{ url_for('student.join_classroom') }}" class="btn btn-primary mt-2">
-                        <i class="fas fa-plus-circle me-1"></i>انضم إلى فصل جديد
+                        <i class="fas fa-plus-circle ml-1"></i> انضم إلى فصل جديد
                     </a>
                 </div>
-            {% endif %}
-        </div>
+            </div>
+        {% endif %}
     </div>
 
-    <!-- الواجبات القادمة -->
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-header">
-                    <h6 class="m-0 font-weight-bold text-primary">الواجبات القادمة</h6>
-                </div>
-                <div class="card-body">
-                    {% if upcoming_assignments %}
-                        <div class="list-group">
-                            {% for assignment in upcoming_assignments %}
-                                <a href="{{ url_for('student.view_assignment', classroom_id=assignment.classroom_id, assignment_id=assignment.id) }}" 
-                                   class="list-group-item list-group-item-action">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ assignment.title }}</h6>
-                                        <small class="text-{{ 'danger' if assignment.due_date.date() <= now.date() else 'muted' }}">
-                                            <i class="fas fa-clock me-1"></i>
-                                            {% if assignment.due_date.date() == now.date() %}
-                                                اليوم
-                                            {% else %}
-                                                {{ (assignment.due_date - now).days }} أيام
-                                            {% endif %}
-                                        </small>
-                                    </div>
-                                    <p class="mb-1 small">{{ assignment.description|truncate(100) }}</p>
-                                    <small class="text-muted">{{ assignment.classroom.name }}</small>
-                                </a>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
-                            <p class="mb-0">لا توجد واجبات قادمة حالياً</p>
-                        </div>
-                    {% endif %}
+    <!-- المهام والواجبات -->
+    <div class="dashboard-section mb-4">
+        <div class="dashboard-section-header mb-3">
+            <h2 class="dashboard-section-title">المهام المطلوبة</h2>
+        </div>
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0 font-weight-bold text-primary">الواجبات القادمة</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if upcoming_assignments %}
+                            <div class="list-group">
+                                {% for assignment in upcoming_assignments %}
+                                    <a href="{{ url_for('student.view_assignment', classroom_id=assignment.classroom_id, assignment_id=assignment.id) }}" 
+                                    class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ assignment.title }}</h6>
+                                            <small class="text-{{ 'danger' if assignment.due_date.date() <= now.date() else 'muted' }}">
+                                                <i class="fas fa-clock ml-1"></i>
+                                                {% if assignment.due_date.date() == now.date() %}
+                                                    اليوم
+                                                {% else %}
+                                                    {{ (assignment.due_date - now).days }} أيام
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <p class="mb-1 small">{{ assignment.description|truncate(100) }}</p>
+                                        <small class="text-muted">{{ assignment.classroom.name }}</small>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                                <p class="mb-0">لا توجد واجبات قادمة حالياً</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- الاختبارات المتاحة -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-header">
-                    <h6 class="m-0 font-weight-bold text-primary">الاختبارات المتاحة</h6>
-                </div>
-                <div class="card-body">
-                    {% if upcoming_quizzes %}
-                        <div class="list-group">
-                            {% for quiz in upcoming_quizzes %}
-                                <a href="{{ url_for('student.quiz', classroom_id=quiz.classroom_id, quiz_id=quiz.id) }}" 
-                                   class="list-group-item list-group-item-action">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ quiz.title }}</h6>
-                                        <small class="text-{{ 'success' if now >= quiz.start_time and now <= quiz.end_time else 'muted' }}">
-                                            <i class="fas fa-hourglass-half me-1"></i>
-                                            {% if now >= quiz.start_time and now <= quiz.end_time %}
-                                                متاح الآن
-                                            {% elif now < quiz.start_time %}
-                                                يبدأ {{ (quiz.start_time - now).days }} أيام
-                                            {% endif %}
-                                        </small>
-                                    </div>
-                                    <p class="mb-1 small">{{ quiz.description|truncate(100) }}</p>
-                                    <small class="text-muted">{{ quiz.classroom.name }} | {{ quiz.duration_minutes }} دقيقة</small>
-                                </a>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-clipboard-check fa-2x text-info mb-3"></i>
-                            <p class="mb-0">لا توجد اختبارات متاحة حالياً</p>
-                        </div>
-                    {% endif %}
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0 font-weight-bold text-primary">الاختبارات المتاحة</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if upcoming_quizzes %}
+                            <div class="list-group">
+                                {% for quiz in upcoming_quizzes %}
+                                    <a href="{{ url_for('student.quiz', classroom_id=quiz.classroom_id, quiz_id=quiz.id) }}" 
+                                    class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ quiz.title }}</h6>
+                                            <small class="text-{{ 'success' if now >= quiz.start_time and now <= quiz.end_time else 'muted' }}">
+                                                <i class="fas fa-hourglass-half ml-1"></i>
+                                                {% if now >= quiz.start_time and now <= quiz.end_time %}
+                                                    متاح الآن
+                                                {% elif now < quiz.start_time %}
+                                                    يبدأ {{ (quiz.start_time - now).days }} أيام
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <p class="mb-1 small">{{ quiz.description|truncate(100) }}</p>
+                                        <small class="text-muted">{{ quiz.classroom.name }} | {{ quiz.duration_minutes }} دقيقة</small>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-clipboard-check fa-2x text-info mb-3"></i>
+                                <p class="mb-0">لا توجد اختبارات متاحة حالياً</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
