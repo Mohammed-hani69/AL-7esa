@@ -3,30 +3,33 @@
 {% block title %}إدارة المستخدمين - الحصة{% endblock %}
 
 {% block styles %}
-<link href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/admin/users.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">إدارة المستخدمين</h1>
-        <a href="#" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#addUserModal">
-            <i class="fas fa-user-plus fa-sm text-white-50"></i> إضافة مستخدم
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">إدارة المستخدمين</h1>
+            <p class="mb-0 text-muted">إدارة المستخدمين، إضافة، تعديل وحذف المستخدمين من النظام</p>
+        </div>
+        <a href="#" class="btn btn-primary btn-icon shadow-sm" data-toggle="modal" data-target="#addUserModal">
+            <i class="fas fa-user-plus fa-sm"></i> إضافة مستخدم
         </a>
     </div>
 
     <!-- Users Filters Row -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header py-3">
+            <div class="card shadow users-filter-card">
+                <div class="card-header users-filter-header">
                     <h6 class="m-0 font-weight-bold text-primary">تصفية المستخدمين</h6>
                 </div>
                 <div class="card-body">
                     <form action="{{ url_for('admin.users') }}" method="get">
                         <div class="form-row">
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-lg-3 col-md-6">
                                 <label for="role">الصلاحية</label>
                                 <select class="form-control" id="role" name="role">
                                     <option value="">الكل</option>
@@ -36,7 +39,7 @@
                                     <option value="admin" {% if role == 'admin' %}selected{% endif %}>مسؤول</option>
                                 </select>
                             </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-lg-3 col-md-6">
                                 <label for="status">الحالة</label>
                                 <select class="form-control" id="status" name="status">
                                     <option value="">الكل</option>
@@ -44,19 +47,22 @@
                                     <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>معطل</option>
                                 </select>
                             </div>
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-lg-6 col-md-12">
                                 <label for="search">بحث</label>
-                                <input type="text" class="form-control" id="search" name="search" placeholder="اسم، بريد إلكتروني، رقم هاتف..." value="{{ search }}">
+                                <div class="search-form">
+                                    <input type="text" class="form-control" id="search" name="search" placeholder="اسم، بريد إلكتروني، رقم هاتف..." value="{{ search }}">
+                                    <i class="fas fa-search search-icon"></i>
+                                </div>
                             </div>
                         </div>
                         <div class="form-row justify-content-end">
-                            <div class="form-group col-md-3">
-                                <button type="submit" class="btn btn-primary btn-block">
+                            <div class="col-lg-3 col-md-6 mb-2 mb-md-0">
+                                <button type="submit" class="btn btn-primary btn-block btn-icon">
                                     <i class="fas fa-search"></i> بحث
                                 </button>
                             </div>
-                            <div class="form-group col-md-3">
-                                <a href="{{ url_for('admin.users') }}" class="btn btn-secondary btn-block">
+                            <div class="col-lg-3 col-md-6">
+                                <a href="{{ url_for('admin.users') }}" class="btn btn-secondary btn-block btn-icon">
                                     <i class="fas fa-redo"></i> إعادة تعيين
                                 </a>
                             </div>
@@ -70,26 +76,26 @@
     <!-- Users Table Row -->
     <div class="row">
         <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">قائمة المستخدمين</h6>
+            <div class="card shadow mb-4 users-table-card">
+                <div class="users-table-header">
+                    <h6 class="users-table-title">قائمة المستخدمين ({{ users.total }})</h6>
                     <div class="dropdown no-arrow">
-                        <a class="dropdown-toggle" href="#" role="button" id="usersDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        <a class="btn btn-icon action-btn dropdown-toggle" href="#" role="button" id="usersDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v"></i>
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="usersDropdown">
+                        <div class="dropdown-menu dropdown-menu-left shadow animated--fade-in" aria-labelledby="usersDropdown">
                             <div class="dropdown-header">إجراءات:</div>
                             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#exportUsersModal">
-                                <i class="fas fa-download fa-sm fa-fw mr-2 text-gray-400"></i>
+                                <i class="fas fa-download fa-sm fa-fw ml-2 text-gray-400"></i>
                                 تصدير المستخدمين
                             </a>
                             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#importUsersModal">
-                                <i class="fas fa-upload fa-sm fa-fw mr-2 text-gray-400"></i>
+                                <i class="fas fa-upload fa-sm fa-fw ml-2 text-gray-400"></i>
                                 استيراد المستخدمين
                             </a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#bulkActionsModal">
-                                <i class="fas fa-tasks fa-sm fa-fw mr-2 text-gray-400"></i>
+                                <i class="fas fa-tasks fa-sm fa-fw ml-2 text-gray-400"></i>
                                 إجراءات جماعية
                             </a>
                         </div>
@@ -97,10 +103,10 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered" id="usersTable" width="100%" cellspacing="0">
+                        <table class="table users-table" id="usersTable">
                             <thead>
                                 <tr>
-                                    <th>الاسم</th>
+                                    <th>المستخدم</th>
                                     <th>رقم الهاتف</th>
                                     <th>البريد الإلكتروني</th>
                                     <th>الصلاحية</th>
@@ -112,56 +118,60 @@
                             <tbody>
                                 {% for user in users.items %}
                                 <tr>
-                                    <td>{{ user.name }}</td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-name">{{ user.name }}</div>
+                                        </div>
+                                    </td>
                                     <td>{{ user.phone }}</td>
                                     <td>{{ user.email or '-' }}</td>
                                     <td>
                                         {% if user.role == 'student' %}
-                                        <span class="badge badge-info">طالب</span>
+                                        <span class="role-badge role-student">طالب</span>
                                         {% elif user.role == 'teacher' %}
-                                        <span class="badge badge-primary">معلم</span>
+                                        <span class="role-badge role-teacher">معلم</span>
                                         {% elif user.role == 'assistant' %}
-                                        <span class="badge badge-success">مساعد</span>
+                                        <span class="role-badge role-assistant">مساعد</span>
                                         {% elif user.role == 'admin' %}
-                                        <span class="badge badge-danger">مسؤول</span>
+                                        <span class="role-badge role-admin">مسؤول</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
                                     <td>
                                         {% if user.is_active %}
-                                        <span class="badge badge-success">نشط</span>
+                                        <span class="status-badge status-active">نشط</span>
                                         {% else %}
-                                        <span class="badge badge-secondary">معطل</span>
+                                        <span class="status-badge status-inactive">معطل</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <div class="dropdown no-arrow">
-                                            <a class="dropdown-toggle btn btn-sm btn-light" href="#" role="button" id="dropdownMenuLink{{ user.id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                <i class="fas fa-ellipsis-v fa-sm fa-fw"></i>
-                                            </a>
-                                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink{{ user.id }}">
+                                        <div class="dropdown">
+                                            <button class="btn btn-icon action-btn dropdown-toggle" type="button" id="dropdownMenuButton{{ user.id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-left shadow animated--fade-in" aria-labelledby="dropdownMenuButton{{ user.id }}">
                                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#viewUserModal" data-id="{{ user.id }}" data-name="{{ user.name }}">
-                                                    <i class="fas fa-eye fa-sm fa-fw mr-2 text-gray-400"></i>
+                                                    <i class="fas fa-eye fa-sm fa-fw ml-2 text-primary"></i>
                                                     عرض التفاصيل
                                                 </a>
                                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#editUserModal" data-id="{{ user.id }}">
-                                                    <i class="fas fa-edit fa-sm fa-fw mr-2 text-gray-400"></i>
+                                                    <i class="fas fa-edit fa-sm fa-fw ml-2 text-info"></i>
                                                     تعديل
                                                 </a>
                                                 <div class="dropdown-divider"></div>
                                                 {% if user.role == 'teacher' %}
                                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#assignTrialModal" data-id="{{ user.id }}" data-name="{{ user.name }}">
-                                                    <i class="fas fa-gift fa-sm fa-fw mr-2 text-gray-400"></i>
+                                                    <i class="fas fa-gift fa-sm fa-fw ml-2 text-success"></i>
                                                     تعيين فترة تجريبية
                                                 </a>
                                                 {% endif %}
                                                 <a class="dropdown-item" href="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" onclick="return confirm('هل أنت متأكد من تغيير حالة المستخدم؟')">
-                                                    <i class="fas fa-{% if user.is_active %}ban{% else %}check{% endif %} fa-sm fa-fw mr-2 text-gray-400"></i>
+                                                    <i class="fas fa-{% if user.is_active %}ban{% else %}check{% endif %} fa-sm fa-fw ml-2 text-warning"></i>
                                                     {% if user.is_active %}تعطيل{% else %}تفعيل{% endif %}
                                                 </a>
                                                 {% if user.role != 'admin' %}
                                                 <a class="dropdown-item text-danger" href="#" onclick="return confirm('هل أنت متأكد من حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء!')">
-                                                    <i class="fas fa-trash fa-sm fa-fw mr-2 text-gray-400"></i>
+                                                    <i class="fas fa-trash fa-sm fa-fw ml-2"></i>
                                                     حذف
                                                 </a>
                                                 {% endif %}
@@ -175,19 +185,20 @@
                     </div>
                     
                     <!-- Pagination -->
-                    <div class="d-flex justify-content-center mt-4">
+                    {% if users.pages > 1 %}
+                    <div class="pagination-container">
                         <nav aria-label="Page navigation">
                             <ul class="pagination">
                                 {% if users.has_prev %}
                                 <li class="page-item">
                                     <a class="page-link" href="{{ url_for('admin.users', page=users.prev_num, role=role, status=status, search=search) }}" aria-label="Previous">
-                                        <span aria-hidden="true">&laquo;</span>
+                                        <i class="fas fa-chevron-right"></i>
                                     </a>
                                 </li>
                                 {% else %}
                                 <li class="page-item disabled">
                                     <a class="page-link" href="#" aria-label="Previous">
-                                        <span aria-hidden="true">&laquo;</span>
+                                        <i class="fas fa-chevron-right"></i>
                                     </a>
                                 </li>
                                 {% endif %}
@@ -213,19 +224,20 @@
                                 {% if users.has_next %}
                                 <li class="page-item">
                                     <a class="page-link" href="{{ url_for('admin.users', page=users.next_num, role=role, status=status, search=search) }}" aria-label="Next">
-                                        <span aria-hidden="true">&raquo;</span>
+                                        <i class="fas fa-chevron-left"></i>
                                     </a>
                                 </li>
                                 {% else %}
                                 <li class="page-item disabled">
                                     <a class="page-link" href="#" aria-label="Next">
-                                        <span aria-hidden="true">&raquo;</span>
+                                        <i class="fas fa-chevron-left"></i>
                                     </a>
                                 </li>
                                 {% endif %}
                             </ul>
                         </nav>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -271,41 +283,157 @@
             </div>
             <form action="" method="post" id="assignTrialForm">
                 <div class="modal-body">
-                    <p class="mb-3">أنت على وشك تعيين فترة تجريبية للمستخدم <strong id="trialUserName"></strong>.</p>
+                    <div class="text-center modal-user-info">
+                        <i class="fas fa-user-circle fa-4x text-primary mb-3"></i>
+                        <h5 class="mb-0"><span id="trialUserName"></span></h5>
+                        <p class="text-muted">تعيين فترة تجريبية للمستخدم</p>
+                    </div>
+                    
                     <div class="form-group">
                         <label for="trial_days">مدة الفترة التجريبية (أيام)</label>
                         <input type="number" class="form-control" id="trial_days" name="trial_days" value="14" min="1" max="30" required>
+                        <small class="form-text text-muted">الحد الأقصى للفترة التجريبية هو 30 يوم</small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-primary">تعيين</button>
+                    <button type="submit" class="btn btn-primary">تعيين الفترة التجريبية</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Additional modals for adding, editing, importing, exporting users would go here -->
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" role="dialog" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUserModalLabel">إضافة مستخدم جديد</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <form action="#" method="post">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="user_name">الاسم الكامل</label>
+                            <input type="text" class="form-control" id="user_name" name="name" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="user_phone">رقم الهاتف</label>
+                            <input type="text" class="form-control" id="user_phone" name="phone" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="user_email">البريد الإلكتروني</label>
+                            <input type="email" class="form-control" id="user_email" name="email">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="user_role">الصلاحية</label>
+                            <select class="form-control" id="user_role" name="role" required>
+                                <option value="">اختر الصلاحية</option>
+                                <option value="student">طالب</option>
+                                <option value="teacher">معلم</option>
+                                <option value="assistant">مساعد</option>
+                                <option value="admin">مسؤول</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="user_password">كلمة المرور</label>
+                            <input type="password" class="form-control" id="user_password" name="password" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="user_password_confirm">تأكيد كلمة المرور</label>
+                            <input type="password" class="form-control" id="user_password_confirm" name="password_confirm" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" checked>
+                            <label class="custom-control-label" for="is_active">حساب نشط</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">إضافة المستخدم</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">تعديل بيانات المستخدم</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center" id="editUserLoader">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">جاري التحميل...</span>
+                    </div>
+                </div>
+                <form action="#" method="post" id="editUserForm" class="d-none">
+                    <!-- Form fields will be loaded via AJAX -->
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Users Modal -->
+<div class="modal fade" id="exportUsersModal" tabindex="-1" role="dialog" aria-labelledby="exportUsersModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportUsersModalLabel">تصدير المستخدمين</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>اختر تنسيق ملف التصدير:</p>
+                <div class="form-group">
+                    <div class="custom-control custom-radio">
+                        <input type="radio" id="exportCsv" name="exportFormat" class="custom-control-input" value="csv" checked>
+                        <label class="custom-control-label" for="exportCsv">CSV</label>
+                    </div>
+                    <div class="custom-control custom-radio">
+                        <input type="radio" id="exportExcel" name="exportFormat" class="custom-control-input" value="excel">
+                        <label class="custom-control-label" for="exportExcel">Excel</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="applyFilters" name="applyFilters" checked>
+                        <label class="custom-control-label" for="applyFilters">تطبيق معايير التصفية الحالية</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary">تصدير</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
 <script>
-    $(document).ready(function() {
-        // Initialize the datatables
-        $('#usersTable').DataTable({
-            "paging": false,  // Disable default paging since we're using Flask-SQLAlchemy pagination
-            "ordering": true,
-            "info": false,
-            "searching": false,  // Disable default search since we have our own search form
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
-            }
-        });
-        
+    $(document).ready(function() {        
         // View User Modal
         $('#viewUserModal').on('show.bs.modal', function (event) {
             const button = $(event.relatedTarget);
@@ -324,9 +452,9 @@
                 $('#userModalContent').removeClass('d-none').html(`
                     <div class="row">
                         <div class="col-md-4 text-center mb-3">
-                            <img src="/static/img/user-default.jpg" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
+                            <img src="/static/uploads/profile_pictures/default.jpg" class="modal-avatar">
                             <h5>${userName}</h5>
-                            <p class="badge badge-primary">معلم</p>
+                            <p class="role-badge role-teacher">معلم</p>
                         </div>
                         <div class="col-md-8">
                             <h6 class="font-weight-bold">معلومات المستخدم</h6>
@@ -430,6 +558,64 @@
             // Update the form action
             const formAction = "{{ url_for('admin.assign_trial', user_id=0) }}".replace('0', userId);
             modal.find('#assignTrialForm').attr('action', formAction);
+        });
+        
+        // Edit User Modal
+        $('#editUserModal').on('show.bs.modal', function (event) {
+            const button = $(event.relatedTarget);
+            const userId = button.data('id');
+            const modal = $(this);
+            
+            $('#editUserLoader').removeClass('d-none');
+            $('#editUserForm').addClass('d-none');
+            
+            // Simulate AJAX loading (replace with actual AJAX)
+            setTimeout(() => {
+                $('#editUserLoader').addClass('d-none');
+                $('#editUserForm').removeClass('d-none').html(`
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="edit_user_name">الاسم الكامل</label>
+                            <input type="text" class="form-control" id="edit_user_name" name="name" value="اسم المستخدم" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="edit_user_phone">رقم الهاتف</label>
+                            <input type="text" class="form-control" id="edit_user_phone" name="phone" value="+966555555555" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="edit_user_email">البريد الإلكتروني</label>
+                            <input type="email" class="form-control" id="edit_user_email" name="email" value="user@example.com">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="edit_user_role">الصلاحية</label>
+                            <select class="form-control" id="edit_user_role" name="role" required>
+                                <option value="">اختر الصلاحية</option>
+                                <option value="student">طالب</option>
+                                <option value="teacher" selected>معلم</option>
+                                <option value="assistant">مساعد</option>
+                                <option value="admin">مسؤول</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="edit_is_active" name="is_active" checked>
+                            <label class="custom-control-label" for="edit_is_active">حساب نشط</label>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="form-group">
+                        <label for="edit_user_password">تغيير كلمة المرور (اتركه فارغًا للاحتفاظ بالحالية)</label>
+                        <input type="password" class="form-control" id="edit_user_password" name="password">
+                    </div>
+                    <div class="text-left mt-4">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                    </div>
+                `);
+            }, 1000);
         });
     });
 </script>
