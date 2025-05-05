@@ -1,30 +1,93 @@
-{% extends 'student/layout.html' %}
 
-{% block title %}الانضمام إلى فصل دراسي{% endblock %}
-
-{% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-6 mx-auto">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">الانضمام إلى فصل دراسي</h3>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الانضمام إلى فصل - الحصة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student/student.css') }}">
+</head>
+<body>
+    <div class="wrapper">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{{ url_for('index') }}">الحصة</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('student.dashboard') }}">لوحة التحكم</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('student.classrooms') }}">فصولي</a>
+                        </li>
+                        <li class="nav-item active">
+                            <a class="nav-link" href="{{ url_for('student.join_classroom') }}">انضمام لفصل</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle fa-fw"></i> {{ current_user.name }}
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                    <i class="fas fa-user fa-sm fa-fw ml-2 text-gray-400"></i>
+                                    الملف الشخصي
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw ml-2 text-gray-400"></i>
+                                    تسجيل الخروج
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('student.join_classroom') }}">
-                        {{ form.hidden_tag() if form }}
-                        <div class="form-group mb-3">
-                            <label for="classroom_code" class="form-label">رمز الفصل الدراسي</label>
-                            <input type="text" class="form-control" id="classroom_code" name="classroom_code" required>
-                            <small class="form-text text-muted">أدخل الرمز الذي أعطاك إياه المعلم.</small>
+            </div>
+        </nav>
+
+        <div class="content-wrapper">
+            <div class="container py-4">
+                <div class="row justify-content-center">
+                    <div class="col-md-8 col-lg-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">انضمام إلى فصل دراسي</h5>
+                            </div>
+                            <div class="card-body">
+                                {% with messages = get_flashed_messages(with_categories=true) %}
+                                    {% if messages %}
+                                        {% for category, message in messages %}
+                                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endwith %}
+                                
+                                <form method="POST" action="{{ url_for('student.join_classroom') }}">
+                                    <div class="mb-3">
+                                        <label for="classroom_code" class="form-label">كود الفصل</label>
+                                        <input type="text" class="form-control" id="classroom_code" name="classroom_code" required>
+                                        <small class="form-text text-muted">أدخل كود الفصل الذي تريد الانضمام إليه. يمكنك الحصول على الكود من معلمك.</small>
+                                    </div>
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary">انضمام للفصل</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">انضمام</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

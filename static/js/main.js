@@ -1,48 +1,176 @@
-// Main JavaScript functionality for Al-Hesa platform
-
+// وظائف مساعدة للتطبيق
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize theme
-  initTheme();
-  
-  // Setup sidebar toggle
-  setupSidebarToggle();
-  
-  // Setup dropdown menus
-  setupDropdowns();
-  
-  // Initialize tooltips
-  initTooltips();
-  
-  // Setup alerts auto-dismiss
-  setupAlerts();
-  
-  // Sidebar Toggle
-  const sidebarToggleTop = document.getElementById('sidebarToggleTop');
-  const sidebar = document.querySelector('.sidebar');
-  const body = document.body;
-  
-  // إنشاء عنصر overlay للخلفية
-  const overlay = document.createElement('div');
-  overlay.className = 'sidebar-overlay';
-  body.appendChild(overlay);
-  
-  function toggleSidebar() {
-      sidebar.classList.toggle('show');
-      overlay.classList.toggle('show');
-      body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
-  }
-  
-  sidebarToggleTop.addEventListener('click', toggleSidebar);
-  
-  // إغلاق السايدبار عند النقر على الـ overlay
-  overlay.addEventListener('click', toggleSidebar);
-  
-  // إغلاق السايدبار عند تغيير حجم النافذة إلى شاشة كبيرة
-  window.addEventListener('resize', function() {
-      if (window.innerWidth >= 768 && sidebar.classList.contains('show')) {
-          toggleSidebar();
-      }
-  });
+    // تهيئة عناصر واجهة المستخدم
+    setupSidebar();
+    setupDropdowns();
+    setupTooltips();
+    setupFormValidation();
+    setupThemeToggle();
+
+    // دعم الرجوع للخلف في المتصفح
+    setupBackButton();
+});
+
+// إعداد الشريط الجانبي
+function setupSidebar() {
+    const sidebarToggle = document.querySelector('#sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.classList.toggle('sidebar-toggled');
+            sidebar.classList.toggle('toggled');
+        });
+    }
+
+    // إغلاق الشريط الجانبي عند تصغير النافذة
+    window.addEventListener('resize', function() {
+        if (window.innerWidth < 768 && sidebar) {
+            document.body.classList.add('sidebar-toggled');
+            sidebar.classList.add('toggled');
+        }
+    });
+
+    // التحقق من حجم النافذة عند التحميل
+    if (window.innerWidth < 768 && sidebar) {
+        document.body.classList.add('sidebar-toggled');
+        sidebar.classList.add('toggled');
+    }
+}
+
+// إعداد القوائم المنسدلة
+function setupDropdowns() {
+    const dropdowns = document.querySelectorAll('.dropdown-toggle');
+
+    if (dropdowns && dropdowns.length > 0) {
+        dropdowns.forEach(dropdown => {
+            dropdown.addEventListener('click', function(e) {
+                e.preventDefault();
+                const menu = this.nextElementSibling;
+                if (menu) {
+                    menu.classList.toggle('show');
+                }
+            });
+        });
+
+        // إغلاق القائمة عند النقر خارجها
+        document.addEventListener('click', function(e) {
+            if (!e.target.matches('.dropdown-toggle')) {
+                const dropdowns = document.querySelectorAll('.dropdown-menu.show');
+                if (dropdowns && dropdowns.length > 0) {
+                    dropdowns.forEach(dropdown => {
+                        dropdown.classList.remove('show');
+                    });
+                }
+            }
+        });
+    }
+}
+
+// إعداد التلميحات
+function setupTooltips() {
+    const tooltips = document.querySelectorAll('[data-toggle="tooltip"]');
+    if (tooltips && tooltips.length > 0) {
+        tooltips.forEach(tooltip => {
+            tooltip.title = tooltip.getAttribute('data-title') || tooltip.title;
+            tooltip.addEventListener('mouseenter', showTooltip);
+            tooltip.addEventListener('mouseleave', hideTooltip);
+        });
+    }
+}
+
+// عرض التلميح
+function showTooltip(e) {
+    const element = e.target;
+    const title = element.getAttribute('data-title') || element.title;
+
+    if (!title) return;
+
+    const tooltipEl = document.createElement('div');
+    tooltipEl.className = 'tooltip';
+    tooltipEl.innerHTML = `<div class="tooltip-inner">${title}</div>`;
+    document.body.appendChild(tooltipEl);
+
+    const rect = element.getBoundingClientRect();
+    const tooltipRect = tooltipEl.getBoundingClientRect();
+
+    tooltipEl.style.position = 'absolute';
+    tooltipEl.style.top = `${rect.top - tooltipRect.height - 5}px`;
+    tooltipEl.style.left = `${rect.left + (rect.width / 2) - (tooltipRect.width / 2)}px`;
+    tooltipEl.style.zIndex = 1070;
+
+    element._tooltip = tooltipEl;
+}
+
+// إخفاء التلميح
+function hideTooltip(e) {
+    const element = e.target;
+    if (element._tooltip) {
+        element._tooltip.remove();
+        delete element._tooltip;
+    }
+}
+
+// التحقق من صحة النماذج
+function setupFormValidation() {
+    const forms = document.querySelectorAll('.needs-validation');
+
+    if (forms && forms.length > 0) {
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }
+}
+
+// تبديل السمة (داكن/فاتح)
+function setupThemeToggle() {
+    const themeToggle = document.querySelector('#themeToggle');
+
+    if (themeToggle) {
+        // استرجاع السمة من التخزين المحلي
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+
+        if (currentTheme === 'dark') {
+            themeToggle.checked = true;
+        }
+
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    }
+}
+
+// دعم زر الرجوع للخلف
+function setupBackButton() {
+    const backButtons = document.querySelectorAll('.back-button');
+
+    if (backButtons && backButtons.length > 0) {
+        backButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.history.back();
+            });
+        });
+    }
+}
+
+// التحقق من وجود أخطاء في الصفحة
+window.addEventListener('error', function(e) {
+    console.error('حدث خطأ في JavaScript:', e.message);
 });
 
 // Initialize theme based on user preference or system setting
@@ -109,71 +237,6 @@ function setupSidebarToggle() {
   }
 }
 
-// Setup dropdown menus
-function setupDropdowns() {
-  const dropdowns = document.querySelectorAll('.dropdown-toggle');
-  
-  dropdowns.forEach(dropdown => {
-    dropdown.addEventListener('click', function(e) {
-      e.preventDefault();
-      const menu = this.nextElementSibling;
-      if (menu) {
-        menu.classList.toggle('show');
-      }
-    });
-  });
-  
-  // Close dropdown when clicking outside
-  document.addEventListener('click', function(e) {
-    if (!e.target.matches('.dropdown-toggle')) {
-      const dropdowns = document.querySelectorAll('.dropdown-menu');
-      dropdowns.forEach(dropdown => {
-        if (dropdown.classList.contains('show')) {
-          dropdown.classList.remove('show');
-        }
-      });
-    }
-  });
-}
-
-// Initialize tooltips
-function initTooltips() {
-  const tooltips = document.querySelectorAll('[data-toggle="tooltip"]');
-  tooltips.forEach(tooltip => {
-    const title = tooltip.getAttribute('title') || tooltip.getAttribute('data-original-title');
-    if (title) {
-      tooltip.setAttribute('data-original-title', title);
-      tooltip.setAttribute('title', '');
-      
-      tooltip.addEventListener('mouseenter', function() {
-        const tooltipId = 'tooltip-' + Math.random().toString(36).substring(2, 9);
-        
-        const tooltipEl = document.createElement('div');
-        tooltipEl.className = 'tooltip fade show';
-        tooltipEl.id = tooltipId;
-        tooltipEl.innerHTML = `<div class="tooltip-inner">${title}</div>`;
-        document.body.appendChild(tooltipEl);
-        
-        const rect = this.getBoundingClientRect();
-        tooltipEl.style.top = (rect.top - tooltipEl.offsetHeight - 5) + 'px';
-        tooltipEl.style.left = (rect.left + (rect.width / 2) - (tooltipEl.offsetWidth / 2)) + 'px';
-        
-        this.setAttribute('aria-describedby', tooltipId);
-      });
-      
-      tooltip.addEventListener('mouseleave', function() {
-        const tooltipId = this.getAttribute('aria-describedby');
-        if (tooltipId) {
-          const tooltipEl = document.getElementById(tooltipId);
-          if (tooltipEl) {
-            tooltipEl.remove();
-          }
-          this.removeAttribute('aria-describedby');
-        }
-      });
-    }
-  });
-}
 
 // Setup alerts auto-dismiss
 function setupAlerts() {
