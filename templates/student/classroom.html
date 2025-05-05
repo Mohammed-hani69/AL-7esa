@@ -7,7 +7,70 @@
             <h6 class="m-0 font-weight-bold text-primary">محادثة الفصل</h6>
         </div>
         <div class="card-body">
-            <!-- Chat content here -->
+            <div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">محتوى الفصل</h6>
+    </div>
+    <div class="card-body">
+        {% if contents %}
+            <div class="list-group">
+                {% for content in contents %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">
+                                {% if content.content_type == 'file' %}
+                                    <i class="fas fa-file me-2 text-primary"></i>
+                                {% elif content.content_type == 'image' %}
+                                    <i class="fas fa-image me-2 text-success"></i>
+                                {% elif content.content_type == 'video' %}
+                                    <i class="fas fa-video me-2 text-danger"></i>
+                                {% elif content.content_type == 'audio' %}
+                                    <i class="fas fa-music me-2 text-warning"></i>
+                                {% else %}
+                                    <i class="fas fa-align-left me-2 text-info"></i>
+                                {% endif %}
+                                {{ content.title }}
+                            </h5>
+                            <small class="text-muted">{{ content.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        {% if content.description %}
+                            <p class="mb-1">{{ content.description }}</p>
+                        {% endif %}
+
+                        {% if content.content_type == 'text' %}
+                            <div class="mt-2 p-3 bg-light rounded">
+                                {{ content.content_text|safe }}
+                            </div>
+                        {% elif content.content_type == 'image' %}
+                            <div class="mt-2">
+                                <img src="{{ content.content_url }}" alt="{{ content.title }}" class="img-fluid rounded" style="max-height: 200px;">
+                            </div>
+                        {% elif content.content_type == 'video' %}
+                            <div class="mt-2">
+                                <video src="{{ content.content_url }}" controls class="w-100" style="max-height: 300px;"></video>
+                            </div>
+                        {% elif content.content_type == 'audio' %}
+                            <div class="mt-2">
+                                <audio src="{{ content.content_url }}" controls class="w-100"></audio>
+                            </div>
+                        {% elif content.content_type == 'file' %}
+                            <div class="mt-2">
+                                <a href="{{ content.content_url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                    <i class="fas fa-download me-1"></i>تحميل الملف
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-folder-open fa-3x text-gray-300 mb-2"></i>
+                <p>لا يوجد محتوى في هذا الفصل بعد</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
         </div>
     </div>
     {% endif %}

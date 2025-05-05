@@ -106,11 +106,28 @@ from routes.teacher import teacher_bp
 from routes.student import student_bp
 from routes.assistant import assistant_bp
 
-app.register_blueprint(auth_bp)
-app.register_blueprint(admin_bp, url_prefix='/admin')
-app.register_blueprint(teacher_bp, url_prefix='/teacher')
-app.register_blueprint(student_bp, url_prefix='/student')
-app.register_blueprint(assistant_bp, url_prefix='/assistant')
+# Create upload directories
+def create_upload_directories():
+    upload_dirs = [
+        'static/uploads',
+        'static/uploads/classroom_content',
+        'static/uploads/profile_pictures',
+        'static/uploads/chat_images'
+    ]
+
+    for directory in upload_dirs:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            print(f"Created directory: {directory}")
+
+# Register blueprints
+def register_blueprints(app):
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(teacher_bp, url_prefix='/teacher')
+    app.register_blueprint(student_bp, url_prefix='/student')
+    app.register_blueprint(assistant_bp, url_prefix='/assistant')
+
 
 # Create tables
 with app.app_context():
@@ -136,8 +153,22 @@ from routes import *
 from streaming import *
 
 # تشغيل التطبيق
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+
+    # Create necessary upload directories
+    create_upload_directories()
+
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
+    register_blueprints(app)
+    return app
+
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    create_app().run(debug=True)
+
 
 @app.errorhandler(500)
 def internal_server_error(error):

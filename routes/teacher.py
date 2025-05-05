@@ -19,7 +19,7 @@ from models import Subscription, SubscriptionPlan, ChatSettings, ChatParticipant
 teacher_bp = Blueprint('teacher', __name__)
 
 # Allowed file extensions for uploads
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'mp4', 'mp3', 'wav'}
 
 def allowed_file(filename):
     return '.' in filename and \
