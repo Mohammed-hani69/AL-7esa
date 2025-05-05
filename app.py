@@ -138,3 +138,11 @@ from streaming import *
 # تشغيل التطبيق
 if __name__ == '__main__':
     socketio.run(app, debug=True)
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    app.logger.error(f"Server Error: {error}")
+    # عند حدوث استثناء في جينجا بسبب تعريف كتلة مكررة
+    if "block 'content' defined twice" in str(error):
+        return render_template('500.html', error="حدث خطأ في قوالب الموقع. يرجى المحاولة مرة أخرى أو الاتصال بمسؤول النظام."), 500
+    return render_template('500.html', error=str(error)), 500

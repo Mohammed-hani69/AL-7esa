@@ -1,174 +1,203 @@
 // وظائف مساعدة للتطبيق
 document.addEventListener('DOMContentLoaded', function() {
-    // تهيئة عناصر واجهة المستخدم
-    setupSidebar();
-    setupDropdowns();
-    setupTooltips();
-    setupFormValidation();
-    setupThemeToggle();
+    // التبديل بين الثيمات (داكن/فاتح)
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', toggleTheme);
+    }
 
-    // دعم الرجوع للخلف في المتصفح
-    setupBackButton();
-});
-
-// إعداد الشريط الجانبي
-function setupSidebar() {
-    const sidebarToggle = document.querySelector('#sidebarToggle');
-    const sidebar = document.querySelector('.sidebar');
-
-    if (sidebarToggle && sidebar) {
-        sidebarToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            document.body.classList.toggle('sidebar-toggled');
-            sidebar.classList.toggle('toggled');
+    // تبديل القائمة الجانبية
+    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    if (sidebarToggleBtn) {
+        const sidebar = document.querySelector('.sidebar');
+        sidebarToggleBtn.addEventListener('click', function() {
+            if (sidebar) {
+                sidebar.classList.toggle('show');
+            }
         });
     }
 
-    // إغلاق الشريط الجانبي عند تصغير النافذة
-    window.addEventListener('resize', function() {
-        if (window.innerWidth < 768 && sidebar) {
-            document.body.classList.add('sidebar-toggled');
-            sidebar.classList.add('toggled');
-        }
-    });
-
-    // التحقق من حجم النافذة عند التحميل
-    if (window.innerWidth < 768 && sidebar) {
-        document.body.classList.add('sidebar-toggled');
-        sidebar.classList.add('toggled');
+    // تنشيط توست آلياً إذا وجد
+    const toastElements = document.querySelectorAll('.toast');
+    if (toastElements.length > 0 && typeof bootstrap !== 'undefined') {
+        toastElements.forEach(toast => {
+            new bootstrap.Toast(toast).show();
+        });
     }
-}
 
-// إعداد القوائم المنسدلة
-function setupDropdowns() {
-    const dropdowns = document.querySelectorAll('.dropdown-toggle');
+    // تنشيط التلميحات (tooltips) إذا وجدت
+    if (typeof bootstrap !== 'undefined' && typeof bootstrap.Tooltip !== 'undefined') {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        if (tooltipTriggerList.length > 0) {
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    }
 
-    if (dropdowns && dropdowns.length > 0) {
-        dropdowns.forEach(dropdown => {
-            dropdown.addEventListener('click', function(e) {
+    // وظائف القائمة المنسدلة
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    if (dropdownToggles.length > 0) {
+        dropdownToggles.forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
                 e.preventDefault();
-                const menu = this.nextElementSibling;
-                if (menu) {
-                    menu.classList.toggle('show');
+                const dropdownMenu = this.nextElementSibling;
+                if (dropdownMenu) {
+                    dropdownMenu.classList.toggle('show');
                 }
             });
         });
 
-        // إغلاق القائمة عند النقر خارجها
+        // إغلاق القائمة المنسدلة عند النقر خارجها
         document.addEventListener('click', function(e) {
             if (!e.target.matches('.dropdown-toggle')) {
                 const dropdowns = document.querySelectorAll('.dropdown-menu.show');
-                if (dropdowns && dropdowns.length > 0) {
-                    dropdowns.forEach(dropdown => {
-                        dropdown.classList.remove('show');
-                    });
-                }
+                dropdowns.forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
             }
         });
     }
-}
 
-// إعداد التلميحات
-function setupTooltips() {
-    const tooltips = document.querySelectorAll('[data-toggle="tooltip"]');
-    if (tooltips && tooltips.length > 0) {
-        tooltips.forEach(tooltip => {
-            tooltip.title = tooltip.getAttribute('data-title') || tooltip.title;
-            tooltip.addEventListener('mouseenter', showTooltip);
-            tooltip.addEventListener('mouseleave', hideTooltip);
-        });
-    }
-}
-
-// عرض التلميح
-function showTooltip(e) {
-    const element = e.target;
-    const title = element.getAttribute('data-title') || element.title;
-
-    if (!title) return;
-
-    const tooltipEl = document.createElement('div');
-    tooltipEl.className = 'tooltip';
-    tooltipEl.innerHTML = `<div class="tooltip-inner">${title}</div>`;
-    document.body.appendChild(tooltipEl);
-
-    const rect = element.getBoundingClientRect();
-    const tooltipRect = tooltipEl.getBoundingClientRect();
-
-    tooltipEl.style.position = 'absolute';
-    tooltipEl.style.top = `${rect.top - tooltipRect.height - 5}px`;
-    tooltipEl.style.left = `${rect.left + (rect.width / 2) - (tooltipRect.width / 2)}px`;
-    tooltipEl.style.zIndex = 1070;
-
-    element._tooltip = tooltipEl;
-}
-
-// إخفاء التلميح
-function hideTooltip(e) {
-    const element = e.target;
-    if (element._tooltip) {
-        element._tooltip.remove();
-        delete element._tooltip;
-    }
-}
-
-// التحقق من صحة النماذج
-function setupFormValidation() {
-    const forms = document.querySelectorAll('.needs-validation');
-
-    if (forms && forms.length > 0) {
-        forms.forEach(form => {
-            form.addEventListener('submit', function(e) {
-                if (!form.checkValidity()) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }
-}
-
-// تبديل السمة (داكن/فاتح)
-function setupThemeToggle() {
-    const themeToggle = document.querySelector('#themeToggle');
-
-    if (themeToggle) {
-        // استرجاع السمة من التخزين المحلي
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', currentTheme);
-
-        if (currentTheme === 'dark') {
-            themeToggle.checked = true;
+    // تنشيط عناصر المودال إذا وجدت
+    if (typeof bootstrap !== 'undefined' && typeof bootstrap.Modal !== 'undefined') {
+        const modalTriggers = document.querySelectorAll('[data-bs-toggle="modal"]');
+        if (modalTriggers.length > 0) {
+            modalTriggers.forEach(trigger => {
+                trigger.addEventListener('click', function() {
+                    const targetModal = document.querySelector(this.getAttribute('data-bs-target'));
+                    if (targetModal) {
+                        const modal = new bootstrap.Modal(targetModal);
+                        modal.show();
+                    }
+                });
+            });
         }
-
-        themeToggle.addEventListener('change', function() {
-            if (this.checked) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.documentElement.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            }
-        });
     }
-}
 
-// دعم زر الرجوع للخلف
-function setupBackButton() {
-    const backButtons = document.querySelectorAll('.back-button');
-
-    if (backButtons && backButtons.length > 0) {
-        backButtons.forEach(btn => {
-            btn.addEventListener('click', function(e) {
+    // معالجة النقر على أزرار التبديل في الأقسام المبوبة
+    const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+    if (tabButtons.length > 0) {
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
                 e.preventDefault();
-                window.history.back();
+                const targetId = this.getAttribute('data-bs-target') || this.getAttribute('href');
+                if (targetId) {
+                    // إزالة الكلاس active من كل التبويبات
+                    document.querySelectorAll('.tab-pane').forEach(tab => {
+                        tab.classList.remove('show', 'active');
+                    });
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('active');
+                    });
+
+                    // إضافة الكلاس active للتبويب المختار
+                    const target = document.querySelector(targetId);
+                    if (target) {
+                        target.classList.add('show', 'active');
+                        this.classList.add('active');
+                    }
+                }
             });
         });
     }
+});
+
+/**
+ * تبديل بين الثيمات (داكن/فاتح)
+ */
+function toggleTheme() {
+    const body = document.body;
+    const currentTheme = body.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+    body.setAttribute('data-theme', newTheme);
+
+    // حفظ التفضيل في localStorage
+    if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('theme', newTheme);
+    }
+
+    // تغيير أيقونة زر التبديل
+    const themeIcon = document.getElementById('themeIcon');
+    if (themeIcon) {
+        if (newTheme === 'dark') {
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        } else {
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+        }
+    }
 }
 
-// التحقق من وجود أخطاء في الصفحة
+/**
+ * نسخ النص إلى الحافظة
+ * @param {string} text - النص المراد نسخه
+ * @param {HTMLElement} button - زر النسخ (اختياري)
+ */
+function copyToClipboard(text, button) {
+    if (typeof navigator.clipboard !== 'undefined') {
+        navigator.clipboard.writeText(text).then(() => {
+            if (button) {
+                const originalText = button.innerHTML;
+                button.innerHTML = 'تم النسخ!';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            }
+        }).catch(err => {
+            console.error('فشل نسخ النص: ', err);
+        });
+    } else {
+        // دعم احتياطي لمتصفحات أقدم
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+
+        try {
+            document.execCommand('copy');
+            if (button) {
+                const originalText = button.innerHTML;
+                button.innerHTML = 'تم النسخ!';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            }
+        } catch (err) {
+            console.error('فشل نسخ النص: ', err);
+        }
+
+        document.body.removeChild(textArea);
+    }
+}
+
+/**
+ * تحقق من حالة الثيم عند تحميل الصفحة
+ */
+(function() {
+    if (typeof localStorage !== 'undefined') {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+
+            // تحديث أيقونة زر التبديل إذا وجدت
+            const themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) {
+                if (savedTheme === 'dark') {
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                } else {
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                }
+            }
+        }
+    }
+})();
+
+// إعداد التحقق من وجود أخطاء في الصفحة
 window.addEventListener('error', function(e) {
     console.error('حدث خطأ في JavaScript:', e.message);
 });
