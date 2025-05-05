@@ -1,6 +1,173 @@
 {% extends "layout.html" %}
 
-{% block title %}لوحة تحكم الطالب - الحصة{% endblock %}
+{% block title %}لوحة التحكم - الحصة{% endblock %}
+
+{% block styles %}
+<style>
+/* Dashboard Cards */
+.stat-card {
+    border-radius: 0.35rem;
+    margin-bottom: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card .icon {
+    font-size: 2rem;
+    opacity: 0.7;
+}
+
+/* Progress Cards */
+.progress-card {
+    margin-bottom: 1rem;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.progress {
+    height: 0.5rem;
+    border-radius: 1rem;
+}
+
+/* Schedule Timeline */
+.timeline {
+    position: relative;
+    padding: 1rem 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 1rem;
+    height: 100%;
+    width: 2px;
+    background-color: var(--border-color);
+}
+
+.timeline-item {
+    position: relative;
+    padding: 1rem 2rem 1rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    right: 0.85rem;
+    top: 1.5rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    z-index: 1;
+}
+
+.timeline-item.upcoming::before {
+    background-color: var(--warning-color);
+}
+
+.timeline-item.completed::before {
+    background-color: var(--success-color);
+}
+
+.timeline-content {
+    padding: 1rem;
+    background-color: var(--card-bg);
+    border-radius: 0.35rem;
+    box-shadow: 0 0.15rem 1.75rem 0 var(--shadow-color);
+}
+
+.timeline-time {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+/* Activity Feed */
+.activity-feed {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.activity-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-left: 1rem;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-time {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Classroom Cards */
+.classroom-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.classroom-card {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.classroom-card:hover {
+    transform: translateY(-5px);
+}
+
+.classroom-card .card-img-overlay {
+    background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.8));
+}
+
+.classroom-card .subject-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .classroom-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .timeline::before {
+        right: 0.75rem;
+    }
+    
+    .timeline-item {
+        padding-right: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid">

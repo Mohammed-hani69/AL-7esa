@@ -1,15 +1,29 @@
+"""
+مسارات المعلم (Teacher Routes)
+التحكم في إدارة الفصول الدراسية والمحتوى التعليمي
+"""
+
 import random
 import string
+import os
+from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
 from functools import wraps
 from datetime import datetime
 from app import db
-from models import User, Role, Classroom, ClassroomEnrollment, ClassroomContent, ContentType
+from models import QuizAnswer, QuizAttempt, User, Role, Classroom, ClassroomEnrollment, ClassroomContent, ContentType
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizQuestionOption
-from models import Subscription, SubscriptionPlan
+from models import Subscription, SubscriptionPlan, ChatSettings, ChatParticipant
 
 teacher_bp = Blueprint('teacher', __name__)
+
+# Allowed file extensions for uploads
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Teacher required decorator
 def teacher_required(f):
@@ -64,6 +78,10 @@ def can_create_classroom():
     
     return current_classrooms < plan.max_classrooms
 
+"""
+الصفحة الرئيسية للمعلم
+عرض لوحة التحكم والإحصائيات
+"""
 @teacher_bp.route('/dashboard')
 @login_required
 @teacher_required
@@ -87,6 +105,10 @@ def dashboard():
                            plans=plans,
                            can_create_classroom=can_create_classroom())
 
+"""
+إدارة الفصول الدراسية
+إنشاء وتعديل وحذف الفصول
+"""
 @teacher_bp.route('/classroom/create', methods=['GET', 'POST'])
 @login_required
 @teacher_required
@@ -136,7 +158,7 @@ def create_classroom():
         flash(f'تم إنشاء الفصل الدراسي بنجاح. كود الفصل: {code}', 'success')
         return redirect(url_for('teacher.classroom', classroom_id=new_classroom.id))
     
-    return render_template('teacher/create.html')
+    return render_template('classroom/create.html')
 
 @teacher_bp.route('/classroom/<int:classroom_id>')
 @login_required
@@ -172,15 +194,19 @@ def classroom(classroom_id):
     if plan and plan.has_chat:
         can_use_chat = True
     
-    return render_template('teacher/view.html',
-                           classroom=classroom,
-                           contents=contents,
-                           enrollments=enrollments,
-                           assignments=assignments,
-                           quizzes=quizzes,
-                           assistant=assistant,
-                           can_use_chat=can_use_chat)
+    return render_template('teacher/classroom.html',
+                       classroom=classroom,
+                       contents=contents,
+                       enrollments=enrollments,
+                       assignments=assignments,
+                       quizzes=quizzes,
+                       assistant=assistant,
+                       can_use_chat=can_use_chat)
 
+"""
+البث المباشر للفصل
+إدارة الحصص المباشرة والتفاعل مع الطلاب
+"""
 @teacher_bp.route('/classroom/<int:classroom_id>/live')
 @login_required
 @teacher_required
@@ -192,7 +218,7 @@ def live_classroom(classroom_id):
         flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
         return redirect(url_for('teacher.dashboard'))
     
-    return render_template('teacher/live_class.html', classroom=classroom)
+    return render_template('classroom/live_class.html', classroom=classroom)
 
 @teacher_bp.route('/classroom/<int:classroom_id>/add_content', methods=['POST'])
 @login_required
@@ -272,7 +298,7 @@ def assignments(classroom_id):
     # Get assignments
     assignments = Assignment.query.filter_by(classroom_id=classroom.id).order_by(Assignment.created_at.desc()).all()
     
-    return render_template('teacher/assignments.html',
+    return render_template('classroom/assignments.html',
                            classroom=classroom,
                            assignments=assignments)
 
@@ -317,7 +343,7 @@ def create_assignment(classroom_id):
         flash('تم إنشاء الواجب بنجاح', 'success')
         return redirect(url_for('teacher.assignments', classroom_id=classroom.id))
     
-    return render_template('teacher/create_assignment.html', classroom=classroom)
+    return render_template('classroom/create_assignment.html', classroom=classroom)
 
 @teacher_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/submissions')
 @login_required
@@ -384,6 +410,10 @@ def grade_submission(classroom_id, assignment_id, submission_id):
     flash('تم تقييم الواجب بنجاح', 'success')
     return redirect(url_for('teacher.assignment_submissions', classroom_id=classroom.id, assignment_id=assignment.id))
 
+"""
+إدارة الاختبارات
+إنشاء وتحرير وتصحيح الاختبارات
+"""
 @teacher_bp.route('/classroom/<int:classroom_id>/quizzes')
 @login_required
 @teacher_required
@@ -468,14 +498,51 @@ def edit_quiz(classroom_id, quiz_id):
     if classroom.teacher_id != current_user.id or quiz.classroom_id != classroom.id:
         flash('غير مصرح لك بالوصول إلى هذا الاختبار', 'danger')
         return redirect(url_for('teacher.dashboard'))
+
+    if request.method == 'POST':
+        # Update basic quiz information
+        title = request.form.get('title')
+        description = request.form.get('description', '')
+        duration_minutes = int(request.form.get('duration_minutes', 0))
+        start_time_str = request.form.get('start_time')
+        end_time_str = request.form.get('end_time')
+        
+        # Parse dates if provided
+        start_time = None
+        end_time = None
+        
+        if start_time_str:
+            try:
+                start_time = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                flash('تنسيق وقت البدء غير صالح', 'danger')
+                return redirect(url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
+        
+        if end_time_str:
+            try:
+                end_time = datetime.strptime(end_time_str, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                flash('تنسيق وقت النهاية غير صالح', 'danger')
+                return redirect(url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
+
+        # Update quiz
+        quiz.title = title
+        quiz.description = description
+        quiz.duration_minutes = duration_minutes
+        quiz.start_time = start_time
+        quiz.end_time = end_time
+        
+        db.session.commit()
+        flash('تم تحديث معلومات الاختبار بنجاح', 'success')
+        return redirect(url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
     
-    # Get existing questions
+    # Get existing questions for display
     questions = QuizQuestion.query.filter_by(quiz_id=quiz.id).order_by(QuizQuestion.position).all()
     
     return render_template('teacher/edit_quiz.html',
-                           classroom=classroom,
-                           quiz=quiz,
-                           questions=questions)
+                         classroom=classroom,
+                         quiz=quiz,
+                         questions=questions)
 
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/add_question', methods=['POST'])
 @login_required
@@ -557,6 +624,116 @@ def delete_question(classroom_id, quiz_id, question_id):
     
     flash('تم حذف السؤال بنجاح', 'success')
     return redirect(url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
+
+@teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/grade')
+@login_required
+@teacher_required
+def grade_quiz(classroom_id, quiz_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    quiz = Quiz.query.get_or_404(quiz_id)
+    
+    # Ensure the teacher owns this classroom
+    if classroom.teacher_id != current_user.id or quiz.classroom_id != classroom.id:
+        flash('غير مصرح لك بالوصول إلى هذا الاختبار', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+    
+    # Get attempts that need grading (have ungraded essay/short answer questions)
+    attempts = QuizAttempt.query\
+        .join(QuizAnswer)\
+        .join(QuizQuestion)\
+        .filter(
+            QuizAttempt.quiz_id == quiz.id,
+            QuizQuestion.question_type.in_(['essay', 'short_answer']),
+            QuizAnswer.points_earned.is_(None),
+            QuizAttempt.is_completed == True
+        )\
+        .distinct()\
+        .all()
+    
+    return render_template('teacher/grade_quiz.html',
+                           classroom=classroom,
+                           quiz=quiz,
+                           attempts=attempts)
+
+@teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/attempt/<int:attempt_id>/grade', methods=['POST'])
+@login_required
+@teacher_required
+def grade_quiz_attempt(classroom_id, quiz_id, attempt_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    quiz = Quiz.query.get_or_404(quiz_id)
+    attempt = QuizAttempt.query.get_or_404(attempt_id)
+    
+    # Ensure the teacher owns this classroom
+    if classroom.teacher_id != current_user.id or quiz.classroom_id != classroom.id or attempt.quiz_id != quiz.id:
+        flash('غير مصرح لك بالوصول إلى هذا الاختبار', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+    
+    # Process grades
+    total_points = 0
+    all_graded = True
+    
+    for answer in attempt.answers:
+        if answer.question.question_type in ['essay', 'short_answer']:
+            points = request.form.get(f'points_{answer.id}')
+            feedback = request.form.get(f'feedback_{answer.id}')
+            
+        
+        # Update student points
+        attempt.enrollment.points += total_points
+        
+        flash('تم حفظ التصحيح بنجاح', 'success')
+    else:
+        flash('يرجى تصحيح جميع الأسئلة', 'danger')
+        return redirect(url_for('teacher.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
+    
+    db.session.commit()
+    return redirect(url_for('teacher.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
+
+@teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/results')
+@login_required
+@teacher_required
+def quiz_results(classroom_id, quiz_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    quiz = Quiz.query.get_or_404(quiz_id)
+    
+    # Ensure the teacher owns this classroom
+    if classroom.teacher_id != current_user.id or quiz.classroom_id != classroom.id:
+        flash('غير مصرح لك بالوصول إلى هذا الاختبار', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+    
+    # Get all attempts for this quiz, including user information through enrollment
+    attempts = QuizAttempt.query.filter_by(quiz_id=quiz.id).order_by(QuizAttempt.start_time.desc()).all()
+    
+    return render_template('teacher/quiz_results.html',
+                         classroom=classroom,
+                         quiz=quiz,
+                         attempts=attempts)
+
+@teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/attempt/<int:attempt_id>/view')
+@login_required
+@teacher_required
+def view_student_attempt(classroom_id, quiz_id, attempt_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    quiz = Quiz.query.get_or_404(quiz_id)
+    attempt = QuizAttempt.query.get_or_404(attempt_id)
+    
+    # Ensure the teacher owns this classroom and the attempt belongs to this quiz
+    if classroom.teacher_id != current_user.id or quiz.classroom_id != classroom.id or attempt.quiz_id != quiz.id:
+        flash('غير مصرح لك بالوصول إلى هذا الاختبار', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+    
+    # Get answers with their questions, ordered by question position
+    answers = QuizAnswer.query\
+        .join(QuizQuestion)\
+        .filter(QuizAnswer.attempt_id == attempt.id)\
+        .order_by(QuizQuestion.position)\
+        .all()
+    
+    return render_template('teacher/view_student_attempt.html',
+                         classroom=classroom,
+                         quiz=quiz,
+                         attempt=attempt,
+                         answers=answers)
 
 @teacher_bp.route('/classroom/<int:classroom_id>/students')
 @login_required
@@ -644,3 +821,108 @@ def remove_assistant(classroom_id):
     
     flash('تم إزالة المساعد من الفصل بنجاح', 'success')
     return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+
+@teacher_bp.route('/classroom/<int:classroom_id>/chat/settings', methods=['GET', 'POST'])
+@login_required
+@teacher_required
+def chat_settings(classroom_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    
+    # Ensure the teacher owns this classroom
+    if classroom.teacher_id != current_user.id:
+        flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+
+    # Check if plan allows chat
+    plan = get_current_plan()
+    if not plan or not plan.has_chat:
+        flash('باقة اشتراكك الحالية لا تتضمن ميزة المحادثات', 'warning')
+        return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+
+    # Get or create chat settings
+    settings = ChatSettings.query.filter_by(classroom_id=classroom.id).first()
+    if not settings:
+        settings = ChatSettings(classroom_id=classroom.id)
+        db.session.add(settings)
+        db.session.commit()
+
+    if request.method == 'POST':
+        settings.background_color = request.form.get('background_color')
+        settings.is_enabled = 'is_enabled' in request.form
+        
+        # Handle image upload
+        if 'chat_image' in request.files:
+            image = request.files['chat_image']
+            if image and allowed_file(image.filename):
+                filename = secure_filename(image.filename)
+                filepath = os.path.join('static', 'uploads', 'chat_images', filename)
+                if not os.path.exists(os.path.dirname(filepath)):
+                    os.makedirs(os.path.dirname(filepath))
+                image.save(filepath)
+                settings.image_url = filepath
+
+        db.session.commit()
+        flash('تم حفظ إعدادات المحادثة بنجاح', 'success')
+        return redirect(url_for('teacher.chat_settings', classroom_id=classroom.id))
+
+    # Get enrolled students
+    enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom.id).all()
+    
+    # Get chat participants
+    chat_participants = ChatParticipant.query.filter_by(classroom_id=classroom.id).all()
+    
+    return render_template('classroom/chat_settings.html',
+                         classroom=classroom,
+                         settings=settings,
+                         enrollments=enrollments,
+                         chat_participants=chat_participants,
+                         user_type='teacher')
+
+@teacher_bp.route('/classroom/<int:classroom_id>/chat/manage_participants', methods=['POST'])
+@login_required
+@teacher_required
+def manage_chat_participants(classroom_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    
+    # Ensure the teacher owns this classroom
+    if classroom.teacher_id != current_user.id:
+        flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+
+    action = request.form.get('action')
+    enrollment_id = request.form.get('enrollment_id')
+    
+    if not action or not enrollment_id:
+        flash('بيانات غير كاملة', 'danger')
+        return redirect(url_for('teacher.chat_settings', classroom_id=classroom.id))
+
+    enrollment = ClassroomEnrollment.query.get_or_404(enrollment_id)
+    if enrollment.classroom_id != classroom.id:
+        flash('الطالب غير مسجل في هذا الفصل', 'danger')
+        return redirect(url_for('teacher.chat_settings', classroom_id=classroom.id))
+
+    participant = ChatParticipant.query.filter_by(
+        classroom_id=classroom.id,
+        enrollment_id=enrollment.id
+    ).first()
+
+    if action == 'add':
+        if not participant:
+            participant = ChatParticipant(
+                classroom_id=classroom.id,
+                enrollment_id=enrollment.id,
+                added_by_id=current_user.id
+            )
+            db.session.add(participant)
+            flash('تمت إضافة الطالب إلى المحادثة بنجاح', 'success')
+        else:
+            participant.is_enabled = True
+            flash('تم تفعيل الطالب في المحادثة', 'success')
+    
+    elif action == 'remove':
+        if participant:
+            participant.is_enabled = False
+            flash('تم منع الطالب من الوصول إلى المحادثة', 'success')
+
+    db.session.commit()
+    return redirect(url_for('teacher.chat_settings', classroom_id=classroom.id))

@@ -1,6 +1,257 @@
 {% extends "layout.html" %}
 
-{% block title %}إنشاء حساب جديد - الحصة{% endblock %}
+{% block title %}تسجيل حساب جديد - الحصة{% endblock %}
+
+{% block styles %}
+<style>
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 600px;
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.auth-header {
+    padding: 2rem;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.auth-title {
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.auth-subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.auth-body {
+    padding: 2rem;
+}
+
+.auth-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.auth-form .form-control {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    transition: all 0.2s ease;
+}
+
+.auth-form .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.auth-form label {
+    color: var(--text-color);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.role-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.role-option {
+    position: relative;
+    cursor: pointer;
+}
+
+.role-option input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.role-card {
+    padding: 1.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 0.5rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.role-option input:checked ~ .role-card {
+    border-color: var(--primary-color);
+    background-color: rgba(78, 115, 223, 0.1);
+}
+
+.role-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.role-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.role-description {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.terms-check {
+    margin-bottom: 1.5rem;
+}
+
+.terms-check .form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.register-btn {
+    width: 100%;
+    padding: 0.75rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+}
+
+.auth-footer {
+    text-align: center;
+    padding: 1rem 2rem;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+.step-indicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+}
+
+.step:not(:last-child) {
+    margin-left: 3rem;
+}
+
+.step-number {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: var(--light-color);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.step.active .step-number {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.step.completed .step-number {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.step-label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.step.active .step-label {
+    color: var(--primary-color);
+}
+
+.step.completed .step-label {
+    color: var(--success-color);
+}
+
+.verification-code {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+.verification-code input {
+    width: 3rem;
+    height: 3rem;
+    text-align: center;
+    font-size: 1.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.verification-code input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 576px) {
+    .auth-wrapper {
+        padding: 1rem;
+    }
+    
+    .auth-card {
+        border-radius: 0.5rem;
+    }
+    
+    .auth-header,
+    .auth-body,
+    .auth-footer {
+        padding: 1.5rem;
+    }
+    
+    .role-selector {
+        grid-template-columns: 1fr;
+    }
+    
+    .step:not(:last-child) {
+        margin-left: 1.5rem;
+    }
+    
+    .step-label {
+        font-size: 0.875rem;
+    }
+}
+</style>
+{% endblock %}
 
 {% block head_extra %}
 <script defer src="{{ url_for('static', filename='js/auth.js') }}"></script>

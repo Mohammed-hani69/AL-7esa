@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block title %}تصحيح الاختبار - {{ quiz.title }} - {{ classroom.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">تصحيح الاختبار - {{ quiz.title }}</h1>
+            <p class="text-muted mb-0">{{ classroom.name }}</p>
+        </div>
+        <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>العودة للاختبارات
+        </a>
+    </div>
+
+    <!-- Ungraded Essay Questions -->
+    {% for attempt in attempts %}
+        {% if not attempt.is_graded %}
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        {{ attempt.enrollment.user.name }}
+                        <span class="badge badge-info float-start">المحاولة: {{ attempt.start_time.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('assistant.grade_quiz_attempt', classroom_id=classroom.id, quiz_id=quiz.id, attempt_id=attempt.id) }}">
+                        {% for answer in attempt.answers %}
+                            {% if answer.question.question_type in ['essay', 'short_answer'] and answer.points_earned is none %}
+                                <div class="mb-4">
+                                    <h6 class="font-weight-bold">السؤال {{ loop.index }}: {{ answer.question.question_text }}</h6>
+                                    <div class="border rounded p-3 mb-2 bg-light">
+                                        {{ answer.text_answer|format_math|safe }}
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="points_{{ answer.id }}">النقاط (من {{ answer.question.points }})</label>
+                                                <input type="number" 
+                                                       class="form-control" 
+                                                       id="points_{{ answer.id }}" 
+                                                       name="points_{{ answer.id }}" 
+                                                       min="0" 
+                                                       max="{{ answer.question.points }}" 
+                                                       required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="feedback_{{ answer.id }}">التعليق (اختياري)</label>
+                                                <textarea class="form-control" 
+                                                          id="feedback_{{ answer.id }}" 
+                                                          name="feedback_{{ answer.id }}" 
+                                                          rows="2"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>حفظ التصحيح
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-check-circle fa-3x text-gray-300 mb-3"></i>
+            <h5>لا توجد اختبارات تحتاج للتصحيح</h5>
+            <p>جميع الإجابات المقالية تم تصحيحها</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

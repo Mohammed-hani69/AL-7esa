@@ -1,0 +1,240 @@
+{% extends "layout.html" %}
+
+{% block title %}تعديل الاختبار - {{ quiz.title }} - {{ classroom.name }}{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">تعديل الاختبار - {{ quiz.title }}</h1>
+        <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>العودة للاختبارات
+        </a>
+    </div>
+
+    <!-- Quiz Basic Info -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">معلومات الاختبار الأساسية</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}">
+                <div class="form-group mb-3">
+                    <label for="title">عنوان الاختبار</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ quiz.title }}" required>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="description">وصف الاختبار</label>
+                    <textarea class="form-control" id="description" name="description" rows="4">{{ quiz.description }}</textarea>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="duration_minutes">مدة الاختبار (بالدقائق)</label>
+                            <input type="number" class="form-control" id="duration_minutes" name="duration_minutes" min="1" value="{{ quiz.duration_minutes }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="start_time">وقت البدء</label>
+                            <input type="datetime-local" class="form-control" id="start_time" name="start_time" value="{{ quiz.start_time.strftime('%Y-%m-%dT%H:%M') if quiz.start_time }}">
+                            <small class="form-text text-muted">اتركه فارغاً للسماح بالبدء فوراً</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="end_time">وقت الانتهاء</label>
+                            <input type="datetime-local" class="form-control" id="end_time" name="end_time" value="{{ quiz.end_time.strftime('%Y-%m-%dT%H:%M') if quiz.end_time }}">
+                            <small class="form-text text-muted">اتركه فارغاً للسماح بالحل في أي وقت</small>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>حفظ التغييرات
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quiz Questions -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">الأسئلة ({{ questions|length }})</h6>
+            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addQuestionModal">
+                <i class="fas fa-plus-circle me-1"></i>إضافة سؤال
+            </button>
+        </div>
+        <div class="card-body">
+            {% if questions %}
+                {% for question in questions %}
+                    <div class="quiz-question mb-4 p-3 border rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="font-weight-bold">
+                                    {{ loop.index }}. {{ question.question_text }}
+                                    <span class="badge badge-info me-2">{{ question.points }} نقطة</span>
+                                </h6>
+                                
+                                {% if question.question_type in ['multiple_choice', 'true_false'] %}
+                                    <div class="options-list mt-2">
+                                        {% for option in question.options %}
+                                            <div class="option {% if option.is_correct %}correct{% endif %} mb-1">
+                                                <i class="fas {% if option.is_correct %}fa-check-circle text-success{% else %}fa-circle text-secondary{% endif %} me-2"></i>
+                                                {{ option.option_text }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="mt-2">
+                                        <span class="badge badge-secondary">
+                                            {% if question.question_type == 'short_answer' %}
+                                                إجابة قصيرة
+                                            {% else %}
+                                                مقال
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <form id="delete-question-{{ question.id }}" 
+                                      action="{{ url_for('teacher.delete_question', classroom_id=classroom.id, quiz_id=quiz.id, question_id=question.id) }}" 
+                                      method="POST" class="d-inline">
+                                    <button type="button" class="btn btn-sm btn-danger" 
+                                            onclick="deleteQuestion({{ question.id }}, '{{ question.question_text }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-question-circle fa-3x text-gray-300 mb-3"></i>
+                    <h5>لا توجد أسئلة بعد</h5>
+                    <p>ابدأ بإضافة الأسئلة باستخدام زر "إضافة سؤال"</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Question Modal -->
+<div class="modal fade" id="addQuestionModal" tabindex="-1" role="dialog" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addQuestionModalLabel">إضافة سؤال جديد</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="add-question-form" action="{{ url_for('teacher.add_question', classroom_id=classroom.id, quiz_id=quiz.id) }}" method="POST">
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label for="question-text">نص السؤال</label>
+                        <textarea class="form-control" id="question-text" name="question_text" rows="3" required></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="question-type">نوع السؤال</label>
+                                <select class="form-control" id="question-type" name="question_type" required>
+                                    <option value="multiple_choice">اختيار من متعدد</option>
+                                    <option value="true_false">صح/خطأ</option>
+                                    <option value="short_answer">إجابة قصيرة</option>
+                                    <option value="essay">مقال</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="points">النقاط</label>
+                                <input type="number" class="form-control" id="points" name="points" min="1" value="1" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="question-options-container" class="mt-3">
+                        <!-- Options will be dynamically added here -->
+                    </div>
+
+                    <div id="options-controls" class="mt-3 text-end d-none">
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="addQuizOption()">
+                            <i class="fas fa-plus me-1"></i>إضافة خيار
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">إضافة السؤال</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide options based on question type
+    const questionType = document.getElementById('question-type');
+    const optionsContainer = document.getElementById('question-options-container');
+    const optionsControls = document.getElementById('options-controls');
+
+    questionType.addEventListener('change', function() {
+        const type = this.value;
+        
+        if (type === 'multiple_choice' || type === 'true_false') {
+            optionsContainer.innerHTML = ''; // Clear existing options
+            optionsControls.classList.remove('d-none');
+            
+            if (type === 'true_false') {
+                // Add true/false options
+                optionsContainer.innerHTML = `
+                    <div class="form-row mb-2">
+                        <div class="col-1">
+                            <input class="form-check-input" type="radio" name="correct_option" id="option-0" value="0" checked>
+                        </div>
+                        <div class="col-10">
+                            <input type="text" class="form-control" name="option_text[]" value="صح" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row mb-2">
+                        <div class="col-1">
+                            <input class="form-check-input" type="radio" name="correct_option" id="option-1" value="1">
+                        </div>
+                        <div class="col-10">
+                            <input type="text" class="form-control" name="option_text[]" value="خطأ" readonly>
+                        </div>
+                    </div>
+                `;
+                optionsControls.classList.add('d-none');
+            } else {
+                // Add initial options for multiple choice
+                addQuizOption();
+                addQuizOption();
+            }
+        } else {
+            optionsContainer.innerHTML = '';
+            optionsControls.classList.add('d-none');
+        }
+    });
+
+    // Trigger initial setup
+    questionType.dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %}
+{% endblock %}

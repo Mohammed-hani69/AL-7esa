@@ -1,0 +1,152 @@
+{% extends "layout.html" %}
+
+{% block title %}تسليمات الواجب - {{ classroom.name }} - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">تقييم الواجب - {{ assignment.title }}</h1>
+        <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>العودة للواجبات
+        </a>
+    </div>
+
+    <!-- Assignment Details -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">تفاصيل الواجب</h6>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <h5>الوصف</h5>
+                        <p>{{ assignment.description|default('لا يوجد وصف') }}</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="assignment-info">
+                        <p><i class="fas fa-calendar me-2"></i>تاريخ التسليم: 
+                            {% if assignment.due_date %}
+                                <span class="text-danger">{{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
+                            {% else %}
+                                <span class="text-muted">غير محدد</span>
+                            {% endif %}
+                        </p>
+                        <p><i class="fas fa-star me-2"></i>النقاط: {{ assignment.points }}</p>
+                        <p><i class="fas fa-users me-2"></i>عدد التسليمات: 
+                            <span class="badge badge-info">{{ submissions|length }} / {{ classroom.enrollments|length }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submissions List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">التسليمات</h6>
+        </div>
+        <div class="card-body">
+            {% if submissions %}
+                <div class="list-group">
+                    {% for submission in submissions %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">{{ submission.enrollment.user.name }}</h5>
+                                <small class="text-muted">{{ submission.submission_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <div class="submission-content bg-light p-3 rounded mb-3">
+                                {{ submission.content }}
+                            </div>
+                            {% if submission.grade is not none %}
+                                <div class="alert alert-success">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>
+                                            <i class="fas fa-check-circle me-2"></i>تم التقييم
+                                            <span class="badge badge-success ms-2">{{ submission.grade }}/{{ assignment.points }}</span>
+                                        </span>
+                                        <button class="btn btn-sm btn-primary" onclick="editGrade({{ submission.id }})">
+                                            <i class="fas fa-edit me-1"></i>تعديل التقييم
+                                        </button>
+                                    </div>
+                                    {% if submission.feedback %}
+                                        <div class="mt-2">
+                                            <h6>الملاحظات:</h6>
+                                            <p class="mb-0">{{ submission.feedback }}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <form method="POST" action="{{ url_for('assistant.grade_submission', classroom_id=classroom.id, assignment_id=assignment.id, submission_id=submission.id) }}" class="grade-form">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label for="grade-{{ submission.id }}">الدرجة</label>
+                                                <input type="number" class="form-control" id="grade-{{ submission.id }}" name="grade" min="0" max="{{ assignment.points }}" required>
+                                                <small class="form-text text-muted">من {{ assignment.points }} نقطة</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="form-group">
+                                                <label for="feedback-{{ submission.id }}">ملاحظات (اختياري)</label>
+                                                <textarea class="form-control" id="feedback-{{ submission.id }}" name="feedback" rows="2"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary mt-2">
+                                        <i class="fas fa-save me-1"></i>حفظ التقييم
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-gray-300 mb-3"></i>
+                    <h5>لا توجد تسليمات بعد</h5>
+                </div>
+            {% endif %}
+
+            {% if missing_submissions %}
+                <div class="mt-4">
+                    <h5>الطلاب الذين لم يسلموا بعد:</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>اسم الطالب</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>تاريخ الانضمام للفصل</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for enrollment in missing_submissions %}
+                                    <tr>
+                                        <td>{{ enrollment.user.name }}</td>
+                                        <td>{{ enrollment.user.phone }}</td>
+                                        <td>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function editGrade(submissionId) {
+        const gradeForm = document.querySelector(`#grade-${submissionId}`).closest('form');
+        const alertDiv = gradeForm.previousElementSibling;
+        gradeForm.classList.remove('d-none');
+        alertDiv.classList.add('d-none');
+    }
+</script>
+{% endblock %}

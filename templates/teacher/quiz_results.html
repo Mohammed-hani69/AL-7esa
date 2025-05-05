@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block title %}نتائج الاختبار - {{ quiz.title }} - {{ classroom.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">نتائج الاختبار - {{ quiz.title }}</h1>
+            <p class="text-muted mb-0">{{ classroom.name }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('teacher.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="btn btn-warning me-2">
+                <i class="fas fa-check-circle me-1"></i>تصحيح الإجابات المقالية
+            </a>
+            <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right me-1"></i>العودة للاختبارات
+            </a>
+        </div>
+    </div>
+
+    <!-- Quiz Info -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">إجمالي المحاولات</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ attempts|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">متوسط الدرجات</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if attempts %}
+                                    {{ "%.1f"|format(attempts|map(attribute='score')|sum / attempts|length) }}/{{ quiz.total_points }}
+                                {% else %}
+                                    0/{{ quiz.total_points }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Attempts -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">محاولات الطلاب</h6>
+        </div>
+        <div class="card-body">
+            {% if attempts %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>اسم الطالب</th>
+                                <th>وقت البدء</th>
+                                <th>وقت الانتهاء</th>
+                                <th>الدرجة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attempt in attempts %}
+                                <tr>
+                                    <td>{{ attempt.enrollment.user.name }}</td>
+                                    <td>{{ attempt.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ attempt.end_time.strftime('%Y-%m-%d %H:%M') if attempt.end_time else 'لم ينته بعد' }}</td>
+                                    <td>
+                                        {% if attempt.is_completed %}
+                                            <span class="badge badge-success">{{ attempt.score }}/{{ quiz.total_points }}</span>
+                                        {% else %}
+                                            <span class="badge badge-warning">جاري الحل</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attempt.is_completed %}
+                                            <a href="{{ url_for('teacher.view_student_attempt', classroom_id=classroom.id, quiz_id=quiz.id, attempt_id=attempt.id) }}" 
+                                               class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye me-1"></i>عرض الإجابات
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                    <h5>لا توجد محاولات بعد</h5>
+                    <p>لم يقم أي طالب بحل الاختبار حتى الآن</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

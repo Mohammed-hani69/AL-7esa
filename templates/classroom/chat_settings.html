@@ -1,0 +1,190 @@
+{% extends "layout.html" %}
+
+{% block title %}إعدادات المحادثة - {{ classroom.name }}{% endblock %}
+
+{% block styles %}
+<style>
+.color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-block;
+    margin: 0 5px;
+    border: 2px solid transparent;
+}
+
+.color-option.selected {
+    border-color: #000;
+}
+
+.student-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.student-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.student-item:last-child {
+    border-bottom: none;
+}
+
+.student-info {
+    flex: 1;
+}
+
+.preview-box {
+    width: 100%;
+    height: 200px;
+    border-radius: 8px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.chat-image-preview {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">إعدادات المحادثة - {{ classroom.name }}</h1>
+        <div>
+            <a href="{{ url_for((user_type + '.classroom')|string, classroom_id=classroom.id) }}" class="btn btn-sm btn-secondary">
+                <i class="fas fa-arrow-right me-1"></i>العودة للفصل
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Chat Settings -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">الإعدادات العامة</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% if user_type == 'teacher' %}
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_enabled" name="is_enabled" {% if settings.is_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="is_enabled">
+                                    تمكين المحادثة
+                                </label>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="form-group mb-3">
+                            <label>لون الخلفية</label>
+                            <div class="d-flex flex-wrap mt-2">
+                                <div class="color-option" style="background-color: #ffffff;" data-color="#ffffff"></div>
+                                <div class="color-option" style="background-color: #f8f9fa;" data-color="#f8f9fa"></div>
+                                <div class="color-option" style="background-color: #e9ecef;" data-color="#e9ecef"></div>
+                                <div class="color-option" style="background-color: #dee2e6;" data-color="#dee2e6"></div>
+                                <div class="color-option" style="background-color: #ced4da;" data-color="#ced4da"></div>
+                            </div>
+                            <input type="hidden" id="background_color" name="background_color" value="{{ settings.background_color or '#ffffff' }}">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="chat_image">صورة المحادثة</label>
+                            <input type="file" class="form-control" id="chat_image" name="chat_image" accept="image/*">
+                            {% if settings.image_url %}
+                            <div class="preview-box mt-2" style="background-color: {{ settings.background_color or '#ffffff' }}">
+                                <img src="{{ url_for('static', filename=settings.image_url) }}" alt="صورة المحادثة" class="chat-image-preview">
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>حفظ الإعدادات
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Participants -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">إدارة المشاركين</h6>
+                </div>
+                <div class="card-body">
+                    <div class="student-list">
+                        {% for enrollment in enrollments %}
+                            {% set participant = chat_participants|selectattr('enrollment_id', 'equalto', enrollment.id)|first %}
+                            <div class="student-item">
+                                <div class="student-info">
+                                    <h6 class="mb-0">{{ enrollment.user.name }}</h6>
+                                    <small class="text-muted">{{ enrollment.user.phone }}</small>
+                                </div>
+                                <div>
+                                    <form method="POST" action="{{ url_for((user_type + '.manage_chat_participants')|string, classroom_id=classroom.id) }}" style="display: inline;">
+                                        <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
+                                        {% if participant and participant.is_enabled %}
+                                            <input type="hidden" name="action" value="remove">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-user-slash me-1"></i>منع
+                                            </button>
+                                        {% else %}
+                                            <input type="hidden" name="action" value="add">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-user-plus me-1"></i>إضافة
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-users fa-3x text-gray-300 mb-2"></i>
+                                <p class="mb-0">لا يوجد طلاب في هذا الفصل بعد</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize color picker
+    const colorOptions = document.querySelectorAll('.color-option');
+    const backgroundColorInput = document.getElementById('background_color');
+    
+    // Set initial selected color
+    colorOptions.forEach(option => {
+        if (option.dataset.color === backgroundColorInput.value) {
+            option.classList.add('selected');
+        }
+        
+        option.addEventListener('click', function() {
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            backgroundColorInput.value = this.dataset.color;
+        });
+    });
+});
+</script>
+{% endblock %}

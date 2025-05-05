@@ -1,3 +1,8 @@
+"""
+نماذج قاعدة البيانات للمنصة التعليمية
+يحتوي على تعريف جميع الجداول وعلاقاتها
+"""
+
 from datetime import datetime
 from app import db
 from flask_login import UserMixin
@@ -10,7 +15,10 @@ class Role:
     ASSISTANT = 'assistant'
     ADMIN = 'admin'
 
-# User model
+"""
+نموذج المستخدم (User)
+يمثل جميع المستخدمين في النظام (مدرسين، طلاب، مشرفين)
+"""
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -80,7 +88,10 @@ class Subscription(db.Model):
     def __repr__(self):
         return f'<Subscription {self.user.name} - {self.plan.name}>'
 
-# Classroom model
+"""
+نموذج الفصل الدراسي (Classroom)
+يمثل الفصول الدراسية التي ينشئها المدرسون
+"""
 class Classroom(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(10), unique=True, nullable=False)
@@ -110,7 +121,10 @@ class Classroom(db.Model):
     def __repr__(self):
         return f'<Classroom {self.name}>'
 
-# Classroom enrollments (student -> classroom)
+"""
+نموذج عضوية الفصل (ClassroomMembership)
+يربط بين المستخدمين والفصول الدراسية
+"""
 class ClassroomEnrollment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -196,7 +210,10 @@ class AssignmentSubmission(db.Model):
     def __repr__(self):
         return f'<AssignmentSubmission {self.enrollment.user.name} - {self.assignment.title}>'
 
-# Quiz model
+"""
+نموذج الاختبارات (Quiz)
+يمثل الاختبارات التي ينشئها المدرسون
+"""
 class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
@@ -218,14 +235,10 @@ class Quiz(db.Model):
     def __repr__(self):
         return f'<Quiz {self.title}>'
 
-# Quiz question types
-class QuestionType:
-    MULTIPLE_CHOICE = 'multiple_choice'
-    TRUE_FALSE = 'true_false'
-    SHORT_ANSWER = 'short_answer'
-    ESSAY = 'essay'
-
-# Quiz question
+"""
+نموذج أسئلة الاختبار (QuizQuestion)
+يخزن الأسئلة المرتبطة بكل اختبار
+"""
 class QuizQuestion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
@@ -256,29 +269,10 @@ class QuizQuestionOption(db.Model):
     def __repr__(self):
         return f'<QuizQuestionOption {self.id}>'
 
-# Quiz attempt
-class QuizAttempt(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    enrollment_id = db.Column(db.Integer, db.ForeignKey('classroom_enrollment.id'), nullable=False)
-    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
-    start_time = db.Column(db.DateTime, default=datetime.utcnow)
-    end_time = db.Column(db.DateTime, nullable=True)
-    score = db.Column(db.Integer, nullable=True)
-    is_completed = db.Column(db.Boolean, default=False)
-    
-    # Relationships
-    enrollment = db.relationship('ClassroomEnrollment', back_populates='quiz_attempts')
-    quiz = db.relationship('Quiz', back_populates='attempts')
-    answers = db.relationship('QuizAnswer', back_populates='attempt', cascade='all, delete-orphan')
-    
-    __table_args__ = (
-        db.UniqueConstraint('enrollment_id', 'quiz_id', name='unique_quiz_attempt'),
-    )
-    
-    def __repr__(self):
-        return f'<QuizAttempt {self.enrollment.user.name} - {self.quiz.title}>'
-
-# Quiz answer
+"""
+نموذج إجابات الطلاب (StudentAnswer)
+يخزن إجابات الطلاب على الاختبارات
+"""
 class QuizAnswer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     attempt_id = db.Column(db.Integer, db.ForeignKey('quiz_attempt.id'), nullable=False)
@@ -311,7 +305,10 @@ class Notification(db.Model):
     def __repr__(self):
         return f'<Notification {self.id}>'
 
-# Chat message model
+"""
+نموذج المحادثات (Chat)
+يخزن رسائل المحادثة في الفصول الدراسية
+"""
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
@@ -326,6 +323,43 @@ class ChatMessage(db.Model):
     
     def __repr__(self):
         return f'<ChatMessage {self.id}>'
+
+# Chat settings model
+class ChatSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
+    background_color = db.Column(db.String(20), nullable=True)
+    image_url = db.Column(db.String(255), nullable=True)
+    is_enabled = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    classroom = db.relationship('Classroom', backref=db.backref('chat_settings', uselist=False))
+
+    def __repr__(self):
+        return f'<ChatSettings {self.classroom.name}>'
+
+# Chat participants model
+class ChatParticipant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
+    enrollment_id = db.Column(db.Integer, db.ForeignKey('classroom_enrollment.id'), nullable=False)
+    is_enabled = db.Column(db.Boolean, default=True)
+    added_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    classroom = db.relationship('Classroom', backref=db.backref('chat_participants', lazy=True))
+    enrollment = db.relationship('ClassroomEnrollment', backref=db.backref('chat_participant', uselist=False))
+    added_by = db.relationship('User', backref=db.backref('chat_participants_added', lazy=True))
+
+    __table_args__ = (
+        db.UniqueConstraint('classroom_id', 'enrollment_id', name='unique_chat_participant'),
+    )
+
+    def __repr__(self):
+        return f'<ChatParticipant {self.enrollment.user.name} - {self.classroom.name}>'
 
 # Payment model
 class Payment(db.Model):

@@ -1,0 +1,261 @@
+{% extends "layout.html" %}
+
+{% block title %}محادثة {{ classroom.name }} - الحصة{% endblock %}
+
+{% block styles %}
+<style>
+.chat-container {
+    height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+}
+
+.chat-message {
+    margin-bottom: 1.5rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.chat-message .sender {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chat-message .sender .role {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(0,0,0,0.05);
+    border-radius: 0.25rem;
+}
+
+.chat-message .timestamp {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.chat-message .content {
+    padding: 0.75rem 1.25rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.chat-input-container {
+    display: flex;
+    padding: 1.25rem;
+    border-top: 1px solid var(--border-color);
+    gap: 1rem;
+    background-color: var(--card-bg);
+}
+
+.chat-input {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    transition: border-color 0.2s ease;
+}
+
+.chat-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" id="chat-data" data-classroom-id="{{ classroom.id }}">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">محادثة {{ classroom.name }}</h1>
+        <div>
+            <a href="{{ url_for((current_user.role + '.classroom')|string, classroom_id=classroom.id) }}" class="btn btn-sm btn-secondary">
+                <i class="fas fa-arrow-right me-1"></i>
+                العودة للفصل
+            </a>
+        </div>
+    </div>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-comments me-2"></i>
+                المحادثة
+            </h6>
+            <div>
+                <span id="online-users" class="badge badge-success">0 متصل</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div id="chat-container" 
+                 data-classroom-id="{{ classroom.id }}" 
+                 data-user-id="{{ current_user.id }}"
+                 data-user-name="{{ current_user.name }}"
+                 data-user-role="{{ current_user.role }}"
+                 data-has-access="{{ is_chat_participant|default(false) }}">
+                <div id="chat-messages" class="chat-messages">
+                    <!-- Chat messages will be loaded here -->
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="اكتب رسالتك هنا...">
+                    <button id="send-chat-btn" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+<script>
+    const socket = io();
+    const classroomId = {{ classroom.id }};
+    const userId = {{ current_user.id }};
+    const userName = "{{ current_user.name }}";
+    const userRole = "{{ current_user.role }}";
+    
+    // DOM Elements
+    const chatMessagesEl = document.getElementById('chat-messages');
+    const chatInputEl = document.getElementById('chat-input');
+    const sendChatBtn = document.getElementById('send-chat-btn');
+    const onlineUsersEl = document.getElementById('online-users');
+    
+    // Connect to chat
+    socket.emit('join_classroom_chat', {
+        classroom_id: classroomId,
+        user_id: userId,
+        user_name: userName,
+        user_role: userRole
+    });
+    
+    // Send message
+    function sendChatMessage() {
+        const message = chatInputEl.value.trim();
+        if (!message) return;
+        
+        socket.emit('classroom_chat_message', {
+            classroom_id: classroomId,
+            message: message
+        });
+        
+        chatInputEl.value = '';
+    }
+    
+    // Event listeners
+    sendChatBtn.addEventListener('click', sendChatMessage);
+    chatInputEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            sendChatMessage();
+        }
+    });
+    
+    // Socket events
+    socket.on('classroom_chat_message', function(data) {
+        const messageEl = document.createElement('div');
+        messageEl.className = 'chat-message';
+        
+        const senderEl = document.createElement('div');
+        senderEl.className = 'sender';
+        
+        let roleText = '';
+        switch (data.user_role) {
+            case 'teacher':
+                roleText = 'معلم';
+                break;
+            case 'student':
+                roleText = 'طالب';
+                break;
+            case 'assistant':
+                roleText = 'مساعد';
+                break;
+            default:
+                roleText = data.user_role;
+        }
+        
+        senderEl.innerHTML = `
+            <span class="role">${roleText}</span>
+            ${data.user_name}
+            <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+        `;
+        
+        const contentEl = document.createElement('div');
+        contentEl.className = 'content';
+        contentEl.textContent = data.message;
+        
+        messageEl.appendChild(senderEl);
+        messageEl.appendChild(contentEl);
+        
+        chatMessagesEl.appendChild(messageEl);
+        chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+    });
+    
+    socket.on('classroom_users_update', function(data) {
+        onlineUsersEl.textContent = `${data.online_count} متصل`;
+    });
+    
+    // Load previous messages
+    socket.emit('get_classroom_chat_history', {
+        classroom_id: classroomId
+    });
+    
+    socket.on('classroom_chat_history', function(messages) {
+        messages.forEach(data => {
+            const messageEl = document.createElement('div');
+            messageEl.className = 'chat-message';
+            
+            const senderEl = document.createElement('div');
+            senderEl.className = 'sender';
+            
+            let roleText = '';
+            switch (data.user_role) {
+                case 'teacher':
+                    roleText = 'معلم';
+                    break;
+                case 'student':
+                    roleText = 'طالب';
+                    break;
+                case 'assistant':
+                    roleText = 'مساعد';
+                    break;
+                default:
+                    roleText = data.user_role;
+            }
+            
+            senderEl.innerHTML = `
+                <span class="role">${roleText}</span>
+                ${data.user_name}
+                <span class="timestamp">${new Date(data.timestamp).toLocaleTimeString()}</span>
+            `;
+            
+            const contentEl = document.createElement('div');
+            contentEl.className = 'content';
+            contentEl.textContent = data.message;
+            
+            messageEl.appendChild(senderEl);
+            messageEl.appendChild(contentEl);
+            
+            chatMessagesEl.appendChild(messageEl);
+        });
+        
+        chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block title %}الاختبارات - {{ classroom.name }} - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">الاختبارات - {{ classroom.name }}</h1>
+        <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>العودة للفصل
+        </a>
+    </div>
+    
+    <!-- Quizzes List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">جميع الاختبارات</h6>
+        </div>
+        <div class="card-body">
+            {% if quizzes %}
+                <div class="list-group">
+                    {% for quiz in quizzes %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ quiz.title }}</h5>
+                                <small>
+                                    {% if quiz.start_time and quiz.end_time %}
+                                        <span class="text-danger">
+                                            {{ quiz.start_time.strftime('%Y-%m-%d') }}
+                                            إلى
+                                            {{ quiz.end_time.strftime('%Y-%m-%d') }}
+                                        </span>
+                                    {% elif quiz.end_time %}
+                                        <span class="text-danger">ينتهي: {{ quiz.end_time.strftime('%Y-%m-%d') }}</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            
+                            <p class="mb-1">{{ quiz.description|default('')|truncate(200) }}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div>
+                                    <small class="me-3">المدة: {{ quiz.duration_minutes }} دقيقة</small>
+                                    <small>النقاط: {{ quiz.total_points }}</small>
+                                </div>
+                                
+                                <div>
+                                    {% if quiz.id in attempt_map %}
+                                        {% set attempt = attempt_map[quiz.id] %}
+                                        {% if attempt.is_completed %}
+                                            <a href="{{ url_for('student.view_quiz_result', classroom_id=classroom.id, quiz_id=quiz.id) }}" 
+                                               class="btn btn-success btn-sm">
+                                                <i class="fas fa-chart-bar me-1"></i>
+                                                عرض النتيجة ({{ attempt.score }}/{{ quiz.total_points }})
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ url_for('student.start_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" 
+                                               class="btn btn-warning btn-sm">
+                                                <i class="fas fa-redo me-1"></i>
+                                                متابعة الحل
+                                            </a>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if quiz.start_time and quiz.start_time > now %}
+                                            <span class="badge badge-secondary">لم يبدأ بعد</span>
+                                        {% elif quiz.end_time and quiz.end_time < now %}
+                                            <span class="badge badge-danger">انتهى</span>
+                                        {% else %}
+                                            <a href="{{ url_for('student.start_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" 
+                                               class="btn btn-primary btn-sm">
+                                                <i class="fas fa-play me-1"></i>
+                                                ابدأ الاختبار
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-question-circle fa-3x text-gray-300 mb-3"></i>
+                    <h5>لا توجد اختبارات بعد</h5>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

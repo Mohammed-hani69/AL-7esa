@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+
+{% block title %}الطلاب - {{ classroom.name }} - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">الطلاب - {{ classroom.name }}</h1>
+        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>العودة للفصل
+        </a>
+    </div>
+    
+    <!-- Students List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">قائمة الطلاب المسجلين</h6>
+        </div>
+        <div class="card-body">
+            {% if enrollments %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="studentsTable">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>رقم الهاتف</th>
+                                <th>تاريخ الانضمام</th>
+                                <th>النقاط</th>
+                                <th>الحالة</th>
+                                <th>آخر نشاط</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enrollment in enrollments %}
+                                <tr>
+                                    <td>
+                                        {{ enrollment.user.name }}
+                                        <span class="student-status student-inactive ms-2" 
+                                              data-student-id="{{ enrollment.user.id }}"></span>
+                                    </td>
+                                    <td>{{ enrollment.user.phone }}</td>
+                                    <td>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <span class="badge badge-primary">{{ enrollment.points }}</span>
+                                    </td>
+                                    <td>
+                                        {% if enrollment.is_active %}
+                                            <span class="badge badge-success">مفعل</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">معطل</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="last-activity" data-student-id="{{ enrollment.user.id }}">-</span>
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('teacher.toggle_student_status', classroom_id=classroom.id, enrollment_id=enrollment.id) }}" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm {{ 'btn-danger' if enrollment.is_active else 'btn-success' }}" 
+                                                    onclick="return confirm('هل أنت متأكد من {{ 'تعطيل' if enrollment.is_active else 'تفعيل' }} هذا الطالب؟');">
+                                                <i class="fas {{ 'fa-user-slash' if enrollment.is_active else 'fa-user-check' }}"></i>
+                                                {{ 'تعطيل' if enrollment.is_active else 'تفعيل' }}
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-user-graduate fa-3x text-gray-300 mb-3"></i>
+                    <h5>لا يوجد طلاب في هذا الفصل بعد</h5>
+                    <p>سيظهر الطلاب هنا عند انضمامهم للفصل</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Activity Guide -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">دليل نشاط الطلاب</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <span>يمكنك متابعة نشاط الطلاب في الفصل من خلال هذه الصفحة وإدارة حالة تسجيلهم</span>
+            </div>
+            
+            <h5>مؤشرات النشاط:</h5>
+            <ul>
+                <li class="mb-2"><i class="fas fa-circle text-success me-2"></i>نشط حالياً</li>
+                <li class="mb-2"><i class="fas fa-circle text-warning me-2"></i>غير نشط</li>
+                <li class="mb-2"><i class="fas fa-circle text-danger me-2"></i>غائب لفترة طويلة</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Track active students
+        trackActiveStudents();
+    });
+</script>
+{% endblock %}

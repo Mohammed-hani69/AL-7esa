@@ -1,0 +1,591 @@
+{% extends "layout.html" %}
+
+{% block title %}البث المباشر - الحصة{% endblock %}
+
+{% block styles %}
+<style>
+.stream-container {
+    display: flex;
+    gap: 1.5rem;
+    height: calc(100vh - 5rem);
+    padding: 1.5rem;
+    max-width: 100%;
+}
+
+.stream-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 75%;
+    min-width: 0; /* Prevent flex item from overflowing */
+}
+
+.stream-video {
+    flex: 1;
+    background-color: var(--dark-color);
+    border-radius: 0.75rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+}
+
+.stream-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1.25rem;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 0.75rem;
+}
+
+.stream-control-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    height: 70px;
+    border-radius: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0.75rem;
+}
+
+.stream-control-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.stream-control-btn.off {
+    background-color: var(--danger-color);
+}
+
+.stream-control-btn.active {
+    background-color: var(--warning-color);
+}
+
+.stream-control-btn i {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.stream-control-btn span {
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.end-stream {
+    background-color: var(--danger-color);
+}
+
+.end-stream:hover {
+    background-color: var(--danger-darker);
+}
+
+.stream-side {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 25%;
+    min-width: 300px;
+}
+
+.participants-box {
+    background-color: var(--card-bg);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.participants-header {
+    padding: 1.25rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.participants-list {
+    padding: 1.25rem;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.participant-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
+}
+
+.participant-item:hover {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.participant-name {
+    margin-right: 0.75rem;
+    font-weight: 500;
+}
+
+.participant-role {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(0,0,0,0.05);
+    border-radius: 0.25rem;
+}
+
+.hand-raised {
+    margin-right: auto;
+    color: var(--warning-color);
+    animation: pulse 2s infinite;
+}
+
+.chat-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--card-bg);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-height: 400px;
+}
+
+.chat-header {
+    padding: 1.25rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 1.25rem;
+    overflow-y: auto;
+}
+
+.chat-input-container {
+    display: flex;
+    padding: 1.25rem;
+    border-top: 1px solid var(--border-color);
+    gap: 1rem;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    transition: border-color 0.2s ease;
+}
+
+.chat-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.local-video {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    width: 180px;
+    height: 120px;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    z-index: 10;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+.remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.stream-status {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    background-color: var(--danger-color);
+    color: white;
+    font-weight: 700;
+    font-size: 0.875rem;
+    animation: pulse 2s infinite;
+}
+
+.no-stream-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 2rem;
+}
+
+.no-stream-message i {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.7;
+}
+
+.no-stream-message h4 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.no-stream-message p {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.8;
+}
+
+.stream-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.stream-placeholder i {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chat-message {
+    margin-bottom: 1.5rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.chat-message .sender {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chat-message .sender .role {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(0,0,0,0.05);
+    border-radius: 0.25rem;
+}
+
+.chat-message .timestamp {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.chat-message .content {
+    padding: 0.75rem 1.25rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .stream-container {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .stream-main {
+        max-width: 100%;
+    }
+
+    .stream-side {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .stream-video {
+        height: 60vh;
+    }
+
+    .local-video {
+        width: 150px;
+        height: 100px;
+    }
+}
+
+@media (max-width: 768px) {
+    .stream-container {
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .stream-controls {
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .stream-control-btn {
+        width: 60px;
+        height: 60px;
+    }
+
+    .stream-video {
+        height: 50vh;
+    }
+
+    .local-video {
+        width: 120px;
+        height: 80px;
+        bottom: 1rem;
+        left: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stream-container">
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="m-0">{{ classroom.name }} - البث المباشر</h5>
+            <div>
+                <a href="{{ url_for((current_user.role + '.classroom')|string, classroom_id=classroom.id) }}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-arrow-right ml-1"></i>
+                    العودة للفصل
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div id="stream-content" class="stream-grid">
+        <div class="stream-main">
+            <div class="stream-video">
+                <div id="no-stream" class="no-stream-message">
+                    <i class="fas fa-video-slash"></i>
+                    {% if current_user.role == 'teacher' %}
+                    <h4>البث المباشر غير نشط</h4>
+                    <p>اضغط على زر "بدء البث" لبدء الفصل المباشر.</p>
+                    <button id="start-stream-btn" class="btn btn-primary mt-3">
+                        <i class="fas fa-play-circle ml-1"></i>
+                        بدء البث
+                    </button>
+                    {% else %}
+                    <h4>لا يوجد بث مباشر الآن</h4>
+                    <p>انتظر حتى يبدأ المعلم البث المباشر.</p>
+                    {% endif %}
+                </div>
+                
+                <div id="active-stream" class="d-none" style="width: 100%; height: 100%;">
+                    <div class="stream-status">مباشر</div>
+                    <video id="remote-video" class="remote-video" autoplay playsinline></video>
+                    {% if current_user.role == 'teacher' %}
+                    <div class="local-video">
+                        <video id="local-video" autoplay muted playsinline style="width: 100%; height: 100%;"></video>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div id="stream-placeholder" class="stream-placeholder d-none">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <h4>جاري التحميل...</h4>
+                </div>
+            </div>
+            
+            <div id="stream-controls" class="stream-controls {% if current_user.role == 'teacher' %}d-none{% endif %}">
+                {% if current_user.role == 'teacher' %}
+                <div id="mic-btn" class="stream-control-btn mic">
+                    <i class="fas fa-microphone"></i>
+                    <span>الميكروفون</span>
+                </div>
+                <div id="camera-btn" class="stream-control-btn camera">
+                    <i class="fas fa-video"></i>
+                    <span>الكاميرا</span>
+                </div>
+                <div id="screen-btn" class="stream-control-btn screen">
+                    <i class="fas fa-desktop"></i>
+                    <span>مشاركة الشاشة</span>
+                </div>
+                <div id="end-stream-btn" class="stream-control-btn end-stream">
+                    <i class="fas fa-phone-slash"></i>
+                    <span>إنهاء البث</span>
+                </div>
+                {% else %}
+                <div id="mic-btn" class="stream-control-btn mic off d-none">
+                    <i class="fas fa-microphone-slash"></i>
+                    <span>الميكروفون</span>
+                </div>
+                <div id="hand-btn" class="stream-control-btn hand">
+                    <i class="fas fa-hand-paper"></i>
+                    <span>رفع اليد</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="stream-side">
+            <div class="participants-box">
+                <div class="participants-header">
+                    <i class="fas fa-users ml-1"></i>
+                    المشاركون
+                    <span id="participants-count" class="badge badge-primary mr-1">0</span>
+                </div>
+                <div id="participants-list" class="participants-list">
+                    <!-- Participants will be added here dynamically -->
+                </div>
+            </div>
+            
+            <div class="chat-box">
+                <div class="chat-header">
+                    <i class="fas fa-comments ml-1"></i>
+                    المحادثة
+                </div>
+                <div id="chat-messages" class="chat-messages">
+                    <!-- Chat messages will be added here dynamically -->
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="chat-input" class="form-control chat-input" placeholder="اكتب رسالتك هنا...">
+                    <button id="send-chat-btn" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+<script>
+    // Classroom data
+    const classroomId = {{ classroom.id }};
+    const userId = {{ current_user.id }};
+    const userName = "{{ current_user.name }}";
+    const userRole = "{{ current_user.role }}";
+    
+    // WebRTC variables
+    let socket;
+    let localStream;
+    let screenStream;
+    let peerConnections = {};
+    let isStreaming = false;
+    let isMicOn = true;
+    let isCameraOn = true;
+    let isScreenSharing = false;
+    let isHandRaised = false;
+    
+    // Participants and hands raised
+    let participants = [];
+    let handsRaised = [];
+    
+    // DOM elements
+    const noStreamEl = document.getElementById('no-stream');
+    const activeStreamEl = document.getElementById('active-stream');
+    const streamPlaceholderEl = document.getElementById('stream-placeholder');
+    const streamControlsEl = document.getElementById('stream-controls');
+    const startStreamBtn = document.getElementById('start-stream-btn');
+    const endStreamBtn = document.getElementById('end-stream-btn');
+    const micBtn = document.getElementById('mic-btn');
+    const cameraBtn = document.getElementById('camera-btn');
+    const screenBtn = document.getElementById('screen-btn');
+    const handBtn = document.getElementById('hand-btn');
+    const localVideoEl = document.getElementById('local-video');
+    const remoteVideoEl = document.getElementById('remote-video');
+    const participantsListEl = document.getElementById('participants-list');
+    const participantsCountEl = document.getElementById('participants-count');
+    const chatMessagesEl = document.getElementById('chat-messages');
+    const chatInputEl = document.getElementById('chat-input');
+    const sendChatBtn = document.getElementById('send-chat-btn');
+    
+    // Initialize when document is ready
+    document.addEventListener('DOMContentLoaded', initialize);
+    
+    // Initialize the streaming page
+    function initialize() {
+        // Connect to Socket.IO server
+        connectToSocketServer();
+        
+        // Add event listeners based on role
+        if (userRole === 'teacher') {
+            startStreamBtn?.addEventListener('click', startStream);
+            endStreamBtn?.addEventListener('click', endStream);
+            micBtn?.addEventListener('click', toggleMic);
+            cameraBtn?.addEventListener('click', toggleCamera);
+            screenBtn?.addEventListener('click', toggleScreenShare);
+        } else {
+            handBtn?.addEventListener('click', toggleHandRaise);
+            micBtn?.addEventListener('click', toggleMic);
+        }
+
+        sendChatBtn?.addEventListener('click', sendChatMessage);
+        chatInputEl?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        });
+    }
+    
+    // Connect to Socket.IO server
+    function connectToSocketServer() {
+        socket = io();
+        
+        socket.on('connect', () => {
+            console.log('Connected to Socket.IO server');
+            joinClassroom();
+        });
+        
+        socket.on('connection_response', (data) => {
+            console.log('Connection response:', data);
+        });
+        
+        socket.on('join_response', handleJoinResponse);
+        socket.on('user_joined', handleUserJoined);
+        socket.on('user_left', handleUserLeft);
+        socket.on('stream_started', handleStreamStarted);
+        socket.on('stream_ended', handleStreamEnded);
+        socket.on('stream_signal', handleStreamSignal);
+        socket.on('new_chat_message', handleNewChatMessage);
+        socket.on('hand_raised', handleHandRaised);
+        socket.on('hand_lowered', handleHandLowered);
+        
+        socket.on('disconnect', () => {
+            console.log('Disconnected from Socket.IO server');
+            cleanupStream();
+        });
+    }
+    
+    // Join the classroom room
+    function joinClassroom() {
+        socket.emit('join_classroom', {
+            classroom_id: classroomId
+        });
+    }
+    
+    // Remaining WebRTC and chat functionality...
+    // The full JavaScript implementation will be provided in a separate file
+</script>
+{% endblock %}

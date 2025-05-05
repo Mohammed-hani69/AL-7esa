@@ -3,64 +3,119 @@
 {% block title %}إضافة باقة اشتراك جديدة - الحصة{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid py-4 subscription-form">
     <div class="row justify-content-center">
-        <div class="col-xl-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">إضافة باقة اشتراك جديدة</h6>
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header py-4">
+                    <h6 class="m-0 font-weight-bold text-white text-center fs-4">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        إضافة باقة اشتراك جديدة
+                    </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-5">
                     <form action="{{ url_for('admin.new_subscription_plan') }}" method="post">
-                        <div class="form-group">
-                            <label for="name">اسم الباقة <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="description">وصف الباقة</label>
-                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="price">السعر (ريال) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" required>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="duration_days">المدة (أيام) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" value="30" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="max_classrooms">الحد الأقصى لعدد الفصول <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="max_classrooms" name="max_classrooms" min="1" value="5" required>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="has_chat" name="has_chat">
-                                    <label class="custom-control-label" for="has_chat">خدمة الدردشة</label>
-                                </div>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="allow_assistant" name="allow_assistant">
-                                    <label class="custom-control-label" for="allow_assistant">تعيين مساعد</label>
-                                </div>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="advanced_analytics" name="advanced_analytics">
-                                    <label class="custom-control-label" for="advanced_analytics">تحليلات متقدمة</label>
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold" for="name">اسم الباقة <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg shadow-sm" id="name" name="name" required>
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group text-center mt-4">
-                            <a href="{{ url_for('admin.subscriptions') }}" class="btn btn-secondary mr-2">
-                                <i class="fas fa-arrow-right"></i> العودة
-                            </a>
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> حفظ الباقة
-                            </button>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold" for="description">وصف الباقة</label>
+                                    <textarea class="form-control shadow-sm" id="description" name="description" rows="4"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold" for="price">السعر (ريال) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control shadow-sm" id="price" name="price" step="0.01" min="0" required>
+                                        <span class="input-group-text">ريال</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold" for="duration_days">المدة (أيام) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control shadow-sm" id="duration_days" name="duration_days" min="1" value="30" required>
+                                        <span class="input-group-text">يوم</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label class="form-label fw-bold" for="max_classrooms">الحد الأقصى لعدد الفصول <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control shadow-sm" id="max_classrooms" name="max_classrooms" min="1" value="5" required>
+                                        <span class="input-group-text">فصل</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card bg-light border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold mb-3">مميزات الباقة</h6>
+                                        <div class="row">
+                                            <div class="col-md-4 mb-3">
+                                                <div class="form-check form-switch">
+                                                    <input type="checkbox" class="form-check-input" id="has_chat" name="has_chat">
+                                                    <label class="form-check-label" for="has_chat">
+                                                        <i class="fas fa-comments text-primary me-2"></i>
+                                                        خدمة الدردشة
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <div class="form-check form-switch">
+                                                    <input type="checkbox" class="form-check-input" id="allow_assistant" name="allow_assistant">
+                                                    <label class="form-check-label" for="allow_assistant">
+                                                        <i class="fas fa-user-plus text-success me-2"></i>
+                                                        تعيين مساعد
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <div class="form-check form-switch">
+                                                    <input type="checkbox" class="form-check-input" id="advanced_analytics" name="advanced_analytics">
+                                                    <label class="form-check-label" for="advanced_analytics">
+                                                        <i class="fas fa-chart-line text-info me-2"></i>
+                                                        تحليلات متقدمة
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <a href="{{ url_for('admin.subscriptions') }}" class="btn btn-secondary btn-lg px-4 me-2">
+                                    <i class="fas fa-arrow-right"></i>
+                                    العودة
+                                </a>
+                                <button type="submit" class="btn btn-success btn-lg px-4">
+                                    <i class="fas fa-save"></i>
+                                    حفظ الباقة
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>

@@ -35,20 +35,6 @@
                     </a>
                 </li>
                 
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if 'assignment' in request.endpoint else '' }}" href="{{ url_for('student.assignments') }}">
-                        <i class="fas fa-fw fa-tasks ml-2"></i>
-                        <span>الواجبات</span>
-                    </a>
-                </li>
-                
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if 'quiz' in request.endpoint else '' }}" href="{{ url_for('student.quizzes') }}">
-                        <i class="fas fa-fw fa-clipboard-list ml-2"></i>
-                        <span>الاختبارات</span>
-                    </a>
-                </li>
-                
                 <hr class="sidebar-divider">
                 
                 <li class="nav-item">

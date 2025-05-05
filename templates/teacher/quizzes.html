@@ -1,0 +1,127 @@
+{% extends "layout.html" %}
+
+{% block title %}الاختبارات - {{ classroom.name }} - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">الاختبارات - {{ classroom.name }}</h1>
+        <div>
+            <a href="{{ url_for('teacher.create_quiz', classroom_id=classroom.id) }}" class="btn btn-primary me-2">
+                <i class="fas fa-plus-circle me-1"></i>إنشاء اختبار جديد
+            </a>
+            <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right me-1"></i>العودة للفصل
+            </a>
+        </div>
+    </div>
+    
+    <!-- Quizzes List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">جميع الاختبارات</h6>
+        </div>
+        <div class="card-body">
+            {% if quizzes %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>العنوان</th>
+                                <th>الوقت المتاح</th>
+                                <th>المدة</th>
+                                <th>النقاط</th>
+                                <th>المحاولات</th>
+                                <th>تاريخ الإنشاء</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for quiz in quizzes %}
+                                <tr>
+                                    <td>{{ quiz.title }}</td>
+                                    <td>
+                                        {% if quiz.start_time and quiz.end_time %}
+                                            <span class="badge badge-info">
+                                                {{ quiz.start_time.strftime('%Y-%m-%d') }}
+                                                إلى
+                                                {{ quiz.end_time.strftime('%Y-%m-%d') }}
+                                            </span>
+                                        {% elif quiz.end_time %}
+                                            <span class="badge badge-warning">
+                                                ينتهي: {{ quiz.end_time.strftime('%Y-%m-%d') }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-success">متاح دائماً</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ quiz.duration_minutes }} دقيقة</td>
+                                    <td>{{ quiz.total_points }}</td>
+                                    <td>
+                                        <span class="badge badge-info">
+                                            {{ quiz.attempts|length }} محاولة
+                                        </span>
+                                    </td>
+                                    <td>{{ quiz.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit me-1"></i>تعديل
+                                        </a>
+                                        <a href="{{ url_for('teacher.quiz_results', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="btn btn-sm btn-info ms-1">
+                                            <i class="fas fa-users me-1"></i>نتائج الطلاب
+                                        </a>
+                                        <button class="btn btn-sm btn-danger ms-1" onclick="deleteQuiz({{ quiz.id }}, '{{ quiz.title }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-question-circle fa-3x text-gray-300 mb-3"></i>
+                    <h5>لا توجد اختبارات بعد</h5>
+                    <p>يمكنك إنشاء اختبار جديد بالنقر على زر "إنشاء اختبار جديد"</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Quiz Modal -->
+<div class="modal fade" id="deleteQuizModal" tabindex="-1" role="dialog" aria-labelledby="deleteQuizModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteQuizModalLabel">تأكيد حذف الاختبار</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                هل أنت متأكد من حذف الاختبار "<span id="quizTitleToDelete"></span>"؟
+                <br>
+                <small class="text-danger">هذا الإجراء لا يمكن التراجع عنه.</small>
+            </div>
+            <div class="modal-footer">
+                <form id="deleteQuizForm" method="POST" action="">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">حذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteQuiz(quizId, quizTitle) {
+    document.getElementById('quizTitleToDelete').textContent = quizTitle;
+    document.getElementById('deleteQuizForm').action = `{{ url_for('teacher.classroom', classroom_id=classroom.id) }}/quiz/${quizId}/delete`;
+    $('#deleteQuizModal').modal('show');
+}
+</script>
+{% endblock %}

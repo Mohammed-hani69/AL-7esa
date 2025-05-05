@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ assignment.title }} - {{ classroom.name }} - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ assignment.title }}</h1>
+        <a href="{{ url_for('student.assignments', classroom_id=classroom.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>العودة للواجبات
+        </a>
+    </div>
+
+    <!-- Assignment Details -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">تفاصيل الواجب</h6>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <h5>الوصف</h5>
+                        <p>{{ assignment.description|default('لا يوجد وصف') }}</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="assignment-info">
+                        <p><i class="fas fa-calendar me-2"></i>تاريخ التسليم: 
+                            {% if assignment.due_date %}
+                                <span class="text-danger">{{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
+                            {% else %}
+                                <span class="text-muted">غير محدد</span>
+                            {% endif %}
+                        </p>
+                        <p><i class="fas fa-star me-2"></i>النقاط: {{ assignment.points }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% if submission %}
+                <div class="submission-status mb-4">
+                    <h5>حالة التسليم</h5>
+                    {% if submission.grade is not none %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>تم التقييم
+                            <span class="badge badge-success ms-2">{{ submission.grade }}/{{ assignment.points }}</span>
+                        </div>
+                        {% if submission.feedback %}
+                            <div class="mt-3">
+                                <h6>ملاحظات المعلم:</h6>
+                                <p class="bg-light p-3 rounded">{{ submission.feedback }}</p>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-clock me-2"></i>تم التسليم، بانتظار التقييم
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {% if not assignment.due_date or assignment.due_date > now %}
+                <div class="submit-section">
+                    <h5>{% if submission %}تعديل الحل{% else %}تسليم الحل{% endif %}</h5>
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="content">الحل</label>
+                            <textarea class="form-control" id="content" name="content" rows="6" required>{{ submission.content if submission else '' }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            {% if submission %}تحديث الحل{% else %}تسليم الحل{% endif %}
+                        </button>
+                    </form>
+                </div>
+            {% elif not submission %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    انتهت مهلة تسليم الواجب
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

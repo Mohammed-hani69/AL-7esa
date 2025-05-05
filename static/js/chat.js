@@ -2,6 +2,13 @@
 
 // Initialize chat functionality
 document.addEventListener('DOMContentLoaded', function() {
+  const chatContainer = document.getElementById('chat-container');
+  if (!chatContainer) return;
+  
+  // Check if user has chat access
+  const hasAccess = chatContainer.getAttribute('data-has-access') === 'true';
+  if (!hasAccess) return;
+  
   initializeChat();
   
   // Chat message form submission
@@ -226,7 +233,7 @@ function displayChatMessage(message, currentUserId) {
     messageDiv.classList.add('message-other');
   }
   
-  const userRole = message.userRole ? `<span class="badge badge-${getRoleBadgeClass(message.userRole)}">${getRoleDisplay(message.userRole)}</span>` : '';
+  const userRoleBadge = message.userRole ? `<span class="badge badge-${getRoleBadgeClass(message.userRole)}">${getRoleDisplay(message.userRole)}</span>` : '';
   
   const messageTime = formatChatTime(message.timestamp);
   

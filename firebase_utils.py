@@ -4,9 +4,9 @@ import json
 import logging
 
 # Initialize Firebase for client-side authentication
-firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "")
-firebase_api_key = os.environ.get("FIREBASE_API_KEY", "")
-firebase_app_id = os.environ.get("FIREBASE_APP_ID", "")
+firebase_project_id = os.environ.get("al-7esa")  # Replace with your actual project ID
+firebase_api_key = os.environ.get("AIzaSyCB_GPRRlb6BCe1Mlv7rTIbtnD-Y3vpAj8")  # Replace with your actual API key
+firebase_app_id = os.environ.get("1:893628750909:web:3cd09924c12987b3ef9e54")  # Replace with your actual app ID
 
 # Flag to track if Firebase is initialized
 firebase_initialized = False

@@ -29,6 +29,13 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
+
+  // Initialize question type handling
+  const questionType = document.getElementById('question-type');
+  if (questionType) {
+    questionType.addEventListener('change', handleQuestionTypeChange);
+    handleQuestionTypeChange(); // Initial setup
+  }
 });
 
 // Initialize quiz timer
@@ -250,3 +257,161 @@ function updateProgressBar() {
     }
   }
 }
+
+// Add quiz option
+function addQuizOption() {
+    const optionsContainer = document.getElementById('question-options-container');
+    
+    if (optionsContainer) {
+        const optionIndex = optionsContainer.children.length;
+        
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'form-row mb-2';
+        optionDiv.innerHTML = `
+            <div class="col-1">
+                <input class="form-check-input" type="radio" name="correct_option" id="option-${optionIndex}" value="${optionIndex}">
+            </div>
+            <div class="col-10">
+                <input type="text" class="form-control" name="option_text[]" placeholder="الخيار ${optionIndex + 1}" required>
+            </div>
+            <div class="col-1">
+                ${optionIndex > 1 ? `
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeQuizOption(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                ` : ''}
+            </div>
+        `;
+        
+        optionsContainer.appendChild(optionDiv);
+    }
+}
+
+// Remove quiz option
+function removeQuizOption(button) {
+    const optionsContainer = document.getElementById('question-options-container');
+    const optionDiv = button.closest('.form-row');
+    
+    if (optionsContainer && optionsContainer.children.length > 2) {
+        optionDiv.remove();
+        
+        // Renumber remaining options
+        const options = optionsContainer.children;
+        for (let i = 0; i < options.length; i++) {
+            const radio = options[i].querySelector('input[type="radio"]');
+            const input = options[i].querySelector('input[type="text"]');
+            
+            radio.id = `option-${i}`;
+            radio.value = i;
+            if (!input.readOnly) {
+                input.placeholder = `الخيار ${i + 1}`;
+            }
+        }
+    }
+}
+
+// Handle question type change
+function handleQuestionTypeChange() {
+    const questionType = document.getElementById('question-type');
+    const optionsContainer = document.getElementById('question-options-container');
+    const optionsControls = document.getElementById('options-controls');
+    
+    if (questionType && optionsContainer && optionsControls) {
+        const type = questionType.value;
+        
+        // Clear existing options
+        optionsContainer.innerHTML = '';
+        
+        if (type === 'multiple_choice' || type === 'true_false') {
+            optionsControls.classList.remove('d-none');
+            
+            if (type === 'true_false') {
+                // Add true/false options
+                addTrueFalseOptions();
+                optionsControls.classList.add('d-none');
+            } else {
+                // Add initial options for multiple choice
+                addQuizOption();
+                addQuizOption();
+            }
+        } else {
+            optionsControls.classList.add('d-none');
+        }
+    }
+}
+
+// Add true/false options
+function addTrueFalseOptions() {
+    const optionsContainer = document.getElementById('question-options-container');
+    
+    if (optionsContainer) {
+        optionsContainer.innerHTML = `
+            <div class="form-row mb-2">
+                <div class="col-1">
+                    <input class="form-check-input" type="radio" name="correct_option" id="option-0" value="0" checked>
+                </div>
+                <div class="col-10">
+                    <input type="text" class="form-control" name="option_text[]" value="صح" readonly>
+                </div>
+            </div>
+            <div class="form-row mb-2">
+                <div class="col-1">
+                    <input class="form-check-input" type="radio" name="correct_option" id="option-1" value="1">
+                </div>
+                <div class="col-10">
+                    <input type="text" class="form-control" name="option_text[]" value="خطأ" readonly>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Validate add question form
+document.addEventListener('DOMContentLoaded', function() {
+    const addQuestionForm = document.getElementById('add-question-form');
+    
+    if (addQuestionForm) {
+        addQuestionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const questionText = document.getElementById('question-text').value.trim();
+            const questionType = document.getElementById('question-type').value;
+            
+            if (!questionText) {
+                alert('يرجى إدخال نص السؤال');
+                return;
+            }
+            
+            if (questionType === 'multiple_choice') {
+                // Check if at least two options exist
+                const options = document.querySelectorAll('input[name="option_text[]"]');
+                if (options.length < 2) {
+                    alert('يجب إضافة خيارين على الأقل');
+                    return;
+                }
+                
+                // Check if all options have text
+                let allOptionsValid = true;
+                options.forEach(option => {
+                    if (!option.value.trim()) {
+                        allOptionsValid = false;
+                    }
+                });
+                
+                if (!allOptionsValid) {
+                    alert('يرجى إدخال نص لجميع الخيارات');
+                    return;
+                }
+                
+                // Check if a correct answer is selected
+                const correctOption = document.querySelector('input[name="correct_option"]:checked');
+                if (!correctOption) {
+                    alert('يرجى تحديد الإجابة الصحيحة');
+                    return;
+                }
+            }
+            
+            this.submit();
+        });
+    }
+});

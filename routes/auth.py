@@ -1,6 +1,12 @@
+"""
+مسارات المصادقة (auth)
+التحكم في تسجيل الدخول والخروج وتسجيل المستخدمين الجدد
+"""
+
 import os
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session
+from werkzeug.utils import secure_filename
+from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
@@ -9,6 +15,14 @@ from firebase_utils import verify_firebase_token
 
 auth_bp = Blueprint('auth', __name__)
 
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+"""
+مسار تسجيل الدخول (Login)
+معالجة نموذج تسجيل الدخول والتحقق من صحة البيانات
+"""
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -36,6 +50,10 @@ def login():
                           firebase_project_id=firebase_project_id,
                           firebase_app_id=firebase_app_id)
 
+"""
+مسار التسجيل (Register)
+إنشاء حساب جديد للمستخدم
+"""
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -261,6 +279,10 @@ def complete_registration():
                           name=session.get('name', ''),
                           phone=session.get('phone_number', ''))
 
+"""
+مسار تسجيل الخروج (Logout)
+تسجيل خروج المستخدم وإنهاء الجلسة
+"""
 @auth_bp.route('/logout')
 @login_required
 def logout():
@@ -287,10 +309,28 @@ def profile():
         # Handle profile picture upload
         profile_pic = request.files.get('profile_picture')
         if profile_pic and profile_pic.filename:
-            # This would typically upload to Firebase Storage and get the URL
-            # For now, we're just keeping track of the filename
-            # You would need to implement the actual file upload functionality
-            current_user.profile_picture = f"profile_pictures/{current_user.id}_{profile_pic.filename}"
+            if allowed_file(profile_pic.filename):
+                # Ensure filename is secure
+                filename = secure_filename(profile_pic.filename)
+                # Create unique filename with user ID
+                unique_filename = f"{current_user.id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{filename}"
+                # Set the path for saving
+                upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'profile_pictures')
+                # Create directory if it doesn't exist
+                os.makedirs(upload_folder, exist_ok=True)
+                # Full path for the file
+                filepath = os.path.join(upload_folder, unique_filename)
+                
+                try:
+                    # Save the file
+                    profile_pic.save(filepath)
+                    # Update database with relative path
+                    current_user.profile_picture = f"/static/uploads/profile_pictures/{unique_filename}"
+                    flash('تم تحديث الصورة الشخصية بنجاح', 'success')
+                except Exception as e:
+                    flash('حدث خطأ أثناء حفظ الصورة', 'danger')
+            else:
+                flash('نوع الملف غير مسموح به. يرجى استخدام صور بامتداد: png, jpg, jpeg, gif', 'danger')
         
         db.session.commit()
         flash('تم تحديث الملف الشخصي بنجاح', 'success')

@@ -1,0 +1,14 @@
+<!-- Chat Section -->
+{% if has_chat %}
+    {% set participant = chat_participants|selectattr('enrollment_id', 'equalto', enrollment.id)|first %}
+    {% if participant and participant.is_enabled %}
+    <div id="chat-section" class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">محادثة الفصل</h6>
+        </div>
+        <div class="card-body">
+            <!-- Chat content here -->
+        </div>
+    </div>
+    {% endif %}
+{% endif %}

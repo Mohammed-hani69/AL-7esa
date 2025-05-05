@@ -37,7 +37,10 @@ window.initPhoneAuth = (phoneInputId, recaptchaContainerId, submitBtnId) => {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
         
         // Initialize Firebase if not already done
-        initFirebase();
+        const firebaseApp = initFirebase();
+        if (!firebaseApp) {
+          throw new Error('تعذر تهيئة Firebase. يرجى التحقق من إعدادات الموقع.');
+        }
         
         // Start phone verification
         const confirmationResult = await setupPhoneAuth(phone, recaptchaContainerId);
@@ -51,7 +54,15 @@ window.initPhoneAuth = (phoneInputId, recaptchaContainerId, submitBtnId) => {
         
       } catch (error) {
         console.error('Error during phone auth:', error);
-        showAlert('حدث خطأ أثناء التحقق من رقم الهاتف: ' + error.message, 'danger');
+        let errorMessage = 'حدث خطأ أثناء التحقق من رقم الهاتف';
+        
+        if (error.code === 'auth/invalid-api-key') {
+          errorMessage = 'خطأ في مفتاح API. يرجى التحقق من إعدادات الموقع.';
+        } else if (error.message) {
+          errorMessage += ': ' + error.message;
+        }
+        
+        showAlert(errorMessage, 'danger');
         submitBtn.disabled = false;
         submitBtn.innerHTML = 'إرسال';
       }

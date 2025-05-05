@@ -55,9 +55,11 @@ pip install -r requirements.txt
 - Configure `firebase_utils.py` with your Firebase credentials
 - قم بتكوين `firebase_utils.py` مع بيانات اعتماد Firebase الخاصة بك
 
-4. Set up the database | إعداد قاعدة البيانات
+4. For future changes:
 ```bash
-flask db upgrade
+git add .
+git commit -m "update to v 1.0.2"
+git push origin main
 ```
 
 5. Run the application | تشغيل التطبيق
@@ -92,4 +94,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License | الرخصة
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-هذا المشروع مرخص تحت رخصة MIT - راجع ملف LICENSE للتفاصيل."# AL-7esa" 
+هذا المشروع مرخص تحت رخصة MIT - راجع ملف LICENSE للتفاصيل."# AL-7esa"

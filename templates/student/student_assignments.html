@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+
+{% block title %}الواجبات - {{ classroom.name }} - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">الواجبات - {{ classroom.name }}</h1>
+        <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>العودة للفصل
+        </a>
+    </div>
+    
+    <!-- Assignments List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">جميع الواجبات</h6>
+        </div>
+        <div class="card-body">
+            {% if assignments %}
+                <div class="list-group">
+                    {% for assignment in assignments %}
+                        <a href="{{ url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}" 
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ assignment.title }}</h5>
+                                {% if assignment.due_date %}
+                                    <small class="text-danger">ينتهي: {{ assignment.due_date.strftime('%Y-%m-%d') }}</small>
+                                {% endif %}
+                            </div>
+                            <p class="mb-1">{{ assignment.description|truncate(200) }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small>النقاط: {{ assignment.points }}</small>
+                                <small>
+                                    {% if assignment.id in submission_map %}
+                                        {% if submission_map[assignment.id].grade is not none %}
+                                            <span class="badge badge-success">تم التقييم: {{ submission_map[assignment.id].grade }}/{{ assignment.points }}</span>
+                                        {% else %}
+                                            <span class="badge badge-warning">تم التسليم، بانتظار التقييم</span>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if assignment.due_date and assignment.due_date < now %}
+                                            <span class="badge badge-danger">انتهت المهلة</span>
+                                        {% else %}
+                                            <span class="badge badge-info">متاح للتسليم</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-tasks fa-3x text-gray-300 mb-3"></i>
+                    <h5>لا توجد واجبات بعد</h5>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

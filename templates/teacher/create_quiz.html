@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+
+{% block title %}إنشاء اختبار جديد - {{ classroom.name }} - الحصة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">إنشاء اختبار جديد - {{ classroom.name }}</h1>
+        <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>العودة للاختبارات
+        </a>
+    </div>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">بيانات الاختبار</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('teacher.create_quiz', classroom_id=classroom.id) }}">
+                <div class="form-group mb-3">
+                    <label for="title">عنوان الاختبار</label>
+                    <input type="text" class="form-control" id="title" name="title" required>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="description">وصف الاختبار</label>
+                    <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="duration_minutes">مدة الاختبار (بالدقائق)</label>
+                            <input type="number" class="form-control" id="duration_minutes" name="duration_minutes" min="1" value="30" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="start_time">وقت البدء</label>
+                            <input type="datetime-local" class="form-control" id="start_time" name="start_time">
+                            <small class="form-text text-muted">اتركه فارغاً للسماح بالبدء فوراً</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="end_time">وقت الانتهاء</label>
+                            <input type="datetime-local" class="form-control" id="end_time" name="end_time">
+                            <small class="form-text text-muted">اتركه فارغاً للسماح بالحل في أي وقت</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    سيتم إضافة الأسئلة بعد إنشاء الاختبار.
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>إنشاء الاختبار
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -2,6 +2,77 @@
 
 {% block title %}إدارة الفصول الدراسية - الحصة{% endblock %}
 
+{% block styles %}
+<style>
+/* Classroom specific styles */
+#classroomsTable {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+#classroomsTable th,
+#classroomsTable td {
+    vertical-align: middle;
+}
+
+.badge {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.65rem;
+}
+
+/* Classroom modal styles */
+.classroom-modal-content {
+    padding: 1.5rem;
+}
+
+.classroom-details {
+    margin-top: 1rem;
+}
+
+.classroom-code {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 1rem;
+    margin: 1rem 0;
+    border: 2px dashed var(--primary-color);
+    border-radius: 0.35rem;
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Action buttons styles */
+.btn-group .dropdown-menu {
+    min-width: 8rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+}
+
+.dropdown-item i {
+    margin-left: 0.5rem;
+}
+
+/* Table Responsive Styles */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+    
+    #classroomsTable th,
+    #classroomsTable td {
+        padding: 0.5rem;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
 

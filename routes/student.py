@@ -5,7 +5,7 @@ from datetime import datetime
 from app import db
 from models import User, Role, Classroom, ClassroomEnrollment, ClassroomContent
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizAttempt, QuizAnswer
-from models import Payment
+from models import Payment, ChatParticipant
 
 student_bp = Blueprint('student', __name__)
 
@@ -17,6 +17,31 @@ def student_required(f):
             flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'danger')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
+    return decorated_function
+
+# Chat access middleware
+def check_chat_access(f):
+    @wraps(f)
+    def decorated_function(classroom_id, *args, **kwargs):
+        # Check if student is enrolled and active
+        enrollment = ClassroomEnrollment.query.filter_by(
+            classroom_id=classroom_id,
+            user_id=current_user.id,
+            is_active=True
+        ).first_or_404()
+        
+        # Check if student has chat access
+        chat_participant = ChatParticipant.query.filter_by(
+            classroom_id=classroom_id,
+            enrollment_id=enrollment.id,
+            is_enabled=True
+        ).first()
+        
+        if not chat_participant:
+            flash('غير مصرح لك بالوصول إلى المحادثة', 'danger')
+            return redirect(url_for('student.classroom', classroom_id=classroom_id))
+            
+        return f(classroom_id, *args, **kwargs)
     return decorated_function
 
 @student_bp.route('/dashboard')
@@ -71,11 +96,13 @@ def classrooms():
 @student_required
 def join_classroom():
     if request.method == 'POST':
-        code = request.form.get('code').strip().upper()
+        classroom_code = request.form.get('classroom_code')
         
-        if not code:
+        if not classroom_code:
             flash('الرجاء إدخال كود الفصل', 'danger')
             return redirect(url_for('student.join_classroom'))
+            
+        code = classroom_code.strip().upper()
         
         # Check if classroom exists
         classroom = Classroom.query.filter_by(code=code).first()
@@ -177,31 +204,16 @@ def process_payment(classroom_id):
 @student_required
 def classroom(classroom_id):
     classroom = Classroom.query.get_or_404(classroom_id)
-    
-    # Check if student is enrolled
     enrollment = ClassroomEnrollment.query.filter_by(
-        user_id=current_user.id,
         classroom_id=classroom.id,
+        user_id=current_user.id,
         is_active=True
-    ).first()
+    ).first_or_404()
     
-    if not enrollment:
-        flash('يجب أن تكون مسجلاً في الفصل للوصول إليه', 'danger')
-        return redirect(url_for('student.dashboard'))
+    # Get chat participants info
+    chat_participants = ChatParticipant.query.filter_by(classroom_id=classroom.id).all()
     
-    # Get classroom content
-    contents = ClassroomContent.query.filter_by(classroom_id=classroom.id).order_by(ClassroomContent.created_at.desc()).all()
-    
-    # Get assignments
-    assignments = Assignment.query.filter_by(classroom_id=classroom.id).all()
-    
-    # Get quizzes
-    quizzes = Quiz.query.filter_by(classroom_id=classroom.id, is_active=True).all()
-    
-    # Get teacher info
-    teacher = User.query.get(classroom.teacher_id)
-    
-    # Check if the classroom has chat enabled
+    # Check if chat is enabled for this classroom
     has_chat = False
     if classroom.teacher:
         teacher_subs = classroom.teacher.subscriptions
@@ -210,14 +222,12 @@ def classroom(classroom_id):
                 has_chat = True
                 break
     
-    return render_template('student/student_view.html',
-                           classroom=classroom,
-                           enrollment=enrollment,
-                           contents=contents,
-                           assignments=assignments,
-                           quizzes=quizzes,
-                           teacher=teacher,
-                           has_chat=has_chat)
+    return render_template('classroom/student_view.html',
+                         classroom=classroom,
+                         enrollment=enrollment,
+                         has_chat=has_chat,
+                         chat_participants=chat_participants,
+                         teacher=classroom.teacher)
 
 @student_bp.route('/classroom/<int:classroom_id>/assignments')
 @login_required
@@ -249,7 +259,8 @@ def assignments(classroom_id):
                            classroom=classroom,
                            enrollment=enrollment,
                            assignments=assignments,
-                           submission_map=submission_map)
+                           submission_map=submission_map,
+                           now=datetime.utcnow())
 
 @student_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>', methods=['GET', 'POST'])
 @login_required
@@ -305,7 +316,8 @@ def view_assignment(classroom_id, assignment_id):
     return render_template('student/view_assignment.html',
                            classroom=classroom,
                            assignment=assignment,
-                           submission=submission)
+                           submission=submission,
+                           now=datetime.utcnow())
 
 @student_bp.route('/classroom/<int:classroom_id>/quizzes')
 @login_required
@@ -400,6 +412,14 @@ def start_quiz(classroom_id, quiz_id):
     # Get questions
     questions = QuizQuestion.query.filter_by(quiz_id=quiz.id).order_by(QuizQuestion.position).all()
     
+    # Create a map of question ID to existing text answers
+    answered_texts = {}
+    if attempt.id:  # Only if attempt exists
+        existing_answers = QuizAnswer.query.filter_by(attempt_id=attempt.id).all()
+        for ans in existing_answers:
+            if ans.text_answer:
+                answered_texts[ans.question_id] = ans.text_answer
+
     if request.method == 'POST':
         # Process quiz submission
         score = 0
@@ -458,7 +478,8 @@ def start_quiz(classroom_id, quiz_id):
                            classroom=classroom,
                            quiz=quiz,
                            questions=questions,
-                           attempt=attempt)
+                           attempt=attempt,
+                           answered_texts=answered_texts)
 
 @student_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/result')
 @login_required
@@ -521,3 +542,25 @@ def live_classroom(classroom_id):
         return redirect(url_for('student.dashboard'))
     
     return render_template('student/live_class.html', classroom=classroom, enrollment=enrollment)
+
+@student_bp.route('/classroom/<int:classroom_id>/chat')
+@login_required
+@student_required
+@check_chat_access
+def chat(classroom_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    enrollment = ClassroomEnrollment.query.filter_by(
+        classroom_id=classroom.id,
+        user_id=current_user.id,
+        is_active=True
+    ).first_or_404()
+    
+    chat_participant = ChatParticipant.query.filter_by(
+        classroom_id=classroom.id,
+        enrollment_id=enrollment.id
+    ).first()
+    
+    return render_template('classroom/chat.html',
+                         classroom=classroom,
+                         enrollment=enrollment,
+                         is_chat_participant=chat_participant is not None and chat_participant.is_enabled)

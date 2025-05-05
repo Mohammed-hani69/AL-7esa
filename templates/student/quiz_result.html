@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block title %}نتيجة الاختبار - {{ quiz.title }} - {{ classroom.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">نتيجة الاختبار - {{ quiz.title }}</h1>
+            <p class="text-muted mb-0">{{ classroom.name }}</p>
+        </div>
+        <a href="{{ url_for('student.quizzes', classroom_id=classroom.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>العودة للاختبارات
+        </a>
+    </div>
+
+    <!-- Quiz Score Summary -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">ملخص النتيجة</h6>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-4 mb-3">
+                    <h5>الدرجة النهائية</h5>
+                    <h2 class="text-primary">{{ attempt.score }}/{{ quiz.total_points }}</h2>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>النسبة المئوية</h5>
+                    <h2 class="text-info">{{ "%.1f"|format(attempt.score / quiz.total_points * 100) }}%</h2>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>وقت الإنهاء</h5>
+                    <h2 class="text-secondary">{{ attempt.end_time.strftime('%H:%M') }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions Review -->
+    {% for question in questions %}
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    السؤال {{ loop.index }}: {{ question.question_text }}
+                    <span class="badge badge-info float-start">{{ question.points }} نقطة</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                {% set answer = answer_map.get(question.id) %}
+                {% if question.question_type in ['multiple_choice', 'true_false'] %}
+                    {% for option in question.options %}
+                        <div class="mb-2 p-3 border rounded {% if option.is_correct %}bg-success text-white{% elif answer and answer.selected_option_id == option.id and not option.is_correct %}bg-danger text-white{% endif %}">
+                            <div class="d-flex align-items-center">
+                                <i class="fas {% if option.is_correct %}fa-check-circle{% elif answer and answer.selected_option_id == option.id %}fa-times-circle{% else %}fa-circle{% endif %} me-2"></i>
+                                {{ option.option_text }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="mb-3">
+                        <h6>إجابتك:</h6>
+                        <div class="p-3 bg-light rounded">
+                            {{ answer.text_answer|default('لم تتم الإجابة')|format_math|safe }}
+                        </div>
+                    </div>
+                    {% if answer and answer.points_earned is not none %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-star me-2"></i>النقاط المكتسبة: {{ answer.points_earned }}/{{ question.points }}
+                            {% if answer.feedback %}
+                                <hr>
+                                <strong>ملاحظات المصحح:</strong><br>
+                                {{ answer.feedback }}
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-clock me-2"></i>في انتظار التصحيح
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

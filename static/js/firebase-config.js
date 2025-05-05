@@ -2,16 +2,25 @@
 const initFirebase = () => {
   // Check if firebase is already initialized
   if (firebase.apps.length === 0) {
+    const apiKey = document.getElementById('firebase-api-key').value;
+    const projectId = document.getElementById('firebase-project-id').value;
+    
+    if (!apiKey || !projectId) {
+      console.error('Firebase configuration is missing. Please check your environment variables.');
+      return null;
+    }
+    
     const firebaseConfig = {
-      apiKey: document.getElementById('firebase-api-key').value,
-      authDomain: document.getElementById('firebase-project-id').value + ".firebaseapp.com",
-      projectId: document.getElementById('firebase-project-id').value,
-      storageBucket: document.getElementById('firebase-project-id').value + ".appspot.com",
+      apiKey: apiKey,
+      authDomain: projectId + ".firebaseapp.com",
+      projectId: projectId,
+      storageBucket: projectId + ".appspot.com",
       messagingSenderId: document.getElementById('firebase-messaging-sender-id').value || "893628750909",
       appId: document.getElementById('firebase-app-id').value,
       measurementId: document.getElementById('firebase-measurement-id').value || "G-B026ZL6KXG"
     };
     
+    try {
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     
@@ -20,7 +29,12 @@ const initFirebase = () => {
       firebase.analytics();
     }
     
-    console.log("Firebase initialized");
+      console.log("Firebase initialized successfully");
+      return firebase;
+    } catch (error) {
+      console.error("Error initializing Firebase:", error);
+      return null;
+    }
   }
   
   return firebase;

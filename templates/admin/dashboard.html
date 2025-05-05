@@ -2,6 +2,87 @@
 
 {% block title %}لوحة تحكم الإدارة - الحصة{% endblock %}
 
+{% block styles %}
+<style>
+/* Dashboard Cards */
+.card.border-left-primary {
+    border-left: 0.25rem solid var(--primary-color) !important;
+}
+
+.card.border-left-success {
+    border-left: 0.25rem solid var(--success-color) !important;
+}
+
+.card.border-left-info {
+    border-left: 0.25rem solid var(--info-color) !important;
+}
+
+.card.border-left-warning {
+    border-left: 0.25rem solid var(--warning-color) !important;
+}
+
+/* Dashboard Text Styles */
+.text-xs {
+    font-size: 0.7rem;
+}
+
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+
+/* Chart Styles */
+.chart-area {
+    position: relative;
+    height: 320px;
+    width: 100%;
+}
+
+.chart-area canvas {
+    max-width: 100%;
+}
+
+/* Table Styles */
+.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.table th {
+    background-color: var(--light-color);
+    font-weight: 600;
+}
+
+/* Report Button */
+.btn-primary.shadow-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-primary.shadow-sm i {
+    margin-left: 0.5rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .chart-area {
+        height: 250px;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .text-xs {
+        font-size: 0.65rem;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
 

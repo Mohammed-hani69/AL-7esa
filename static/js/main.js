@@ -15,6 +15,34 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Setup alerts auto-dismiss
   setupAlerts();
+  
+  // Sidebar Toggle
+  const sidebarToggleTop = document.getElementById('sidebarToggleTop');
+  const sidebar = document.querySelector('.sidebar');
+  const body = document.body;
+  
+  // إنشاء عنصر overlay للخلفية
+  const overlay = document.createElement('div');
+  overlay.className = 'sidebar-overlay';
+  body.appendChild(overlay);
+  
+  function toggleSidebar() {
+      sidebar.classList.toggle('show');
+      overlay.classList.toggle('show');
+      body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+  }
+  
+  sidebarToggleTop.addEventListener('click', toggleSidebar);
+  
+  // إغلاق السايدبار عند النقر على الـ overlay
+  overlay.addEventListener('click', toggleSidebar);
+  
+  // إغلاق السايدبار عند تغيير حجم النافذة إلى شاشة كبيرة
+  window.addEventListener('resize', function() {
+      if (window.innerWidth >= 768 && sidebar.classList.contains('show')) {
+          toggleSidebar();
+      }
+  });
 });
 
 // Initialize theme based on user preference or system setting
