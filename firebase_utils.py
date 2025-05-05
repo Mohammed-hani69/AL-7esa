@@ -26,16 +26,16 @@ def verify_firebase_token(id_token):
     Verify the Firebase ID token through the Firebase REST API
     """
     if not firebase_initialized or not firebase_api_key:
-        logging.error("Firebase not initialized. Cannot verify token.")
+        logging.warning("Firebase not initialized, skipping token verification")
         return None
-    
+
     try:
         # Using the Firebase Auth REST API to verify token
         # In a production app, you'd use a more robust method
         url = f"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={firebase_api_key}"
         payload = {"idToken": id_token}
         response = requests.post(url, json=payload)
-        
+
         if response.status_code == 200:
             user_data = response.json().get('users', [])
             if user_data:
@@ -44,7 +44,7 @@ def verify_firebase_token(id_token):
                     'phone_number': user_data[0].get('phoneNumber'),
                     'email': user_data[0].get('email')
                 }
-        
+
         logging.error(f"Error verifying token: {response.text}")
         return None
     except Exception as e:
@@ -58,13 +58,13 @@ def get_firebase_user(uid):
     if not firebase_initialized or not firebase_api_key:
         logging.error("Firebase not initialized. Cannot get user.")
         return None
-    
+
     try:
         # Get user info using the REST API
         url = f"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={firebase_api_key}"
         payload = {"localId": [uid]}
         response = requests.post(url, json=payload)
-        
+
         if response.status_code == 200:
             user_data = response.json().get('users', [])
             if user_data:
@@ -74,7 +74,7 @@ def get_firebase_user(uid):
                     'email': user_data[0].get('email'),
                     'display_name': user_data[0].get('displayName')
                 }
-            
+
         logging.error(f"Error getting user: {response.text}")
         return None
     except Exception as e:
@@ -88,13 +88,13 @@ def send_firebase_notification(token, title, body, data=None):
     if not firebase_initialized or not firebase_api_key:
         logging.error("Firebase not initialized. Cannot send notification.")
         return False
-    
+
     url = "https://fcm.googleapis.com/fcm/send"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"key={firebase_api_key}"
     }
-    
+
     payload = {
         "to": token,
         "notification": {
@@ -102,10 +102,10 @@ def send_firebase_notification(token, title, body, data=None):
             "body": body
         }
     }
-    
+
     if data:
         payload["data"] = data
-    
+
     try:
         response = requests.post(url, headers=headers, data=json.dumps(payload))
         if response.status_code == 200:

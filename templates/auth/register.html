@@ -227,25 +227,25 @@
     .auth-wrapper {
         padding: 1rem;
     }
-    
+
     .auth-card {
         border-radius: 0.5rem;
     }
-    
+
     .auth-header,
     .auth-body,
     .auth-footer {
         padding: 1.5rem;
     }
-    
+
     .role-selector {
         grid-template-columns: 1fr;
     }
-    
+
     .step:not(:last-child) {
         margin-left: 1.5rem;
     }
-    
+
     .step-label {
         font-size: 0.875rem;
     }
@@ -270,7 +270,7 @@
                         <h4>منصة الحصة</h4>
                         <p class="text-muted">منصة تعليمية متكاملة للمدارس والدروس الخصوصية</p>
                     </div>
-                    
+
                     <ul class="nav nav-tabs mb-4" id="authTabs" role="tablist">
                         <li class="nav-item w-50 text-center">
                             <a class="nav-link active" id="phone-tab" data-toggle="tab" href="#phone-auth" role="tab">
@@ -283,7 +283,7 @@
                             </a>
                         </li>
                     </ul>
-                    
+
                     <div class="tab-content" id="authTabsContent">
                         <!-- Phone Authentication -->
                         <div class="tab-pane fade show active" id="phone-auth" role="tabpanel">
@@ -293,50 +293,50 @@
                                     <input type="tel" id="phone" class="form-control" placeholder="أدخل رقم الهاتف" dir="ltr">
                                     <small class="form-text text-muted">مثال: +966512345678</small>
                                 </div>
-                                
+
                                 <div id="recaptcha-container" class="mb-3"></div>
-                                
+
                                 <button id="auth-submit-btn" class="btn btn-primary w-100">
                                     إرسال رمز التحقق
                                 </button>
                             </div>
-                            
+
                             <div id="phone-auth-step-2" class="d-none">
                                 <div class="form-group mb-3">
                                     <label for="verification-code">رمز التحقق</label>
                                     <input type="text" id="verification-code" class="form-control" placeholder="أدخل رمز التحقق">
                                     <small class="form-text text-muted">أدخل الرمز المرسل إلى هاتفك</small>
                                 </div>
-                                
+
                                 <button id="verify-code-btn" class="btn btn-primary w-100" onclick="verifyCode('verification-code', 'verify-code-btn')">
                                     تحقق
                                 </button>
-                                
+
                                 <button class="btn btn-link w-100 mt-2" onclick="document.getElementById('phone-auth-step-1').classList.remove('d-none'); document.getElementById('phone-auth-step-2').classList.add('d-none');">
                                     العودة
                                 </button>
                             </div>
                         </div>
-                        
+
                         <!-- Password Authentication -->
                         <div class="tab-pane fade" id="password-auth" role="tabpanel">
-                            <form method="POST" action="{{ url_for('auth.register') }}">
+                            <form method="POST" action="{{ url_for('auth.register') }}" class="needs-validation auth-form" novalidate>
                                 <div class="form-group mb-3">
                                     <label for="register-name">الاسم الكامل</label>
                                     <input type="text" id="register-name" name="name" class="form-control" required>
                                 </div>
-                                
+
                                 <div class="form-group mb-3">
                                     <label for="register-phone">رقم الهاتف</label>
                                     <input type="tel" id="register-phone" name="phone" class="form-control" required dir="ltr">
                                     <small class="form-text text-muted">مثال: +966512345678</small>
                                 </div>
-                                
+
                                 <div class="form-group mb-3">
                                     <label for="register-password">كلمة المرور</label>
                                     <input type="password" id="register-password" name="password" class="form-control" required>
                                 </div>
-                                
+
                                 <div class="form-group mb-3">
                                     <label>نوع الحساب</label>
                                     <div class="d-flex justify-content-between">
@@ -354,14 +354,14 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <button type="submit" class="btn btn-primary w-100">إنشاء حساب</button>
                                 </div>
                             </form>
                         </div>
                     </div>
-                    
+
                     <div class="text-center mt-4">
                         <p>لديك حساب بالفعل؟ <a href="{{ url_for('auth.login') }}">تسجيل الدخول</a></p>
                     </div>
@@ -378,39 +378,39 @@
         // Setup tabs functionality
         const tabLinks = document.querySelectorAll('.nav-link');
         const tabPanes = document.querySelectorAll('.tab-pane');
-        
+
         tabLinks.forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                
+
                 // Remove active class from all tabs
                 tabLinks.forEach(tab => tab.classList.remove('active'));
                 tabPanes.forEach(pane => {
                     pane.classList.remove('show');
                     pane.classList.remove('active');
                 });
-                
+
                 // Add active class to clicked tab
                 this.classList.add('active');
-                
+
                 // Show corresponding tab content
                 const tabId = this.getAttribute('href').substring(1);
                 document.getElementById(tabId).classList.add('show');
                 document.getElementById(tabId).classList.add('active');
             });
         });
-        
+
         // Initialize phone auth (using the global function from auth.js)
         if (window.initPhoneAuth) {
             window.initPhoneAuth('phone', 'recaptcha-container', 'auth-submit-btn');
         }
-        
+
         // Format phone number with Saudi Arabia prefix
         const phoneInputs = document.querySelectorAll('input[type="tel"]');
         phoneInputs.forEach(input => {
             input.addEventListener('blur', function() {
                 let phone = this.value.trim();
-                
+
                 // Add Saudi Arabia code if not present
                 if (phone && !phone.startsWith('+')) {
                     if (phone.startsWith('0')) {
