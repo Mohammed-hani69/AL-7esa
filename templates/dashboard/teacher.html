@@ -2,378 +2,104 @@
 
 {% block title %}لوحة تحكم المعلم - الحصة{% endblock %}
 
-{% block styles %}
-<style>
-/* Stats Cards */
-.stat-card {
-    transition: all 0.3s ease;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    height: 100%;
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-}
-
-.stat-icon {
-    font-size: 2.5rem;
-    opacity: 0.8;
-    margin-bottom: 1rem;
-    color: var(--primary-color);
-}
-
-/* Live Classes */
-.live-class-card {
-    border-right: 4px solid var(--danger-color);
-}
-
-.live-badge {
-    position: relative;
-    padding-right: 1rem;
-}
-
-.live-badge::before {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 0.5rem;
-    height: 0.5rem;
-    background-color: var(--danger-color);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; transform: translateY(-50%) scale(1); }
-    50% { opacity: 0.5; transform: translateY(-50%) scale(1.2); }
-    100% { opacity: 1; transform: translateY(-50%) scale(1); }
-}
-
-/* Classroom Grid */
-.classroom-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
-    margin: 2rem 0;
-}
-
-.classroom-card {
-    position: relative;
-    border: none;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
-    background: var(--card-bg);
-    height: 100%;
-}
-
-.classroom-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.5rem 2rem rgba(0,0,0,0.1);
-}
-
-.classroom-card .card-body {
-    padding: 1.5rem;
-}
-
-.classroom-card .card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    color: var(--primary-color);
-}
-
-.classroom-info {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-    color: var(--text-muted);
-}
-
-.classroom-info i {
-    margin-left: 0.5rem;
-    font-size: 1rem;
-}
-
-/* Subscription Section */
-.subscription-card {
-    border-radius: 0.5rem;
-    overflow: hidden;
-    margin-bottom: 2rem;
-}
-
-.subscription-header {
-    padding: 1.5rem;
-    background: linear-gradient(45deg, var(--primary-color), var(--info-color));
-    color: white;
-}
-
-.subscription-body {
-    padding: 1.5rem;
-}
-
-.feature-list {
-    margin: 1.5rem 0;
-}
-
-.feature-list li {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.75rem;
-    color: var(--text-muted);
-}
-
-.feature-list i {
-    width: 1.5rem;
-    margin-left: 0.75rem;
-}
-
-/* Quick Actions */
-.action-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-.action-card {
-    background: var(--card-bg);
-    border-radius: 0.5rem;
-    padding: 1.25rem;
-    transition: all 0.3s ease;
-    text-decoration: none !important;
-    color: inherit;
-    border: 1px solid var(--border-color);
-}
-
-.action-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.08);
-    border-color: var(--primary-color);
-}
-
-.action-icon {
-    width: 3.5rem;
-    height: 3.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 1rem;
-    margin-bottom: 1rem;
-    background-color: rgba(var(--primary-rgb), 0.1);
-    color: var(--primary-color);
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    .classroom-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .assignment-stats,
-    .quick-actions {
-        grid-template-columns: 1fr 1fr;
-    }
-    
-    .activity-timeline {
-        padding-right: 1.5rem;
-    }
-    
-    .activity-item::before {
-        right: -1.5rem;
-    }
-    
-    .action-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .subscription-header {
-        padding: 1.25rem;
-    }
-    
-    .subscription-body {
-        padding: 1.25rem;
-    }
-    
-    .stat-card {
-        margin-bottom: 1rem;
-    }
-}
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 text-gray-800">لوحة تحكم المعلم</h1>
-        
-        {% if can_create_classroom %}
-            <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-primary">
-                <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
-            </a>
-        {% else %}
-            <button class="btn btn-secondary" disabled>
-                <i class="fas fa-plus-circle me-2"></i>لا يمكن إنشاء فصول إضافية
-            </button>
-        {% endif %}
+<div class="teacher-dashboard">
+    <div class="content-header">
+        <h1>لوحة تحكم المعلم</h1>
+        <p class="content-description">مرحباً {{ current_user.name }}، مرحباً بك في لوحة التحكم الخاصة بك.</p>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="row g-3 mb-4">
-        <div class="col-xl-3 col-md-6">
-            <div class="stat-card card h-100">
-                <div class="card-body">
-                    <div class="text-center">
-                        <div class="stat-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h3 class="h5 mb-2">إجمالي الطلاب</h3>
-                        <div class="h2 mb-0">{{ total_students }}</div>
+    <!-- إحصائيات سريعة -->
+    <div class="dashboard-section">
+        <div class="dashboard-section-header">
+            <h2 class="dashboard-section-title">إحصائيات سريعة</h2>
+        </div>
+        <div class="row g-3">
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card primary">
+                    <h3>إجمالي الطلاب</h3>
+                    <div class="stat-value">{{ total_students }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6">
-            <div class="stat-card card h-100">
-                <div class="card-body">
-                    <div class="text-center">
-                        <div class="stat-icon">
-                            <i class="fas fa-chalkboard"></i>
-                        </div>
-                        <h3 class="h5 mb-2">الفصول النشطة</h3>
-                        <div class="h2 mb-0">{{ classrooms|length }}</div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card success">
+                    <h3>الفصول الدراسية</h3>
+                    <div class="stat-value">{{ classrooms|length }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-chalkboard"></i>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6">
-            <div class="stat-card card h-100">
-                <div class="card-body">
-                    <div class="text-center">
-                        <div class="stat-icon">
-                            <i class="fas fa-tasks"></i>
-                        </div>
-                        <h3 class="h5 mb-2">الواجبات</h3>
-                        <div class="h2 mb-0">{{ total_assignments }}</div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card info">
+                    <h3>الاختبارات النشطة</h3>
+                    <div class="stat-value">{{ active_quizzes }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-question-circle"></i>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6">
-            <div class="stat-card card h-100">
-                <div class="card-body">
-                    <div class="text-center">
-                        <div class="stat-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h3 class="h5 mb-2">معدل التفاعل</h3>
-                        <div class="h2 mb-0">85%</div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card warning">
+                    <h3>الواجبات المعلقة</h3>
+                    <div class="stat-value">{{ pending_submissions }}</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Subscription Status -->
-    <div class="subscription-card card">
-        <div class="subscription-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">حالة الاشتراك</h5>
-                {% if subscription %}
-                    <span class="badge bg-light text-dark">{{ subscription.plan.name }}</span>
-                {% endif %}
-            </div>
-        </div>
-        <div class="subscription-body">
-            {% if subscription %}
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            {% if subscription.is_trial %}
-                                <span class="badge bg-warning">فترة تجريبية</span>
-                            {% endif %}
-                            <p class="mb-1 mt-2">تاريخ الانتهاء: {{ subscription.end_date.strftime('%Y-%m-%d') }}</p>
-                        </div>
-                        <ul class="feature-list list-unstyled">
-                            <li>
-                                <i class="fas fa-check-circle text-success"></i>
-                                عدد الفصول المتاح: {{ subscription.plan.max_classrooms }}
-                            </li>
-                            <li>
-                                <i class="fas {% if subscription.plan.has_chat %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %}"></i>
-                                محادثات الفصل
-                            </li>
-                            <li>
-                                <i class="fas {% if subscription.plan.allow_assistant %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %}"></i>
-                                إضافة مساعدين
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6 text-md-end">
-                        <a href="#subscription-plans" class="btn btn-outline-primary">
-                            <i class="fas fa-arrow-up me-2"></i>
-                            ترقية الاشتراك
-                        </a>
-                    </div>
-                </div>
+    <!-- الخطة الحالية والفصول -->
+    <div class="dashboard-section">
+        <div class="dashboard-section-header">
+            <h2 class="dashboard-section-title">الفصول الدراسية</h2>
+            {% if can_create_classroom %}
+                <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher">
+                    <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
+                </a>
             {% else %}
-                <div class="text-center py-4">
-                    <div class="mb-3">
-                        <i class="fas fa-crown fa-3x text-warning"></i>
-                    </div>
-                    <h5>لا يوجد اشتراك نشط</h5>
-                    <p class="text-muted mb-4">اشترك الآن للحصول على جميع المميزات</p>
-                    <a href="#subscription-plans" class="btn btn-primary">
-                        <i class="fas fa-crown me-2"></i>
-                        اختر خطة اشتراك
-                    </a>
-                </div>
+                <button class="btn btn-secondary" disabled>
+                    <i class="fas fa-plus-circle me-2"></i>لا يمكن إنشاء فصول إضافية
+                </button>
             {% endif %}
         </div>
-    </div>
 
-    <!-- Classrooms -->
-    <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="text-gray-800">فصولك الدراسية</h5>
-            <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-plus me-1"></i>
-                فصل جديد
-            </a>
-        </div>
-        
         {% if classrooms %}
             <div class="classroom-grid">
                 {% for classroom in classrooms %}
-                    <div class="classroom-card card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ classroom.name }}</h5>
-                            <div class="classroom-info">
-                                <i class="fas fa-book"></i>
-                                <span>{{ classroom.subject }}</span>
+                    <div class="classroom-card">
+                        <div class="classroom-card-header">
+                            <h5>{{ classroom.name }}</h5>
+                            <div class="classroom-code">{{ classroom.code }}</div>
+                        </div>
+                        <div class="classroom-card-body">
+                            <div class="classroom-status {{ 'free' if classroom.is_free else 'paid' }}">
+                                {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
                             </div>
-                            <div class="classroom-info">
-                                <i class="fas fa-user-graduate"></i>
-                                <span>{{ classroom.enrollments|length }} طالب</span>
+                            <div class="classroom-meta">
+                                <div class="classroom-meta-item">
+                                    <i class="fas fa-users"></i>
+                                    <span>{{ classroom.students|length }} طالب</span>
+                                </div>
+                                <div class="classroom-meta-item">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>تاريخ الإنشاء: {{ classroom.created_at.strftime('%Y-%m-%d') }}</span>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <span class="badge bg-{{ 'success' if classroom.is_free else 'primary' }}">
-                                    {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
-                                </span>
-                                <span class="ms-2 text-muted">{{ classroom.code }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-external-link-alt me-1"></i>
+                            <div class="classroom-actions">
+                                <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-primary">
+                                    <i class="fas fa-eye"></i>
                                     عرض الفصل
                                 </a>
-                                <button class="btn btn-sm btn-light" onclick="copyClassroomCode('{{ classroom.code }}')">
+                                <button class="btn btn-light" onclick="copyClassroomCode('{{ classroom.code }}')">
                                     <i class="fas fa-copy"></i>
                                 </button>
                             </div>
@@ -386,72 +112,59 @@
                 <i class="fas fa-school fa-3x text-gray-400 mb-3"></i>
                 <h5>لا يوجد لديك فصول دراسية بعد</h5>
                 <p class="text-muted mb-4">قم بإنشاء فصلك الدراسي الأول للبدء</p>
-                <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-primary">
+                <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher">
                     <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
                 </a>
             </div>
         {% endif %}
     </div>
 
-    <!-- Quick Actions -->
-    <div class="mb-4">
-        <h5 class="text-gray-800 mb-3">إجراءات سريعة</h5>
-        <div class="action-grid">
-            <a href="{{ url_for('teacher.create_classroom') }}" class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-plus"></i>
-                </div>
-                <h6>إنشاء فصل جديد</h6>
-                <p class="text-muted mb-0">أضف فصلاً دراسياً جديداً</p>
-            </a>
-            
-            {% if classrooms %}
-                <a href="{{ url_for('teacher.assignments', classroom_id=classrooms[0].id) }}" class="action-card">
-            {% else %}
-                <a href="#" class="action-card disabled" style="opacity: 0.6; pointer-events: none;">
-            {% endif %}
-                <div class="action-icon">
-                    <i class="fas fa-tasks"></i>
-                </div>
-                <h6>الواجبات</h6>
-                <p class="text-muted mb-0">إدارة واجبات الطلاب</p>
-            </a>
-            
-            {% if classrooms %}
-                <a href="{{ url_for('teacher.quizzes', classroom_id=classrooms[0].id) }}" class="action-card">
-            {% else %}
-                <a href="#" class="action-card disabled" style="opacity: 0.6; pointer-events: none;">
-            {% endif %}
-                <div class="action-icon">
-                    <i class="fas fa-question-circle"></i>
-                </div>
-                <h6>الاختبارات</h6>
-                <p class="text-muted mb-0">إنشاء وإدارة الاختبارات</p>
-            </a>
-            
-            {% if classrooms %}
-                <a href="{{ url_for('teacher.students', classroom_id=classrooms[0].id) }}" class="action-card">
-            {% else %}
-                <a href="#" class="action-card disabled" style="opacity: 0.6; pointer-events: none;">
-            {% endif %}
-                <div class="action-icon">
-                    <i class="fas fa-user-graduate"></i>
-                </div>
-                <h6>الطلاب</h6>
-                <p class="text-muted mb-0">عرض وإدارة الطلاب</p>
-            </a>
+    <!-- الفعاليات الأخيرة -->
+    <div class="dashboard-section">
+        <div class="dashboard-section-header">
+            <h2 class="dashboard-section-title">الفعاليات الأخيرة</h2>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                {% if recent_activities %}
+                    <div class="activity-list">
+                        {% for activity in recent_activities %}
+                            <div class="activity-card">
+                                <div class="activity-card-header">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-{{ activity.icon }}"></i>
+                                    </div>
+                                    <div>
+                                        <div class="activity-title">{{ activity.title }}</div>
+                                        <div class="activity-time">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+                                    </div>
+                                </div>
+                                <div class="activity-card-body">
+                                    {{ activity.description }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted">لا توجد أنشطة حديثة</p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script>
 function copyClassroomCode(code) {
-    navigator.clipboard.writeText(code).then(() => {
-        // Show a toast or notification
-        alert('تم نسخ كود الفصل');
-    });
+    navigator.clipboard.writeText(code)
+        .then(() => {
+            alert('تم نسخ رمز الفصل الدراسي: ' + code);
+        })
+        .catch(err => {
+            console.error('فشل في نسخ النص: ', err);
+        });
 }
 </script>
 {% endblock %}
