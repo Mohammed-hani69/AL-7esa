@@ -59,7 +59,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ 'active' if request.endpoint == 'teacher.students' else '' }}" href="{{ url_for('teacher.students') }}">
+                    <a class="nav-link {{ 'active' if 'students' in request.endpoint else '' }}" href="{{ url_for('teacher.dashboard') }}">
                         <i class="fas fa-user-graduate me-2"></i>
                         <span>الطلاب</span>
                     </a>
