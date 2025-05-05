@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}لوحة التحكم - الحصة{% endblock %}
+{% block title %}لوحة تحكم الطالب - الحصة{% endblock %}
 
 {% block styles %}
 <style>
@@ -157,11 +157,11 @@
     .classroom-cards {
         grid-template-columns: 1fr;
     }
-    
+
     .timeline::before {
         right: 0.75rem;
     }
-    
+
     .timeline-item {
         padding-right: 1.5rem;
     }
@@ -171,120 +171,164 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 text-gray-800">لوحة تحكم الطالب</h1>
-        <a href="{{ url_for('student.join_classroom') }}" class="btn btn-primary">
-            <i class="fas fa-plus-circle me-2"></i>الانضمام إلى فصل
-        </a>
+    <!-- ترحيب لوحة التحكم -->
+    <div class="dashboard-welcome shadow">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-3">مرحباً، {{ current_user.name }}!</h2>
+                <p class="mb-2">مرحباً بك في لوحة تحكم الطالب الخاصة بك. من هنا يمكنك الوصول إلى فصولك الدراسية ومتابعة تقدمك.</p>
+            </div>
+            <div class="d-none d-md-block">
+                <i class="fas fa-user-graduate fa-4x text-white-50"></i>
+            </div>
+        </div>
     </div>
-    
-    <!-- Enrolled Classrooms -->
-    <div class="mb-4">
-        <h5 class="text-gray-800 mb-3">فصولك الدراسية</h5>
-        
-        {% if enrollments %}
-            <div class="row">
-                {% for enrollment in enrollments %}
-                    {% set classroom = enrollment.classroom %}
-                    <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="card classroom-card shadow-sm" style="border-top: 4px solid {{ classroom.color }};">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ classroom.name }}</h5>
-                                <p class="card-text">{{ classroom.subject }} | {{ classroom.grade }}</p>
-                                <div class="mb-3">
-                                    <span class="badge badge-{{ 'success' if classroom.is_free else 'primary' }}">
-                                        {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
-                                    </span>
-                                    <span class="points-badge float-end">{{ enrollment.points }} نقطة</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">المعلم: {{ classroom.teacher.name }}</small>
-                                    <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">
-                                        عرض الفصل
+
+    <!-- إحصائيات الطالب -->
+    <div class="dashboard-stats">
+        <div class="stat-card primary">
+            <div class="stat-icon">
+                <i class="fas fa-chalkboard"></i>
+            </div>
+            <h3>{{ enrollments|length }}</h3>
+            <p>الفصول المسجلة</p>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-icon">
+                <i class="fas fa-tasks"></i>
+            </div>
+            <h3>{{ upcoming_assignments|length }}</h3>
+            <p>الواجبات القادمة</p>
+        </div>
+
+        <div class="stat-card info">
+            <div class="stat-icon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h3>{{ upcoming_quizzes|length }}</h3>
+            <p>الاختبارات المتاحة</p>
+        </div>
+    </div>
+
+    <!-- الفصول الدراسية -->
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h6 class="m-0 font-weight-bold text-primary">فصولك الدراسية</h6>
+            <a href="{{ url_for('student.join_classroom') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus-circle me-1"></i>الانضمام إلى فصل
+            </a>
+        </div>
+        <div class="card-body">
+            {% if enrollments %}
+                <div class="row">
+                    {% for enrollment in enrollments %}
+                        {% set classroom = enrollment.classroom %}
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card classroom-card" style="border-top-color: {{ classroom.color }};">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-2">{{ classroom.name }}</h5>
+                                    <p class="card-text text-muted mb-3">{{ classroom.subject }} | {{ classroom.grade }}</p>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="badge bg-{{ 'success' if classroom.is_free else 'primary' }}">
+                                            {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
+                                        </span>
+                                        <span class="text-primary">
+                                            <i class="fas fa-user-tie me-1"></i>{{ classroom.teacher.name }}
+                                        </span>
+                                    </div>
+                                    <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn btn-primary w-100">
+                                        دخول الفصل
                                     </a>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="text-center py-5 bg-light rounded mb-4">
-                <i class="fas fa-school fa-3x text-gray-400 mb-3"></i>
-                <h5>لم تنضم إلى أي فصل دراسي بعد</h5>
-                <p>استخدم كود الفصل المقدم من معلمك للانضمام</p>
-                <a href="{{ url_for('student.join_classroom') }}" class="btn btn-primary">
-                    <i class="fas fa-plus-circle me-2"></i>الانضمام إلى فصل
-                </a>
-            </div>
-        {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                    <h5>لم تنضم إلى أي فصول بعد</h5>
+                    <p class="text-muted">قم بالانضمام إلى فصل دراسي للبدء في رحلتك التعليمية</p>
+                    <a href="{{ url_for('student.join_classroom') }}" class="btn btn-primary mt-2">
+                        <i class="fas fa-plus-circle me-1"></i>انضم إلى فصل جديد
+                    </a>
+                </div>
+            {% endif %}
+        </div>
     </div>
-    
+
+    <!-- الواجبات القادمة -->
     <div class="row">
-        <!-- Upcoming Assignments -->
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header">
                     <h6 class="m-0 font-weight-bold text-primary">الواجبات القادمة</h6>
                 </div>
                 <div class="card-body">
                     {% if upcoming_assignments %}
                         <div class="list-group">
                             {% for assignment in upcoming_assignments %}
-                                <a href="{{ url_for('student.view_assignment', classroom_id=assignment.classroom_id, assignment_id=assignment.id) }}" class="list-group-item list-group-item-action">
+                                <a href="{{ url_for('student.view_assignment', classroom_id=assignment.classroom_id, assignment_id=assignment.id) }}" 
+                                   class="list-group-item list-group-item-action">
                                     <div class="d-flex w-100 justify-content-between">
-                                        <h5 class="mb-1">{{ assignment.title }}</h5>
-                                        <small class="text-danger">{{ assignment.due_date.strftime('%Y-%m-%d') }}</small>
+                                        <h6 class="mb-1">{{ assignment.title }}</h6>
+                                        <small class="text-{{ 'danger' if assignment.due_date.date() <= now.date() else 'muted' }}">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {% if assignment.due_date.date() == now.date() %}
+                                                اليوم
+                                            {% else %}
+                                                {{ (assignment.due_date - now).days }} أيام
+                                            {% endif %}
+                                        </small>
                                     </div>
-                                    <p class="mb-1">{{ assignment.description|truncate(100) }}</p>
-                                    <small>{{ assignment.classroom.name }} | {{ assignment.classroom.subject }}</small>
+                                    <p class="mb-1 small">{{ assignment.description|truncate(100) }}</p>
+                                    <small class="text-muted">{{ assignment.classroom.name }}</small>
                                 </a>
                             {% endfor %}
                         </div>
                     {% else %}
                         <div class="text-center py-4">
-                            <i class="fas fa-tasks fa-3x text-gray-300 mb-2"></i>
-                            <p>لا توجد واجبات قادمة</p>
+                            <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                            <p class="mb-0">لا توجد واجبات قادمة حالياً</p>
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
-        <!-- Upcoming Quizzes -->
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">الاختبارات القادمة</h6>
+
+        <!-- الاختبارات المتاحة -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">الاختبارات المتاحة</h6>
                 </div>
                 <div class="card-body">
                     {% if upcoming_quizzes %}
                         <div class="list-group">
                             {% for quiz in upcoming_quizzes %}
-                                <a href="{{ url_for('student.quizzes', classroom_id=quiz.classroom_id) }}" class="list-group-item list-group-item-action">
+                                <a href="{{ url_for('student.quiz', classroom_id=quiz.classroom_id, quiz_id=quiz.id) }}" 
+                                   class="list-group-item list-group-item-action">
                                     <div class="d-flex w-100 justify-content-between">
-                                        <h5 class="mb-1">{{ quiz.title }}</h5>
-                                        <small class="text-danger">
-                                            {% if quiz.start_time and quiz.end_time %}
-                                                {{ quiz.start_time.strftime('%Y-%m-%d') }}
-                                                إلى
-                                                {{ quiz.end_time.strftime('%Y-%m-%d') }}
-                                            {% elif quiz.end_time %}
-                                                ينتهي {{ quiz.end_time.strftime('%Y-%m-%d') }}
-                                            {% else %}
+                                        <h6 class="mb-1">{{ quiz.title }}</h6>
+                                        <small class="text-{{ 'success' if now >= quiz.start_time and now <= quiz.end_time else 'muted' }}">
+                                            <i class="fas fa-hourglass-half me-1"></i>
+                                            {% if now >= quiz.start_time and now <= quiz.end_time %}
                                                 متاح الآن
+                                            {% elif now < quiz.start_time %}
+                                                يبدأ {{ (quiz.start_time - now).days }} أيام
                                             {% endif %}
                                         </small>
                                     </div>
-                                    <p class="mb-1">{{ quiz.description|truncate(100) }}</p>
-                                    <small>{{ quiz.classroom.name }} | {{ quiz.classroom.subject }}</small>
+                                    <p class="mb-1 small">{{ quiz.description|truncate(100) }}</p>
+                                    <small class="text-muted">{{ quiz.classroom.name }} | {{ quiz.duration_minutes }} دقيقة</small>
                                 </a>
                             {% endfor %}
                         </div>
                     {% else %}
                         <div class="text-center py-4">
-                            <i class="fas fa-question-circle fa-3x text-gray-300 mb-2"></i>
-                            <p>لا توجد اختبارات قادمة</p>
+                            <i class="fas fa-clipboard-check fa-2x text-info mb-3"></i>
+                            <p class="mb-0">لا توجد اختبارات متاحة حالياً</p>
                         </div>
                     {% endif %}
                 </div>
