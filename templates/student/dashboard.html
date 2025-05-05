@@ -13,15 +13,15 @@
 </head>
 <body>
     <div class="wrapper">
-        <!-- الشريط الجانبي -->
-        <aside class="sidebar">
+        <!-- Sidebar -->
+        <div class="sidebar">
             <div class="sidebar-brand">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" width="40" height="40" class="d-inline-block align-top me-2" alt="الحصة" onerror="this.src='https://via.placeholder.com/40?text=AL'">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" width="30" height="30" class="d-inline-block align-top me-2" alt="الحصة" onerror="this.src='https://via.placeholder.com/30?text=AL'">
                 <span class="sidebar-brand-text">الحصة</span>
             </div>
-            
+
             <hr class="sidebar-divider">
-            
+
             <ul class="nav-list">
                 <li class="nav-item">
                     <a class="nav-link active" href="{{ url_for('student.dashboard') }}">
@@ -29,37 +29,22 @@
                         <span>لوحة التحكم</span>
                     </a>
                 </li>
-                
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('student.classrooms') }}">
                         <i class="fas fa-chalkboard me-2"></i>
                         <span>الفصول</span>
                     </a>
                 </li>
-                
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('student.assignments') }}">
-                        <i class="fas fa-tasks me-2"></i>
-                        <span>الواجبات</span>
-                    </a>
-                </li>
-                
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('student.quizzes') }}">
-                        <i class="fas fa-clipboard-list me-2"></i>
-                        <span>الاختبارات</span>
-                    </a>
-                </li>
-                
+
                 <hr class="sidebar-divider">
-                
+
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('auth.profile') }}">
                         <i class="fas fa-user-circle me-2"></i>
                         <span>الملف الشخصي</span>
                     </a>
                 </li>
-                
+
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('auth.logout') }}">
                         <i class="fas fa-sign-out-alt me-2"></i>
@@ -67,20 +52,19 @@
                     </a>
                 </li>
             </ul>
-        </aside>
-        
-        <!-- محتوى الصفحة -->
+        </div>
+
         <div class="content-wrapper">
-            <!-- الشريط العلوي -->
+            <!-- Navbar -->
             <div class="topbar">
                 <nav class="navbar">
                     <button id="sidebarToggleBtn" class="btn">
                         <i class="fas fa-bars"></i>
                     </button>
-                    
+
                     <ul class="navbar-nav">
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button">
+                            <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-bell"></i>
                                 {% if current_user.notifications|selectattr('is_read', 'equalto', false)|list|length > 0 %}
                                 <span class="badge bg-danger badge-counter">{{ current_user.notifications|selectattr('is_read', 'equalto', false)|list|length }}</span>
@@ -102,14 +86,14 @@
                                 <a class="dropdown-item text-center small text-muted" href="#">عرض كل الإشعارات</a>
                             </div>
                         </li>
-                        
+
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <span class="me-2 d-none d-lg-inline text-gray-600 small">{{ current_user.name }}</span>
                                 {% if current_user.profile_picture %}
-                                <img class="img-profile rounded-circle" src="{{ current_user.profile_picture }}" width="36" height="36" alt="{{ current_user.name }}">
+                                <img class="img-profile rounded-circle" src="{{ current_user.profile_picture }}" width="32" height="32" alt="{{ current_user.name }}">
                                 {% else %}
-                                <img class="img-profile rounded-circle" src="{{ url_for('static', filename='img/default-profile.png') }}" width="36" height="36" alt="{{ current_user.name }}" onerror="this.src='https://via.placeholder.com/36?text=User'">
+                                <img class="img-profile rounded-circle" src="{{ url_for('static', filename='img/default-profile.png') }}" width="32" height="32" alt="{{ current_user.name }}" onerror="this.src='https://via.placeholder.com/32?text=User'">
                                 {% endif %}
                             </a>
                             <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
@@ -131,9 +115,9 @@
                     </ul>
                 </nav>
             </div>
-            
-            <!-- المحتوى الرئيسي -->
-            <div class="student-dashboard">
+
+            <!-- Main Content -->
+            <div class="main-content">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
@@ -144,59 +128,44 @@
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
-                
+
+                <!-- محتوى لوحة التحكم -->
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">لوحة التحكم</h1>
-                        <a href="{{ url_for('student.join') }}" class="btn btn-sm btn-primary shadow-sm">
-                            <i class="fas fa-plus fa-sm text-white-50 ml-1"></i> الانضمام إلى فصل
+                        <h1 class="h3 mb-0 text-gray-800">لوحة تحكم الطالب</h1>
+                        <a href="{{ url_for('student.join') }}" class="d-none d-sm-inline-block btn btn-primary shadow-sm">
+                            <i class="fas fa-plus fa-sm text-white-50 me-1"></i> انضمام إلى فصل
                         </a>
                     </div>
 
-                    <!-- ملخص البطاقات -->
                     <div class="row">
+                        <!-- إحصائيات الطالب -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-right-primary shadow h-100 py-2">
+                            <div class="card border-left-primary shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
+                                        <div class="col me-2">
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                الفصول المسجلة</div>
+                                                عدد الفصول المنضم إليها</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ enrollments|length }}</div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-chalkboard fa-2x text-gray-300"></i>
+                                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- عدد المهام المعلقة -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-right-warning shadow h-100 py-2">
+                            <div class="card border-left-warning shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
+                                        <div class="col me-2">
                                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                الواجبات المطلوبة</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_assignment_count }}</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-tasks fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-right-info shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                                الاختبارات القادمة</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ upcoming_quiz_count }}</div>
+                                                المهام والواجبات</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_assignments|length }}</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
@@ -206,154 +175,190 @@
                             </div>
                         </div>
 
+                        <!-- النقاط الكلية -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-right-success shadow h-100 py-2">
+                            <div class="card border-left-success shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
+                                        <div class="col me-2">
                                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                متوسط الدرجات</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ average_score }}%</div>
+                                                النقاط الكلية</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_points }}</div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                            <i class="fas fa-star fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- الفصول -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">الفصول الدراسية</h6>
-                                    <a href="{{ url_for('student.join') }}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-plus fa-sm"></i> الانضمام إلى فصل
-                                    </a>
-                                </div>
-                                <div class="card-body">
-                                    {% if enrollments %}
-                                    <div class="row">
-                                        {% for enrollment in enrollments %}
-                                        <div class="col-lg-4 col-md-6 mb-4">
-                                            <div class="card h-100 classroom-card">
-                                                <div class="card-header py-3">
-                                                    <h6 class="m-0 font-weight-bold">{{ enrollment.classroom.name }}</h6>
-                                                </div>
-                                                <div class="card-body">
-                                                    <p><i class="fas fa-book-reader me-2"></i> {{ enrollment.classroom.subject }}</p>
-                                                    <p><i class="fas fa-user-tie me-2"></i> {{ enrollment.classroom.teacher.name }}</p>
-                                                    <p><i class="fas fa-calendar-alt me-2"></i> تاريخ الانضمام: {{ enrollment.created_at.strftime('%Y-%m-%d') }}</p>
-                                                </div>
-                                                <div class="card-footer">
-                                                    <a href="{{ url_for('student.classroom', classroom_id=enrollment.classroom.id) }}" class="btn btn-primary btn-sm">
-                                                        <i class="fas fa-eye me-1"></i> عرض
-                                                    </a>
-                                                    <a href="{{ url_for('student.live_class', classroom_id=enrollment.classroom.id) }}" class="btn btn-info btn-sm">
-                                                        <i class="fas fa-video me-1"></i> بث مباشر
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                    {% else %}
-                                    <div class="text-center py-4">
-                                        <i class="fas fa-chalkboard fa-3x mb-3 text-gray-400"></i>
-                                        <p>أنت غير مسجل في أي فصل دراسي حالياً</p>
-                                        <a href="{{ url_for('student.join') }}" class="btn btn-primary">
-                                            <i class="fas fa-plus me-1"></i> الانضمام إلى فصل
-                                        </a>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- الواجبات القادمة -->
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">الواجبات القادمة</h6>
-                                </div>
-                                <div class="card-body">
-                                    {% if pending_assignments %}
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>عنوان الواجب</th>
-                                                    <th>الفصل</th>
-                                                    <th>تاريخ التسليم</th>
-                                                    <th>الإجراءات</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for assignment in pending_assignments %}
-                                                <tr>
-                                                    <td>{{ assignment.title }}</td>
-                                                    <td>{{ assignment.classroom.name }}</td>
-                                                    <td>{{ assignment.due_date.strftime('%Y-%m-%d') }}</td>
-                                                    <td>
-                                                        <a href="{{ url_for('student.view_assignment', classroom_id=assignment.classroom.id, assignment_id=assignment.id) }}" class="btn btn-sm btn-primary">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    {% else %}
-                                    <div class="text-center py-3">
-                                        <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
-                                        <p>لا توجد واجبات مطلوبة حالياً</p>
-                                    </div>
-                                    {% endif %}
                                 </div>
                             </div>
                         </div>
 
                         <!-- الاختبارات القادمة -->
-                        <div class="col-lg-6">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">الاختبارات القادمة</h6>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col me-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                الاختبارات القادمة</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ upcoming_quizzes|length }}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- الفصول المنضم إليها -->
+                        <div class="col-lg-7 mb-4">
+                            <div class="card shadow">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">الفصول المنضم إليها</h6>
+                                    <a href="{{ url_for('student.classrooms') }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-external-link-alt me-1"></i> عرض الكل
+                                    </a>
                                 </div>
                                 <div class="card-body">
-                                    {% if upcoming_quizzes %}
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>عنوان الاختبار</th>
-                                                    <th>الفصل</th>
-                                                    <th>تاريخ البدء</th>
-                                                    <th>المدة</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for quiz in upcoming_quizzes %}
-                                                <tr>
-                                                    <td>{{ quiz.title }}</td>
-                                                    <td>{{ quiz.classroom.name }}</td>
-                                                    <td>{{ quiz.start_date.strftime('%Y-%m-%d') }}</td>
-                                                    <td>{{ quiz.duration_minutes }} دقيقة</td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    {% if enrollments %}
+                                        <div class="row">
+                                            {% for enrollment in enrollments %}
+                                                <div class="col-lg-6 mb-4">
+                                                    <div class="card bg-light border-left-primary">
+                                                        <div class="card-body py-3">
+                                                            <div class="row align-items-center">
+                                                                <div class="col-auto">
+                                                                    <i class="fas fa-chalkboard fa-2x text-primary"></i>
+                                                                </div>
+                                                                <div class="col">
+                                                                    <h5 class="mb-1">{{ enrollment.classroom.name }}</h5>
+                                                                    <div class="small text-muted">{{ enrollment.classroom.subject }}</div>
+                                                                    <div class="small text-muted">{{ enrollment.classroom.teacher.name }}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-end mt-2">
+                                                                <a href="{{ url_for('student.classroom', classroom_id=enrollment.classroom.id) }}" class="btn btn-sm btn-primary">
+                                                                    <i class="fas fa-arrow-right me-1"></i> الدخول
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
                                     {% else %}
-                                    <div class="text-center py-3">
-                                        <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
-                                        <p>لا توجد اختبارات قادمة حالياً</p>
-                                    </div>
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-graduation-cap fa-3x text-gray-300 mb-3"></i>
+                                            <p class="mb-0">لم تنضم إلى أي فصل بعد</p>
+                                            <a href="{{ url_for('student.join') }}" class="btn btn-primary mt-3">
+                                                <i class="fas fa-plus me-1"></i> انضمام إلى فصل
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- آخر النشاطات والتنبيهات -->
+                        <div class="col-lg-5 mb-4">
+                            <div class="card shadow">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">آخر النشاطات</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if activities %}
+                                        <div class="timeline">
+                                            {% for activity in activities %}
+                                                <div class="timeline-item">
+                                                    <div class="timeline-icon bg-{{ activity.icon_class }}">
+                                                        <i class="fas fa-{{ activity.icon }}"></i>
+                                                    </div>
+                                                    <div class="timeline-content">
+                                                        <h5 class="mb-1">{{ activity.title }}</h5>
+                                                        <p class="mb-1">{{ activity.description }}</p>
+                                                        <span class="small text-muted">{{ activity.date.strftime('%Y-%m-%d %H:%M') }}</span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-calendar-check fa-3x text-gray-300 mb-3"></i>
+                                            <p>لم يتم تسجيل أي نشاط مؤخراً</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- المهام القادمة والواجبات -->
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <div class="card shadow">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">المهام القادمة</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if assignments_and_quizzes %}
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>العنوان</th>
+                                                        <th>النوع</th>
+                                                        <th>الفصل</th>
+                                                        <th>تاريخ الاستحقاق</th>
+                                                        <th>الحالة</th>
+                                                        <th>الإجراءات</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for item in assignments_and_quizzes %}
+                                                        <tr>
+                                                            <td>{{ item.title }}</td>
+                                                            <td>
+                                                                {% if item.type == 'assignment' %}
+                                                                    <span class="badge bg-warning">واجب</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-info">اختبار</span>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>{{ item.classroom_name }}</td>
+                                                            <td>{{ item.due_date.strftime('%Y-%m-%d') }}</td>
+                                                            <td>
+                                                                {% if item.status == 'completed' %}
+                                                                    <span class="badge bg-success">مكتمل</span>
+                                                                {% elif item.status == 'pending' %}
+                                                                    <span class="badge bg-warning">قيد الانتظار</span>
+                                                                {% elif item.status == 'overdue' %}
+                                                                    <span class="badge bg-danger">متأخر</span>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                {% if item.type == 'assignment' %}
+                                                                    <a href="{{ url_for('student.view_assignment', classroom_id=item.classroom_id, assignment_id=item.id) }}" class="btn btn-sm btn-primary">
+                                                                        <i class="fas fa-eye me-1"></i> عرض
+                                                                    </a>
+                                                                {% else %}
+                                                                    <a href="{{ url_for('student.start_quiz', classroom_id=item.classroom_id, quiz_id=item.id) }}" class="btn btn-sm btn-primary">
+                                                                        <i class="fas fa-play me-1"></i> بدء
+                                                                    </a>
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-tasks fa-3x text-gray-300 mb-3"></i>
+                                            <p>لا توجد مهام قادمة حالياً</p>
+                                        </div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -367,19 +372,16 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // تبديل القائمة الجانبية
         document.addEventListener('DOMContentLoaded', function() {
+            // تبديل القائمة الجانبية
             const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-            const sidebar = document.querySelector('.sidebar');
-            const contentWrapper = document.querySelector('.content-wrapper');
-            
             if (sidebarToggleBtn) {
+                const sidebar = document.querySelector('.sidebar');
                 sidebarToggleBtn.addEventListener('click', function() {
-                    sidebar.classList.toggle('collapsed');
-                    contentWrapper.classList.toggle('expanded');
+                    sidebar.classList.toggle('show');
                 });
             }
-            
+
             // وظائف القائمة المنسدلة
             const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
             dropdownToggles.forEach(toggle => {
@@ -391,10 +393,10 @@
                     }
                 });
             });
-            
+
             // إغلاق القائمة المنسدلة عند النقر خارجها
             document.addEventListener('click', function(e) {
-                if (!e.target.matches('.dropdown-toggle') && !e.target.closest('.dropdown-toggle')) {
+                if (!e.target.matches('.dropdown-toggle')) {
                     const dropdowns = document.querySelectorAll('.dropdown-menu.show');
                     dropdowns.forEach(dropdown => {
                         dropdown.classList.remove('show');
