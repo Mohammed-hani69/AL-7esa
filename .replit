@@ -10,7 +10,7 @@ run = ["sh", "-c", "python main.py"]
 build = ["sh", "-c", "python -m flask db upgrade"]
 
 [workflows]
-runButton = "بدء_التطبيق"
+runButton = "تشغيل_التطبيق"
 
 [[workflows.workflow]]
 name = "Project"
@@ -75,15 +75,15 @@ args = "pip install -r requirements.txt"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "flask db init || true"
+args = "python -m flask db init || true"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "flask db migrate || true"
+args = "python -m flask db migrate || true"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "flask db upgrade || true"
+args = "python -m flask db upgrade || true"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"

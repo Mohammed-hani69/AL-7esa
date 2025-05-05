@@ -1,311 +1,58 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الانضمام إلى فصل دراسي - الحصة</title>
+    <title>الانضمام للفصل</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student/student.css') }}">
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+        }
+    </style>
 </head>
 <body>
-    <div class="wrapper">
-        <!-- الشريط الجانبي -->
-        <div class="sidebar">
-            <div class="sidebar-brand">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" width="30" height="30" class="d-inline-block align-top me-2" alt="الحصة" onerror="this.src='https://via.placeholder.com/30?text=AL'">
-                <span class="sidebar-brand-text">الحصة</span>
-            </div>
-            
-            <hr class="sidebar-divider">
-            
-            <ul class="nav-list">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('student.dashboard') }}">
-                        <i class="fas fa-tachometer-alt me-2"></i>
-                        <span>لوحة التحكم</span>
-                    </a>
-                </li>
-                
-                <li class="nav-item">
-                    <a class="nav-link active" href="{{ url_for('student.classrooms') }}">
-                        <i class="fas fa-chalkboard me-2"></i>
-                        <span>الفصول</span>
-                    </a>
-                </li>
-                
-                <hr class="sidebar-divider">
-                
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.profile') }}">
-                        <i class="fas fa-user-circle me-2"></i>
-                        <span>الملف الشخصي</span>
-                    </a>
-                </li>
-                
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.logout') }}">
-                        <i class="fas fa-sign-out-alt me-2"></i>
-                        <span>تسجيل الخروج</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-        
-        <!-- محتوى الصفحة -->
-        <div class="content-wrapper">
-            <!-- الشريط العلوي -->
-            <div class="topbar">
-                <nav class="navbar">
-                    <button id="sidebarToggleBtn" class="btn">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-bell"></i>
-                                {% if current_user.notifications|selectattr('is_read', 'equalto', false)|list|length > 0 %}
-                                <span class="badge bg-danger badge-counter">{{ current_user.notifications|selectattr('is_read', 'equalto', false)|list|length }}</span>
-                                {% endif %}
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown">
-                                <h6 class="dropdown-header">الإشعارات</h6>
-                                {% if current_user.notifications %}
-                                    {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true)|slice(0, 5) %}
-                                    <a class="dropdown-item {{ '' if notification.is_read else 'fw-bold' }}" href="#">
-                                        <span class="small text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
-                                        <p class="mb-0">{{ notification.message }}</p>
-                                    </a>
-                                    {% endfor %}
-                                {% else %}
-                                    <a class="dropdown-item text-center" href="#">لا توجد إشعارات</a>
-                                {% endif %}
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item text-center small text-muted" href="#">عرض كل الإشعارات</a>
-                            </div>
-                        </li>
-                        
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="me-2 d-none d-lg-inline text-gray-600 small">{{ current_user.name }}</span>
-                                {% if current_user.profile_picture %}
-                                <img class="img-profile rounded-circle" src="{{ current_user.profile_picture }}" width="32" height="32" alt="{{ current_user.name }}">
-                                {% else %}
-                                <img class="img-profile rounded-circle" src="{{ url_for('static', filename='img/default-profile.png') }}" width="32" height="32" alt="{{ current_user.name }}" onerror="this.src='https://via.placeholder.com/32?text=User'">
-                                {% endif %}
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
-                                    <i class="fas fa-user-circle me-2"></i>
-                                    الملف الشخصي
-                                </a>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-cogs me-2"></i>
-                                    الإعدادات
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                    <i class="fas fa-sign-out-alt me-2"></i>
-                                    تسجيل الخروج
-                                </a>
-                            </div>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-            
-            <!-- المحتوى الرئيسي -->
-            <div class="main-content">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                
-                <div class="container-fluid">
-                    <div class="row justify-content-center">
-                        <div class="col-lg-8">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">الانضمام إلى فصل دراسي</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-lg-6 mb-4 mb-lg-0">
-                                            <div class="join-info">
-                                                <h4 class="mb-4">كيفية الانضمام إلى فصل دراسي</h4>
-                                                <div class="steps-list">
-                                                    <div class="step-item">
-                                                        <div class="step-icon">
-                                                            <i class="fas fa-key"></i>
-                                                        </div>
-                                                        <div class="step-content">
-                                                            <h5>استخدم رمز الفصل</h5>
-                                                            <p>اطلب من معلمك رمز الفصل واكتبه في الحقل المخصص.</p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="step-item">
-                                                        <div class="step-icon">
-                                                            <i class="fas fa-search"></i>
-                                                        </div>
-                                                        <div class="step-content">
-                                                            <h5>ابحث عن الفصل</h5>
-                                                            <p>يمكنك البحث عن الفصل باستخدام اسم المعلم أو اسم المادة الدراسية.</p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="step-item">
-                                                        <div class="step-icon">
-                                                            <i class="fas fa-bell"></i>
-                                                        </div>
-                                                        <div class="step-content">
-                                                            <h5>قبول الدعوة</h5>
-                                                            <p>إذا أرسل لك المعلم دعوة، ستظهر في قسم الإشعارات.</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <div class="join-form">
-                                                <h4 class="mb-4">انضم برمز الفصل</h4>
-                                                <form method="POST" action="{{ url_for('student.join_classroom') }}">
-                                                    <div class="mb-4">
-                                                        <label for="classCode" class="form-label">رمز الفصل</label>
-                                                        <div class="input-group">
-                                                            <input type="text" class="form-control form-control-lg" id="classCode" name="classroom_code" placeholder="أدخل رمز الفصل" required>
-                                                            <button class="btn btn-primary" type="submit">انضمام</button>
-                                                        </div>
-                                                        <div class="form-text">رمز الفصل هو رمز من 6-8 أحرف أو أرقام يمكنك الحصول عليه من المعلم.</div>
-                                                    </div>
-                                                </form>
-                                                
-                                                <hr class="my-4">
-                                                
-                                                <h4 class="mb-4">ابحث عن فصل</h4>
-                                                <form method="GET" action="{{ url_for('student.join_classroom') }}">
-                                                    <div class="mb-3">
-                                                        <label for="searchTerm" class="form-label">ابحث باسم المعلم أو المادة</label>
-                                                        <div class="input-group">
-                                                            <input type="text" class="form-control" id="searchTerm" name="search" placeholder="اكتب اسم المعلم أو المادة" value="{{ search_term or '' }}">
-                                                            <button class="btn btn-outline-primary" type="submit">بحث</button>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                                
-                                                {% if search_results %}
-                                                <div class="search-results mt-4">
-                                                    <h5>نتائج البحث ({{ search_results|length }})</h5>
-                                                    <div class="list-group">
-                                                        {% for classroom in search_results %}
-                                                        <div class="list-group-item">
-                                                            <div class="d-flex justify-content-between align-items-center">
-                                                                <div>
-                                                                    <h6 class="mb-1">{{ classroom.name }}</h6>
-                                                                    <p class="mb-1 small text-muted">{{ classroom.subject }} - {{ classroom.grade }}</p>
-                                                                    <p class="mb-0 small">المعلم: {{ classroom.teacher.name }}</p>
-                                                                </div>
-                                                                <form method="POST" action="{{ url_for('student.join_classroom', classroom_id=classroom.id) }}">
-                                                                    <button type="submit" class="btn btn-sm btn-success">انضمام</button>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                        {% endfor %}
-                                                    </div>
-                                                </div>
-                                                {% elif search_term %}
-                                                <div class="alert alert-info mt-4">
-                                                    <i class="fas fa-info-circle me-2"></i> لم يتم العثور على نتائج للبحث "{{ search_term }}".
-                                                </div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {% if pending_invitations %}
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">دعوات معلقة ({{ pending_invitations|length }})</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="list-group">
-                                        {% for invitation in pending_invitations %}
-                                        <div class="list-group-item">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 class="mb-1">{{ invitation.classroom.name }}</h6>
-                                                    <p class="mb-1 small text-muted">{{ invitation.classroom.subject }} - {{ invitation.classroom.grade }}</p>
-                                                    <p class="mb-0 small">المعلم: {{ invitation.classroom.teacher.name }}</p>
-                                                    <small class="text-muted">تاريخ الدعوة: {{ invitation.created_at.strftime('%Y-%m-%d') }}</small>
-                                                </div>
-                                                <div class="btn-group">
-                                                    <form method="POST" action="{{ url_for('student.accept_invitation', invitation_id=invitation.id) }}">
-                                                        <button type="submit" class="btn btn-success me-2">قبول</button>
-                                                    </form>
-                                                    <form method="POST" action="{{ url_for('student.decline_invitation', invitation_id=invitation.id) }}">
-                                                        <button type="submit" class="btn btn-outline-danger">رفض</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h3 class="mb-0">الانضمام للفصل</h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-chalkboard-teacher fa-3x text-primary mb-3"></i>
+                        <p class="lead">أدخل كود الفصل للانضمام إليه</p>
                     </div>
+
+                    <form method="POST" action="{{ url_for('student.join_classroom') }}">
+                        <div class="mb-4">
+                            <label for="classroom_code" class="form-label fw-bold">كود الفصل</label>
+                            <input type="text" id="classroom_code" name="classroom_code" class="form-control form-control-lg text-center" placeholder="أدخل كود الفصل هنا" required>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> يمكنك الحصول على كود الفصل من معلمك
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i> انضم للفصل
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light text-center py-3">
+                    <p class="mb-0">
+                        <a href="{{ url_for('student.dashboard') }}" class="text-decoration-none">
+                            <i class="fas fa-arrow-right me-1"></i> العودة إلى الفصول الدراسية
+                        </a>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // تبديل القائمة الجانبية
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-            const sidebar = document.querySelector('.sidebar');
-            
-            if (sidebarToggleBtn) {
-                sidebarToggleBtn.addEventListener('click', function() {
-                    sidebar.classList.toggle('show');
-                });
-            }
-            
-            // وظائف القائمة المنسدلة
-            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-            dropdownToggles.forEach(toggle => {
-                toggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const dropdownMenu = this.nextElementSibling;
-                    if (dropdownMenu) {
-                        dropdownMenu.classList.toggle('show');
-                    }
-                });
-            });
-            
-            // إغلاق القائمة المنسدلة عند النقر خارجها
-            document.addEventListener('click', function(e) {
-                if (!e.target.matches('.dropdown-toggle')) {
-                    const dropdowns = document.querySelectorAll('.dropdown-menu.show');
-                    dropdowns.forEach(dropdown => {
-                        dropdown.classList.remove('show');
-                    });
-                }
-            });
-        });
-    </script>
+</div>
 </body>
 </html>

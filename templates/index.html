@@ -1,126 +1,121 @@
+
 {% extends "layout.html" %}
 
-{% block title %}الحصة - منصة تعليمية متكاملة{% endblock %}
+{% block title %}الرئيسية - منصة الحصة التعليمية{% endblock %}
 
 {% block public_content %}
-<!-- قسم الترحيب الرئيسي -->
-<section class="landing-hero py-5">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="hero-title mb-4">منصة <span class="text-gradient">الحصة</span> التعليمية</h1>
-                <p class="hero-description mb-4">منصة تعليمية متكاملة تجمع بين المعلمين والطلاب في بيئة تفاعلية آمنة. ابدأ رحلتك التعليمية اليوم!</p>
-
-                <div class="hero-buttons mb-4">
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-3 btn-glow">
-                        <i class="fas fa-user-plus me-2"></i>إنشاء حساب
-                    </a>
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
-                    </a>
-                </div>
-
-                <div class="hero-stats">
-                    <div class="stat-item me-4">
-                        <i class="fas fa-users stat-icon"></i>
-                        <span>أكثر من 10,000 مستخدم</span>
+<div class="landing-container">
+    <!-- Hero Section -->
+    <section class="landing-hero">
+        <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="hero-title mb-4">منصة <span class="text-gradient">الحصة</span> التعليمية</h1>
+                    <p class="hero-description mb-4">منصة تعليمية متكاملة تجمع بين المعلمين والطلاب في بيئة تفاعلية لتحقيق أفضل النتائج التعليمية.</p>
+                    <div class="hero-buttons">
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-3 btn-glow">ابدأ الآن مجاناً</a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg">تسجيل الدخول</a>
                     </div>
-                    <div class="stat-item">
-                        <i class="fas fa-book-open stat-icon"></i>
-                        <span>مئات الفصول التعليمية</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="hero-image-container">
-                    <div class="hero-shapes">
-                        <div class="shape shape-1"></div>
-                        <div class="shape shape-2"></div>
-                        <div class="shape shape-3"></div>
-                    </div>
-                    <div class="hero-animation">
-                        <i class="fas fa-graduation-cap hero-icon"></i>
+                    <div class="hero-stats mt-4">
+                        <div class="stat-item me-4">
+                            <i class="fas fa-users stat-icon"></i>
+                            <span>+10,000 طالب ومعلم</span>
+                        </div>
+                        <div class="stat-item me-4">
+                            <i class="fas fa-graduation-cap stat-icon"></i>
+                            <span>+500 فصل دراسي</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-star stat-icon"></i>
+                            <span>4.8/5 تقييم</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- قسم المميزات -->
-<section class="landing-features py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="mb-3">ميزات <span class="highlight-text">المنصة</span></h2>
-            <p class="lead text-muted">اكتشف كيف يمكن لمنصة الحصة أن تساعدك في رحلتك التعليمية</p>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-laptop-code"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h3>فصول تفاعلية</h3>
-                        <p>استمتع بتجربة تعليمية تفاعلية مع دعم للاختبارات والواجبات والمحادثات المباشرة.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h3>اختبارات وتقييمات</h3>
-                        <p>إنشاء وإدارة الاختبارات بسهولة مع تصحيح تلقائي ومراجعة شاملة للنتائج.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-comments"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h3>تواصل فعال</h3>
-                        <p>تواصل مباشر بين المعلمين والطلاب من خلال نظام محادثة متطور.</p>
+                <div class="col-lg-6">
+                    <div class="hero-image-container">
+                        <div class="hero-shapes">
+                            <div class="shape shape-1"></div>
+                            <div class="shape shape-2"></div>
+                            <div class="shape shape-3"></div>
+                        </div>
+                        <div class="hero-animation">
+                            <i class="fas fa-chalkboard-teacher hero-icon"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- دعوة للعمل -->
-<section class="landing-cta py-5 text-white">
-    <div class="container">
-        <div class="cta-content text-center">
-            <h2 class="cta-title">ابدأ رحلتك التعليمية اليوم</h2>
-            <p class="cta-description">انضم إلى الآلاف من المعلمين والطلاب على منصة الحصة واستمتع بتجربة تعليمية فريدة</p>
-
-            <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg btn-pulse">
-                <i class="fas fa-rocket me-2"></i>سجل الآن مجاناً
-            </a>
-
-            <div class="cta-features mt-4">
-                <div class="cta-feature-item">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <span>تسجيل سريع</span>
+    <!-- Features Section -->
+    <section class="landing-features">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="highlight-text mb-3">لماذا تختار منصة الحصة؟</h2>
+                <p class="lead">نقدم لك مجموعة متكاملة من الأدوات والميزات التي تساعدك على تحقيق أهدافك التعليمية</p>
+            </div>
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>دروس تفاعلية مباشرة</h3>
+                            <p>حصص مباشرة بالصوت والصورة مع إمكانية التفاعل والمشاركة بين المعلم والطلاب.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="cta-feature-item">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <span>دعم فني متميز</span>
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>اختبارات وواجبات متنوعة</h3>
+                            <p>أدوات متنوعة لإنشاء الاختبارات والواجبات بأنواع مختلفة من الأسئلة وتصحيحها تلقائياً.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="cta-feature-item">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <span>تحديثات مستمرة</span>
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>متابعة تقدم الطلاب</h3>
+                            <p>تقارير وإحصائيات دقيقة لمتابعة تقدم الطلاب ومستوى أدائهم بشكل مستمر.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="landing-cta">
+        <div class="container py-5 text-center text-white">
+            <div class="cta-content">
+                <h2 class="cta-title">ابدأ رحلتك التعليمية اليوم</h2>
+                <p class="cta-description">انضم إلى آلاف المعلمين والطلاب واستمتع بتجربة تعليمية فريدة</p>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg btn-pulse">سجل الآن مجاناً</a>
+                
+                <div class="cta-features">
+                    <div class="cta-feature-item">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>بداية مجانية</span>
+                    </div>
+                    <div class="cta-feature-item">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>دعم فني على مدار الساعة</span>
+                    </div>
+                    <div class="cta-feature-item">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>إلغاء الاشتراك في أي وقت</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 {% endblock %}

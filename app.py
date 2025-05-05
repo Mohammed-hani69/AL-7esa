@@ -100,6 +100,7 @@ def load_user(user_id):
 """
 
 # Import and register blueprints
+from routes import main_bp
 from routes.auth import auth_bp
 from routes.admin import admin_bp
 from routes.teacher import teacher_bp
@@ -120,13 +121,31 @@ def create_upload_directories():
             os.makedirs(directory)
             print(f"Created directory: {directory}")
 
+# Create upload directories
+def create_upload_directories():
+    upload_dirs = [
+        'static/uploads',
+        'static/uploads/classroom_content',
+        'static/uploads/profile_pictures',
+        'static/uploads/chat_images',
+    ]
+    
+    for directory in upload_dirs:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            print(f"Created directory: {directory}")
+
 # Register blueprints
 def register_blueprints(app):
+    app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(teacher_bp, url_prefix='/teacher')
     app.register_blueprint(student_bp, url_prefix='/student')
     app.register_blueprint(assistant_bp, url_prefix='/assistant')
+    
+    # Create upload directories
+    create_upload_directories()
 
 
 # Create tables
