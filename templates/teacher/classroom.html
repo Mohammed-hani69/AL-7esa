@@ -111,7 +111,7 @@
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">محتوى الفصل</h6>
-            <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addContentModal">
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addContentModal">
                 <i class="fas fa-plus me-1"></i>إضافة محتوى
             </button>
         </div>
@@ -178,7 +178,7 @@
                 <div class="text-center py-4">
                     <i class="fas fa-folder-open fa-3x text-gray-300 mb-2"></i>
                     <p>لا يوجد محتوى في هذا الفصل بعد</p>
-                    <button class="btn btn-primary" data-toggle="modal" data-target="#addContentModal">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContentModal">
                         <i class="fas fa-plus me-1"></i>إضافة محتوى
                     </button>
                 </div>
@@ -263,14 +263,12 @@
 </div>
 
 <!-- Add Content Modal -->
-<div class="modal fade" id="addContentModal" tabindex="-1" role="dialog" aria-labelledby="addContentModalLabel" aria-hidden="true">
+<div class="modal fade" id="addContentModal" tabindex="-1" aria-labelledby="addContentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addContentModalLabel">إضافة محتوى جديد</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="{{ url_for('teacher.add_content', classroom_id=classroom.id) }}" enctype="multipart/form-data">
                 <div class="modal-body">
@@ -350,7 +348,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                     <button type="submit" class="btn btn-primary">إضافة المحتوى</button>
                 </div>
             </form>
