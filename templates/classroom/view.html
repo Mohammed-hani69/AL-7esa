@@ -1,271 +1,429 @@
-{% extends "teacher/layout.html" %}
 
-{% block title %}{{ classroom.name }} - الحصة{% endblock %}
-
-{% block styles %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/classroom/classroom.css') }}">
-{% endblock %}
-
-{% block teacher_content %}
-<div class="classroom-container">
-    <div class="content-header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
-            <h1>{{ classroom.name }}</h1>
-            <div class="d-flex align-items-center mt-2 mt-md-0">
-                <div class="classroom-code me-3" id="classroom-code" onclick="copyClassroomCode('{{ classroom.code }}')">
-                    {{ classroom.code }}
-                    <span class="copy-tooltip">انقر للنسخ</span>
-                </div>
-                <button class="btn btn-light" onclick="copyClassroomCode('{{ classroom.code }}')">
-                    <i class="fas fa-copy"></i>
-                </button>
-            </div>
-        </div>
-        <p class="content-description">{{ classroom.description }}</p>
-    </div>
-
-    <div class="row g-4">
-        <!-- بطاقة معلومات الفصل -->
-        <div class="col-md-4">
-            <div class="classroom-info-card card h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>معلومات الفصل</h5>
-                </div>
-                <div class="card-body">
-                    <div class="classroom-info-item">
-                        <i class="fas fa-users"></i>
-                        <span>عدد الطلاب: <strong>{{ classroom.students|length }}</strong></span>
-                    </div>
-                    <div class="classroom-info-item">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>تاريخ الإنشاء: <strong>{{ classroom.created_at.strftime('%Y-%m-%d') }}</strong></span>
-                    </div>
-                    <div class="classroom-info-item">
-                        <i class="fas fa-tag"></i>
-                        <span>النوع: <strong>{{ 'مجاني' if classroom.is_free else 'مدفوع' }}</strong></span>
-                    </div>
-                    <div class="classroom-info-item">
-                        <i class="fas fa-clipboard-list"></i>
-                        <span>عدد الاختبارات: <strong>{{ classroom.quizzes|length if classroom.quizzes else 0 }}</strong></span>
-                    </div>
-                    <div class="classroom-info-item">
-                        <i class="fas fa-tasks"></i>
-                        <span>عدد الواجبات: <strong>{{ classroom.assignments|length if classroom.assignments else 0 }}</strong></span>
-                    </div>
-
-                    <div class="classroom-status {{ 'free' if classroom.is_free else 'paid' }} mt-4">
-                        {{ 'فصل مجاني' if classroom.is_free else 'فصل مدفوع' }}
-                    </div>
-                </div>
-            </div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ classroom.name }} - الحصة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher/teacher.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/classroom/classroom.css') }}">
+</head>
+<body>
+<div class="wrapper">
+    <!-- الشريط الجانبي -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" width="40" height="40" class="d-inline-block align-top ms-2" alt="الحصة" onerror="this.src='https://via.placeholder.com/40?text=AL'">
+            <span class="sidebar-brand-text">الحصة</span>
         </div>
 
-        <!-- بطاقة الإجراءات -->
-        <div class="col-md-8">
-            <div class="classroom-actions-card card h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>إدارة الفصل</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6 mb-3">
-                            <a href="{{ url_for('teacher.create_assignment', classroom_id=classroom.id) }}" class="btn btn-success w-100">
-                                <i class="fas fa-clipboard-check me-2"></i>إضافة واجب
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="btn btn-secondary w-100">
-                                <i class="fas fa-tasks me-2"></i>الواجبات
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="btn btn-info w-100">
-                                <i class="fas fa-question-circle me-2"></i>الاختبارات
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-primary w-100">
-                                <i class="fas fa-user-graduate me-2"></i>الطلاب
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            {% if can_use_chat %}
-                                <a href="#chat-section" class="btn btn-warning w-100">
-                                    <i class="fas fa-comments me-2"></i>المحادثة
-                                </a>
-                            {% else %}
-                                <button class="btn btn-secondary w-100" disabled>
-                                    <i class="fas fa-comments me-2"></i>المحادثة
-                                </button>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            {% if can_use_live_class %}
-                                <a href="{{ url_for('teacher.live_class', classroom_id=classroom.id) }}" class="btn btn-danger w-100">
-                                    <i class="fas fa-video me-2"></i>فصل مباشر
-                                </a>
-                            {% else %}
-                                <button class="btn btn-secondary w-100" disabled data-bs-toggle="tooltip" data-bs-placement="top" title="غير متاح في خطتك الحالية">
-                                    <i class="fas fa-video me-2"></i>فصل مباشر
-                                </button>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        <hr class="sidebar-divider">
 
-    <!-- قسم الطلاب في الفصل -->
-    <div class="dashboard-section mt-4">
-        <div class="dashboard-section-header">
-            <h2 class="dashboard-section-title">الطلاب المسجلين</h2>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#inviteStudentModal">
-                    <i class="fas fa-user-plus me-1"></i> دعوة طالب
-                </button>
-                <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-outline-primary">
-                    <i class="fas fa-cog me-1"></i> إدارة الطلاب
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'teacher.dashboard' else '' }}" href="{{ url_for('teacher.dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>لوحة التحكم</span>
                 </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if 'classroom' in request.endpoint else '' }}" href="{{ url_for('teacher.dashboard') }}">
+                    <i class="fas fa-chalkboard"></i>
+                    <span>الفصول</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'teacher.students' else '' }}" href="{{ url_for('teacher.students') }}">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>الطلاب</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if 'assignment' in request.endpoint else '' }}" href="{{ url_for('teacher.assignments') }}">
+                    <i class="fas fa-tasks"></i>
+                    <span>الواجبات</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if 'quiz' in request.endpoint else '' }}" href="{{ url_for('teacher.quizzes') }}">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>الاختبارات</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'teacher.content' else '' }}" href="{{ url_for('teacher.content') }}">
+                    <i class="fas fa-book"></i>
+                    <span>المحتوى</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'teacher.profile' else '' }}" href="{{ url_for('auth.profile') }}">
+                    <i class="fas fa-user-circle"></i>
+                    <span>الملف الشخصي</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'auth.logout' else '' }}" href="{{ url_for('auth.logout') }}">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>تسجيل الخروج</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="content-wrapper">
+        <div class="topbar">
+            <nav class="navbar">
+                <button id="sidebarToggleBtn" class="btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            {% if current_user.notifications|selectattr('is_read', 'equalto', false)|list|length > 0 %}
+                            <span class="badge bg-danger badge-counter">{{ current_user.notifications|selectattr('is_read', 'equalto', false)|list|length }}</span>
+                            {% endif %}
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown">
+                            <h6 class="dropdown-header">الإشعارات</h6>
+                            {% if current_user.notifications %}
+                                {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true)|slice(0, 5) %}
+                                <a class="dropdown-item {{ '' if notification.is_read else 'fw-bold' }}" href="#">
+                                    <span class="small text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                    <p class="mb-0">{{ notification.message }}</p>
+                                </a>
+                                {% endfor %}
+                            {% else %}
+                                <a class="dropdown-item text-center" href="#">لا توجد إشعارات</a>
+                            {% endif %}
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-center small text-muted" href="#">عرض كل الإشعارات</a>
+                        </div>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="ms-2 d-none d-lg-inline text-gray-600 small">{{ current_user.name }}</span>
+                            {% if current_user.profile_picture %}
+                            <img class="img-profile rounded-circle" src="{{ current_user.profile_picture }}" width="36" height="36" alt="{{ current_user.name }}">
+                            {% else %}
+                            <img class="img-profile rounded-circle" src="{{ url_for('static', filename='img/default-profile.png') }}" width="36" height="36" alt="{{ current_user.name }}" onerror="this.src='https://via.placeholder.com/36?text=User'">
+                            {% endif %}
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                <i class="fas fa-user-circle ms-2"></i>
+                                الملف الشخصي
+                            </a>
+                            <a class="dropdown-item" href="#">
+                                <i class="fas fa-cogs ms-2"></i>
+                                الإعدادات
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt ms-2"></i>
+                                تسجيل الخروج
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        
+        <!-- إشعارات النظام -->
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <!-- محتوى الفصل -->
+        <div class="classroom-container">
+            <div class="content-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                    <h1>{{ classroom.name }}</h1>
+                    <div class="d-flex align-items-center mt-2 mt-md-0">
+                        <div class="classroom-code me-3" id="classroom-code" onclick="copyClassroomCode('{{ classroom.code }}')">
+                            {{ classroom.code }}
+                            <span class="copy-tooltip">انقر للنسخ</span>
+                        </div>
+                        <button class="btn btn-light" onclick="copyClassroomCode('{{ classroom.code }}')">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="content-description">{{ classroom.description }}</p>
             </div>
-        </div>
 
-        <div class="student-list">
-            {% if classroom.students %}
-                <div class="table-responsive">
-                    <table class="student-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>الاسم</th>
-                                <th>رقم الهاتف</th>
-                                <th>تاريخ الانضمام</th>
-                                <th>الحالة</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for student in classroom.students %}
-                                <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="student-avatar me-2">
-                                                {% if student.profile_picture %}
-                                                <img src="{{ student.profile_picture }}" alt="{{ student.name }}" class="student-img">
-                                                {% else %}
-                                                <div class="avatar-placeholder">{{ student.name[0] }}</div>
-                                                {% endif %}
-                                            </div>
-                                            {{ student.name }}
-                                        </div>
-                                    </td>
-                                    <td>{{ student.phone }}</td>
-                                    <td>{{ student.joined_at.strftime('%Y-%m-%d') }}</td>
-                                    <td>
-                                        <span class="status-badge {{ 'active' if student.is_active else 'inactive' }}">
-                                            {{ 'نشط' if student.is_active else 'غير نشط' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="student-actions">
-                                            <a href="{{ url_for('teacher.view_student', classroom_id=classroom.id, student_id=student.id) }}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="عرض الطالب">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{{ url_for('teacher.message_student', classroom_id=classroom.id, student_id=student.id) }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="مراسلة">
-                                                <i class="fas fa-envelope"></i>
-                                            </a>
-                                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#removeStudentModal{{ student.id }}" title="إزالة الطالب">
-                                                <i class="fas fa-user-minus"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <div class="row g-4">
+                <!-- بطاقة معلومات الفصل -->
+                <div class="col-md-4">
+                    <div class="classroom-info-card card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>معلومات الفصل</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="classroom-info-item">
+                                <i class="fas fa-users"></i>
+                                <span>عدد الطلاب: <strong>{{ classroom.students|length }}</strong></span>
+                            </div>
+                            <div class="classroom-info-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>تاريخ الإنشاء: <strong>{{ classroom.created_at.strftime('%Y-%m-%d') }}</strong></span>
+                            </div>
+                            <div class="classroom-info-item">
+                                <i class="fas fa-tag"></i>
+                                <span>النوع: <strong>{{ 'مجاني' if classroom.is_free else 'مدفوع' }}</strong></span>
+                            </div>
+                            <div class="classroom-info-item">
+                                <i class="fas fa-clipboard-list"></i>
+                                <span>عدد الاختبارات: <strong>{{ classroom.quizzes|length if classroom.quizzes else 0 }}</strong></span>
+                            </div>
+                            <div class="classroom-info-item">
+                                <i class="fas fa-tasks"></i>
+                                <span>عدد الواجبات: <strong>{{ classroom.assignments|length if classroom.assignments else 0 }}</strong></span>
+                            </div>
+
+                            <div class="classroom-status {{ 'free' if classroom.is_free else 'paid' }} mt-4">
+                                {{ 'فصل مجاني' if classroom.is_free else 'فصل مدفوع' }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            {% else %}
-                <div class="text-center py-5 empty-state">
-                    <i class="fas fa-user-graduate fa-3x mb-3 text-muted"></i>
-                    <h5>لا يوجد طلاب مسجلين في هذا الفصل بعد</h5>
-                    <p class="text-muted mb-4">يمكنك مشاركة رمز الفصل مع الطلاب للانضمام، أو دعوتهم مباشرة</p>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inviteStudentModal">
-                        <i class="fas fa-user-plus me-2"></i>دعوة طالب
-                    </button>
-                </div>
-            {% endif %}
-        </div>
-    </div>
 
-    <!-- قسم النشاط الأخير -->
-    <div class="dashboard-section mt-4">
-        <div class="dashboard-section-header">
-            <h2 class="dashboard-section-title">النشاط الأخير</h2>
-            <a href="#" class="btn btn-sm btn-outline-secondary">عرض كل الأنشطة</a>
-        </div>
-
-        <div class="row">
-            <div class="col-lg-12">
-                {% if classroom_activities %}
-                    <div class="activity-list">
-                        {% for activity in classroom_activities %}
-                            <div class="activity-card">
-                                <div class="activity-card-header">
-                                    <div class="activity-icon">
-                                        <i class="fas fa-{{ activity.icon }}"></i>
-                                    </div>
-                                    <div>
-                                        <div class="activity-title">{{ activity.title }}</div>
-                                        <div class="activity-time">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
-                                    </div>
+                <!-- بطاقة الإجراءات -->
+                <div class="col-md-8">
+                    <div class="classroom-actions-card card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>إدارة الفصل</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6 mb-3">
+                                    <a href="{{ url_for('teacher.create_assignment', classroom_id=classroom.id) }}" class="btn btn-success w-100">
+                                        <i class="fas fa-clipboard-check me-2"></i>إضافة واجب
+                                    </a>
                                 </div>
-                                <div class="activity-card-body">
-                                    {{ activity.description }}
+                                <div class="col-md-6 mb-3">
+                                    <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="btn btn-secondary w-100">
+                                        <i class="fas fa-tasks me-2"></i>الواجبات
+                                    </a>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="btn btn-info w-100">
+                                        <i class="fas fa-question-circle me-2"></i>الاختبارات
+                                    </a>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-primary w-100">
+                                        <i class="fas fa-user-graduate me-2"></i>الطلاب
+                                    </a>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {% if can_use_chat %}
+                                        <a href="#chat-section" class="btn btn-warning w-100">
+                                            <i class="fas fa-comments me-2"></i>المحادثة
+                                        </a>
+                                    {% else %}
+                                        <button class="btn btn-secondary w-100" disabled>
+                                            <i class="fas fa-comments me-2"></i>المحادثة
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {% if can_use_live_class %}
+                                        <a href="{{ url_for('teacher.live_class', classroom_id=classroom.id) }}" class="btn btn-danger w-100">
+                                            <i class="fas fa-video me-2"></i>فصل مباشر
+                                        </a>
+                                    {% else %}
+                                        <button class="btn btn-secondary w-100" disabled data-bs-toggle="tooltip" data-bs-placement="top" title="غير متاح في خطتك الحالية">
+                                            <i class="fas fa-video me-2"></i>فصل مباشر
+                                        </button>
+                                    {% endif %}
                                 </div>
                             </div>
-                        {% endfor %}
+                        </div>
                     </div>
-                {% else %}
-                    <div class="text-center py-4 empty-state">
-                        <i class="fas fa-history fa-3x mb-3 text-muted"></i>
-                        <h5>لا توجد أنشطة حديثة في هذا الفصل</h5>
-                        <p class="text-muted">ستظهر هنا الأنشطة بمجرد حدوثها</p>
-                    </div>
-                {% endif %}
+                </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Modal لدعوة طالب -->
-    <div class="modal fade" id="inviteStudentModal" tabindex="-1" aria-labelledby="inviteStudentModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="inviteStudentModalLabel">دعوة طالب</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            <!-- قسم الطلاب في الفصل -->
+            <div class="dashboard-section mt-4">
+                <div class="dashboard-section-header">
+                    <h2 class="dashboard-section-title">الطلاب المسجلين</h2>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#inviteStudentModal">
+                            <i class="fas fa-user-plus me-1"></i> دعوة طالب
+                        </button>
+                        <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-cog me-1"></i> إدارة الطلاب
+                        </a>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <form id="inviteStudentForm">
-                        <div class="mb-3">
-                            <label for="studentPhone" class="form-label">رقم هاتف الطالب</label>
-                            <input type="text" class="form-control" id="studentPhone" placeholder="أدخل رقم الهاتف" required>
+
+                <div class="student-list">
+                    {% if classroom.students %}
+                        <div class="table-responsive">
+                            <table class="student-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>الاسم</th>
+                                        <th>رقم الهاتف</th>
+                                        <th>تاريخ الانضمام</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in classroom.students %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="student-avatar me-2">
+                                                        {% if student.profile_picture %}
+                                                        <img src="{{ student.profile_picture }}" alt="{{ student.name }}" class="student-img">
+                                                        {% else %}
+                                                        <div class="avatar-placeholder">{{ student.name[0] }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                    {{ student.name }}
+                                                </div>
+                                            </td>
+                                            <td>{{ student.phone }}</td>
+                                            <td>{{ student.joined_at.strftime('%Y-%m-%d') }}</td>
+                                            <td>
+                                                <span class="status-badge {{ 'active' if student.is_active else 'inactive' }}">
+                                                    {{ 'نشط' if student.is_active else 'غير نشط' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="student-actions">
+                                                    <a href="{{ url_for('teacher.view_student', classroom_id=classroom.id, student_id=student.id) }}" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="عرض الطالب">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('teacher.message_student', classroom_id=classroom.id, student_id=student.id) }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="مراسلة">
+                                                        <i class="fas fa-envelope"></i>
+                                                    </a>
+                                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#removeStudentModal{{ student.id }}" title="إزالة الطالب">
+                                                        <i class="fas fa-user-minus"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="mb-3">
-                            <label for="inviteMessage" class="form-label">رسالة الدعوة (اختياري)</label>
-                            <textarea class="form-control" id="inviteMessage" rows="3" placeholder="أدخل رسالة للطالب"></textarea>
+                    {% else %}
+                        <div class="text-center py-5 empty-state">
+                            <i class="fas fa-user-graduate fa-3x mb-3 text-muted"></i>
+                            <h5>لا يوجد طلاب مسجلين في هذا الفصل بعد</h5>
+                            <p class="text-muted mb-4">يمكنك مشاركة رمز الفصل مع الطلاب للانضمام، أو دعوتهم مباشرة</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inviteStudentModal">
+                                <i class="fas fa-user-plus me-2"></i>دعوة طالب
+                            </button>
                         </div>
-                    </form>
+                    {% endif %}
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary">إرسال الدعوة</button>
+            </div>
+
+            <!-- قسم النشاط الأخير -->
+            <div class="dashboard-section mt-4">
+                <div class="dashboard-section-header">
+                    <h2 class="dashboard-section-title">النشاط الأخير</h2>
+                    <a href="#" class="btn btn-sm btn-outline-secondary">عرض كل الأنشطة</a>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        {% if classroom_activities %}
+                            <div class="activity-list">
+                                {% for activity in classroom_activities %}
+                                    <div class="activity-card">
+                                        <div class="activity-card-header">
+                                            <div class="activity-icon">
+                                                <i class="fas fa-{{ activity.icon }}"></i>
+                                            </div>
+                                            <div>
+                                                <div class="activity-title">{{ activity.title }}</div>
+                                                <div class="activity-time">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="activity-card-body">
+                                            {{ activity.description }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4 empty-state">
+                                <i class="fas fa-history fa-3x mb-3 text-muted"></i>
+                                <h5>لا توجد أنشطة حديثة في هذا الفصل</h5>
+                                <p class="text-muted">ستظهر هنا الأنشطة بمجرد حدوثها</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal لدعوة طالب -->
+            <div class="modal fade" id="inviteStudentModal" tabindex="-1" aria-labelledby="inviteStudentModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="inviteStudentModalLabel">دعوة طالب</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="inviteStudentForm">
+                                <div class="mb-3">
+                                    <label for="studentPhone" class="form-label">رقم هاتف الطالب</label>
+                                    <input type="text" class="form-control" id="studentPhone" placeholder="أدخل رقم الهاتف" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="inviteMessage" class="form-label">رسالة الدعوة (اختياري)</label>
+                                    <textarea class="form-control" id="inviteMessage" rows="3" placeholder="أدخل رسالة للطالب"></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                            <button type="button" class="btn btn-primary">إرسال الدعوة</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 function copyClassroomCode(code) {
     navigator.clipboard.writeText(code)
@@ -312,6 +470,39 @@ document.addEventListener('DOMContentLoaded', function() {
         row.addEventListener('mouseleave', function() {
             this.classList.remove('highlight');
         });
+    });
+
+    // تبديل القائمة الجانبية
+    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    const sidebar = document.querySelector('.sidebar');
+    const contentWrapper = document.querySelector('.content-wrapper');
+    
+    if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+        });
+    }
+    
+    // وظائف القائمة المنسدلة
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const dropdownMenu = this.nextElementSibling;
+            if (dropdownMenu) {
+                dropdownMenu.classList.toggle('show');
+            }
+        });
+    });
+    
+    // إغلاق القائمة المنسدلة عند النقر خارجها
+    document.addEventListener('click', function(e) {
+        if (!e.target.matches('.dropdown-toggle')) {
+            const dropdowns = document.querySelectorAll('.dropdown-menu.show');
+            dropdowns.forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
+        }
     });
 });
 </script>
@@ -428,4 +619,5 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 1rem 1.5rem 1.5rem;
 }
 </style>
-{% endblock %}
+</body>
+</html>
