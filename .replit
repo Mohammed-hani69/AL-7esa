@@ -2,11 +2,12 @@ modules = ["web", "python-3.11", "nodejs-20"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["iana-etc", "openssl", "postgresql"]
+packages = ["iana-etc", "libmysqlclient", "openssl", "postgresql"]
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
+run = ["sh", "-c", "gunicorn --bind 0.0.0.0:5000 main:app"]
+build = ["sh", "-c", "python -m flask db upgrade"]
 
 [workflows]
 runButton = "Project"

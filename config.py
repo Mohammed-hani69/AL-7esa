@@ -6,7 +6,7 @@ class Config:
     DEBUG = True
     
     # Database Configuration
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "mysql://root:@localhost/al-7esa")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///app.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_recycle": 300,
