@@ -21,12 +21,19 @@
     --card-shadow-hover: 0 0.5rem 1.5rem rgba(78, 115, 223, 0.15);
     --header-bg: #4e73df;
     --sidebar-bg: #4e73df;
+    --sidebar-width: 250px;
     --transition-normal: all 0.3s ease;
 }
 
 /* تنسيقات عامة للوحة التحكم */
 .dashboard-container {
     padding: 1.5rem;
+    width: 100%;
+}
+
+/* تضبيط الصفحة بما يناسب السايدبار */
+.teacher-dashboard {
+    width: 100%;
 }
 
 /* العنوان الرئيسي والترحيب */
@@ -725,6 +732,10 @@
 }
 
 @media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+    
     .dashboard-section-title {
         font-size: 1.2rem;
     }
@@ -752,11 +763,32 @@
 }
 
 @media (max-width: 576px) {
+    .dashboard-container {
+        padding: 0.75rem;
+    }
+    
     .quick-actions {
         flex-direction: column;
     }
     
     .btn-teacher-primary, .btn-teacher-secondary, .btn-teacher-outline {
         width: 100%;
+    }
+}
+
+/* تعديلات للتوافق مع وجود السايدبار */
+/* عندما تكون الشاشة كبيرة يكون هناك مسافة للسايدبار */
+@media (min-width: 992px) {
+    .dashboard-container {
+        /* تعديل التنسيق ليتوافق مع مساحة السايدبار */
+        padding: 1.5rem;
+    }
+}
+
+/* عند طي السايدبار أو على الشاشات الصغيرة */
+@media (max-width: 992px) {
+    .sidebar.collapsed + .content-wrapper .dashboard-container {
+        /* زيادة المساحة عند طي السايدبار */
+        padding: 1.5rem;
     }
 }

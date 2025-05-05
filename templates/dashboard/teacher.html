@@ -5,375 +5,377 @@
 
 {% block content %}
 <div class="teacher-dashboard">
-    <div class="dashboard-header mb-4">
-        <div class="welcome-section">
-            <h1 class="dashboard-title">لوحة تحكم المعلم</h1>
-            <p class="dashboard-subtitle">مرحباً <span class="teacher-name">{{ current_user.name }}</span>، نتمنى لك يوماً تعليمياً مثمراً</p>
-        </div>
-        <div class="quick-actions">
-            {% if can_create_classroom %}
-                <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher-primary">
-                    <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
-                </a>
-            {% endif %}
-            <button class="btn btn-teacher-secondary" data-bs-toggle="modal" data-bs-target="#helpModal">
-                <i class="fas fa-question-circle me-2"></i>الدعم والمساعدة
-            </button>
-        </div>
-    </div>
-
-    <!-- إحصائيات سريعة -->
-    <div class="dashboard-section mb-5">
-        <div class="dashboard-section-header mb-3">
-            <h2 class="dashboard-section-title">إحصائيات سريعة</h2>
-            <div class="section-divider"></div>
-        </div>
-        <div class="row g-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card primary shadow-effect h-100">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>إجمالي الطلاب</h3>
-                        <div class="stat-value">{{ total_students|default(0) }}</div>
-                    </div>
-                </div>
+    <div class="dashboard-container">
+        <div class="dashboard-header mb-4">
+            <div class="welcome-section">
+                <h1 class="dashboard-title">لوحة تحكم المعلم</h1>
+                <p class="dashboard-subtitle">مرحباً <span class="teacher-name">{{ current_user.name }}</span>، نتمنى لك يوماً تعليمياً مثمراً</p>
             </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card success shadow-effect h-100">
-                    <div class="stat-icon">
-                        <i class="fas fa-chalkboard"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>الفصول الدراسية</h3>
-                        <div class="stat-value">{{ classrooms|length }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card info shadow-effect h-100">
-                    <div class="stat-icon">
-                        <i class="fas fa-question-circle"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>الاختبارات النشطة</h3>
-                        <div class="stat-value">{{ active_quizzes|default(0) }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card warning shadow-effect h-100">
-                    <div class="stat-icon">
-                        <i class="fas fa-tasks"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>الواجبات المعلقة</h3>
-                        <div class="stat-value">{{ pending_submissions|default(0) }}</div>
-                    </div>
-                </div>
+            <div class="quick-actions">
+                {% if can_create_classroom %}
+                    <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher-primary">
+                        <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
+                    </a>
+                {% endif %}
+                <button class="btn btn-teacher-secondary" data-bs-toggle="modal" data-bs-target="#helpModal">
+                    <i class="fas fa-question-circle me-2"></i>الدعم والمساعدة
+                </button>
             </div>
         </div>
-    </div>
 
-    <!-- قسم الاشتراك والباقات -->
-    <div class="dashboard-section mb-5">
-        <div class="dashboard-section-header mb-3">
-            <h2 class="dashboard-section-title">الاشتراك الحالي والباقات المتاحة</h2>
-            <div class="section-divider"></div>
-        </div>
-        <div class="row">
-            <div class="col-lg-4">
-                <!-- الاشتراك الحالي -->
-                <div class="current-subscription-card shadow-effect">
-                    <div class="subscription-header">
-                        <h3><i class="fas fa-crown me-2"></i> الاشتراك الحالي</h3>
-                    </div>
-                    <div class="subscription-body">
-                        {% if subscription %}
-                            <div class="active-plan">
-                                <h4 class="plan-name">{{ subscription.plan.name }}</h4>
-                                <p class="plan-description">{{ subscription.plan.description }}</p>
-                                
-                                <div class="subscription-status-wrapper mb-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="status-label">حالة الاشتراك:</span>
-                                        <span class="badge bg-{{ 'success' if subscription_days_left and subscription_days_left > 0 else 'danger' }} rounded-pill">
-                                            {% if subscription_days_left and subscription_days_left > 0 %}
-                                                متبقي {{ subscription_days_left }} يوم
-                                            {% else %}
-                                                منتهي
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="progress subscription-progress">
-                                        {% if subscription_days_left and subscription.plan.duration_days %}
-                                            {% set progress = (subscription_days_left / subscription.plan.duration_days) * 100 %}
-                                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ progress }}%;" 
-                                                aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                        {% else %}
-                                            <div class="progress-bar bg-danger" role="progressbar" style="width: 100%;" 
-                                                aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                
-                                <div class="plan-features">
-                                    <div class="plan-feature">
-                                        <i class="fas fa-check-circle feature-icon"></i>
-                                        <span>عدد الفصول: {{ subscription.plan.max_classrooms }}</span>
-                                    </div>
-                                    <div class="plan-feature">
-                                        <i class="fas {% if subscription.plan.has_chat %}fa-check-circle{% else %}fa-times-circle{% endif %} feature-icon"></i>
-                                        <span>المحادثات المباشرة</span>
-                                    </div>
-                                    <div class="plan-feature">
-                                        <i class="fas {% if subscription.plan.allow_assistant %}fa-check-circle{% else %}fa-times-circle{% endif %} feature-icon"></i>
-                                        <span>إضافة مساعدين</span>
-                                    </div>
-                                </div>
-                                
-                                {% if subscription_days_left and subscription_days_left <= 7 %}
-                                    <div class="alert alert-warning py-2 small mt-3">
-                                        <i class="fas fa-exclamation-triangle me-1"></i>
-                                        اشتراكك على وشك الانتهاء، قم بتجديده لتجنب انقطاع الخدمة
-                                    </div>
-                                {% endif %}
-                                
-                                <div class="subscription-actions mt-3">
-                                    <button class="btn btn-teacher-outline w-100">تجديد الاشتراك</button>
-                                </div>
-                            </div>
-                        {% else %}
-                            <div class="no-subscription">
-                                <div class="empty-subscription">
-                                    <i class="fas fa-exclamation-circle fs-1 mb-3"></i>
-                                    <h5>ليس لديك اشتراك نشط</h5>
-                                    <p>قم بالاشتراك في إحدى الباقات المتاحة للاستفادة من جميع المزايا</p>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-8">
-                <!-- الباقات المتاحة -->
-                <div class="available-plans-container">
-                    <div class="plans-carousel">
-                        {% if plans %}
-                            <div class="row">
-                                {% for plan in plans %}
-                                    <div class="col-md-6 mb-4">
-                                        <div class="plan-card shadow-effect {% if subscription and subscription.plan.id == plan.id %}current-plan{% endif %}">
-                                            {% if subscription and subscription.plan.id == plan.id %}
-                                                <div class="current-plan-badge">
-                                                    <i class="fas fa-check"></i> الباقة الحالية
-                                                </div>
-                                            {% endif %}
-                                            <div class="plan-card-header">
-                                                <h4 class="plan-card-title">{{ plan.name }}</h4>
-                                            </div>
-                                            <div class="plan-card-price">
-                                                <span class="price-value">{{ plan.price }}</span>
-                                                <span class="price-currency">ريال</span>
-                                                <span class="price-duration">/ {{ plan.duration_days }} يوم</span>
-                                            </div>
-                                            <div class="plan-card-body">
-                                                <p class="plan-card-description">{{ plan.description }}</p>
-                                                <ul class="plan-card-features">
-                                                    <li>
-                                                        <i class="fas fa-school feature-icon"></i>
-                                                        <span>{{ plan.max_classrooms }} فصل دراسي</span>
-                                                    </li>
-                                                    <li>
-                                                        <i class="fas {% if plan.has_chat %}fa-check text-success{% else %}fa-times text-danger{% endif %} feature-icon"></i>
-                                                        <span>المحادثات المباشرة</span>
-                                                    </li>
-                                                    <li>
-                                                        <i class="fas {% if plan.allow_assistant %}fa-check text-success{% else %}fa-times text-danger{% endif %} feature-icon"></i>
-                                                        <span>إضافة مساعدين</span>
-                                                    </li>
-                                                    <li>
-                                                        <i class="fas {% if plan.advanced_analytics %}fa-check text-success{% else %}fa-times text-danger{% endif %} feature-icon"></i>
-                                                        <span>تحليلات متقدمة</span>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                            <div class="plan-card-footer">
-                                                {% if subscription and subscription.plan.id == plan.id %}
-                                                    <button class="btn btn-teacher-success w-100" disabled>
-                                                        مشترك حالياً
-                                                    </button>
-                                                {% else %}
-                                                    <button class="btn btn-teacher-primary w-100">
-                                                        اشترك الآن
-                                                    </button>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="no-plans-message">
-                                <p>لا توجد باقات متاحة حالياً. يرجى التواصل مع الإدارة للمزيد من المعلومات.</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- الفصول الدراسية -->
-    <div class="dashboard-section mb-5">
-        <div class="dashboard-section-header d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="dashboard-section-title mb-0">الفصول الدراسية</h2>
+        <!-- إحصائيات سريعة -->
+        <div class="dashboard-section mb-5">
+            <div class="dashboard-section-header mb-3">
+                <h2 class="dashboard-section-title">إحصائيات سريعة</h2>
                 <div class="section-divider"></div>
             </div>
-            {% if can_create_classroom %}
-                <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher-primary">
-                    <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
-                </a>
+            <div class="row g-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card primary shadow-effect h-100">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>إجمالي الطلاب</h3>
+                            <div class="stat-value">{{ total_students|default(0) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card success shadow-effect h-100">
+                        <div class="stat-icon">
+                            <i class="fas fa-chalkboard"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>الفصول الدراسية</h3>
+                            <div class="stat-value">{{ classrooms|length }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card info shadow-effect h-100">
+                        <div class="stat-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>الاختبارات النشطة</h3>
+                            <div class="stat-value">{{ active_quizzes|default(0) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card warning shadow-effect h-100">
+                        <div class="stat-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>الواجبات المعلقة</h3>
+                            <div class="stat-value">{{ pending_submissions|default(0) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم الاشتراك والباقات -->
+        <div class="dashboard-section mb-5">
+            <div class="dashboard-section-header mb-3">
+                <h2 class="dashboard-section-title">الاشتراك الحالي والباقات المتاحة</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <!-- الاشتراك الحالي -->
+                    <div class="current-subscription-card shadow-effect h-100">
+                        <div class="subscription-header">
+                            <h3><i class="fas fa-crown me-2"></i> الاشتراك الحالي</h3>
+                        </div>
+                        <div class="subscription-body">
+                            {% if subscription %}
+                                <div class="active-plan">
+                                    <h4 class="plan-name">{{ subscription.plan.name }}</h4>
+                                    <p class="plan-description">{{ subscription.plan.description }}</p>
+                                    
+                                    <div class="subscription-status-wrapper mb-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="status-label">حالة الاشتراك:</span>
+                                            <span class="badge bg-{{ 'success' if subscription_days_left and subscription_days_left > 0 else 'danger' }} rounded-pill">
+                                                {% if subscription_days_left and subscription_days_left > 0 %}
+                                                    متبقي {{ subscription_days_left }} يوم
+                                                {% else %}
+                                                    منتهي
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="progress subscription-progress">
+                                            {% if subscription_days_left and subscription.plan.duration_days %}
+                                                {% set progress = (subscription_days_left / subscription.plan.duration_days) * 100 %}
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ progress }}%;" 
+                                                    aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            {% else %}
+                                                <div class="progress-bar bg-danger" role="progressbar" style="width: 100%;" 
+                                                    aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="plan-features">
+                                        <div class="plan-feature">
+                                            <i class="fas fa-check-circle feature-icon"></i>
+                                            <span>عدد الفصول: {{ subscription.plan.max_classrooms }}</span>
+                                        </div>
+                                        <div class="plan-feature">
+                                            <i class="fas {% if subscription.plan.has_chat %}fa-check-circle{% else %}fa-times-circle{% endif %} feature-icon"></i>
+                                            <span>المحادثات المباشرة</span>
+                                        </div>
+                                        <div class="plan-feature">
+                                            <i class="fas {% if subscription.plan.allow_assistant %}fa-check-circle{% else %}fa-times-circle{% endif %} feature-icon"></i>
+                                            <span>إضافة مساعدين</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if subscription_days_left and subscription_days_left <= 7 %}
+                                        <div class="alert alert-warning py-2 small mt-3">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            اشتراكك على وشك الانتهاء، قم بتجديده لتجنب انقطاع الخدمة
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="subscription-actions mt-3">
+                                        <button class="btn btn-teacher-outline w-100">تجديد الاشتراك</button>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="no-subscription">
+                                    <div class="empty-subscription">
+                                        <i class="fas fa-exclamation-circle fs-1 mb-3"></i>
+                                        <h5>ليس لديك اشتراك نشط</h5>
+                                        <p>قم بالاشتراك في إحدى الباقات المتاحة للاستفادة من جميع المزايا</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-8">
+                    <!-- الباقات المتاحة -->
+                    <div class="available-plans-container">
+                        <div class="plans-carousel">
+                            {% if plans %}
+                                <div class="row g-4">
+                                    {% for plan in plans %}
+                                        <div class="col-md-6 mb-4">
+                                            <div class="plan-card shadow-effect h-100 {% if subscription and subscription.plan.id == plan.id %}current-plan{% endif %}">
+                                                {% if subscription and subscription.plan.id == plan.id %}
+                                                    <div class="current-plan-badge">
+                                                        <i class="fas fa-check"></i> الباقة الحالية
+                                                    </div>
+                                                {% endif %}
+                                                <div class="plan-card-header">
+                                                    <h4 class="plan-card-title">{{ plan.name }}</h4>
+                                                </div>
+                                                <div class="plan-card-price">
+                                                    <span class="price-value">{{ plan.price }}</span>
+                                                    <span class="price-currency">ريال</span>
+                                                    <span class="price-duration">/ {{ plan.duration_days }} يوم</span>
+                                                </div>
+                                                <div class="plan-card-body">
+                                                    <p class="plan-card-description">{{ plan.description }}</p>
+                                                    <ul class="plan-card-features">
+                                                        <li>
+                                                            <i class="fas fa-school feature-icon"></i>
+                                                            <span>{{ plan.max_classrooms }} فصل دراسي</span>
+                                                        </li>
+                                                        <li>
+                                                            <i class="fas {% if plan.has_chat %}fa-check text-success{% else %}fa-times text-danger{% endif %} feature-icon"></i>
+                                                            <span>المحادثات المباشرة</span>
+                                                        </li>
+                                                        <li>
+                                                            <i class="fas {% if plan.allow_assistant %}fa-check text-success{% else %}fa-times text-danger{% endif %} feature-icon"></i>
+                                                            <span>إضافة مساعدين</span>
+                                                        </li>
+                                                        <li>
+                                                            <i class="fas {% if plan.advanced_analytics %}fa-check text-success{% else %}fa-times text-danger{% endif %} feature-icon"></i>
+                                                            <span>تحليلات متقدمة</span>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                                <div class="plan-card-footer">
+                                                    {% if subscription and subscription.plan.id == plan.id %}
+                                                        <button class="btn btn-teacher-success w-100" disabled>
+                                                            مشترك حالياً
+                                                        </button>
+                                                    {% else %}
+                                                        <button class="btn btn-teacher-primary w-100">
+                                                            اشترك الآن
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="no-plans-message">
+                                    <p>لا توجد باقات متاحة حالياً. يرجى التواصل مع الإدارة للمزيد من المعلومات.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الفصول الدراسية -->
+        <div class="dashboard-section mb-5">
+            <div class="dashboard-section-header d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="dashboard-section-title mb-0">الفصول الدراسية</h2>
+                    <div class="section-divider"></div>
+                </div>
+                {% if can_create_classroom %}
+                    <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher-primary">
+                        <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
+                    </a>
+                {% else %}
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-plus-circle me-2"></i>لا يمكن إنشاء فصول إضافية
+                    </button>
+                {% endif %}
+            </div>
+
+            {% if classrooms %}
+                <div class="classroom-grid">
+                    <div class="row g-4">
+                        {% for classroom in classrooms %}
+                            <div class="col-lg-4 col-md-6">
+                                <div class="classroom-card shadow-effect h-100">
+                                    <div class="classroom-header">
+                                        <h5 class="classroom-title">{{ classroom.name }}</h5>
+                                        <div class="classroom-badges">
+                                            <span class="badge bg-primary">{{ classroom.subject }}</span>
+                                            <span class="badge bg-secondary">{{ classroom.grade }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="classroom-body">
+                                        <div class="classroom-info">
+                                            <div class="classroom-detail">
+                                                <i class="fas fa-key"></i>
+                                                <span>كود الفصل: <strong>{{ classroom.code }}</strong></span>
+                                            </div>
+                                            <div class="classroom-detail">
+                                                <i class="fas fa-user-graduate"></i>
+                                                <span>عدد الطلاب: <strong>{{ classroom.students|length }}</strong></span>
+                                            </div>
+                                            <div class="classroom-detail">
+                                                <i class="fas fa-calendar-alt"></i>
+                                                <span>تاريخ الإنشاء: {{ classroom.created_at.strftime('%Y-%m-%d') }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="classroom-actions">
+                                            <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-teacher-primary btn-block mb-2">
+                                                <i class="fas fa-eye me-2"></i>عرض الفصل
+                                            </a>
+                                            <button class="btn btn-teacher-outline btn-block" onclick="copyClassroomCode('{{ classroom.code }}')">
+                                                <i class="fas fa-copy me-2"></i>نسخ كود الفصل
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
             {% else %}
-                <button class="btn btn-secondary" disabled>
-                    <i class="fas fa-plus-circle me-2"></i>لا يمكن إنشاء فصول إضافية
-                </button>
+                <div class="empty-classrooms text-center py-5">
+                    <i class="fas fa-school fa-4x text-muted mb-3"></i>
+                    <h5>لا يوجد لديك فصول دراسية بعد</h5>
+                    <p class="text-muted mb-4">قم بإنشاء فصلك الدراسي الأول للبدء</p>
+                    <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher-primary">
+                        <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
+                    </a>
+                </div>
             {% endif %}
         </div>
 
-        {% if classrooms %}
-            <div class="classroom-grid">
-                <div class="row g-4">
-                    {% for classroom in classrooms %}
-                        <div class="col-lg-4 col-md-6">
-                            <div class="classroom-card shadow-effect h-100">
-                                <div class="classroom-header">
-                                    <h5 class="classroom-title">{{ classroom.name }}</h5>
-                                    <div class="classroom-badges">
-                                        <span class="badge bg-primary">{{ classroom.subject }}</span>
-                                        <span class="badge bg-secondary">{{ classroom.grade }}</span>
-                                    </div>
-                                </div>
-                                <div class="classroom-body">
-                                    <div class="classroom-info">
-                                        <div class="classroom-detail">
-                                            <i class="fas fa-key"></i>
-                                            <span>كود الفصل: <strong>{{ classroom.code }}</strong></span>
-                                        </div>
-                                        <div class="classroom-detail">
-                                            <i class="fas fa-user-graduate"></i>
-                                            <span>عدد الطلاب: <strong>{{ classroom.students|length }}</strong></span>
-                                        </div>
-                                        <div class="classroom-detail">
-                                            <i class="fas fa-calendar-alt"></i>
-                                            <span>تاريخ الإنشاء: {{ classroom.created_at.strftime('%Y-%m-%d') }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="classroom-actions">
-                                        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-teacher-primary btn-block mb-2">
-                                            <i class="fas fa-eye me-2"></i>عرض الفصل
-                                        </a>
-                                        <button class="btn btn-teacher-outline btn-block" onclick="copyClassroomCode('{{ classroom.code }}')">
-                                            <i class="fas fa-copy me-2"></i>نسخ كود الفصل
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+        <!-- آخر النشاطات والمهام -->
+        <div class="dashboard-section">
+            <div class="dashboard-section-header mb-3">
+                <h2 class="dashboard-section-title">آخر النشاطات والمهام</h2>
+                <div class="section-divider"></div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="activities-card shadow-effect">
+                        <div class="activities-header">
+                            <h3><i class="fas fa-history me-2"></i> آخر النشاطات</h3>
                         </div>
-                    {% endfor %}
-                </div>
-            </div>
-        {% else %}
-            <div class="empty-classrooms text-center py-5">
-                <i class="fas fa-school fa-4x text-muted mb-3"></i>
-                <h5>لا يوجد لديك فصول دراسية بعد</h5>
-                <p class="text-muted mb-4">قم بإنشاء فصلك الدراسي الأول للبدء</p>
-                <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher-primary">
-                    <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
-                </a>
-            </div>
-        {% endif %}
-    </div>
-
-    <!-- آخر النشاطات والمهام -->
-    <div class="dashboard-section">
-        <div class="dashboard-section-header mb-3">
-            <h2 class="dashboard-section-title">آخر النشاطات والمهام</h2>
-            <div class="section-divider"></div>
-        </div>
-        
-        <div class="row g-4">
-            <div class="col-lg-7">
-                <div class="activities-card shadow-effect">
-                    <div class="activities-header">
-                        <h3><i class="fas fa-history me-2"></i> آخر النشاطات</h3>
-                    </div>
-                    <div class="activities-body">
-                        {% if activities %}
-                            <div class="activity-timeline">
-                                {% for activity in activities %}
-                                    <div class="activity-item">
-                                        <div class="activity-icon">
-                                            <i class="fas fa-circle"></i>
-                                        </div>
-                                        <div class="activity-content">
-                                            <div class="activity-text">{{ activity.description }}</div>
-                                            <div class="activity-time">{{ activity.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="empty-activities">
-                                <i class="fas fa-clock fa-3x text-muted mb-3"></i>
-                                <p>لا توجد أنشطة حديثة</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-5">
-                <div class="tasks-card shadow-effect">
-                    <div class="tasks-header">
-                        <h3><i class="fas fa-clipboard-list me-2"></i> آخر المهام</h3>
-                    </div>
-                    <div class="tasks-body">
-                        {% if recent_assignments %}
-                            <div class="assignments-list">
-                                {% for assignment in recent_assignments %}
-                                    <div class="assignment-item">
-                                        <div class="assignment-icon">
-                                            <i class="fas fa-file-alt"></i>
-                                        </div>
-                                        <div class="assignment-content">
-                                            <div class="assignment-title">{{ assignment.title }}</div>
-                                            <div class="assignment-info">
-                                                <span class="assignment-classroom">{{ assignment.classroom.name }}</span>
-                                                <span class="assignment-date">{{ assignment.due_date.strftime('%m/%d') }}</span>
+                        <div class="activities-body">
+                            {% if activities %}
+                                <div class="activity-timeline">
+                                    {% for activity in activities %}
+                                        <div class="activity-item">
+                                            <div class="activity-icon">
+                                                <i class="fas fa-circle"></i>
                                             </div>
-                                            <div class="assignment-status">
-                                                <span class="badge bg-{{ 'success' if assignment.is_active else 'secondary' }} rounded-pill">
-                                                    {{ 'نشط' if assignment.is_active else 'منتهي' }}
-                                                </span>
+                                            <div class="activity-content">
+                                                <div class="activity-text">{{ activity.description }}</div>
+                                                <div class="activity-time">{{ activity.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
                                             </div>
                                         </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="empty-assignments">
-                                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
-                                <p>لا توجد مهام حديثة</p>
-                            </div>
-                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="empty-activities">
+                                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                                    <p>لا توجد أنشطة حديثة</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="tasks-card shadow-effect">
+                        <div class="tasks-header">
+                            <h3><i class="fas fa-clipboard-list me-2"></i> آخر المهام</h3>
+                        </div>
+                        <div class="tasks-body">
+                            {% if recent_assignments %}
+                                <div class="assignments-list">
+                                    {% for assignment in recent_assignments %}
+                                        <div class="assignment-item">
+                                            <div class="assignment-icon">
+                                                <i class="fas fa-file-alt"></i>
+                                            </div>
+                                            <div class="assignment-content">
+                                                <div class="assignment-title">{{ assignment.title }}</div>
+                                                <div class="assignment-info">
+                                                    <span class="assignment-classroom">{{ assignment.classroom.name }}</span>
+                                                    <span class="assignment-date">{{ assignment.due_date.strftime('%m/%d') }}</span>
+                                                </div>
+                                                <div class="assignment-status">
+                                                    <span class="badge bg-{{ 'success' if assignment.is_active else 'secondary' }} rounded-pill">
+                                                        {{ 'نشط' if assignment.is_active else 'منتهي' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="empty-assignments">
+                                    <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                                    <p>لا توجد مهام حديثة</p>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
