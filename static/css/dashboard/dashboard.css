@@ -1,35 +1,94 @@
 
 /* ملف أنماط لوحة التحكم */
+:root {
+    --primary-color: #4e73df;
+    --primary-darker: #3a59c7;
+    --secondary-color: #6f42c1;
+    --success-color: #1cc88a;
+    --success-darker: #169e6e;
+    --info-color: #36b9cc;
+    --warning-color: #f6c23e;
+    --danger-color: #e74a3b;
+    --light-color: #f8f9fc;
+    --dark-color: #5a5c69;
+    --text-color: #333;
+    --text-muted: #858796;
+    --border-color: #e3e6f0;
+    --border-light: #f0f2f8;
+    --bg-color: #f8f9fc;
+    --card-bg: #fff;
+    --card-shadow: 0 0.25rem 0.75rem rgba(78, 115, 223, 0.08);
+    --card-shadow-hover: 0 0.5rem 1.5rem rgba(78, 115, 223, 0.15);
+    --header-bg: #4e73df;
+    --sidebar-bg: #4e73df;
+    --transition-normal: all 0.3s ease;
+}
+
+/* تنسيقات عامة للوحة التحكم */
 .dashboard-container {
     padding: 1.5rem;
 }
 
-/* القسم الرئيسي في لوحة التحكم */
+/* العنوان الرئيسي والترحيب */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.welcome-section {
+    flex: 1;
+}
+
+.dashboard-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-bottom: 0;
+}
+
+.teacher-name {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* الأقسام الرئيسية */
 .dashboard-section {
     margin-bottom: 2.5rem;
 }
 
 .dashboard-section-header {
     margin-bottom: 1.5rem;
-}
-
-.dashboard-section-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--dark-color);
-    margin-bottom: 0.5rem;
     position: relative;
 }
 
-.dashboard-section-title:after {
-    content: '';
-    position: absolute;
-    bottom: -0.5rem;
-    right: 0;
-    width: 3rem;
+.dashboard-section-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.25rem;
+    position: relative;
+}
+
+.section-divider {
+    width: 3.5rem;
     height: 3px;
     background-color: var(--primary-color);
     border-radius: 1.5px;
+    margin-top: 0.5rem;
 }
 
 /* بطاقات الإحصائيات */
@@ -39,13 +98,16 @@
     padding: 1.5rem;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 0.1rem 0.75rem rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition-normal);
+    border: none;
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1);
+    box-shadow: var(--card-shadow-hover);
 }
 
 .stat-card.primary {
@@ -68,46 +130,52 @@
     border-right: 4px solid var(--danger-color);
 }
 
+.stat-icon {
+    font-size: 2.5rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-left: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.primary .stat-icon {
+    color: var(--primary-color);
+    background-color: rgba(78, 115, 223, 0.1);
+}
+
+.success .stat-icon {
+    color: var(--success-color);
+    background-color: rgba(28, 200, 138, 0.1);
+}
+
+.info .stat-icon {
+    color: var(--info-color);
+    background-color: rgba(54, 185, 204, 0.1);
+}
+
+.warning .stat-icon {
+    color: var(--warning-color);
+    background-color: rgba(246, 194, 62, 0.1);
+}
+
+.stat-content {
+    flex: 1;
+}
+
 .stat-card h3 {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    margin-bottom: 0.75rem;
-    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
 }
 
 .stat-card .stat-value {
-    font-size: 2.25rem;
+    font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 0.75rem;
     color: var(--dark-color);
-}
-
-.stat-card .stat-icon {
-    position: absolute;
-    left: 1.25rem;
-    bottom: 1.25rem;
-    font-size: 3.5rem;
-    opacity: 0.15;
-}
-
-.stat-card.primary .stat-icon {
-    color: var(--primary-color);
-}
-
-.stat-card.success .stat-icon {
-    color: var(--success-color);
-}
-
-.stat-card.info .stat-icon {
-    color: var(--info-color);
-}
-
-.stat-card.warning .stat-icon {
-    color: var(--warning-color);
-}
-
-.stat-card.danger .stat-icon {
-    color: var(--danger-color);
 }
 
 /* بطاقات الفصول */
@@ -115,59 +183,335 @@
     border: none;
     border-radius: 0.8rem;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: var(--transition-normal);
+    background-color: var(--card-bg);
 }
 
 .classroom-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1);
+    box-shadow: var(--card-shadow-hover);
 }
 
-.classroom-card .card-header {
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    padding: 1rem 1.25rem;
+.classroom-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+    background-color: rgba(0, 0, 0, 0.02);
 }
 
-.classroom-card .card-title {
+.classroom-title {
+    font-size: 1.1rem;
     font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--primary-color);
+}
+
+.classroom-badges {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.classroom-body {
+    padding: 1.25rem;
 }
 
 .classroom-info {
     margin-bottom: 1.25rem;
 }
 
-.classroom-info > div {
-    margin-bottom: 0.5rem;
+.classroom-detail {
+    margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
 }
 
-.classroom-info i {
-    margin-left: 0.5rem;
+.classroom-detail i {
+    margin-left: 0.75rem;
     width: 1.25rem;
     text-align: center;
+    color: var(--text-muted);
+}
+
+.classroom-actions {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+/* قسم الاشتراك والباقات */
+.current-subscription-card {
+    background-color: var(--card-bg);
+    border-radius: 0.8rem;
+    overflow: hidden;
+    height: 100%;
+}
+
+.subscription-header {
+    padding: 1.25rem;
+    background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+    color: #fff;
+}
+
+.subscription-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.subscription-body {
+    padding: 1.5rem;
+}
+
+.active-plan {
+    text-align: center;
+}
+
+.plan-name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
     color: var(--dark-color);
-    opacity: 0.6;
 }
 
-.classroom-subject .badge {
-    margin-left: 0.5rem;
+.plan-description {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
 }
 
-/* النشاطات */
+.subscription-status-wrapper {
+    background-color: var(--light-color);
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.status-label {
+    font-weight: 500;
+}
+
+.subscription-progress {
+    height: 0.5rem;
+    border-radius: 0.25rem;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.plan-features {
+    margin-top: 1rem;
+    text-align: right;
+}
+
+.plan-feature {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.plan-feature:last-child {
+    border-bottom: none;
+}
+
+.feature-icon {
+    margin-left: 0.75rem;
+    color: var(--success-color);
+}
+
+.no-subscription {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-subscription {
+    padding: 2rem 0;
+}
+
+.empty-subscription h5 {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.empty-subscription p {
+    margin-bottom: 1.5rem;
+}
+
+/* بطاقات الباقات */
+.available-plans-container {
+    height: 100%;
+}
+
+.plan-card {
+    background-color: var(--card-bg);
+    border-radius: 0.8rem;
+    overflow: hidden;
+    transition: var(--transition-normal);
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.current-plan {
+    border: 2px solid var(--primary-color);
+}
+
+.current-plan-badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    border-radius: 0 0 0.5rem 0;
+}
+
+.plan-card-header {
+    padding: 1.25rem;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.plan-card-title {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.plan-card-price {
+    text-align: center;
+    padding: 1rem;
+    background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.price-value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.price-currency {
+    font-size: 1rem;
+    vertical-align: super;
+}
+
+.price-duration {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.plan-card-body {
+    padding: 1.25rem;
+    flex: 1;
+}
+
+.plan-card-description {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.plan-card-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.plan-card-features li {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.plan-card-features li:last-child {
+    border-bottom: none;
+}
+
+.plan-card-footer {
+    padding: 1.25rem;
+    border-top: 1px solid var(--border-light);
+}
+
+/* آخر النشاطات والمهام */
+.activities-card, .tasks-card {
+    border-radius: 0.8rem;
+    overflow: hidden;
+    background-color: var(--card-bg);
+    margin-bottom: 1.5rem;
+    height: 100%;
+}
+
+.activities-header, .tasks-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.activities-header h3, .tasks-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.activities-body, .tasks-body {
+    padding: 1rem;
+    height: 330px;
+    overflow-y: auto;
+}
+
 .activity-timeline {
     position: relative;
 }
 
+.activity-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0.7rem;
+    width: 2px;
+    background-color: var(--border-light);
+    transform: translateX(50%);
+}
+
 .activity-item {
     position: relative;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
+    padding-right: 2rem;
+    padding-bottom: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.activity-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .activity-icon {
-    width: 24px;
-    height: 24px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    background-color: var(--card-bg);
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -175,65 +519,200 @@
 
 .activity-icon i {
     font-size: 0.5rem;
+    color: var(--primary-color);
+}
+
+.activity-content {
+    background-color: var(--light-color);
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
 }
 
 .activity-text {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     margin-bottom: 0.25rem;
+    color: var(--dark-color);
 }
 
 .activity-time {
-    font-size: 0.8rem;
-    color: var(--dark-color);
-    opacity: 0.6;
+    font-size: 0.75rem;
+    color: var(--text-muted);
 }
 
-/* الأزرار */
-.btn-teacher {
+.assignments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.assignment-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background-color: var(--light-color);
+}
+
+.assignment-icon {
+    padding: 0.5rem;
+    background-color: rgba(78, 115, 223, 0.1);
+    border-radius: 0.5rem;
+    margin-left: 0.75rem;
+    color: var(--primary-color);
+}
+
+.assignment-content {
+    flex: 1;
+}
+
+.assignment-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    color: var(--dark-color);
+}
+
+.assignment-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+/* الحالات الفارغة */
+.empty-activities, .empty-assignments, .empty-classrooms {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* تنسيقات للأزرار */
+.btn-teacher-primary {
     background-color: var(--primary-color);
-    color: #fff;
+    color: white;
     border: none;
     border-radius: 0.5rem;
     padding: 0.5rem 1rem;
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: var(--transition-normal);
 }
 
-.btn-teacher:hover {
-    background-color: #3a5fc8;
-    color: #fff;
+.btn-teacher-primary:hover {
+    background-color: var(--primary-darker);
+    color: white;
     transform: translateY(-2px);
-    box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.1);
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
 }
 
-/* أنماط الرسوم البيانية */
-.chart-container {
-    height: 300px;
-    margin-bottom: 2rem;
+.btn-teacher-secondary {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: var(--transition-normal);
+}
+
+.btn-teacher-secondary:hover {
+    background-color: #5d37a6;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+}
+
+.btn-teacher-outline {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: var(--transition-normal);
+}
+
+.btn-teacher-outline:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+}
+
+.btn-teacher-success {
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: var(--transition-normal);
+}
+
+.btn-teacher-success:hover {
+    background-color: var(--success-darker);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+}
+
+/* تأثيرات إضافية */
+.shadow-effect {
+    box-shadow: var(--card-shadow);
+    transition: var(--transition-normal);
+}
+
+.shadow-effect:hover {
+    box-shadow: var(--card-shadow-hover);
+}
+
+/* نافذة المساعدة */
+.help-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.help-option {
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+    padding: 1.5rem;
+    background-color: var(--light-color);
+    border-radius: 0.5rem;
+}
+
+.help-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.help-option h6 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.help-option p {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
 }
 
 /* تجاوب */
 @media (max-width: 992px) {
-    .stat-card .stat-value {
-        font-size: 1.75rem;
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
     }
     
-    .stat-card .stat-icon {
-        font-size: 2.5rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .dashboard-section-title {
-        font-size: 1.25rem;
-    }
-    
-    .stat-card {
-        padding: 1.25rem;
-    }
-    
-    .stat-card h3 {
-        font-size: 0.9rem;
+    .quick-actions {
+        width: 100%;
     }
     
     .stat-card .stat-value {
@@ -242,5 +721,42 @@
     
     .stat-card .stat-icon {
         font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-section-title {
+        font-size: 1.2rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-card h3 {
+        font-size: 0.85rem;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 1.3rem;
+    }
+    
+    .stat-icon {
+        font-size: 1.8rem;
+        padding: 0.5rem;
+    }
+    
+    .activities-body, .tasks-body {
+        height: 300px;
+    }
+}
+
+@media (max-width: 576px) {
+    .quick-actions {
+        flex-direction: column;
+    }
+    
+    .btn-teacher-primary, .btn-teacher-secondary, .btn-teacher-outline {
+        width: 100%;
     }
 }
