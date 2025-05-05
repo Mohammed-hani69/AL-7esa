@@ -1,79 +1,53 @@
+{% extends 'layout.html' %}
 
-{% extends "layout.html" %}
-
-{% block title %}لوحة تحكم المعلم - الحصة{% endblock %}
+{% block title %}لوحة تحكم المعلم{% endblock %}
 
 {% block content %}
-<div class="teacher-dashboard">
-    <div class="dashboard-header mb-4">
-        <div class="welcome-section">
-            <h1 class="dashboard-title">لوحة تحكم المعلم</h1>
-            <p class="dashboard-subtitle">مرحباً <span class="teacher-name">{{ current_user.name }}</span>، نتمنى لك يوماً تعليمياً مثمراً</p>
-        </div>
-        <div class="quick-actions">
-            {% if can_create_classroom %}
-                <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher-primary">
-                    <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
-                </a>
-            {% endif %}
-            <button class="btn btn-teacher-secondary" data-bs-toggle="modal" data-bs-target="#helpModal">
-                <i class="fas fa-question-circle me-2"></i>الدعم والمساعدة
-            </button>
+<div class="dashboard-container">
+    <h1 class="dashboard-title">لوحة تحكم المعلم</h1>
+
+    {% if not has_active_subscription %}
+    <!-- رسالة تحذير للمعلمين بدون اشتراك نشط -->
+    <div class="subscription-warning-alert">
+        <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> تنبيه: لا يوجد اشتراك نشط!</h4>
+            <p>لا يمكنك إنشاء فصول دراسية جديدة أو إدارة الفصول الحالية حتى تقوم بالاشتراك في إحدى الباقات المتاحة.</p>
+            <hr>
+            <p class="mb-0">الرجاء الاشتراك في باقة مناسبة لمتابعة استخدام جميع ميزات المنصة.</p>
         </div>
     </div>
+    {% endif %}
 
-    <!-- إحصائيات سريعة -->
-    <div class="dashboard-section mb-5">
-        <div class="dashboard-section-header mb-3">
-            <h2 class="dashboard-section-title">إحصائيات سريعة</h2>
-            <div class="section-divider"></div>
-        </div>
-        <div class="row g-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card primary shadow-effect h-100">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>إجمالي الطلاب</h3>
-                        <div class="stat-value">{{ total_students|default(0) }}</div>
-                    </div>
+    <!-- بيانات المعلم والإحصائيات -->
+    <div class="dashboard-stats-section">
+        <div class="dashboard-teacher-info">
+            <h2 class="welcome-msg">مرحباً، {{ current_user.name }}</h2>
+            <div class="teacher-stats">
+                <div class="stat-card">
+                    <div class="stat-value">{{ classrooms|length }}</div>
+                    <div class="stat-label">الفصول الدراسية</div>
                 </div>
-            </div>
 
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card success shadow-effect h-100">
-                    <div class="stat-icon">
-                        <i class="fas fa-chalkboard"></i>
+                <div class="stat-card">
+                    <div class="stat-value">
+                        {% if subscription %}
+                            {{ subscription_days_left }}
+                        {% else %}
+                            0
+                        {% endif %}
                     </div>
-                    <div class="stat-content">
-                        <h3>الفصول الدراسية</h3>
-                        <div class="stat-value">{{ classrooms|length }}</div>
-                    </div>
+                    <div class="stat-label">أيام متبقية في الاشتراك</div>
                 </div>
-            </div>
 
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card info shadow-effect h-100">
-                    <div class="stat-icon">
-                        <i class="fas fa-question-circle"></i>
+                <div class="stat-card">
+                    <div class="stat-value">
+                        {% set total_students = namespace(count=0) %}
+                        {% for classroom in classrooms %}
+                            {% set total_students.count = total_students.count + classroom.enrollments|length %}
+                        {% endfor %}
+                        {{ total_students.count }}
                     </div>
-                    <div class="stat-content">
-                        <h3>الاختبارات النشطة</h3>
-                        <div class="stat-value">{{ active_quizzes|default(0) }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="stat-card warning shadow-effect h-100">
-                    <div class="stat-icon">
-                        <i class="fas fa-tasks"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>الواجبات المعلقة</h3>
-                        <div class="stat-value">{{ pending_submissions|default(0) }}</div>
-                    </div>
+                    <div class="stat-label">إجمالي الطلاب</div>
                 </div>
             </div>
         </div>
@@ -97,7 +71,7 @@
                             <div class="active-plan">
                                 <h4 class="plan-name">{{ subscription.plan.name }}</h4>
                                 <p class="plan-description">{{ subscription.plan.description }}</p>
-                                
+
                                 <div class="subscription-status-wrapper mb-4">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <span class="status-label">حالة الاشتراك:</span>
@@ -109,7 +83,7 @@
                                             {% endif %}
                                         </span>
                                     </div>
-                                    
+
                                     <div class="progress subscription-progress">
                                         {% if subscription_days_left and subscription.plan.duration_days %}
                                             {% set progress = (subscription_days_left / subscription.plan.duration_days) * 100 %}
@@ -121,7 +95,7 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                
+
                                 <div class="plan-features">
                                     <div class="plan-feature">
                                         <i class="fas fa-check-circle feature-icon"></i>
@@ -136,14 +110,14 @@
                                         <span>إضافة مساعدين</span>
                                     </div>
                                 </div>
-                                
+
                                 {% if subscription_days_left and subscription_days_left <= 7 %}
                                     <div class="alert alert-warning py-2 small mt-3">
                                         <i class="fas fa-exclamation-triangle me-1"></i>
                                         اشتراكك على وشك الانتهاء، قم بتجديده لتجنب انقطاع الخدمة
                                     </div>
                                 {% endif %}
-                                
+
                                 <div class="subscription-actions mt-3">
                                     <button class="btn btn-teacher-outline w-100">تجديد الاشتراك</button>
                                 </div>
@@ -160,7 +134,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-lg-8">
                 <!-- الباقات المتاحة -->
                 <div class="available-plans-container">
@@ -237,18 +211,24 @@
                 <h2 class="dashboard-section-title mb-0">الفصول الدراسية</h2>
                 <div class="section-divider"></div>
             </div>
-            {% if can_create_classroom %}
-                <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher-primary">
-                    <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
-                </a>
+            {% if has_active_subscription %}
+                {% if can_create_classroom %}
+                    <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher-primary">
+                        <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
+                    </a>
+                {% else %}
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-plus-circle me-2"></i>لا يمكن إنشاء فصول إضافية
+                    </button>
+                {% endif %}
             {% else %}
                 <button class="btn btn-secondary" disabled>
-                    <i class="fas fa-plus-circle me-2"></i>لا يمكن إنشاء فصول إضافية
+                    <i class="fas fa-plus-circle me-2"></i>لا يمكن إنشاء فصول دراسية (مطلوب اشتراك)
                 </button>
             {% endif %}
         </div>
 
-        {% if classrooms %}
+        {% if classrooms and has_active_subscription %}
             <div class="classroom-grid">
                 <div class="row g-4">
                     {% for classroom in classrooms %}
@@ -292,12 +272,21 @@
             </div>
         {% else %}
             <div class="empty-classrooms text-center py-5">
-                <i class="fas fa-school fa-4x text-muted mb-3"></i>
-                <h5>لا يوجد لديك فصول دراسية بعد</h5>
-                <p class="text-muted mb-4">قم بإنشاء فصلك الدراسي الأول للبدء</p>
-                <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher-primary">
-                    <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
-                </a>
+                {% if not has_active_subscription %}
+                    <i class="fas fa-lock fa-4x text-muted mb-3"></i>
+                    <h5>لا يمكنك عرض الفصول الدراسية بدون اشتراك نشط</h5>
+                    <p class="text-muted mb-4">الرجاء الاشتراك في باقة مناسبة</p>
+                    <a href="#subscription-plans" class="btn btn-warning">
+                        <i class="fas fa-credit-card me-2"></i>اشترك الآن
+                    </a>
+                {% else %}
+                    <i class="fas fa-school fa-4x text-muted mb-3"></i>
+                    <h5>لا يوجد لديك فصول دراسية بعد</h5>
+                    <p class="text-muted mb-4">قم بإنشاء فصلك الدراسي الأول للبدء</p>
+                    <a href="{{ url_for('teacher.create_classroom') }}" class="btn btn-teacher-primary">
+                        <i class="fas fa-plus-circle me-2"></i>إنشاء فصل جديد
+                    </a>
+                {% endif %}
             </div>
         {% endif %}
     </div>
@@ -308,7 +297,7 @@
             <h2 class="dashboard-section-title">آخر النشاطات والمهام</h2>
             <div class="section-divider"></div>
         </div>
-        
+
         <div class="row g-4">
             <div class="col-lg-7">
                 <div class="activities-card shadow-effect">

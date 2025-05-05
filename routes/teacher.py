@@ -101,16 +101,20 @@ def dashboard():
 
     # تحديد عدد الأيام المتبقية في الاشتراك
     subscription_days_left = 0
+    has_active_sub = False
+    
     active_subscription = next((sub for sub in current_user.subscriptions if sub.is_active), None)
     if active_subscription and active_subscription.end_date:
         subscription_days_left = (active_subscription.end_date - datetime.utcnow()).days
-
+        has_active_sub = subscription_days_left > 0
+    
     return render_template('dashboard/teacher.html', 
                            classrooms=classrooms, 
                            subscription=active_sub,
                            plans=plans,
                            can_create_classroom=can_create_classroom(),
-                           subscription_days_left=subscription_days_left)
+                           subscription_days_left=subscription_days_left,
+                           has_active_subscription=has_active_sub)
 
 """
 إدارة الفصول الدراسية
@@ -120,6 +124,11 @@ def dashboard():
 @login_required
 @teacher_required
 def create_classroom():
+    # التحقق من وجود اشتراك نشط للمعلم
+    if not has_active_subscription():
+        flash('لا يمكنك إنشاء فصول دراسية جديدة. يرجى الاشتراك في باقة نشطة أولاً.', 'warning')
+        return redirect(url_for('teacher.dashboard'))
+        
     # Check if teacher can create a new classroom
     if not can_create_classroom():
         flash('لا يمكنك إنشاء فصول دراسية أخرى. الرجاء ترقية اشتراكك', 'warning')
@@ -171,6 +180,12 @@ def create_classroom():
 @login_required
 @teacher_required
 def classroom(classroom_id):
+    # التحقق من وجود اشتراك نشط للمعلم
+    has_subscription = has_active_subscription()
+    if not has_subscription:
+        flash('لا يمكنك الوصول إلى الفصول الدراسية. يرجى الاشتراك في باقة نشطة أولاً.', 'warning')
+        return redirect(url_for('teacher.dashboard'))
+        
     classroom = Classroom.query.get_or_404(classroom_id)
 
     # Ensure the teacher owns this classroom
