@@ -68,6 +68,35 @@ def format_math_filter(value):
     value = value.replace('\n', ' ')
     return value
 
+@app.template_filter('timeago')
+def timeago_filter(value):
+    """تحويل التاريخ إلى صيغة نصية سهلة القراءة (مثل: منذ دقيقتين)"""
+    if not value:
+        return ''
+    
+    now = datetime.utcnow()
+    diff = now - value
+    
+    seconds = diff.total_seconds()
+    
+    if seconds < 60:
+        return 'الآن'
+    elif seconds < 3600:
+        minutes = int(seconds / 60)
+        return f'منذ {minutes} {"دقيقة" if minutes == 1 else "دقائق"}'
+    elif seconds < 86400:
+        hours = int(seconds / 3600)
+        return f'منذ {hours} {"ساعة" if hours == 1 else "ساعات"}'
+    elif seconds < 2592000:
+        days = int(seconds / 86400)
+        return f'منذ {days} {"يوم" if days == 1 else "أيام"}'
+    elif seconds < 31536000:
+        months = int(seconds / 2592000)
+        return f'منذ {months} {"شهر" if months == 1 else "أشهر"}'
+    else:
+        years = int(seconds / 31536000)
+        return f'منذ {years} {"سنة" if years == 1 else "سنوات"}'
+
 # Configure login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -87,8 +116,9 @@ def create_upload_directories():
     upload_dirs = [
         'static/uploads',
         'static/uploads/classroom_content',
-        'static/uploads/profile_pictures',
+        'static/uploads/profile_pictures', 
         'static/uploads/chat_images',
+        'static/uploads/assignments'  # إضافة مجلد الواجبات
     ]
     
     for directory in upload_dirs:

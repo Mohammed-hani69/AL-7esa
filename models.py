@@ -118,6 +118,72 @@ class Classroom(db.Model):
     assignments = db.relationship('Assignment', back_populates='classroom', cascade='all, delete-orphan')
     quizzes = db.relationship('Quiz', back_populates='classroom', cascade='all, delete-orphan')
 
+    @property
+    def interaction_rate(self):
+        """حساب معدل تفاعل الطلاب في الفصل"""
+        total_activities = 0
+        total_possible = 0
+        
+        # حساب التفاعل من خلال الواجبات المكتملة
+        for enrollment in self.enrollments:
+            completed = sum(1 for submission in enrollment.assignment_submissions if submission.grade is not None)
+            total_activities += completed
+            total_possible += Assignment.query.filter_by(classroom_id=self.id).count()
+            
+        # حساب التفاعل من خلال الاختبارات المكتملة
+        for enrollment in self.enrollments:
+            completed = sum(1 for attempt in enrollment.quiz_attempts if attempt.is_completed)
+            total_activities += completed
+            total_possible += Quiz.query.filter_by(classroom_id=self.id).count()
+        
+        if total_possible == 0:
+            return 0
+        
+        return round((total_activities / total_possible) * 100)
+
+    @property
+    def average_grade(self):
+        """حساب متوسط درجات الطلاب في الفصل"""
+        total_grades = []
+        
+        # جمع درجات الواجبات
+        for enrollment in self.enrollments:
+            grades = [submission.grade for submission in enrollment.assignment_submissions if submission.grade is not None]
+            total_grades.extend(grades)
+            
+        # جمع درجات الاختبارات
+        for enrollment in self.enrollments:
+            grades = [attempt.score for attempt in enrollment.quiz_attempts if attempt.is_completed]
+            total_grades.extend(grades)
+        
+        if not total_grades:
+            return 0
+            
+        return sum(total_grades) / len(total_grades)
+
+    @property
+    def assignments_completion_rate(self):
+        """حساب نسبة إكمال الواجبات في الفصل"""
+        total_assignments = Assignment.query.filter_by(classroom_id=self.id).count()
+        if total_assignments == 0:
+            return 0
+            
+        completed = 0
+        for enrollment in self.enrollments:
+            completed += sum(1 for submission in enrollment.assignment_submissions if submission.grade is not None)
+            
+        expected_submissions = total_assignments * len(self.enrollments)
+        if expected_submissions == 0:
+            return 0
+            
+        return round((completed / expected_submissions) * 100)
+
+    @property
+    def attendance_rate(self):
+        """حساب نسبة حضور الطلاب في الفصل"""
+        # يمكن تنفيذ هذه الخاصية لاحقاً عندما نضيف نظام تتبع الحضور
+        return 95  # قيمة افتراضية للعرض
+
     def __repr__(self):
         return f'<Classroom {self.name}>'
 
@@ -182,6 +248,7 @@ class Assignment(db.Model):
     description = db.Column(db.Text, nullable=False)
     due_date = db.Column(db.DateTime, nullable=True)
     points = db.Column(db.Integer, default=0)
+    attachment_url = db.Column(db.String(255), nullable=True)  # URL للملف المرفق
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -395,6 +462,11 @@ class Payment(db.Model):
     transaction_id = db.Column(db.String(100), nullable=True)
     status = db.Column(db.String(20), nullable=False)  # 'success', 'pending', 'failed'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # New fields for e-wallet payments
+    screenshot_path = db.Column(db.String(255), nullable=True)
+    transfer_note = db.Column(db.String(255), nullable=True)
+    ewallet_number = db.Column(db.String(50), nullable=True)
 
     # Relationships
     user = db.relationship('User', backref=db.backref('payments', lazy=True))
@@ -402,4 +474,72 @@ class Payment(db.Model):
     subscription = db.relationship('Subscription', backref=db.backref('payment', lazy=True))
 
     def __repr__(self):
-        return f'<Payment {self.id}>'
+        return f'<Payment {self.id} - {self.amount} {self.currency}>'
+
+"""
+نموذج الاتصال (Contact)
+يخزن رسائل الاتصال المرسلة من صفحة اتصل بنا
+"""
+class Contact(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=True)
+    subject = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default='new')  # new, read, replied
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Contact {self.name} - {self.subject}>'
+
+"""
+نموذج إعدادات النظام (SystemSettings)
+يخزن الإعدادات العامة للنظام مثل اسم النظام واللغة والعملة وغيرها
+"""
+class SystemSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.Text, nullable=True)
+    group = db.Column(db.String(50), nullable=False)  # general, appearance, contact
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<SystemSettings {self.key}>'
+
+    @staticmethod
+    def get_setting(key, default=None):
+        setting = SystemSettings.query.filter_by(key=key).first()
+        return setting.value if setting else default
+
+    @staticmethod
+    def set_setting(key, value, group='general'):
+        setting = SystemSettings.query.filter_by(key=key).first()
+        if not setting:
+            setting = SystemSettings(key=key, group=group)
+        setting.value = value
+        db.session.add(setting)
+        try:
+            db.session.commit()
+            return True
+        except Exception:
+            db.session.rollback()
+            return False
+
+"""
+نموذج الأسئلة الشائعة (FAQ)
+يخزن الأسئلة الشائعة وإجاباتها
+"""
+class FAQ(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.String(500), nullable=False)
+    answer = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(100), nullable=True)  # تصنيف السؤال (تقني، مالي، أكاديمي، إلخ)
+    order = db.Column(db.Integer, default=0)  # ترتيب ظهور السؤال
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<FAQ {self.question[:50]}...>'

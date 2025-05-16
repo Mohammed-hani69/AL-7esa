@@ -1,190 +1,421 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعدادات المحادثة - {{ classroom.name }} - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
 
-{% block title %}إعدادات المحادثة - {{ classroom.name }}{% endblock %}
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
 
-{% block styles %}
-<style>
-.color-option {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: inline-block;
-    margin: 0 5px;
-    border: 2px solid transparent;
-}
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            padding: 2rem;
+        }
 
-.color-option.selected {
-    border-color: #000;
-}
+        .innovative-sidebar {
+            background: var(--accent-gradient);
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 2rem;
+            height: calc(100vh - 4rem);
+            color: var(--surface-color);
+        }
 
-.student-list {
-    max-height: 400px;
-    overflow-y: auto;
-}
+        .sidebar-brand {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
 
-.student-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-}
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 10px;
+            margin-bottom: 1rem;
+        }
 
-.student-item:last-child {
-    border-bottom: none;
-}
+        .brand-text {
+            color: var(--surface-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
 
-.student-info {
-    flex: 1;
-}
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
 
-.preview-box {
-    width: 100%;
-    height: 200px;
-    border-radius: 8px;
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-}
+        .nav-item {
+            margin-bottom: 1rem;
+        }
 
-.chat-image-preview {
-    max-width: 100%;
-    max-height: 100%;
-    border-radius: 8px;
-}
-</style>
-{% endblock %}
+        .nav-link {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
 
-{% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">إعدادات المحادثة - {{ classroom.name }}</h1>
-        <div>
-            <a href="{{ url_for((user_type + '.classroom')|string, classroom_id=classroom.id) }}" class="btn btn-sm btn-secondary">
-                <i class="fas fa-arrow-right me-1"></i>العودة للفصل
-            </a>
-        </div>
-    </div>
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--surface-color);
+            transform: translateX(-10px);
+        }
 
-    <div class="row">
-        <!-- Chat Settings -->
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">الإعدادات العامة</h6>
-                </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
-                        {% if user_type == 'teacher' %}
-                        <div class="form-group mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="is_enabled" name="is_enabled" {% if settings.is_enabled %}checked{% endif %}>
-                                <label class="form-check-label" for="is_enabled">
-                                    تمكين المحادثة
-                                </label>
-                            </div>
-                        </div>
-                        {% endif %}
+        .nav-link i {
+            margin-left: 1rem;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
 
-                        <div class="form-group mb-3">
-                            <label>لون الخلفية</label>
-                            <div class="d-flex flex-wrap mt-2">
-                                <div class="color-option" style="background-color: #ffffff;" data-color="#ffffff"></div>
-                                <div class="color-option" style="background-color: #f8f9fa;" data-color="#f8f9fa"></div>
-                                <div class="color-option" style="background-color: #e9ecef;" data-color="#e9ecef"></div>
-                                <div class="color-option" style="background-color: #dee2e6;" data-color="#dee2e6"></div>
-                                <div class="color-option" style="background-color: #ced4da;" data-color="#ced4da"></div>
-                            </div>
-                            <input type="hidden" id="background_color" name="background_color" value="{{ settings.background_color or '#ffffff' }}">
-                        </div>
+        .content-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+        }
 
-                        <div class="form-group mb-3">
-                            <label for="chat_image">صورة المحادثة</label>
-                            <input type="file" class="form-control" id="chat_image" name="chat_image" accept="image/*">
-                            {% if settings.image_url %}
-                            <div class="preview-box mt-2" style="background-color: {{ settings.background_color or '#ffffff' }}">
-                                <img src="{{ url_for('static', filename=settings.image_url) }}" alt="صورة المحادثة" class="chat-image-preview">
-                            </div>
-                            {% endif %}
-                        </div>
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-block;
+            margin: 0 5px;
+            border: 2px solid transparent;
+        }
 
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i>حفظ الإعدادات
-                        </button>
-                    </form>
-                </div>
+        .color-option.selected {
+            border-color: #000;
+        }
+
+        .student-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .student-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .student-item:last-child {
+            border-bottom: none;
+        }
+
+        .student-info {
+            flex: 1;
+        }
+
+        .preview-box {
+            width: 100%;
+            height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .chat-image-preview {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 250px 1fr;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .innovative-sidebar {
+                position: fixed;
+                right: -300px;
+                z-index: 1000;
+                transition: 0.3s ease;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .innovative-sidebar.show {
+                right: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                right: 1rem;
+                top: 1rem;
+                z-index: 1001;
+                background: var(--surface-color);
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: var(--box-shadow);
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
             </div>
-        </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.dashboard') }}" class="nav-link">
+                        <i class="fas fa-th-large"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/teacher/classrooms" class="nav-link active">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>الفصول</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.payments') }}" class="nav-link">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>المدفوعات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.subscriptions') }}" class="nav-link">
+                        <i class="fas fa-crown"></i>
+                        <span>الاشتراكات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
 
-        <!-- Chat Participants -->
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">إدارة المشاركين</h6>
-                </div>
-                <div class="card-body">
-                    <div class="student-list">
-                        {% for enrollment in enrollments %}
-                            {% set participant = chat_participants|selectattr('enrollment_id', 'equalto', enrollment.id)|first %}
-                            <div class="student-item">
-                                <div class="student-info">
-                                    <h6 class="mb-0">{{ enrollment.user.name }}</h6>
-                                    <small class="text-muted">{{ enrollment.user.phone }}</small>
-                                </div>
-                                <div>
-                                    <form method="POST" action="{{ url_for((user_type + '.manage_chat_participants')|string, classroom_id=classroom.id) }}" style="display: inline;">
-                                        <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
-                                        {% if participant and participant.is_enabled %}
-                                            <input type="hidden" name="action" value="remove">
-                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-user-slash me-1"></i>منع
-                                            </button>
-                                        {% else %}
-                                            <input type="hidden" name="action" value="add">
-                                            <button type="submit" class="btn btn-sm btn-success">
-                                                <i class="fas fa-user-plus me-1"></i>إضافة
-                                            </button>
-                                        {% endif %}
-                                    </form>
-                                </div>
-                            </div>
-                        {% else %}
-                            <div class="text-center py-4">
-                                <i class="fas fa-users fa-3x text-gray-300 mb-2"></i>
-                                <p class="mb-0">لا يوجد طلاب في هذا الفصل بعد</p>
-                            </div>
-                        {% endfor %}
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="page-header content-section">
+                <div class="d-sm-flex align-items-center justify-content-between">
+                    <h1 class="h3 mb-0 text-gray-800">إعدادات المحادثة - {{ classroom.name }}</h1>
+                    <div>
+                        <a href="{{ url_for((user_type + '.classroom')|string, classroom_id=classroom.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right me-1"></i>العودة للفصل
+                        </a>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize color picker
-    const colorOptions = document.querySelectorAll('.color-option');
-    const backgroundColorInput = document.getElementById('background_color');
-    
-    // Set initial selected color
-    colorOptions.forEach(option => {
-        if (option.dataset.color === backgroundColorInput.value) {
-            option.classList.add('selected');
-        }
-        
-        option.addEventListener('click', function() {
-            colorOptions.forEach(opt => opt.classList.remove('selected'));
-            this.classList.add('selected');
-            backgroundColorInput.value = this.dataset.color;
+            <div class="row">
+                <!-- Chat Settings -->
+                <div class="col-lg-6">
+                    <div class="content-section">
+                        <h6 class="text-primary mb-4">الإعدادات العامة</h6>
+                        <form method="POST" enctype="multipart/form-data">
+                            {% if user_type == 'teacher' %}
+                            <div class="form-group mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_enabled" name="is_enabled" {% if settings.is_enabled %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_enabled">
+                                        تمكين المحادثة
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="form-group mb-3">
+                                <label>لون الخلفية</label>
+                                <div class="d-flex flex-wrap mt-2">
+                                    <div class="color-option" style="background-color: #ffffff;" data-color="#ffffff"></div>
+                                    <div class="color-option" style="background-color: #f8f9fa;" data-color="#f8f9fa"></div>
+                                    <div class="color-option" style="background-color: #e9ecef;" data-color="#e9ecef"></div>
+                                    <div class="color-option" style="background-color: #dee2e6;" data-color="#dee2e6"></div>
+                                    <div class="color-option" style="background-color: #ced4da;" data-color="#ced4da"></div>
+                                </div>
+                                <input type="hidden" id="background_color" name="background_color" value="{{ settings.background_color or '#ffffff' }}">
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="chat_image">صورة المحادثة</label>
+                                <input type="file" class="form-control" id="chat_image" name="chat_image" accept="image/*">
+                                {% if settings.image_url %}
+                                <div class="preview-box mt-2" style="background-color: {{ settings.background_color or '#ffffff' }}">
+                                    <img src="{{ url_for('static', filename=settings.image_url) }}" alt="صورة المحادثة" class="chat-image-preview">
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>حفظ الإعدادات
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Chat Participants -->
+                <div class="col-lg-6">
+                    <div class="content-section">
+                        <h6 class="text-primary mb-4">إدارة المشاركين</h6>
+                        <div class="student-list">
+                            {% for enrollment in enrollments %}
+                                {% set participant = chat_participants|selectattr('enrollment_id', 'equalto', enrollment.id)|first %}
+                                <div class="student-item">
+                                    <div class="student-info">
+                                        <h6 class="mb-0">{{ enrollment.user.name }}</h6>
+                                        <small class="text-muted">{{ enrollment.user.phone }}</small>
+                                    </div>
+                                    <div>
+                                        <form method="POST" action="{{ url_for((user_type + '.manage_chat_participants')|string, classroom_id=classroom.id) }}" style="display: inline;">
+                                            <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
+                                            {% if participant and participant.is_enabled %}
+                                                <input type="hidden" name="action" value="remove">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-user-slash me-1"></i>منع
+                                                </button>
+                                            {% else %}
+                                                <input type="hidden" name="action" value="add">
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-user-plus me-1"></i>إضافة
+                                                </button>
+                                            {% endif %}
+                                        </form>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-users fa-3x text-gray-300 mb-2"></i>
+                                    <p class="mb-0">لا يوجد طلاب في هذا الفصل بعد</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
         });
-    });
-});
-</script>
-{% endblock %}
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+
+        // تفعيل اختيار الألوان
+        document.addEventListener('DOMContentLoaded', function() {
+            const colorOptions = document.querySelectorAll('.color-option');
+            const backgroundColorInput = document.getElementById('background_color');
+            
+            // تحديد اللون المختار مسبقاً
+            colorOptions.forEach(option => {
+                if (option.dataset.color === backgroundColorInput.value) {
+                    option.classList.add('selected');
+                }
+                
+                option.addEventListener('click', function() {
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    backgroundColorInput.value = this.dataset.color;
+                });
+            });
+        });
+
+        // معاينة الصورة
+        document.getElementById('chat_image').addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewBox = document.querySelector('.preview-box') || document.createElement('div');
+                    previewBox.className = 'preview-box mt-2';
+                    previewBox.style.backgroundColor = document.getElementById('background_color').value;
+                    previewBox.innerHTML = `<img src="${e.target.result}" alt="صورة المحادثة" class="chat-image-preview">`;
+                    
+                    if (!document.querySelector('.preview-box')) {
+                        document.getElementById('chat_image').parentElement.appendChild(previewBox);
+                    }
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    </script>
+</body>
+</html>

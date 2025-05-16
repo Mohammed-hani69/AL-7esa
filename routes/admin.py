@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from flask_login import login_required, current_user
 from functools import wraps
 from app import db
-from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment
+from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -370,12 +370,17 @@ def classrooms():
     
     # Get paginated results
     page = request.args.get('page', 1, type=int)
-    classrooms = query.order_by(Classroom.created_at.desc()).paginate(page=page, per_page=20)
+    pagination = query.order_by(Classroom.created_at.desc()).paginate(page=page, per_page=20)
+    classrooms = pagination.items
     
     # Get all teachers for the filter dropdown
     teachers = User.query.filter_by(role=Role.TEACHER).all()
     
-    return render_template('admin/classrooms.html', classrooms=classrooms, teachers=teachers, currency="ريال")
+    return render_template('admin/classrooms.html', 
+                         classrooms=classrooms,
+                         teachers=teachers, 
+                         currency="ريال",
+                         pagination=pagination)
 
 @admin_bp.route('/classroom/<int:classroom_id>/confirm_delete')
 @login_required
@@ -405,18 +410,70 @@ def delete_classroom():
     flash(f'تم حذف الفصل "{classroom_name}" بنجاح', 'success')
     return redirect(url_for('admin.classrooms'))
 
+@admin_bp.route('/classroom/<int:classroom_id>/toggle_status')
+@login_required
+@admin_required
+def toggle_classroom_status(classroom_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    
+    classroom.is_active = not classroom.is_active
+    db.session.commit()
+    
+    status = "تفعيل" if classroom.is_active else "تعطيل"
+    flash(f'تم {status} الفصل بنجاح', 'success')
+    return redirect(url_for('admin.classrooms'))
+
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def settings():
-    # This would typically load settings from a database table
-    # For now, we'll just show a form placeholder
     if request.method == 'POST':
-        # Save settings to database
-        flash('تم حفظ الإعدادات بنجاح', 'success')
+        # General settings
+        settings_map = {
+            'system_name': ('general', request.form.get('system_name')),
+            'system_description': ('general', request.form.get('system_description')),
+            'default_language': ('general', request.form.get('default_language')),
+            'default_currency': ('general', request.form.get('default_currency')),
+            'trial_days': ('general', request.form.get('trial_days')),
+            'max_file_size': ('general', request.form.get('max_file_size')),
+            
+            # Appearance settings
+            'primary_color': ('appearance', request.form.get('primary_color')),
+            'secondary_color': ('appearance', request.form.get('secondary_color')),
+            'logo_url': ('appearance', request.form.get('logo_url')),
+            
+            # Contact settings
+            'contact_email': ('contact', request.form.get('contact_email')),
+            'contact_phone': ('contact', request.form.get('contact_phone'))
+        }
+        
+        # Save all settings
+        success = True
+        for key, (group, value) in settings_map.items():
+            if not SystemSettings.set_setting(key, value, group):
+                success = False
+                
+        if success:
+            flash('تم حفظ الإعدادات بنجاح', 'success')
+        else:
+            flash('حدث خطأ أثناء حفظ الإعدادات', 'danger')
+            
         return redirect(url_for('admin.settings'))
     
-    # Get current time for template
-    now = datetime.utcnow()
+    # Load current settings
+    settings = {
+        'system_name': SystemSettings.get_setting('system_name', 'الحصة'),
+        'system_description': SystemSettings.get_setting('system_description', 'منصة تعليمية متكاملة لإدارة العملية التعليمية بكفاءة'),
+        'default_language': SystemSettings.get_setting('default_language', 'ar'),
+        'default_currency': SystemSettings.get_setting('default_currency', 'SAR'),
+        'trial_days': SystemSettings.get_setting('trial_days', '14'),
+        'max_file_size': SystemSettings.get_setting('max_file_size', '16'),
+        'primary_color': SystemSettings.get_setting('primary_color', '#4e73df'),
+        'secondary_color': SystemSettings.get_setting('secondary_color', '#1cc88a'),
+        'logo_url': SystemSettings.get_setting('logo_url', '/static/img/logo.png'),
+        'contact_email': SystemSettings.get_setting('contact_email', 'support@alhesa.com'),
+        'contact_phone': SystemSettings.get_setting('contact_phone', '+966 55 555 5555')
+    }
     
-    return render_template('admin/settings.html', now=now)
+    now = datetime.utcnow()
+    return render_template('admin/settings.html', settings=settings, now=now)

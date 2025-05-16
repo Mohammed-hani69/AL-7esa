@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المدفوعات - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher/teacher.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .innovative-sidebar {
+            background: var(--accent-gradient);
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 2rem;
+            height: calc(100vh - 4rem);
+            color: var(--surface-color);
+        }
+
+        .sidebar-brand {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .brand-text {
+            color: var(--surface-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--surface-color);
+            transform: translateX(-10px);
+        }
+
+        .nav-link i {
+            margin-left: 1rem;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin: 0;
+            position: relative;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            right: 0;
+            width: 50px;
+            height: 4px;
+            background: var(--accent-gradient);
+            border-radius: 2px;
+        }
+
+        .stats-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .table {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+        }
+
+        .table th {
+            background: #F7F7FA;
+            font-weight: 600;
+            color: var(--text-primary);
+            border: none;
+        }
+
+        .table td {
+            vertical-align: middle;
+            border-top: 1px solid #F0F0F5;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: linear-gradient(45deg, #00B09B, #96C93D);
+        }
+
+        .badge-danger {
+            background: linear-gradient(45deg, #FF416C, #FF4B2B);
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 250px 1fr;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .innovative-sidebar {
+                position: fixed;
+                right: -300px;
+                z-index: 1000;
+                transition: 0.3s ease;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .innovative-sidebar.show {
+                right: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                right: 1rem;
+                top: 1rem;
+                z-index: 1001;
+                background: var(--surface-color);
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: var(--box-shadow);
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.dashboard') }}" class="nav-link">
+                        <i class="fas fa-th-large"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="/teacher/classrooms" class="nav-link">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>الفصول</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.payments') }}" class="nav-link active">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>المدفوعات</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.subscriptions') }}" class="nav-link">
+                        <i class="fas fa-crown"></i>
+                        <span>الاشتراكات</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">إدارة المدفوعات</h1>
+            </div>
+
+            <!-- بطاقات الإحصائيات -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card border-start border-4 border-primary">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="text-xs font-weight-bold text-primary mb-1">المدفوعات المعلقة</div>
+                                <div class="h5 mb-0 font-weight-bold">{{ pending_payments|length }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-clock fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card border-start border-4 border-success">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="text-xs font-weight-bold text-success mb-1">المدفوعات المكتملة</div>
+                                <div class="h5 mb-0 font-weight-bold">
+                                    {{ completed_payments|selectattr('status', 'equalto', 'success')|list|length }}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card border-start border-4 border-danger">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="text-xs font-weight-bold text-danger mb-1">المدفوعات المرفوضة</div>
+                                <div class="h5 mb-0 font-weight-bold">
+                                    {{ completed_payments|selectattr('status', 'equalto', 'failed')|list|length }}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stats-card border-start border-4 border-info">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="text-xs font-weight-bold text-info mb-1">إجمالي الفصول</div>
+                                <div class="h5 mb-0 font-weight-bold">{{ classrooms|length }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-school fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- المدفوعات المعلقة -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">المدفوعات المعلقة</h6>
+                </div>
+                <div class="card-body">
+                    {% if pending_payments %}
+                        <div class="table-responsive">
+                            <table class="table" id="pendingPaymentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>الفصل</th>
+                                        <th>الطالب</th>
+                                        <th>رقم الجوال</th>
+                                        <th>المبلغ</th>
+                                        <th>تاريخ الدفع</th>
+                                        <th>صورة التحويل</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in pending_payments %}
+                                        <tr>
+                                            <td>{{ payment.classroom.name }}</td>
+                                            <td>{{ payment.user.name }}</td>
+                                            <td>{{ payment.user.phone }}</td>
+                                            <td>{{ payment.amount }} ريال</td>
+                                            <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                <a href="{{ url_for('static', filename=payment.screenshot_path) }}" 
+                                                data-lightbox="payment-screenshots"
+                                                data-title="صورة تحويل الدفع - {{ payment.user.name }}"
+                                                class="btn btn-info btn-sm">
+                                                    <i class="fas fa-image"></i> عرض الصورة
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <form action="{{ url_for('teacher.approve_payment', payment_id=payment.id) }}" method="POST" style="display:inline;">
+                                                        <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('هل أنت متأكد من تفعيل اشتراك الطالب؟')">
+                                                            <i class="fas fa-check"></i> قبول
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ url_for('teacher.reject_payment', payment_id=payment.id) }}" method="POST" style="display:inline;">
+                                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('هل أنت متأكد من رفض عملية الدفع؟')">
+                                                            <i class="fas fa-times"></i> رفض
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-gray-300 mb-3"></i>
+                            <p class="text-muted">لا توجد مدفوعات معلقة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- سجل المدفوعات -->
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">سجل المدفوعات</h6>
+                </div>
+                <div class="card-body">
+                    {% if completed_payments %}
+                        <div class="table-responsive">
+                            <table class="table" id="completedPaymentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>الفصل</th>
+                                        <th>الطالب</th>
+                                        <th>رقم الجوال</th>
+                                        <th>المبلغ</th>
+                                        <th>تاريخ الدفع</th>
+                                        <th>الحالة</th>
+                                        <th>صورة التحويل</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in completed_payments %}
+                                        <tr>
+                                            <td>{{ payment.classroom.name }}</td>
+                                            <td>{{ payment.user.name }}</td>
+                                            <td>{{ payment.user.phone }}</td>
+                                            <td>{{ payment.amount }} ريال</td>
+                                            <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                {% if payment.status == 'success' %}
+                                                    <span class="badge bg-success">مقبول</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">مرفوض</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('static', filename=payment.screenshot_path) }}" 
+                                                data-lightbox="completed-screenshots"
+                                                data-title="صورة تحويل الدفع - {{ payment.user.name }}"
+                                                class="btn btn-info btn-sm">
+                                                    <i class="fas fa-image"></i> عرض الصورة
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-history fa-3x text-gray-300 mb-3"></i>
+                            <p class="text-muted">لا يوجد سجل مدفوعات</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // تهيئة DataTables
+            $('#pendingPaymentsTable, #completedPaymentsTable').DataTable({
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
+                }
+            });
+
+            // تخصيص إعدادات Lightbox
+            lightbox.option({
+                'resizeDuration': 300,
+                'wrapAround': true,
+                'albumLabel': "صورة %1 من %2",
+                'fadeDuration': 300,
+                'positionFromTop': 100,
+                'showImageNumberLabel': false
+            });
+
+            // تفعيل زر القائمة للموبايل
+            $('.mobile-toggle').on('click', function() {
+                $('.innovative-sidebar').toggleClass('show');
+            });
+
+            // إغلاق السايدبار عند النقر خارجه
+            $(document).on('click', function(e) {
+                if ($(window).width() < 992 && 
+                    !$(e.target).closest('.innovative-sidebar').length && 
+                    !$(e.target).closest('.mobile-toggle').length) {
+                    $('.innovative-sidebar').removeClass('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

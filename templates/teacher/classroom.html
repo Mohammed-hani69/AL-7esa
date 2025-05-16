@@ -1,553 +1,1057 @@
-{% extends "layout.html" %}
-
-{% block title %}{{ classroom.name }} - الحصة{% endblock %}
-
-{% block head_extra %}
-<script defer src="{{ url_for('static', filename='js/classroom.js') }}"></script>
-{% endblock %}
-
-{% block content %}
-<div class="container-fluid" id="classroom-data" data-classroom-id="{{ classroom.id }}">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ classroom.name }}</h1>
-        <div>
-            <a href="{{ url_for('teacher.live_classroom', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary me-2">
-                <i class="fas fa-video me-1"></i>بدء البث المباشر
-            </a>
-            <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-sm btn-secondary me-2">
-                <i class="fas fa-arrow-right me-1"></i>العودة للوحة التحكم
-            </a>
-        </div>
-    </div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ classroom.name }} - الحصة</title>
     
-    <!-- Classroom Info Card -->
-    <div class="row mb-4">
-        <div class="col-xl-8">
-            <div class="card shadow" style="border-top: 4px solid {{ classroom.color }};">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h5 class="text-primary">معلومات الفصل</h5>
-                            <div class="mb-2">
-                                <span class="text-muted">المادة:</span>
-                                <span class="ms-2">{{ classroom.subject }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <span class="text-muted">المرحلة:</span>
-                                <span class="ms-2">{{ classroom.grade }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <span class="text-muted">العام الدراسي:</span>
-                                <span class="ms-2">{{ classroom.academic_year }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <span class="text-muted">نوع الفصل:</span>
-                                <span class="badge badge-{{ 'success' if classroom.is_free else 'primary' }} ms-2">
-                                    {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
-                                </span>
-                            </div>
-                            {% if classroom.description %}
-                                <div class="mb-2">
-                                    <span class="text-muted">الوصف:</span>
-                                    <p class="mt-1">{{ classroom.description }}</p>
-                                </div>
-                            {% endif %}
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .innovative-sidebar {
+            background: var(--accent-gradient);
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 2rem;
+            height: calc(100vh - 4rem);
+            color: var(--surface-color);
+        }
+
+        .sidebar-brand {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .brand-text {
+            color: var(--surface-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: var (--surface-color);
+            transform: translateX(-10px);
+        }
+
+        .nav-link i {
+            margin-left: 1rem;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .classroom-info-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .classroom-code {
+            background: var(--background-color);
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .code {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .content-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .content-list {
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+        }
+
+        .content-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--background-color);
+            transition: all 0.3s ease;
+        }
+
+        .content-item:hover {
+            background: var(--background-color);
+        }
+
+        .modal-content {
+            border-radius: var(--border-radius-md);
+        }
+
+        .modal-header {
+            background: var(--accent-gradient);
+            color: white;
+            border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 250px 1fr;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .innovative-sidebar {
+                position: fixed;
+                right: -300px;
+                z-index: 1000;
+                transition: 0.3s ease;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .innovative-sidebar.show {
+                right: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                right: 1rem;
+                top: 1rem;
+                z-index: 1001;
+                background: var(--surface-color);
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: var(--box-shadow);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-primary {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        /* تحسين تصميم البطاقات */
+        .card {
+            border: none;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(108, 99, 255, 0.15);
+        }
+
+        .card-header {
+            background: none;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 1.5rem;
+        }
+
+        /* تحسين الأزرار */
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--background-color);
+            color: var(--text-primary);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-color);
+            transform: translateY(-2px);
+        }
+
+        /* تحسين الجداول */
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table th {
+            background: var(--background-color);
+            color: var(--text-primary);
+            font-weight: 600;
+            padding: 1rem;
+            border: none;
+        }
+
+        .table td {
+            padding: 1rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            vertical-align: middle;
+        }
+
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .table tbody tr:hover {
+            background: var(--background-color);
+        }
+
+        /* تحسين المحتوى */
+        .content-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .accordion-button {
+            padding: 1.25rem;
+            background: var(--surface-color);
+            border: none;
+            box-shadow: none;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background: var(--background-color);
+            color: var(--accent-color);
+        }
+
+        .accordion-item {
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        /* تحسين البطاقات */
+        .classroom-info-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+            border: none;
+        }
+
+        .classroom-code {
+            background: var(--background-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-sm);
+            text-align: center;
+            margin: 1.5rem 0;
+            border: 2px dashed rgba(108, 99, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .code {
+            font-family: monospace;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            letter-spacing: 2px;
+        }
+
+        /* تحسين النموذج */
+        .form-control {
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: var(--border-radius-sm);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var (--text-primary);
+        }
+
+        /* تحسين الشارات */
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        /* تحسين المحادثة */
+        .chat-container {
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            height: 400px;
+            overflow-y: auto;
+            background: var(--surface-color);
+        }
+
+        #chat-message {
+            border-top-right-radius: var(--border-radius-sm);
+            border-bottom-right-radius: var (--border-radius-sm);
+        }
+
+        /* تحسين المودال */
+        .modal-content {
+            border: none;
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+
+        .modal-header {
+            background: var(--accent-gradient);
+            padding: 1.5rem;
+            border-top-left-radius: var(--border-radius-md);
+            border-top-right-radius: var(--border-radius-md);
+        }
+
+        .modal-header .modal-title {
+            color: white;
+            font-weight: 600;
+        }
+
+        .modal-header .btn-close {
+            color: white;
+            box-shadow: none;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* تحسينات إضافية */
+        .date-separator {
+            position: relative;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .date-separator h6 {
+            background: var(--surface-color);
+            padding: 0 1rem;
+            display: inline-block;
+            position: relative;
+            z-index: 1;
+            color: var(--text-secondary);
+        }
+
+        .date-separator:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 1px;
+            background: rgba(0,0,0,0.1);
+            z-index: 0;
+        }
+
+        /* تحسين عرض الملفات */
+        .file-card {
+            background: var(--background-color);
+            border-radius: var(--border-radius-sm);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .file-card:hover {
+            background: var(--surface-color);
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.dashboard') }}" class="nav-link">
+                        <i class="fas fa-th-large"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/teacher/classrooms" class="nav-link active">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>الفصول</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.payments') }}" class="nav-link">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>المدفوعات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.subscriptions') }}" class="nav-link">
+                        <i class="fas fa-crown"></i>
+                        <span>الاشتراكات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">{{ classroom.name }}</h1>
+                <div class="header-actions">
+                    <a href="{{ url_for('teacher.live_classroom', classroom_id=classroom.id) }}" class="btn btn-primary">
+                        <i class="fas fa-video me-1"></i>بدء البث المباشر
+                    </a>
+                    <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right me-1"></i>العودة للوحة التحكم
+                    </a>
+                </div>
+            </div>
+
+            <!-- معلومات الفصل -->
+            <div class="classroom-info-card" style="border-top: 4px solid {{ classroom.color }};">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="text-primary">معلومات الفصل</h5>
+                        <div class="mb-2">
+                            <span class="text-muted">المادة:</span>
+                            <span class="ms-2">{{ classroom.subject }}</span>
                         </div>
-                        <div class="col-md-4 border-start">
-                            <h5 class="text-primary">كود الفصل</h5>
-                            <div class="classroom-code" id="classroom-code">{{ classroom.code }}</div>
-                            <button id="copy-code-btn" class="btn btn-sm btn-primary w-100">
-                                <i class="fas fa-copy me-1"></i>نسخ الكود
+                        <div class="mb-2">
+                            <span class="text-muted">المرحلة:</span>
+                            <span class="ms-2">{{ classroom.grade }}</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="text-muted">العام الدراسي:</span>
+                            <span class="ms-2">{{ classroom.academic_year }}</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="text-muted">نوع الفصل:</span>
+                            <span class="badge badge-{{ 'success' if classroom.is_free else 'primary' }} ms-2">
+                                {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
+                            </span>
+                        </div>
+                        {% if classroom.description %}
+                            <div class="mb-2">
+                                <span class="text-muted">الوصف:</span>
+                                <p class="mt-1">{{ classroom.description }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 border-start">
+                        <h5 class="text-primary">كود الفصل</h5>
+                        <div class="classroom-code" id="classroom-code">{{ classroom.code }}</div>
+                        <button id="copy-code-btn" class="btn btn-primary w-100">
+                            <i class="fas fa-copy me-1"></i>نسخ الكود
+                        </button>
+                        <div class="mt-3">
+                            <small class="text-muted">شارك هذا الكود مع طلابك للانضمام إلى الفصل</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الروابط السريعة -->
+            <div class="content-section">
+                <h6 class="text-primary mb-3">الروابط السريعة</h6>
+                <div class="row g-3">
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="btn btn-success w-100">
+                            <i class="fas fa-tasks me-1"></i>الواجبات
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="btn btn-info w-100">
+                            <i class="fas fa-question-circle me-1"></i>الاختبارات
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-primary w-100">
+                            <i class="fas fa-user-graduate me-1"></i>الطلاب
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        {% if can_use_chat %}
+                            <a href="#chat-section" class="btn btn-warning w-100">
+                                <i class="fas fa-comments me-1"></i>المحادثة
+                            </a>
+                        {% else %}
+                            <button class="btn btn-secondary w-100" disabled>
+                                <i class="fas fa-comments me-1"></i>المحادثة
                             </button>
-                            <div class="mt-3">
-                                <small class="text-muted">شارك هذا الكود مع طلابك للانضمام إلى الفصل</small>
-                            </div>
-                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-xl-4">
-            <div class="card shadow h-100">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">الروابط السريعة</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="btn btn-success btn-block">
-                                <i class="fas fa-tasks me-1"></i>الواجبات
-                            </a>
-                        </div>
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="btn btn-info btn-block">
-                                <i class="fas fa-question-circle me-1"></i>الاختبارات
-                            </a>
-                        </div>
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-primary btn-block">
-                                <i class="fas fa-user-graduate me-1"></i>الطلاب
-                            </a>
-                        </div>
-                        <div class="col-6 mb-2">
-                            {% if can_use_chat %}
-                                <a href="#chat-section" class="btn btn-warning btn-block">
-                                    <i class="fas fa-comments me-1"></i>المحادثة
-                                </a>
-                            {% else %}
-                                <button class="btn btn-secondary btn-block" disabled>
-                                    <i class="fas fa-comments me-1"></i>المحادثة
-                                </button>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Content Section -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">محتوى الفصل</h6>
-            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addContentModal">
-                <i class="fas fa-plus me-1"></i>إضافة محتوى
-            </button>
-        </div>
-        <div class="card-body">
-            {% if contents %}
-                <div class="list-group">
-                    {% for content in contents %}
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">
-                                    {% if content.content_type == 'file' %}
-                                        <i class="fas fa-file me-2 text-primary"></i>
-                                    {% elif content.content_type == 'image' %}
-                                        <i class="fas fa-image me-2 text-success"></i>
-                                    {% elif content.content_type == 'video' %}
-                                        <i class="fas fa-video me-2 text-danger"></i>
-                                    {% elif content.content_type == 'audio' %}
-                                        <i class="fas fa-music me-2 text-warning"></i>
-                                    {% else %}
-                                        <i class="fas fa-align-left me-2 text-info"></i>
-                                    {% endif %}
-                                    {{ content.title }}
-                                </h5>
-                                <div>
-                                    <small class="text-muted">{{ content.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                                    <form method="POST" action="{{ url_for('teacher.delete_content', classroom_id=classroom.id, content_id=content.id) }}" style="display: inline;">
-                                        <button type="submit" class="btn btn-sm btn-danger ms-2" onclick="return confirm('هل أنت متأكد من حذف هذا المحتوى؟');">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                            {% if content.description %}
-                                <p class="mb-1">{{ content.description }}</p>
-                            {% endif %}
-                            
-                            {% if content.content_type == 'text' %}
-                                <div class="mt-2 p-3 bg-light rounded">
-                                    {{ content.content_text|safe }}
-                                </div>
-                            {% elif content.content_type == 'image' %}
-                                <div class="mt-2">
-                                    <img src="{{ content.content_url }}" alt="{{ content.title }}" class="img-fluid rounded" style="max-height: 200px;">
-                                </div>
-                            {% elif content.content_type == 'video' %}
-                                <div class="mt-2">
-                                    <video src="{{ content.content_url }}" controls class="w-100" style="max-height: 300px;"></video>
-                                </div>
-                            {% elif content.content_type == 'audio' %}
-                                <div class="mt-2">
-                                    <audio src="{{ content.content_url }}" controls class="w-100"></audio>
-                                </div>
-                            {% elif content.content_type == 'file' %}
-                                <div class="mt-2">
-                                    <a href="{{ content.content_url }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                                        <i class="fas fa-download me-1"></i>تحميل الملف
-                                    </a>
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-4">
-                    <i class="fas fa-folder-open fa-3x text-gray-300 mb-2"></i>
-                    <p>لا يوجد محتوى في هذا الفصل بعد</p>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContentModal">
+
+            <!-- محتوى الفصل -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">محتوى الفصل</h6>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addContentModal">
                         <i class="fas fa-plus me-1"></i>إضافة محتوى
                     </button>
                 </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Students Section -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">الطلاب المسجلين</h6>
-        </div>
-        <div class="card-body">
-            {% if enrollments %}
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>الاسم</th>
-                                <th>رقم الهاتف</th>
-                                <th>تاريخ الانضمام</th>
-                                <th>الحالة</th>
-                                <th>النقاط</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for enrollment in enrollments %}
-                                <tr>
-                                    <td>{{ enrollment.user.name }}</td>
-                                    <td>{{ enrollment.user.phone }}</td>
-                                    <td>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</td>
-                                    <td>
-                                        {% if enrollment.is_active %}
-                                            <span class="badge badge-success">مفعل</span>
-                                        {% else %}
-                                            <span class="badge badge-danger">معطل</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ enrollment.points }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-primary mt-2">
-                    <i class="fas fa-users me-2"></i>إدارة الطلاب
-                </a>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-user-graduate fa-3x text-gray-300 mb-3"></i>
-                    <h5>لا يوجد طلاب في الفصل بعد</h5>
-                    <p>شارك كود الفصل مع طلابك للانضمام</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Chat Section -->
-    {% if can_use_chat %}
-    <div id="chat-section" class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">محادثة الفصل</h6>
-            <a href="{{ url_for('teacher.chat_settings', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-cog me-1"></i>إعدادات المحادثة
-            </a>
-        </div>
-        <div class="card-body">
-            <div class="chat-container" style="height: 400px;">
-                <!-- Chat messages will be loaded here -->
-            </div>
-            <div class="chat-input mt-3">
-                <div class="input-group">
-                    <input type="text" id="chat-message" class="form-control" placeholder="اكتب رسالتك هنا...">
-                    <button class="btn btn-primary" id="send-message">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-</div>
+                <div class="card-body">
+                    {% if contents %}
+                        <div class="accordion" id="contentAccordion">
+                            {% set current_date = None %}
+                            {% for content in contents|sort(attribute='created_at', reverse=true) %}
+                                {% set content_date = content.created_at.strftime('%Y-%m-%d') %}
+                                {% if content_date != current_date %}
+                                    {% set current_date = content_date %}
+                                    <div class="date-separator mt-3 mb-2">
+                                        <h6 class="text-muted">{{ content.created_at.strftime('%d %B %Y') }}</h6>
+                                    </div>
+                                {% endif %}
+                                <div class="accordion-item mb-2">
+                                    <h2 class="accordion-header" id="heading{{ content.id }}">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                                data-bs-target="#collapse{{ content.id }}" aria-expanded="false" 
+                                                aria-controls="collapse{{ content.id }}">
+                                            <div class="d-flex justify-content-between align-items-center w-100">
+                                                <div class="d-flex align-items-center">
+                                                    {% if content.content_type == 'file' %}
+                                                        <i class="fas fa-file me-2 text-primary"></i>
+                                                    {% elif content.content_type == 'image' %}
+                                                        <i class="fas fa-image me-2 text-success"></i>
+                                                    {% elif content.content_type == 'video' %}
+                                                        <i class="fas fa-video me-2 text-danger"></i>
+                                                    {% elif content.content_type == 'audio' %}
+                                                        <i class="fas fa-music me-2 text-warning"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-align-left me-2 text-info"></i>
+                                                    {% endif %}
+                                                    {{ content.title }}
+                                                </div>
+                                                <small class="text-muted">{{ content.created_at.strftime('%H:%M') }}</small>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ content.id }}" class="accordion-collapse collapse" 
+                                         aria-labelledby="heading{{ content.id }}" data-bs-parent="#contentAccordion">
+                                        <div class="accordion-body">
+                                            {% if content.description %}
+                                                <p class="text-muted mb-3">{{ content.description }}</p>
+                                            {% endif %}
 
-<!-- Add Content Modal -->
-<div class="modal fade" id="addContentModal" tabindex="-1" aria-labelledby="addContentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addContentModalLabel">إضافة محتوى جديد</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="{{ url_for('teacher.add_content', classroom_id=classroom.id) }}" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="form-group mb-3">
-                        <label for="title">عنوان المحتوى</label>
-                        <input type="text" class="form-control" id="title" name="title" required>
-                    </div>
-                    
-                    <div class="form-group mb-3">
-                        <label for="description">وصف المحتوى</label>
-                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                    </div>
-                    
-                    <div class="form-group mb-3">
-                        <label for="content_type">نوع المحتوى</label>
-                        <select class="form-control" id="content_type" name="content_type" required>
-                            <option value="text">نص</option>
-                            <option value="file">ملف</option>
-                            <option value="image">صورة</option>
-                            <option value="video">فيديو</option>
-                            <option value="audio">صوت</option>
-                        </select>
-                    </div>
-                    
-                    <div id="text-content" class="content-input">
-                        <div class="form-group">
-                            <label for="content_text">المحتوى النصي</label>
-                            <textarea class="form-control" id="content_text" name="content_text" rows="5" placeholder="أدخل المحتوى النصي هنا..."></textarea>
-                            <small class="form-text text-muted">يمكنك كتابة نص منسق، شرح، أو تعليمات للطلاب</small>
-                        </div>
-                    </div>
-                    
-                    <div id="image-content" class="content-input d-none">
-                        <div class="form-group">
-                            <label for="content_image">الصورة <span class="text-danger">*</span></label>
-                            <input type="file" class="form-control" id="content_image" name="content_file" accept="image/*" required>
-                            <small class="form-text text-muted">يمكنك رفع الصور بصيغة JPG, PNG, GIF (الحد الأقصى 5 ميجابايت)</small>
-                            <div class="mt-2 image-preview-container">
-                                <img id="image-preview" class="img-fluid d-none" alt="معاينة الصورة">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="video-content" class="content-input d-none">
-                        <div class="form-group">
-                            <label for="content_video">الفيديو <span class="text-danger">*</span></label>
-                            <input type="file" class="form-control" id="content_video" name="content_file" accept="video/*" required>
-                            <small class="form-text text-muted">يمكنك رفع الفيديوهات بصيغة MP4, WebM (الحد الأقصى 50 ميجابايت)</small>
-                            <div class="mt-2">
-                                <video id="video-preview" class="d-none" style="max-width: 100%; max-height: 200px;" controls></video>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="audio-content" class="content-input d-none">
-                        <div class="form-group">
-                            <label for="content_audio">الصوت <span class="text-danger">*</span></label>
-                            <input type="file" class="form-control" id="content_audio" name="content_file" accept="audio/*" required>
-                            <small class="form-text text-muted">يمكنك رفع الملفات الصوتية بصيغة MP3, WAV (الحد الأقصى 20 ميجابايت)</small>
-                            <div class="mt-2">
-                                <audio id="audio-preview" class="d-none w-100" controls></audio>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="file-content" class="content-input d-none">
-                        <div class="form-group">
-                            <label for="content_file">الملف <span class="text-danger">*</span></label>
-                            <input type="file" class="form-control" id="content_file" name="content_file" required>
-                            <small class="form-text text-muted">يمكنك رفع أي نوع من الملفات مثل PDF, DOCX, XLSX (الحد الأقصى 20 ميجابايت)</small>
-                            <div class="mt-2 file-info d-none">
-                                <div class="alert alert-info">
-                                    <span id="file-name"></span> - <span id="file-size"></span>
+                                            {% if content.content_type == 'text' %}
+                                                <div class="content-text bg-light rounded p-4 border-start border-4 border-primary shadow-sm">
+                                                    {{ content.content_text|safe }}
+                                                </div>
+                                            {% elif content.content_type == 'image' %}
+                                                <div class="content-image text-center">
+                                                    <div class="position-relative d-inline-block">
+                                                        <img src="{{ content.content_url }}" alt="{{ content.title }}" class="img-fluid rounded shadow-sm" style="max-height: 400px;">
+                                                        <div class="mt-3">
+                                                            <a href="{{ content.content_url }}" class="btn btn-outline-primary btn-sm me-2" target="_blank">
+                                                                <i class="fas fa-external-link-alt me-1"></i>معاينة بحجم كامل
+                                                            </a>
+                                                            <a href="{{ content.content_url }}" download class="btn btn-primary btn-sm">
+                                                                <i class="fas fa-download me-1"></i>تحميل الصورة
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% elif content.content_type == 'video' %}
+                                                <div class="content-video">
+                                                    <div class="video-container position-relative rounded shadow-sm overflow-hidden" style="background-color: #000;">
+                                                        <video src="{{ content.content_url }}" controls class="w-100" style="max-height: 400px;"></video>
+                                                    </div>
+                                                    <div class="mt-3 text-center">
+                                                        <a href="{{ content.content_url }}" class="btn btn-primary" download>
+                                                            <i class="fas fa-download me-1"></i>تحميل الفيديو
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            {% elif content.content_type == 'audio' %}
+                                                <div class="content-audio bg-light rounded p-4 shadow-sm">
+                                                    <div class="d-flex align-items-center justify-content-center mb-3">
+                                                        <i class="fas fa-music fa-2x text-primary"></i>
+                                                    </div>
+                                                    <audio src="{{ content.content_url }}" controls class="w-100 mb-3"></audio>
+                                                    <div class="text-center">
+                                                        <a href="{{ content.content_url }}" class="btn btn-primary" download>
+                                                            <i class="fas fa-download me-1"></i>تحميل الملف الصوتي
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            {% elif content.content_type == 'file' %}
+                                                <div class="content-file">
+                                                    <div class="file-card bg-light rounded p-4 shadow-sm">
+                                                        <div class="d-flex align-items-center justify-content-between">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="fas fa-file-alt fa-2x text-primary me-3"></i>
+                                                                <div>
+                                                                    <h6 class="mb-1">{{ content.title }}</h6>
+                                                                    <small class="text-muted">انقر على الزر للتحميل</small>
+                                                                </div>
+                                                            </div>
+                                                            <div class="d-flex gap-2">
+                                                                <a href="{{ content.content_url }}" class="btn btn-primary" download>
+                                                                    <i class="fas fa-download me-1"></i>تحميل الملف
+                                                                </a>
+                                                                <button type="button" class="btn btn-danger" onclick="deleteContent({{ content.id }})">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+
+                                            <div class="content-actions mt-3 text-end">
+                                                <form method="POST" action="{{ url_for('teacher.delete_content', classroom_id=classroom.id, content_id=content.id) }}" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذا المحتوى؟');">
+                                                        <i class="fas fa-trash me-1"></i>حذف
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-folder-open fa-3x text-gray-300 mb-2"></i>
+                            <p>لا يوجد محتوى في هذا الفصل بعد</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContentModal">
+                                <i class="fas fa-plus me-1"></i>إضافة محتوى
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- الطلاب -->
+            <div class="content-section">
+                <h6 class="text-primary mb-3">الطلاب المسجلين</h6>
+                {% if enrollments %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>تاريخ الانضمام</th>
+                                    <th>الحالة</th>
+                                    <th>النقاط</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for enrollment in enrollments %}
+                                    <tr>
+                                        <td>{{ enrollment.user.name }}</td>
+                                        <td>{{ enrollment.user.phone }}</td>
+                                        <td>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</td>
+                                        <td>
+                                            {% if enrollment.is_active %}
+                                                <span class="badge bg-success">مفعل</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">معطل</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ enrollment.points }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-users me-1"></i>إدارة الطلاب
+                    </a>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-graduate fa-3x text-gray-300 mb-2"></i>
+                        <p>لا يوجد طلاب في الفصل بعد</p>
+                        <small class="text-muted">شارك كود الفصل مع طلابك للانضمام</small>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- المحادثة -->
+            {% if can_use_chat %}
+            <div id="chat-section" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-primary mb-0">محادثة الفصل</h6>
+                    <a href="{{ url_for('teacher.chat_settings', classroom_id=classroom.id) }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-cog me-1"></i>إعدادات المحادثة
+                    </a>
+                </div>
+                <div class="chat-container bg-light rounded p-3" style="height: 400px;">
+                    <!-- Chat messages will be loaded here -->
+                </div>
+                <div class="mt-3">
+                    <div class="input-group">
+                        <input type="text" id="chat-message" class="form-control" placeholder="اكتب رسالتك هنا...">
+                        <button class="btn btn-primary" id="send-message">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- Modal إضافة محتوى -->
+    <div class="modal fade" id="addContentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة محتوى جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ url_for('teacher.add_content', classroom_id=classroom.id) }}" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">عنوان المحتوى</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">وصف المحتوى</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">نوع المحتوى</label>
+                            <select class="form-control" id="content_type" name="content_type" required>
+                                <option value="text">نص</option>
+                                <option value="file">ملف</option>
+                                <option value="image">صورة</option>
+                                <option value="video">فيديو</option>
+                                <option value="audio">صوت</option>
+                            </select>
+                        </div>
+                        
+                        <div id="text-content" class="content-input">
+                            <div class="mb-3">
+                                <label class="form-label">المحتوى النصي</label>
+                                <textarea class="form-control" name="content_text" rows="5"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div id="file-content" class="content-input d-none">
+                            <div class="mb-3">
+                                <label class="form-label">الملف</label>
+                                <input type="file" class="form-control" name="content_file" id="content_file">
+                                <small class="form-text text-muted file-types-info"></small>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-primary">إضافة المحتوى</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">إضافة المحتوى</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize content type switcher
-        const contentType = document.getElementById('content_type');
-        const textContent = document.getElementById('text-content');
-        const imageContent = document.getElementById('image-content');
-        const videoContent = document.getElementById('video-content');
-        const audioContent = document.getElementById('audio-content');
-        const fileContent = document.getElementById('file-content');
-        
-        // Hide all content types initially except text
-        const hideAllContentTypes = () => {
-            const contentInputs = document.querySelectorAll('.content-input');
-            contentInputs.forEach(input => input.classList.add('d-none'));
-        };
-        
-        contentType.addEventListener('change', function() {
-            hideAllContentTypes();
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+
+        // نسخ كود الفصل
+        $('#copy-code-btn').on('click', function() {
+            const code = $('#classroom-code').text().trim();
+            navigator.clipboard.writeText(code).then(() => {
+                $(this).html('<i class="fas fa-check me-1"></i>تم النسخ');
+                setTimeout(() => {
+                    $(this).html('<i class="fas fa-copy me-1"></i>نسخ الكود');
+                }, 2000);
+            });
+        });
+
+        // تبديل أنواع المحتوى في النموذج
+        $('#content_type').on('change', function() {
+            $('.content-input').addClass('d-none');
+            const selectedType = $(this).val();
+            const fileInput = $('#content_file');
+            const fileTypesInfo = $('.file-types-info');
             
-            switch(this.value) {
-                case 'text':
-                    textContent.classList.remove('d-none');
-                    break;
-                case 'image':
-                    imageContent.classList.remove('d-none');
-                    break;
-                case 'video':
-                    videoContent.classList.remove('d-none');
-                    break;
-                case 'audio':
-                    audioContent.classList.remove('d-none');
-                    break;
-                case 'file':
-                    fileContent.classList.remove('d-none');
-                    break;
-                default:
-                    textContent.classList.remove('d-none');
-            }
-        });
-        
-        // File Previews
-        // Image Preview
-        const imageInput = document.getElementById('content_image');
-        const imagePreview = document.getElementById('image-preview');
-        
-        imageInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    imagePreview.src = e.target.result;
-                    imagePreview.classList.remove('d-none');
-                }
-                
-                reader.readAsDataURL(this.files[0]);
-            } else {
-                imagePreview.classList.add('d-none');
-            }
-        });
-        
-        // Video Preview
-        const videoInput = document.getElementById('content_video');
-        const videoPreview = document.getElementById('video-preview');
-        
-        videoInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    videoPreview.src = e.target.result;
-                    videoPreview.classList.remove('d-none');
-                }
-                
-                reader.readAsDataURL(this.files[0]);
-            } else {
-                videoPreview.classList.add('d-none');
-            }
-        });
-        
-        // Audio Preview
-        const audioInput = document.getElementById('content_audio');
-        const audioPreview = document.getElementById('audio-preview');
-        
-        audioInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    audioPreview.src = e.target.result;
-                    audioPreview.classList.remove('d-none');
-                }
-                
-                reader.readAsDataURL(this.files[0]);
-            } else {
-                audioPreview.classList.add('d-none');
-            }
-        });
-        
-        // File Info
-        const fileInput = document.getElementById('content_file');
-        const fileInfo = document.querySelector('.file-info');
-        const fileName = document.getElementById('file-name');
-        const fileSize = document.getElementById('file-size');
-        
-        fileInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const file = this.files[0];
-                fileName.textContent = file.name;
-                
-                // Format file size
-                let size = file.size;
-                const units = ['بايت', 'كيلوبايت', 'ميجابايت', 'جيجابايت'];
-                let unitIndex = 0;
-                
-                while (size > 1024 && unitIndex < units.length - 1) {
-                    size /= 1024;
-                    unitIndex++;
-                }
-                
-                fileSize.textContent = `${size.toFixed(2)} ${units[unitIndex]}`;
-                fileInfo.classList.remove('d-none');
-            } else {
-                fileInfo.classList.add('d-none');
-            }
-        });
-        
-        // Initialize classroom code copy button
-        const copyBtn = document.getElementById('copy-code-btn');
-        const classroomCode = document.getElementById('classroom-code');
-        
-        copyBtn.addEventListener('click', function() {
-            navigator.clipboard.writeText(classroomCode.textContent.trim())
-                .then(() => {
-                    copyBtn.innerHTML = '<i class="fas fa-check me-1"></i>تم النسخ';
-                    setTimeout(() => {
-                        copyBtn.innerHTML = '<i class="fas fa-copy me-1"></i>نسخ الكود';
-                    }, 2000);
-                });
-        });
-        
-        // Form validation before submit
-        const contentForm = document.querySelector('form[action*="add_content"]');
-        
-        contentForm.addEventListener('submit', function(e) {
-            const selectedType = contentType.value;
-            let isValid = true;
-            
-            // Validate based on content type
             if (selectedType === 'text') {
-                const contentText = document.getElementById('content_text').value;
-                if (!contentText.trim()) {
-                    alert('يرجى إدخال المحتوى النصي');
-                    isValid = false;
-                }
+                $('#text-content').removeClass('d-none');
             } else {
-                // For file-based content
-                let fileInput;
+                $('#file-content').removeClass('d-none');
                 
-                switch(selectedType) {
+                // تحديد أنواع الملفات المسموح بها حسب النوع
+                switch (selectedType) {
                     case 'image':
-                        fileInput = document.getElementById('content_image');
+                        fileInput.attr('accept', 'image/*');
+                        fileTypesInfo.text('الملفات المسموحة: JPG, JPEG, PNG, GIF, WEBP');
                         break;
                     case 'video':
-                        fileInput = document.getElementById('content_video');
+                        fileInput.attr('accept', 'video/*');
+                        fileTypesInfo.text('الملفات المسموحة: MP4, WEBM, MOV');
                         break;
                     case 'audio':
-                        fileInput = document.getElementById('content_audio');
+                        fileInput.attr('accept', 'audio/*');
+                        fileTypesInfo.text('الملفات المسموحة: MP3, WAV, OGG');
                         break;
                     case 'file':
-                        fileInput = document.getElementById('content_file');
+                        fileInput.attr('accept', '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar');
+                        fileTypesInfo.text('الملفات المسموحة: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, RAR');
                         break;
-                }
-                
-                if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-                    alert('يرجى اختيار ملف للرفع. نوع المحتوى المحدد يتطلب ملفاً.');
-                    isValid = false;
-                }
-            }
-            
-            if (!isValid) {
-                e.preventDefault();
-            } else {
-                // إظهار رسالة حالة الرفع
-                if (selectedType !== 'text') {
-                    const submitBtn = contentForm.querySelector('button[type="submit"]');
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري رفع الملف...';
-                    submitBtn.disabled = true;
                 }
             }
         });
-    });
-</script>
-{% endblock %}
+
+        // التحقق من نوع الملف
+        $('#content_file').on('change', function() {
+            const file = this.files[0];
+            const fileType = file.type;
+            const contentType = $('#content_type').val();
+            
+            let isValid = true;
+            const validTypes = {
+                'image': ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+                'video': ['video/mp4', 'video/webm', 'video/quicktime'],
+                'audio': ['audio/mpeg', 'audio/wav', 'audio/ogg'],
+                'file': ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                        'text/plain', 'application/zip', 'application/x-rar-compressed']
+            };
+
+            if (contentType !== 'text' && validTypes[contentType]) {
+                isValid = validTypes[contentType].includes(fileType);
+            }
+
+            if (!isValid) {
+                alert('نوع الملف غير مسموح به');
+                this.value = '';
+            }
+        });
+
+        // التحقق من النموذج قبل الإرسال
+        $('form[action*="add_content"]').on('submit', function(e) {
+            const contentType = $('#content_type').val();
+            const titleInput = $('input[name="title"]');
+            
+            if (!titleInput.val().trim()) {
+                e.preventDefault();
+                alert('يرجى إدخال عنوان المحتوى');
+                return;
+            }
+
+            if (contentType === 'text') {
+                const contentText = $('textarea[name="content_text"]');
+                if (!contentText.val().trim()) {
+                    e.preventDefault();
+                    alert('يرجى إدخال المحتوى النصي');
+                    return;
+                }
+            } else {
+                const fileInput = $('input[name="content_file"]');
+                if (!fileInput[0].files.length) {
+                    e.preventDefault();
+                    alert('يرجى اختيار ملف للرفع');
+                    return;
+                }
+            }
+            
+            const submitBtn = $(this).find('button[type="submit"]');
+            submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري الرفع...');
+            submitBtn.prop('disabled', true);
+        });
+    </script>
+</body>
+</html>

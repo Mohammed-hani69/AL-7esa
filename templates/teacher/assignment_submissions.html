@@ -1,153 +1,465 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسليمات الواجب - {{ classroom.name }} - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
 
-{% block title %}تسليمات الواجب - {{ classroom.name }} - الحصة{% endblock %}
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
 
-{% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">تقييم الواجب - {{ assignment.title }}</h1>
-        <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-right me-1"></i>العودة للواجبات
-        </a>
-    </div>
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            padding: 2rem;
+        }
 
-    <!-- Assignment Details -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">تفاصيل الواجب</h6>
-        </div>
-        <div class="card-body">
-            <div class="row mb-4">
-                <div class="col-md-8">
-                    <div class="mb-3">
-                        <h5>الوصف</h5>
-                        <p>{{ assignment.description|default('لا يوجد وصف') }}</p>
-                    </div>
+        .innovative-sidebar {
+            background: var(--accent-gradient);
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 2rem;
+            height: calc(100vh - 4rem);
+            color: var(--surface-color);
+        }
+
+        .sidebar-brand {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .brand-text {
+            color: var(--surface-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--surface-color);
+            transform: translateX(-10px);
+        }
+
+        .nav-link i {
+            margin-left: 1rem;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .submissions-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--background-color);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .submission-item {
+            background: var(--surface-color);
+            border: 1px solid var(--background-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .submission-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .submission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .submission-content {
+            background: var(--background-color);
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+        }
+
+        .grade-form {
+            background: var(--background-color);
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            margin-top: 1rem;
+        }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            border: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        @media (max-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .innovative-sidebar {
+                position: fixed;
+                right: -300px;
+                z-index: 1000;
+                transition: 0.3s ease;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .innovative-sidebar.show {
+                right: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                right: 1rem;
+                top: 1rem;
+                z-index: 1001;
+                background: var(--surface-color);
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: var(--box-shadow);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.dashboard') }}" class="nav-link">
+                        <i class="fas fa-th-large"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/teacher/classrooms" class="nav-link active">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>الفصول</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">تقييم الواجب - {{ assignment.title }}</h1>
+                <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-1"></i>العودة للواجبات
+                </a>
+            </div>
+
+            <!-- تفاصيل الواجب -->
+            <div class="submissions-card">
+                <div class="card-header">
+                    <h3 class="card-title">تفاصيل الواجب</h3>
                 </div>
-                <div class="col-md-4">
-                    <div class="assignment-info">
-                        <p><i class="fas fa-calendar me-2"></i>تاريخ التسليم: 
-                            {% if assignment.due_date %}
-                                <span class="text-danger">{{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
-                            {% else %}
-                                <span class="text-muted">غير محدد</span>
-                            {% endif %}
-                        </p>
-                        <p><i class="fas fa-star me-2"></i>النقاط: {{ assignment.points }}</p>
-                        <p><i class="fas fa-users me-2"></i>عدد التسليمات: 
-                            <span class="badge badge-info">{{ submissions|length }} / {{ classroom.enrollments|length }}</span>
-                        </p>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <h5>الوصف</h5>
+                                <p>{{ assignment.description|default('لا يوجد وصف') }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="assignment-info">
+                                <p><i class="fas fa-calendar me-2"></i>تاريخ التسليم: 
+                                    {% if assignment.due_date %}
+                                        <span class="text-danger">{{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </p>
+                                <p><i class="fas fa-star me-2"></i>النقاط: {{ assignment.points }}</p>
+                                <p><i class="fas fa-users me-2"></i>عدد التسليمات: 
+                                    <span class="badge badge-info">{{ submissions|length }} / {{ classroom.enrollments|length }}</span>
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Submissions List -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">التسليمات</h6>
-        </div>
-        <div class="card-body">
-            {% if submissions %}
-                <div class="list-group">
-                    {% for submission in submissions %}
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">{{ submission.enrollment.user.name }}</h5>
-                                <small class="text-muted">{{ submission.submission_date.strftime('%Y-%m-%d %H:%M') }}</small>
-                            </div>
-                            <div class="submission-content bg-light p-3 rounded mb-3">
-                                {{ submission.content }}
-                            </div>
-
-                            {% if submission.grade is not none %}
-                                <div class="alert alert-success">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>
-                                            <i class="fas fa-check-circle me-2"></i>تم التقييم
-                                            <span class="badge badge-success ms-2">{{ submission.grade }}/{{ assignment.points }}</span>
-                                        </span>
-                                        <button class="btn btn-sm btn-primary" onclick="editGrade({{ submission.id }})">
-                                            <i class="fas fa-edit me-1"></i>تعديل التقييم
-                                        </button>
+            <!-- قائمة التسليمات -->
+            <div class="submissions-card">
+                <div class="card-header">
+                    <h3 class="card-title">التسليمات</h3>
+                </div>
+                <div class="card-body">
+                    {% if submissions %}
+                        <div class="list-group">
+                            {% for submission in submissions %}
+                                <div class="submission-item">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="mb-0">{{ submission.enrollment.user.name }}</h5>
+                                        <small class="text-muted">{{ submission.submission_date.strftime('%Y-%m-%d %H:%M') }}</small>
                                     </div>
-                                    {% if submission.feedback %}
-                                        <div class="mt-2">
-                                            <h6>الملاحظات:</h6>
-                                            <p class="mb-0">{{ submission.feedback }}</p>
+                                    <div class="submission-content">
+                                        {{ submission.content }}
+                                    </div>
+
+                                    {% if submission.grade is not none %}
+                                        <div class="alert alert-success">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <i class="fas fa-check-circle me-2"></i>تم التقييم
+                                                    <span class="badge badge-success ms-2">{{ submission.grade }}/{{ assignment.points }}</span>
+                                                </span>
+                                                <button class="btn btn-sm btn-primary" onclick="editGrade({{ submission.id }})">
+                                                    <i class="fas fa-edit me-1"></i>تعديل التقييم
+                                                </button>
+                                            </div>
+                                            {% if submission.feedback %}
+                                                <div class="mt-2">
+                                                    <h6>الملاحظات:</h6>
+                                                    <p class="mb-0">{{ submission.feedback }}</p>
+                                                </div>
+                                            {% endif %}
                                         </div>
                                     {% endif %}
-                                </div>
-                            {% endif %}
 
-                            <form method="POST" action="{{ url_for('teacher.grade_submission', classroom_id=classroom.id, assignment_id=assignment.id, submission_id=submission.id) }}" class="grade-form {{ 'd-none' if submission.grade is not none }}">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label for="grade-{{ submission.id }}">الدرجة</label>
-                                            <input type="number" class="form-control" id="grade-{{ submission.id }}" name="grade" min="0" max="{{ assignment.points }}" value="{{ submission.grade or '' }}" required>
-                                            <small class="form-text text-muted">من {{ assignment.points }} نقطة</small>
+                                    <form method="POST" action="{{ url_for('teacher.grade_submission', classroom_id=classroom.id, assignment_id=assignment.id, submission_id=submission.id) }}" class="grade-form {{ 'd-none' if submission.grade is not none }}">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label for="grade-{{ submission.id }}">الدرجة</label>
+                                                    <input type="number" class="form-control" id="grade-{{ submission.id }}" name="grade" min="0" max="{{ assignment.points }}" value="{{ submission.grade or '' }}" required>
+                                                    <small class="form-text text-muted">من {{ assignment.points }} نقطة</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <div class="form-group">
+                                                    <label for="feedback-{{ submission.id }}">ملاحظات (اختياري)</label>
+                                                    <textarea class="form-control" id="feedback-{{ submission.id }}" name="feedback" rows="2">{{ submission.feedback or '' }}</textarea>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-9">
-                                        <div class="form-group">
-                                            <label for="feedback-{{ submission.id }}">ملاحظات (اختياري)</label>
-                                            <textarea class="form-control" id="feedback-{{ submission.id }}" name="feedback" rows="2">{{ submission.feedback or '' }}</textarea>
-                                        </div>
-                                    </div>
+                                        <button type="submit" class="btn btn-primary mt-2">
+                                            <i class="fas fa-save me-1"></i>حفظ التقييم
+                                        </button>
+                                    </form>
                                 </div>
-                                <button type="submit" class="btn btn-primary mt-2">
-                                    <i class="fas fa-save me-1"></i>حفظ التقييم
-                                </button>
-                            </form>
+                            {% endfor %}
                         </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-inbox fa-3x text-gray-300 mb-3"></i>
-                    <h5>لا توجد تسليمات بعد</h5>
-                </div>
-            {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-gray-300 mb-3"></i>
+                            <h5>لا توجد تسليمات بعد</h5>
+                        </div>
+                    {% endif %}
 
-            {% if missing_submissions %}
-                <div class="mt-4">
-                    <h5>الطلاب الذين لم يسلموا بعد:</h5>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead>
-                                <tr>
-                                    <th>اسم الطالب</th>
-                                    <th>رقم الهاتف</th>
-                                    <th>تاريخ الانضمام للفصل</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for enrollment in missing_submissions %}
-                                    <tr>
-                                        <td>{{ enrollment.user.name }}</td>
-                                        <td>{{ enrollment.user.phone }}</td>
-                                        <td>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                    {% if missing_submissions %}
+                        <div class="mt-4">
+                            <h5>الطلاب الذين لم يسلموا بعد:</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>اسم الطالب</th>
+                                            <th>رقم الهاتف</th>
+                                            <th>تاريخ الانضمام للفصل</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for enrollment in missing_submissions %}
+                                            <tr>
+                                                <td>{{ enrollment.user.name }}</td>
+                                                <td>{{ enrollment.user.phone }}</td>
+                                                <td>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
-            {% endif %}
-        </div>
+            </div>
+        </main>
     </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    function editGrade(submissionId) {
-        const gradeForm = document.querySelector(`#grade-${submissionId}`).closest('form');
-        const alertDiv = gradeForm.previousElementSibling;
-        gradeForm.classList.remove('d-none');
-        alertDiv.classList.add('d-none');
-    }
-</script>
-{% endblock %}
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+
+        // دالة تعديل التقييم
+        function editGrade(submissionId) {
+            const gradeForm = document.querySelector(`#grade-${submissionId}`).closest('form');
+            const alertDiv = gradeForm.previousElementSibling;
+            gradeForm.classList.remove('d-none');
+            alertDiv.classList.add('d-none');
+        }
+    </script>
+</body>
+</html>

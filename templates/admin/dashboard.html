@@ -1,190 +1,409 @@
-{% extends "layout.html" %}
-
-{% block title %}لوحة تحكم الإدارة - الحصة{% endblock %}
-
-{% block styles %}
-<style>
-/* Dashboard Cards */
-.card.border-left-primary {
-    border-left: 0.25rem solid var(--primary-color) !important;
-}
-
-.card.border-left-success {
-    border-left: 0.25rem solid var(--success-color) !important;
-}
-
-.card.border-left-info {
-    border-left: 0.25rem solid var(--info-color) !important;
-}
-
-.card.border-left-warning {
-    border-left: 0.25rem solid var(--warning-color) !important;
-}
-
-/* Dashboard Text Styles */
-.text-xs {
-    font-size: 0.7rem;
-}
-
-.text-gray-300 {
-    color: #dddfeb !important;
-}
-
-.text-gray-800 {
-    color: #5a5c69 !important;
-}
-
-/* Chart Styles */
-.chart-area {
-    position: relative;
-    height: 320px;
-    width: 100%;
-}
-
-.chart-area canvas {
-    max-width: 100%;
-}
-
-/* Table Styles */
-.table-responsive {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.table th {
-    background-color: var(--light-color);
-    font-weight: 600;
-}
-
-/* Report Button */
-.btn-primary.shadow-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
-
-.btn-primary.shadow-sm i {
-    margin-left: 0.5rem;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    .chart-area {
-        height: 250px;
-    }
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الإدارة - الحصة</title>
     
-    .card-body {
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+    /* متغيرات التصميم المخصص */
+    :root {
+        --accent-color: #6C63FF;
+        --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+        --surface-color: #FFFFFF;
+        --background-color: #F4F7FE;
+        --text-primary: #2D3748;
+        --text-secondary: #718096;
+        --border-radius-lg: 24px;
+        --border-radius-md: 16px;
+        --border-radius-sm: 8px;
+        --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+    }
+
+    /* تنسيق عام */
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background: var(--background-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    /* تخطيط الصفحة الفريد */
+    .app-container {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    /* تصميم السايدبار المبتكر */
+    .innovative-sidebar {
+        background: var(--accent-gradient);
+        padding: 2rem;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        position: sticky;
+        top: 2rem;
+        height: calc(100vh - 4rem);
+        color: var(--surface-color);
+    }
+
+    .sidebar-brand {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .brand-logo {
+        width: 60px;
+        height: 60px;
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .brand-text {
+        color: var(--surface-color);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .nav-item {
+        margin-bottom: 1rem;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        color: rgba(255,255,255,0.8);
         padding: 1rem;
+        border-radius: var(--border-radius-md);
+        transition: all 0.3s ease;
+        text-decoration: none;
     }
-    
-    .text-xs {
-        font-size: 0.65rem;
+
+    .nav-link:hover, .nav-link.active {
+        background: rgba(255,255,255,0.1);
+        color: var(--surface-color);
+        transform: translateX(-10px);
     }
-}
-</style>
-{% endblock %}
 
-{% block content %}
-<div class="container-fluid">
+    .nav-link i {
+        margin-left: 1rem;
+        font-size: 1.2rem;
+        width: 24px;
+        text-align: center;
+    }
 
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">لوحة تحكم الإدارة</h1>
-        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-            <i class="fas fa-download fa-sm text-white-50"></i> تنزيل التقرير
-        </a>
-    </div>
+    /* تصميم المحتوى الرئيسي */
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
 
-    <!-- Content Row -->
-    <div class="row">
+    /* تصميم الهيدر */
+    .page-header {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-lg);
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--box-shadow);
+    }
 
-        <!-- Total Users Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                إجمالي المستخدمين</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ user_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
+    .page-title {
+        font-size: 1.8rem;
+        color: var(--text-primary);
+        margin: 0;
+        position: relative;
+    }
+
+    .page-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        right: 0;
+        width: 50px;
+        height: 4px;
+        background: var(--accent-gradient);
+        border-radius: 2px;
+    }
+
+    /* تصميم البطاقات */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--border-radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        background: var(--accent-gradient);
+        color: var(--surface-color);
+    }
+
+    .stat-title {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    /* تصميم البطاقات الرئيسية */
+    .data-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        margin-bottom: 2rem;
+    }
+
+    .card-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 2px solid var(--background-color);
+    }
+
+    .card-title {
+        color: var(--text-primary);
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .card-body {
+        padding: 1.5rem 2rem;
+    }
+
+    /* تصميم الجدول */
+    .custom-table {
+        width: 100%;
+        margin: 0;
+    }
+
+    .custom-table th {
+        background: var(--background-color);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 1rem;
+        border: none;
+    }
+
+    .custom-table td {
+        padding: 1rem;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--background-color);
+    }
+
+    .custom-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* تصميم الشارات */
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .badge-success {
+        background: linear-gradient(120deg, #00B5B5, #00D68F);
+        color: white;
+    }
+
+    .badge-warning {
+        background: linear-gradient(120deg, #FFB75E, #ED8F03);
+        color: white;
+    }
+
+    .badge-danger {
+        background: linear-gradient(120deg, #FF6B6B, #FF3366);
+        color: white;
+    }
+
+    /* تحسينات التجاوب */
+    @media (max-width: 1200px) {
+        .app-container {
+            grid-template-columns: 250px 1fr;
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .app-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .innovative-sidebar {
+            position: fixed;
+            right: -300px;
+            z-index: 1000;
+            transition: 0.3s ease;
+            height: 100vh;
+            border-radius: 0;
+        }
+        
+        .innovative-sidebar.show {
+            right: 0;
+        }
+        
+        .mobile-toggle {
+            display: block;
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            z-index: 1001;
+            background: var(--surface-color);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: var(--box-shadow);
+        }
+    }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار المبتكر -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">منصة الحصة</h1>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.dashboard') }}" class="nav-link active">
+                        <i class="fas fa-chart-line"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.users') }}" class="nav-link ">
+                        <i class="fas fa-users"></i>
+                        <span>المستخدمين</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.classrooms') }}" class="nav-link ">
+                        <i class="fas fa-school"></i>
+                        <span>الفصول الدراسية</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.subscriptions') }}" class="nav-link">
+                        <i class="fas fa-money-check"></i>
+                        <span>الاشتراكات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.notifications') }}" class="nav-link">
+                        <i class="fas fa-bell"></i>
+                        <span>الإشعارات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.settings') }}" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>الإعدادات</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- هيدر الصفحة -->
+            <header class="page-header">
+                <h1 class="page-title">لوحة تحكم الإدارة</h1>
+            </header>
+
+            <!-- البطاقات الإحصائية -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users fa-lg"></i>
                     </div>
+                    <div class="stat-title">إجمالي المستخدمين</div>
+                    <div class="stat-value">{{ user_count }}</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-school fa-lg"></i>
+                    </div>
+                    <div class="stat-title">الفصول النشطة</div>
+                    <div class="stat-value">{{ classroom_count }}</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-credit-card fa-lg"></i>
+                    </div>
+                    <div class="stat-title">الاشتراكات النشطة</div>
+                    <div class="stat-value">{{ subscription_count }}</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-dollar-sign fa-lg"></i>
+                    </div>
+                    <div class="stat-title">الإيرادات (الشهرية)</div>
+                    <div class="stat-value">{{ revenue }} جنيه</div>
                 </div>
             </div>
-        </div>
 
-        <!-- Active Classrooms Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                الفصول النشطة</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ classroom_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-school fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+            <!-- المستخدمون الجدد -->
+            <div class="data-card">
+                <div class="card-header">
+                    <h2 class="card-title">المستخدمون الجدد</h2>
                 </div>
-            </div>
-        </div>
-
-        <!-- Active Subscriptions Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                الاشتراكات النشطة
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ subscription_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-credit-card fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Revenue Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                الإيرادات (الشهرية)</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ revenue }} ريال</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Content Row -->
-    <div class="row">
-
-        <!-- Recent Users -->
-        <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">المستخدمون الجدد</h6>
-                </div>
-                <!-- Card Body -->
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered" width="100%" cellspacing="0">
+                        <table class="custom-table">
                             <thead>
                                 <tr>
                                     <th>الاسم</th>
@@ -207,19 +426,15 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Recent Payments -->
-        <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">المدفوعات الأخيرة</h6>
+            <!-- المدفوعات الأخيرة -->
+            <div class="data-card">
+                <div class="card-header">
+                    <h2 class="card-title">المدفوعات الأخيرة</h2>
                 </div>
-                <!-- Card Body -->
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered" width="100%" cellspacing="0">
+                        <table class="custom-table">
                             <thead>
                                 <tr>
                                     <th>المستخدم</th>
@@ -242,15 +457,15 @@
                                         آخر
                                         {% endif %}
                                     </td>
-                                    <td>{{ payment.amount }} {{ payment.currency }}</td>
+                                    <td>{{ payment.amount }} جنيه</td>
                                     <td>{{ payment.created_at.strftime('%Y-%m-%d') }}</td>
                                     <td>
                                         {% if payment.status == 'success' %}
-                                        <span class="badge badge-success">ناجح</span>
+                                        <span class="status-badge badge-success">ناجح</span>
                                         {% elif payment.status == 'pending' %}
-                                        <span class="badge badge-warning">قيد الانتظار</span>
+                                        <span class="status-badge badge-warning">قيد الانتظار</span>
                                         {% else %}
-                                        <span class="badge badge-danger">فشل</span>
+                                        <span class="status-badge badge-danger">فشل</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -260,118 +475,127 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Content Row -->
-    <div class="row">
-        <!-- Enrollments Chart -->
-        <div class="col-xl-12 col-lg-12">
-            <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">التسجيلات في الفصول خلال 30 يوم الماضية</h6>
+            <!-- مخطط التسجيلات -->
+            <div class="data-card">
+                <div class="card-header">
+                    <h2 class="card-title">التسجيلات في الفصول خلال 30 يوم الماضية</h2>
                 </div>
-                <!-- Card Body -->
                 <div class="card-body">
                     <div class="chart-area">
                         <canvas id="enrollmentsChart"></canvas>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Sample data - Replace with actual data
-        var enrollmentDates = {{ enrollment_dates|tojson }};
-        var enrollmentCounts = {{ enrollment_counts|tojson }};
-        
-        // Area Chart - Enrollments
-        var ctx = document.getElementById("enrollmentsChart");
-        var myLineChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: enrollmentDates,
-                datasets: [{
-                    label: "التسجيلات",
-                    lineTension: 0.3,
-                    backgroundColor: "rgba(78, 115, 223, 0.05)",
-                    borderColor: "rgba(78, 115, 223, 1)",
-                    pointRadius: 3,
-                    pointBackgroundColor: "rgba(78, 115, 223, 1)",
-                    pointBorderColor: "rgba(78, 115, 223, 1)",
-                    pointHoverRadius: 3,
-                    pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
-                    pointHoverBorderColor: "rgba(78, 115, 223, 1)",
-                    pointHitRadius: 10,
-                    pointBorderWidth: 2,
-                    data: enrollmentCounts,
-                }],
-            },
-            options: {
-                maintainAspectRatio: false,
-                layout: {
-                    padding: {
-                        left: 10,
-                        right: 25,
-                        top: 25,
-                        bottom: 0
-                    }
-                },
-                scales: {
-                    xAxes: [{
-                        time: {
-                            unit: 'date'
-                        },
-                        gridLines: {
-                            display: false,
-                            drawBorder: false
-                        },
-                        ticks: {
-                            maxTicksLimit: 7
-                        }
-                    }],
-                    yAxes: [{
-                        ticks: {
-                            maxTicksLimit: 5,
-                            padding: 10,
-                            beginAtZero: true
-                        },
-                        gridLines: {
-                            color: "rgb(234, 236, 244)",
-                            zeroLineColor: "rgb(234, 236, 244)",
-                            drawBorder: false,
-                            borderDash: [2],
-                            zeroLineBorderDash: [2]
-                        }
-                    }],
-                },
-                legend: {
-                    display: false
-                },
-                tooltips: {
-                    backgroundColor: "rgb(255,255,255)",
-                    bodyFontColor: "#858796",
-                    titleMarginBottom: 10,
-                    titleFontColor: '#6e707e',
-                    titleFontSize: 14,
-                    borderColor: '#dddfeb',
-                    borderWidth: 1,
-                    xPadding: 15,
-                    yPadding: 15,
-                    displayColors: false,
-                    intersect: false,
-                    mode: 'index',
-                    caretPadding: 10
-                }
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تفعيل زر القائمة للموبايل
+            const menuToggle = document.querySelector('.mobile-toggle');
+            const sidebar = document.querySelector('.innovative-sidebar');
+            
+            if (menuToggle) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('show');
+                });
             }
+            
+            // إغلاق السايدبار عند النقر خارجه
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth < 992 && 
+                    !e.target.closest('.innovative-sidebar') && 
+                    !e.target.closest('.mobile-toggle')) {
+                    sidebar.classList.remove('show');
+                }
+            });
+
+            // تهيئة مخطط التسجيلات
+            var enrollmentDates = {{ enrollment_dates|tojson }};
+            var enrollmentCounts = {{ enrollment_counts|tojson }};
+            
+            var ctx = document.getElementById("enrollmentsChart");
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: enrollmentDates,
+                    datasets: [{
+                        label: "التسجيلات",
+                        lineTension: 0.3,
+                        backgroundColor: "rgba(108, 99, 255, 0.1)",
+                        borderColor: "#6C63FF",
+                        pointRadius: 3,
+                        pointBackgroundColor: "#6C63FF",
+                        pointBorderColor: "#6C63FF",
+                        pointHoverRadius: 3,
+                        pointHoverBackgroundColor: "#6C63FF",
+                        pointHoverBorderColor: "#6C63FF",
+                        pointHitRadius: 10,
+                        pointBorderWidth: 2,
+                        data: enrollmentCounts,
+                    }],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 25,
+                            top: 25,
+                            bottom: 0
+                        }
+                    },
+                    scales: {
+                        xAxes: [{
+                            gridLines: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                maxTicksLimit: 7
+                            }
+                        }],
+                        yAxes: [{
+                            ticks: {
+                                maxTicksLimit: 5,
+                                padding: 10,
+                                beginAtZero: true
+                            },
+                            gridLines: {
+                                color: "rgb(234, 236, 244)",
+                                zeroLineColor: "rgb(234, 236, 244)",
+                                drawBorder: false,
+                                borderDash: [2],
+                                zeroLineBorderDash: [2]
+                            }
+                        }],
+                    },
+                    legend: {
+                        display: false
+                    },
+                    tooltips: {
+                        backgroundColor: "rgb(255,255,255)",
+                        bodyFontColor: "#858796",
+                        titleMarginBottom: 10,
+                        titleFontColor: '#6e707e',
+                        titleFontSize: 14,
+                        borderColor: '#dddfeb',
+                        borderWidth: 1,
+                        xPadding: 15,
+                        yPadding: 15,
+                        displayColors: false,
+                        intersect: false,
+                        mode: 'index',
+                        caretPadding: 10
+                    }
+                }
+            });
         });
-    });
-</script>
-{% endblock %}
+    </script>
+</body>
+</html>

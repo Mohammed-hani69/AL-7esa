@@ -1,211 +1,678 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعدادات النظام - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+    /* متغيرات التصميم المخصص */
+    :root {
+        --accent-color: #6C63FF;
+        --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+        --surface-color: #FFFFFF;
+        --background-color: #F4F7FE;
+        --text-primary: #2D3748;
+        --text-secondary: #718096;
+        --border-radius-lg: 24px;
+        --border-radius-md: 16px;
+        --border-radius-sm: 8px;
+        --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+    }
 
-{% block title %}إعدادات النظام - الحصة{% endblock %}
+    /* تنسيق عام */
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background: var(--background-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
 
-{% block content %}
-<div class="container-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">إعدادات النظام</h1>
+    /* تخطيط الصفحة الفريد */
+    .app-container {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    /* تصميم السايدبار المبتكر */
+    .innovative-sidebar {
+        background: var(--accent-gradient);
+        padding: 2rem;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        position: sticky;
+        top: 2rem;
+        height: calc(100vh - 4rem);
+        color: var(--surface-color);
+    }
+
+    .sidebar-brand {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .brand-logo {
+        width: 60px;
+        height: 60px;
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .brand-text {
+        color: var(--surface-color);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .nav-item {
+        margin-bottom: 1rem;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        color: rgba(255,255,255,0.8);
+        padding: 1rem;
+        border-radius: var(--border-radius-md);
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        background: rgba(255,255,255,0.1);
+        color: var(--surface-color);
+        transform: translateX(-10px);
+    }
+
+    .nav-link i {
+        margin-left: 1rem;
+        font-size: 1.2rem;
+        width: 24px;
+        text-align: center;
+    }
+
+    /* تصميم المحتوى الرئيسي */
+    .main-content {
+        flex: 1;
+    }
+
+    /* تصميم البطاقات */
+    .settings-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .settings-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .card-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 2px solid var(--background-color);
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+        color: var(--text-primary);
+        margin: 0;
+        position: relative;
+        font-weight: 600;
+    }
+
+    .card-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        right: 0;
+        width: 50px;
+        height: 4px;
+        background: var(--accent-gradient);
+        border-radius: 2px;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    /* تصميم النموذج */
+    .form-label {
+        color: var(--text-primary);
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border: 2px solid #E2E8F0;
+        border-radius: var(--border-radius-sm);
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+    }
+
+    .form-select {
+        border: 2px solid #E2E8F0;
+        border-radius: var(--border-radius-sm);
+        padding: 0.75rem 1rem;
+    }
+
+    /* تصميم الأزرار */
+    .btn-custom {
+        padding: 0.8rem 1.5rem;
+        border-radius: var(--border-radius-sm);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: var(--accent-gradient);
+        border: none;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+    }
+
+    .btn-danger {
+        background: linear-gradient(120deg, #FF6B6B, #FF3366);
+        border: none;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 51, 102, 0.3);
+    }
+
+    .btn-warning {
+        background: linear-gradient(120deg, #FFB75E, #ED8F03);
+        border: none;
+        color: white;
+    }
+
+    .btn-warning:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 183, 94, 0.3);
+    }
+
+    .btn-info {
+        background: linear-gradient(120deg, #00B5B5, #00D68F);
+        border: none;
+        color: white;
+    }
+
+    .btn-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 181, 181, 0.3);
+    }
+
+    /* تصميم الشارات */
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 500;
+    }
+
+    .badge-success {
+        background: linear-gradient(120deg, #00B5B5, #00D68F);
+        color: white;
+    }
+
+    /* تصميم القسم المعلوماتي */
+    .info-item {
+        display: flex;
+        align-items: center;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .info-item i {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--border-radius-sm);
+        margin-left: 0.75rem;
+        background: var(--accent-gradient);
+        color: white;
+    }
+
+    /* تصميم النوافذ المنبثقة */
+    .modal-content {
+        border: none;
+        border-radius: var(--border-radius-lg);
+    }
+
+    .modal-header {
+        background: var(--accent-gradient);
+        color: white;
+        border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+        padding: 1.5rem 2rem;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .alert {
+        border: none;
+        border-radius: var(--border-radius-md);
+        padding: 1rem 1.5rem;
+    }
+
+    .alert-warning {
+        background: linear-gradient(to left, rgba(255, 183, 94, 0.1), rgba(237, 143, 3, 0.1));
+        color: #ED8F03;
+        border-right: 4px solid #ED8F03;
+    }
+
+    /* تحسينات التجاوب */
+    @media (max-width: 1200px) {
+        .app-container {
+            grid-template-columns: 250px 1fr;
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .app-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .innovative-sidebar {
+            position: fixed;
+            right: -300px;
+            z-index: 1000;
+            transition: 0.3s ease;
+            height: 100vh;
+            border-radius: 0;
+        }
+        
+        .innovative-sidebar.show {
+            right: 0;
+        }
+        
+        .mobile-toggle {
+            display: block;
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            z-index: 1001;
+            background: var(--surface-color);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: var(--box-shadow);
+        }
+    }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار المبتكر -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.dashboard') }}" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.users') }}" class="nav-link ">
+                        <i class="fas fa-users"></i>
+                        <span>المستخدمين</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.classrooms') }}" class="nav-link ">
+                        <i class="fas fa-school"></i>
+                        <span>الفصول الدراسية</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.subscriptions') }}" class="nav-link">
+                        <i class="fas fa-money-check"></i>
+                        <span>الاشتراكات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.notifications') }}" class="nav-link">
+                        <i class="fas fa-bell"></i>
+                        <span>الإشعارات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.settings') }}" class="nav-link active">
+                        <i class="fas fa-cog"></i>
+                        <span>الإعدادات</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="row">
+                <div class="col-xl-8">
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h2 class="card-title">الإعدادات العامة</h2>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('admin.settings') }}" method="post">
+                                <div class="mb-4">
+                                    <label class="form-label" for="system_name">اسم النظام <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="system_name" name="system_name" value="{{ settings.system_name }}" required>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label" for="system_description">وصف النظام</label>
+                                    <textarea class="form-control" id="system_description" name="system_description" rows="3">{{ settings.system_description }}</textarea>
+                                </div>
+                                
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        <label class="form-label" for="default_language">اللغة الافتراضية</label>
+                                        <select class="form-select" id="default_language" name="default_language">
+                                            <option value="ar" {% if settings.default_language == 'ar' %}selected{% endif %}>العربية</option>
+                                            <option value="en" {% if settings.default_language == 'en' %}selected{% endif %}>الإنجليزية</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="default_currency">العملة الافتراضية</label>
+                                        <select class="form-select" id="default_currency" name="default_currency">
+                                            <option value="SAR" {% if settings.default_currency == 'SAR' %}selected{% endif %}>ريال سعودي (SAR)</option>
+                                            <option value="USD" {% if settings.default_currency == 'USD' %}selected{% endif %}>دولار أمريكي (USD)</option>
+                                            <option value="EUR" {% if settings.default_currency == 'EUR' %}selected{% endif %}>يورو (EUR)</option>
+                                            <option value="EGP" {% if settings.default_currency == 'EGP' %}selected{% endif %}>جنيه مصري (EGP)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        <label class="form-label" for="trial_days">فترة التجربة المجانية (أيام) <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="trial_days" name="trial_days" value="{{ settings.trial_days }}" min="0" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="max_file_size">الحد الأقصى لحجم الملفات (ميجابايت) <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="max_file_size" name="max_file_size" value="{{ settings.max_file_size }}" min="1" required>
+                                    </div>
+                                </div>
+                                
+                                <hr class="my-4">
+                                
+                                <h5 class="card-title mb-4">إعدادات المظهر</h5>
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        <label class="form-label" for="primary_color">اللون الرئيسي</label>
+                                        <input type="color" class="form-control" id="primary_color" name="primary_color" value="{{ settings.primary_color }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="secondary_color">اللون الثانوي</label>
+                                        <input type="color" class="form-control" id="secondary_color" name="secondary_color" value="{{ settings.secondary_color }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label" for="logo_url">رابط الشعار</label>
+                                    <input type="text" class="form-control" id="logo_url" name="logo_url" value="{{ settings.logo_url }}" placeholder="https://example.com/logo.png">
+                                </div>
+                                
+                                <hr class="my-4">
+                                
+                                <h5 class="card-title mb-4">إعدادات التواصل</h5>
+                                <div class="mb-4">
+                                    <label class="form-label" for="contact_email">البريد الإلكتروني للتواصل</label>
+                                    <input type="email" class="form-control" id="contact_email" name="contact_email" value="{{ settings.contact_email }}" placeholder="contact@example.com">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label" for="contact_phone">رقم الهاتف للتواصل</label>
+                                    <input type="text" class="form-control" id="contact_phone" name="contact_phone" value="{{ settings.contact_phone }}" placeholder="05xxxxxxxx" dir="ltr">
+                                </div>
+                                
+                                <div class="text-center">
+                                    <button type="submit" class="btn-custom btn-primary">
+                                        <i class="fas fa-save"></i>
+                                        <span>حفظ الإعدادات</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-4">
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h2 class="card-title">إعدادات متقدمة</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <button class="btn-custom btn-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#clearCacheModal">
+                                    <i class="fas fa-broom"></i>
+                                    <span>مسح ذاكرة التخزين المؤقت</span>
+                                </button>
+                                <small class="text-muted d-block text-center">مسح البيانات المخزنة مؤقتًا لتحديث واجهة المستخدم</small>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <button class="btn-custom btn-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#backupModal">
+                                    <i class="fas fa-download"></i>
+                                    <span>إنشاء نسخة احتياطية</span>
+                                </button>
+                                <small class="text-muted d-block text-center">نسخ احتياطي لقاعدة البيانات والملفات</small>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <button class="btn-custom btn-danger w-100 mb-2" data-bs-toggle="modal" data-bs-target="#maintenanceModal">
+                                    <i class="fas fa-tools"></i>
+                                    <span>وضع الصيانة</span>
+                                </button>
+                                <small class="text-muted d-block text-center">منع الوصول إلى النظام مؤقتًا</small>
+                            </div>
+                            
+                            <hr class="my-4">
+                            
+                            <h5 class="card-title mb-4">معلومات النظام</h5>
+                            <div class="info-item">
+                                <i class="fas fa-code-branch"></i>
+                                <div>
+                                    <strong>الإصدار:</strong>
+                                    <span>1.0.0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i class="fas fa-calendar-check"></i>
+                                <div>
+                                    <strong>آخر تحديث:</strong>
+                                    <span>{{ now.strftime('%Y-%m-%d') }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i class="fas fa-database"></i>
+                                <div>
+                                    <strong>قاعدة البيانات:</strong>
+                                    <span class="badge badge-success">متصلة</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i class="fas fa-hdd"></i>
+                                <div>
+                                    <strong>المساحة المستخدمة:</strong>
+                                    <span>1.2 جيجابايت</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <!-- Content Row -->
-    <div class="row">
-        <div class="col-xl-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">الإعدادات العامة</h6>
+    <!-- نافذة مسح الذاكرة المؤقتة -->
+    <div class="modal fade" id="clearCacheModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تأكيد مسح ذاكرة التخزين المؤقت</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="card-body">
-                    <form action="{{ url_for('admin.settings') }}" method="post">
-                        <div class="form-group">
-                            <label for="system_name">اسم النظام</label>
-                            <input type="text" class="form-control" id="system_name" name="system_name" value="الحصة" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="system_description">وصف النظام</label>
-                            <textarea class="form-control" id="system_description" name="system_description" rows="3">منصة تعليمية متكاملة لإدارة العملية التعليمية بكفاءة</textarea>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="default_language">اللغة الافتراضية</label>
-                                <select class="form-control" id="default_language" name="default_language">
-                                    <option value="ar" selected>العربية</option>
-                                    <option value="en">الإنجليزية</option>
-                                </select>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="default_currency">العملة الافتراضية</label>
-                                <select class="form-control" id="default_currency" name="default_currency">
-                                    <option value="SAR" selected>ريال سعودي (SAR)</option>
-                                    <option value="USD">دولار أمريكي (USD)</option>
-                                    <option value="EUR">يورو (EUR)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="trial_days">فترة التجربة المجانية (أيام)</label>
-                                <input type="number" class="form-control" id="trial_days" name="trial_days" value="14" min="0" required>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="max_file_size">الحد الأقصى لحجم الملفات (ميجابايت)</label>
-                                <input type="number" class="form-control" id="max_file_size" name="max_file_size" value="16" min="1" required>
-                            </div>
-                        </div>
-                        <hr>
-                        <h6 class="font-weight-bold mb-3">إعدادات المظهر</h6>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="primary_color">اللون الرئيسي</label>
-                                <input type="color" class="form-control" id="primary_color" name="primary_color" value="#4e73df">
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="secondary_color">اللون الثانوي</label>
-                                <input type="color" class="form-control" id="secondary_color" name="secondary_color" value="#1cc88a">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="logo_url">رابط الشعار</label>
-                            <input type="text" class="form-control" id="logo_url" name="logo_url" value="/static/img/logo.png">
-                        </div>
-                        <hr>
-                        <h6 class="font-weight-bold mb-3">إعدادات التواصل</h6>
-                        <div class="form-group">
-                            <label for="contact_email">البريد الإلكتروني للتواصل</label>
-                            <input type="email" class="form-control" id="contact_email" name="contact_email" value="support@alhesa.com">
-                        </div>
-                        <div class="form-group">
-                            <label for="contact_phone">رقم الهاتف للتواصل</label>
-                            <input type="text" class="form-control" id="contact_phone" name="contact_phone" value="+966 55 555 5555">
-                        </div>
-                        <div class="form-group text-center mt-4">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> حفظ الإعدادات
-                            </button>
-                        </div>
-                    </form>
+                <div class="modal-body">
+                    <p>هل أنت متأكد من رغبتك في مسح ذاكرة التخزين المؤقت؟ سيؤدي هذا إلى:</p>
+                    <ul class="mb-0">
+                        <li>تحديث واجهة المستخدم</li>
+                        <li>إعادة تحميل البيانات من قاعدة البيانات</li>
+                        <li>تحسين أداء النظام</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-custom btn-light" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn-custom btn-warning">
+                        <i class="fas fa-broom"></i>
+                        <span>تأكيد المسح</span>
+                    </button>
                 </div>
             </div>
         </div>
-        <div class="col-xl-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">إعدادات متقدمة</h6>
+    </div>
+
+    <!-- نافذة النسخ الاحتياطي -->
+    <div class="modal fade" id="backupModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إنشاء نسخة احتياطية</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="card-body">
+                <div class="modal-body">
+                    <p>سيتم إنشاء نسخة احتياطية كاملة من:</p>
+                    <ul class="mb-4">
+                        <li>قاعدة البيانات</li>
+                        <li>الملفات المرفوعة</li>
+                        <li>إعدادات النظام</li>
+                    </ul>
                     <div class="mb-3">
-                        <button class="btn btn-warning btn-block mb-2" data-toggle="modal" data-target="#clearCacheModal">
-                            <i class="fas fa-broom"></i> مسح ذاكرة التخزين المؤقت
-                        </button>
-                        <small class="text-muted">مسح جميع البيانات المخزنة مؤقتًا على الخادم لتحديث واجهة المستخدم</small>
+                        <label class="form-label" for="backup_description">وصف النسخة الاحتياطية (اختياري)</label>
+                        <input type="text" class="form-control" id="backup_description" placeholder="مثال: نسخة قبل تحديث النظام">
                     </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-custom btn-light" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn-custom btn-info">
+                        <i class="fas fa-download"></i>
+                        <span>بدء النسخ الاحتياطي</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة وضع الصيانة -->
+    <div class="modal fade" id="maintenanceModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تفعيل وضع الصيانة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        تحذير: تفعيل وضع الصيانة سيمنع جميع المستخدمين من الوصول إلى النظام باستثناء المسؤولين.
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label" for="maintenance_message">رسالة الصيانة للمستخدمين</label>
+                        <textarea class="form-control" id="maintenance_message" rows="3">نعتذر، النظام قيد الصيانة حاليًا. يرجى المحاولة لاحقًا.</textarea>
+                    </div>
+                    
                     <div class="mb-3">
-                        <button class="btn btn-info btn-block mb-2" data-toggle="modal" data-target="#backupModal">
-                            <i class="fas fa-download"></i> إنشاء نسخة احتياطية
-                        </button>
-                        <small class="text-muted">إنشاء نسخة احتياطية كاملة من قاعدة البيانات والملفات المرفوعة</small>
-                    </div>
-                    <div class="mb-3">
-                        <button class="btn btn-danger btn-block mb-2" data-toggle="modal" data-target="#maintenanceModal">
-                            <i class="fas fa-tools"></i> وضع الصيانة
-                        </button>
-                        <small class="text-muted">تفعيل وضع الصيانة لمنع المستخدمين من الوصول إلى النظام مؤقتًا</small>
-                    </div>
-                    <hr>
-                    <div>
-                        <h6 class="font-weight-bold mb-3">معلومات النظام</h6>
-                        <p class="mb-1">الإصدار: <span class="font-weight-bold">1.0.0</span></p>
-                        <p class="mb-1">تاريخ آخر تحديث: <span class="font-weight-bold">{{ now.strftime('%Y-%m-%d') }}</span></p>
-                        <p class="mb-1">حالة قاعدة البيانات: <span class="badge badge-success">متصلة</span></p>
-                        <p class="mb-1">مساحة التخزين المستخدمة: <span class="font-weight-bold">1.2 جيجابايت</span></p>
+                        <label class="form-label" for="maintenance_duration">مدة الصيانة المتوقعة (دقائق)</label>
+                        <input type="number" class="form-control" id="maintenance_duration" value="30" min="5">
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-custom btn-light" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn-custom btn-danger">
+                        <i class="fas fa-tools"></i>
+                        <span>تفعيل وضع الصيانة</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Clear Cache Modal -->
-<div class="modal fade" id="clearCacheModal" tabindex="-1" role="dialog" aria-labelledby="clearCacheModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="clearCacheModalLabel">تأكيد مسح ذاكرة التخزين المؤقت</h5>
-                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>هل أنت متأكد من رغبتك في مسح ذاكرة التخزين المؤقت؟ سيؤدي هذا إلى تحديث واجهة المستخدم وإعادة تحميل البيانات من قاعدة البيانات.</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" type="button" data-dismiss="modal">إلغاء</button>
-                <a class="btn btn-warning" href="#">
-                    <i class="fas fa-broom"></i> تأكيد المسح
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Backup Modal -->
-<div class="modal fade" id="backupModal" tabindex="-1" role="dialog" aria-labelledby="backupModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="backupModalLabel">إنشاء نسخة احتياطية</h5>
-                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>سيتم إنشاء نسخة احتياطية كاملة من قاعدة البيانات والملفات المرفوعة. هذه العملية قد تستغرق بعض الوقت حسب حجم البيانات.</p>
-                <div class="form-group">
-                    <label for="backup_description">وصف النسخة الاحتياطية (اختياري)</label>
-                    <input type="text" class="form-control" id="backup_description" placeholder="مثال: نسخة قبل تحديث النظام">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" type="button" data-dismiss="modal">إلغاء</button>
-                <a class="btn btn-info" href="#">
-                    <i class="fas fa-download"></i> بدء النسخ الاحتياطي
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Maintenance Mode Modal -->
-<div class="modal fade" id="maintenanceModal" tabindex="-1" role="dialog" aria-labelledby="maintenanceModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="maintenanceModalLabel">تفعيل وضع الصيانة</h5>
-                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i> تحذير: تفعيل وضع الصيانة سيمنع جميع المستخدمين من الوصول إلى النظام باستثناء المسؤولين.
-                </div>
-                <div class="form-group">
-                    <label for="maintenance_message">رسالة الصيانة للمستخدمين</label>
-                    <textarea class="form-control" id="maintenance_message" rows="3">نعتذر، النظام قيد الصيانة حاليًا. يرجى المحاولة لاحقًا.</textarea>
-                </div>
-                <div class="form-group">
-                    <label for="maintenance_duration">مدة الصيانة المتوقعة (دقائق)</label>
-                    <input type="number" class="form-control" id="maintenance_duration" value="30" min="5">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" type="button" data-dismiss="modal">إلغاء</button>
-                <a class="btn btn-danger" href="#">
-                    <i class="fas fa-tools"></i> تفعيل وضع الصيانة
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تفعيل زر القائمة للموبايل
+            const menuToggle = document.querySelector('.mobile-toggle');
+            const sidebar = document.querySelector('.innovative-sidebar');
+            
+            if (menuToggle) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('show');
+                });
+            }
+            
+            // إغلاق السايدبار عند النقر خارجه
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth < 992 && 
+                    !e.target.closest('.innovative-sidebar') && 
+                    !e.target.closest('.mobile-toggle')) {
+                    sidebar.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

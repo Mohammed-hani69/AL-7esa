@@ -1,225 +1,836 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الحصة التعليمية - الصفحة الرئيسية</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo2.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='img/logo2.png') }}">
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: {{ primary_color }};
+            --accent-gradient: linear-gradient(120deg, {{ primary_color }}, {{ secondary_color }});
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
 
-{% extends "layout.html" %}
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
 
-{% block title %}منصة الحصة التعليمية - الصفحة الرئيسية{% endblock %}
+        .landing-hero {
+            position: relative;
+            background: var(--accent-gradient);
+            color: var(--surface-color);
+            padding: 6rem 0;
+            overflow: hidden;
+        }
 
-{% block public_content %}
-<main class="container-fluid p-0">
-    <!-- قسم Hero -->
-    <section class="landing-hero py-5">
-        <div class="container py-5">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h1 class="hero-title mb-4">منصة <span class="text-gradient">الحصة التعليمية</span></h1>
-                    <p class="hero-description mb-4">بيئة تعليمية متكاملة تجمع بين المعلمين والطلاب في مكان واحد، مع أدوات فعالة للتعلم الرقمي وإدارة الصفوف الافتراضية.</p>
-                    <div class="hero-buttons">
-                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-3 btn-glow">سجل الآن</a>
-                        <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg">تسجيل الدخول</a>
-                    </div>
-                    <div class="hero-stats mt-4">
-                        <div class="stat-item">
-                            <i class="fas fa-users stat-icon"></i>
-                            <span>أكثر من 5000 طالب</span>
-                        </div>
-                        <div class="stat-item">
-                            <i class="fas fa-chalkboard-teacher stat-icon"></i>
-                            <span>أكثر من 200 معلم</span>
-                        </div>
-                        <div class="stat-item">
-                            <i class="fas fa-book stat-icon"></i>
-                            <span>أكثر من 500 فصل دراسي</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="hero-image-container position-relative">
-                        <div class="hero-shapes">
-                            <div class="shape shape-1"></div>
-                            <div class="shape shape-2"></div>
-                            <div class="shape shape-3"></div>
-                        </div>
-                        <div class="hero-animation">
-                            <i class="fas fa-laptop-code hero-icon"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
 
-    <!-- قسم الميزات -->
-    <section class="landing-features py-5">
-        <div class="container py-5">
-            <div class="text-center mb-5">
-                <h2 class="mb-3">ميزات <span class="highlight-text">منصة الحصة</span></h2>
-                <p class="lead">اكتشف الميزات التي تجعل منصتنا الخيار الأمثل للتعليم الرقمي</p>
-            </div>
-            <div class="row g-4">
-                <div class="col-md-6 col-lg-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-video"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>حصص مباشرة</h3>
-                            <p>نقدم تجربة تعليمية مباشرة عبر خاصية البث المباشر مع إمكانيات التفاعل الكاملة بين المعلم والطلاب.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-tasks"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>الواجبات والاختبارات</h3>
-                            <p>نظام متكامل لإنشاء وتوزيع وتقييم الواجبات والاختبارات مع تقارير متقدمة عن مستوى الطلاب.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-comments"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>تواصل فعال</h3>
-                            <p>منصة محادثات متكاملة تتيح التواصل بين المعلم والطلاب وبين الطلاب أنفسهم لتعزيز بيئة التعلم.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>متابعة التقدم</h3>
-                            <p>تقارير تحليلية شاملة تتيح للمعلمين متابعة تقدم الطلاب وتحديد نقاط القوة والضعف.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>محتوى تعليمي غني</h3>
-                            <p>إمكانية إضافة ومشاركة مختلف أنواع المحتوى التعليمي مثل الفيديوهات والملفات والصور.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-mobile-alt"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>تجربة متوافقة</h3>
-                            <p>تصميم متجاوب يعمل على جميع الأجهزة سواء الحاسب أو الهاتف الذكي أو الجهاز اللوحي.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+        .hero-description {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
 
-    <!-- قسم الإنجازات -->
-    <section class="achievements-section py-5">
-        <div class="container py-5">
-            <div class="text-center mb-5">
-                <h2 class="mb-3">إنجازاتنا <span class="highlight-text">بالأرقام</span></h2>
-                <p class="lead">ما حققناه معاً خلال مسيرتنا في دعم العملية التعليمية</p>
-            </div>
-            <div class="row g-4">
-                <div class="col-md-6 col-lg-3">
-                    <div class="achievement-card text-center">
-                        <div class="achievement-icon mb-3">
-                            <i class="fas fa-user-graduate fa-3x text-primary"></i>
-                        </div>
-                        <div class="achievement-number mb-2">5000+</div>
-                        <div class="achievement-text">طالب مسجل</div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="achievement-card text-center">
-                        <div class="achievement-icon mb-3">
-                            <i class="fas fa-chalkboard-teacher fa-3x text-success"></i>
-                        </div>
-                        <div class="achievement-number mb-2">200+</div>
-                        <div class="achievement-text">معلم متميز</div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="achievement-card text-center">
-                        <div class="achievement-icon mb-3">
-                            <i class="fas fa-book-open fa-3x text-info"></i>
-                        </div>
-                        <div class="achievement-number mb-2">500+</div>
-                        <div class="achievement-text">فصل دراسي</div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="achievement-card text-center">
-                        <div class="achievement-icon mb-3">
-                            <i class="fas fa-clock fa-3x text-warning"></i>
-                        </div>
-                        <div class="achievement-number mb-2">10000+</div>
-                        <div class="achievement-text">ساعة تعلم</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+        .hero-buttons .btn {
+            padding: 1rem 2rem;
+            font-weight: 600;
+            border-radius: var(--border-radius-md);
+        }
 
-    <!-- دعوة للاشتراك -->
-    <section class="landing-cta text-white text-center">
-        <div class="container py-5">
-            <div class="cta-content">
-                <h2 class="cta-title mb-4">انضم إلى منصة الحصة اليوم</h2>
-                <p class="cta-description">وابدأ رحلتك التعليمية في بيئة رقمية متكاملة</p>
-                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg btn-pulse mt-3">سجل الآن مجاناً</a>
-                <div class="cta-features">
-                    <div class="cta-feature-item">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <span>فترة تجريبية مجانية</span>
-                    </div>
-                    <div class="cta-feature-item">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <span>دعم فني على مدار الساعة</span>
-                    </div>
-                    <div class="cta-feature-item">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <span>تحديثات مستمرة</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</main>
-{% endblock %}
+        .btn-glow {
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
+            transition: all 0.3s ease;
+        }
 
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // إظهار عناصر الصفحة بتأثير متحرك عند التمرير
-        const revealElements = document.querySelectorAll('.feature-card, .achievement-card');
-        
-        const revealOnScroll = function() {
-            for (let i = 0; i < revealElements.length; i++) {
-                const windowHeight = window.innerHeight;
-                const elementTop = revealElements[i].getBoundingClientRect().top;
-                const elementVisible = 150;
-                
-                if (elementTop < windowHeight - elementVisible) {
-                    revealElements[i].classList.add('animated', 'fadeInUp');
-                }
+        .btn-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(108, 99, 255, 0.6);
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-icon {
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .landing-features {
+            padding: 5rem 0;
+            background: var (--surface-color);
+        }
+
+        .feature-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px -5px rgba(108, 99, 255, 0.15);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--accent-gradient);
+            border-radius: var(--border-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--surface-color);
+            font-size: 1.5rem;
+        }
+
+        .achievements-section {
+            background: var(--background-color);
+            padding: 5rem 0;
+        }
+
+        .achievement-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .achievement-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin: 1rem 0;
+        }
+
+        .landing-cta {
+            background: var(--accent-gradient);
+            padding: 5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-description {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .cta-features {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .btn-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* تنسيقات الفوتر */
+        footer {
+            background: linear-gradient(to right, #1a1a1a, #2d2d2d);
+            color: var(--surface-color);
+            padding: 3rem 0;
+            margin-top: 4rem;
+        }
+
+        footer h5 {
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        footer .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            color: var(--surface-color);
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+
+        footer .social-links a:hover {
+            background: var(--accent-color);
+            transform: translateY(-3px);
+        }
+
+        footer ul li a {
+            color: var(--surface-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        footer ul li a:hover {
+            color: var(--accent-color);
+            padding-right: 10px;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
             }
-        };
-        
-        window.addEventListener('scroll', revealOnScroll);
-        revealOnScroll(); // تشغيل الدالة عند تحميل الصفحة
-    });
-</script>
-{% endblock %}
+            70% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .cta-features {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.5rem 0;
+            }
+
+            .navbar-brand img {
+                height: 30px;
+            }
+
+            .navbar-toggler {
+                padding: 4px 8px;
+                margin-right: 8px;
+            }
+
+            .navbar .btn {
+                width: 100%;
+                margin: 0.25rem 0;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+                text-align: center;
+            }
+
+            .hero-description {
+                font-size: 1rem;
+                text-align: center;
+            }
+
+            .hero-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .hero-buttons .btn {
+                margin: 0;
+            }
+
+            .feature-card {
+                padding: 1.5rem;
+            }
+
+            .achievement-card {
+                padding: 1.5rem;
+            }
+
+            .achievement-number {
+                font-size: 2rem;
+            }
+
+            .landing-cta {
+                padding: 3rem 0;
+            }
+
+            .cta-title {
+                font-size: 2rem;
+            }
+
+            .cta-description {
+                font-size: 1rem;
+            }
+
+            .social-links a {
+                width: 32px;
+                height: 32px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .hero-title {
+                font-size: 1.75rem;
+            }
+
+            .hero-description {
+                font-size: 0.9rem;
+            }
+
+            .feature-card {
+                padding: 1.25rem;
+            }
+
+            .feature-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.25rem;
+            }
+
+            .achievement-card {
+                padding: 1.25rem;
+            }
+
+            .achievement-number {
+                font-size: 1.75rem;
+            }
+
+            .cta-title {
+                font-size: 1.75rem;
+            }
+
+            /* تنسيقات الفوتر */
+        footer {
+            background: linear-gradient(to right, #1a1a1a, #2d2d2d);
+            color: var(--surface-color);
+            padding: 3rem 0;
+            margin-top: 4rem;
+        }
+
+        footer h5 {
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        footer .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            color: var(--surface-color);
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+
+        footer .social-links a:hover {
+            background: var(--accent-color);
+            transform: translateY(-3px);
+        }
+
+        footer ul li a {
+            color: var(--surface-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        footer ul li a:hover {
+            color: var(--accent-color);
+            padding-right: 10px;
+        }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-collapse {
+                background: white;
+                padding: 1rem;
+                border-radius: var(--border-radius-sm);
+                box-shadow: var(--box-shadow);
+                margin-top: 1rem;
+            }
+
+            .navbar-nav {
+                margin-bottom: 1rem;
+            }
+
+            .nav-item {
+                padding: 0.5rem 0;
+            }
+
+            .d-flex {
+                flex-direction: column;
+                width: 100%;
+                gap: 0.5rem;
+            }
+
+            .d-flex .btn {
+                width: 100%;
+                margin: 0 !important;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+                text-align: center;
+            }
+
+            .hero-description {
+                font-size: 1rem;
+                text-align: center;
+            }
+
+            .hero-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                margin-bottom: 2rem;
+            }
+
+            .hero-buttons .btn {
+                width: 100%;
+                margin: 0 !important;
+            }
+
+            .hero-stats {
+                justify-content: center;
+                text-align: center;
+            }
+
+            .feature-card {
+                height: auto;
+                margin-bottom: 1rem;
+            }
+
+            .achievement-card {
+                margin-bottom: 1rem;
+            }
+
+            .cta-title {
+                font-size: 1.8rem;
+            }
+
+            .cta-description {
+                font-size: 1rem;
+            }
+
+            .cta-features {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .landing-hero {
+                padding: 3rem 0;
+                text-align: center;
+            }
+
+            .hero-image {
+                margin-top: 2rem;
+                max-width: 80%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .container {
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hero-title {
+                font-size: 1.8rem;
+            }
+
+            .feature-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .achievement-number {
+                font-size: 2rem;
+            }
+
+            footer {
+                text-align: center;
+                padding: 2rem 0;
+            }
+
+            footer .col-lg-2,
+            footer .col-lg-4 {
+                margin-bottom: 2rem;
+            }
+
+            .social-links {
+                margin-bottom: 1.5rem;
+            }
+
+            .social-links a {
+                width: 32px;
+                height: 32px;
+                margin-right: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- القائمة العلوية -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <img src="{{ url_for('static', filename='img/logo2.png') }}" alt="الحصة" height="40">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('main.index') }}">الرئيسية</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.about') }}">عن المنصة</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.contact') }}">اتصل بنا</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.faq') }}">الأسئلة الشائعة</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.support') }}">الدعم الفني</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.privacy') }}">سياسة الخصوصية</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.terms') }}">شروط الاستخدام</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary me-2">تسجيل الدخول</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">تسجيل جديد</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid p-0">
+        <!-- قسم Hero -->
+        <section class="landing-hero">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <h1 class="hero-title">منصة <span class="text-gradient">الحصة التعليمية</span></h1>
+                        <p class="hero-description">بيئة تعليمية متكاملة تجمع بين المعلمين والطلاب في مكان واحد، مع أدوات فعالة للتعلم الرقمي وإدارة الصفوف الافتراضية.</p>
+                        <div class="hero-buttons">
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg me-3 btn-glow">سجل الآن</a>
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">تسجيل الدخول</a>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-users stat-icon"></i>
+                                <span>أكثر من 5000 طالب</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-chalkboard-teacher stat-icon"></i>
+                                <span>أكثر من 200 معلم</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-book stat-icon"></i>
+                                <span>أكثر من 500 فصل دراسي</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="hero-image text-center">
+                            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="تعلم عن بعد" class="img-fluid" 
+                                onerror="this.onerror=null; this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- قسم الميزات -->
+        <section class="landing-features">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2 class="mb-3">ميزات <span class="text-primary">منصة الحصة</span></h2>
+                    <p class="lead">اكتشف الميزات التي تجعل منصتنا الخيار الأمثل للتعليم الرقمي</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <h3 class="h5 mb-3">حصص مباشرة</h3>
+                            <p class="text-muted mb-0">نقدم تجربة تعليمية مباشرة عبر خاصية البث المباشر مع إمكانيات التفاعل الكاملة بين المعلم والطلاب.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <h3 class="h5 mb-3">الواجبات والاختبارات</h3>
+                            <p class="text-muted mb-0">نظام متكامل لإنشاء وتوزيع وتقييم الواجبات والاختبارات مع تقارير متقدمة عن مستوى الطلاب.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <h3 class="h5 mb-3">تواصل فعال</h3>
+                            <p class="text-muted mb-0">منصة محادثات متكاملة تتيح التواصل بين المعلم والطلاب وبين الطلاب أنفسهم لتعزيز بيئة التعلم.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3 class="h5 mb-3">متابعة التقدم</h3>
+                            <p class="text-muted mb-0">تقارير تحليلية شاملة تتيح للمعلمين متابعة تقدم الطلاب وتحديد نقاط القوة والضعف.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <h3 class="h5 mb-3">محتوى تعليمي غني</h3>
+                            <p class="text-muted mb-0">إمكانية إضافة ومشاركة مختلف أنواع المحتوى التعليمي مثل الفيديوهات والملفات والصور.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <h3 class="h5 mb-3">تجربة متوافقة</h3>
+                            <p class="text-muted mb-0">تصميم متجاوب يعمل على جميع الأجهزة سواء الحاسب أو الهاتف الذكي أو الجهاز اللوحي.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- قسم الإنجازات -->
+        <section class="achievements-section">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2 class="mb-3">إنجازاتنا <span class="text-primary">بالأرقام</span></h2>
+                    <p class="lead">ما حققناه معاً خلال مسيرتنا في دعم العملية التعليمية</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="achievement-card text-center">
+                            <i class="fas fa-user-graduate fa-3x text-primary mb-3"></i>
+                            <div class="achievement-number">5000+</div>
+                            <div class="text-muted">طالب مسجل</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="achievement-card text-center">
+                            <i class="fas fa-chalkboard-teacher fa-3x text-success mb-3"></i>
+                            <div class="achievement-number">200+</div>
+                            <div class="text-muted">معلم متميز</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="achievement-card text-center">
+                            <i class="fas fa-book-open fa-3x text-info mb-3"></i>
+                            <div class="achievement-number">500+</div>
+                            <div class="text-muted">فصل دراسي</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="achievement-card text-center">
+                            <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                            <div class="achievement-number">10000+</div>
+                            <div class="text-muted">ساعة تعلم</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- دعوة للاشتراك -->
+        <section class="landing-cta">
+            <div class="container">
+                <div class="cta-content text-center">
+                    <h2 class="cta-title">انضم إلى منصة الحصة اليوم</h2>
+                    <p class="cta-description">وابدأ رحلتك التعليمية في بيئة رقمية متكاملة</p>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg btn-pulse">سجل الآن مجاناً</a>
+                    <div class="cta-features mt-4">
+                        <div class="cta-feature-item">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <span>فترة تجريبية مجانية</span>
+                        </div>
+                        <div class="cta-feature-item">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <span>دعم فني على مدار الساعة</span>
+                        </div>
+                        <div class="cta-feature-item">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <span>تحديثات مستمرة</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-dark text-light py-5 mt-5">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <h5 class="mb-4">عن منصة الحصة</h5>
+                        <p class="mb-4">منصة تعليمية رقمية متكاملة تهدف إلى تسهيل العملية التعليمية وتحسين تجربة التعلم عن بعد لكل من المعلمين والطلاب.</p>
+                        <div class="social-links">
+                            <a href="#" class="text-light me-3"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="text-light me-3"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="text-light me-3"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="text-light"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <h5 class="mb-4">روابط سريعة</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><a href="{{ url_for('main.index') }}" class="text-light text-decoration-none">الرئيسية</a></li>
+                            <li class="mb-2"><a href="{{ url_for('main.about') }}" class="text-light text-decoration-none">عن المنصة</a></li>
+                            <li class="mb-2"><a href="{{ url_for('main.contact') }}" class="text-light text-decoration-none">اتصل بنا</a></li>
+                            <li class="mb-2"><a href="{{ url_for('auth.register') }}" class="text-light text-decoration-none">التسجيل</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <h5 class="mb-4">الدعم</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><a href="{{ url_for('main.faq') }}" class="text-light text-decoration-none">الأسئلة الشائعة</a></li>
+                            <li class="mb-2"><a href="{{ url_for('main.support') }}" class="text-light text-decoration-none">الدعم الفني</a></li>
+                            <li class="mb-2"><a href="{{ url_for('main.privacy') }}" class="text-light text-decoration-none">سياسة الخصوصية</a></li>
+                            <li class="mb-2"><a href="{{ url_for('main.terms') }}" class="text-light text-decoration-none">شروط الاستخدام</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-4 col-md-4">
+                        <h5 class="mb-4">تواصل معنا</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-envelope me-2"></i> info@alhessa.com</li>
+                            <li class="mb-2"><i class="fas fa-phone me-2"></i> +201145425207</li>
+                            <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> جمهورية مصر العربية</li>
+                        </ul>
+                    </div>
+                </div>
+                <hr class="my-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-0">&copy; {{ current_year }} منصة الحصة - جميع الحقوق محفوظة</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <p class="mb-0">تم التطوير بواسطة <a href="#" class="text-light text-decoration-none">فريق الحصة</a></p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تأثيرات التحريك عند التمرير
+            const animateOnScroll = function() {
+                const elements = document.querySelectorAll('.feature-card, .achievement-card');
+                elements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    const windowHeight = window.innerHeight;
+                    if (elementTop < windowHeight - 100) {
+                        element.style.opacity = '1';
+                        element.style.transform = 'translateY(0)';
+                    }
+                });
+            };
+
+            // تطبيق التأثيرات الأولية
+            document.querySelectorAll('.feature-card, .achievement-card').forEach(element => {
+                element.style.opacity = '0';
+                element.style.transform = 'translateY(20px)';
+                element.style.transition = 'all 0.6s ease-out';
+            });
+
+            // تفعيل التأثيرات عند التمرير
+            window.addEventListener('scroll', animateOnScroll);
+            animateOnScroll();
+        });
+    </script>
+</body>
+</html>

@@ -3,56 +3,440 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الانضمام للفصل</title>
+    <title>الانضمام للفصل - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
     <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
+
         body {
             font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .join-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+        }
+
+        .join-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        .join-header {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .join-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .join-body {
+            padding: 2rem;
+        }
+
+        .join-icon {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .form-control {
+            border: 2px solid var(--background-color);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            font-size: 1.1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(108, 99, 255, 0.25);
+        }
+
+        .btn-join {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .btn-join:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .join-footer {
+            background: var(--background-color);
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .back-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--accent-color);
+            transform: translateX(-5px);
+        }
+
+        .back-link i {
+            margin-left: 0.5rem;
+        }
+
+        @media (max-width: 576px) {
+            .join-container {
+                padding: 1rem;
+            }
+            
+            .join-header {
+                padding: 1.5rem;
+            }
+            
+            .join-body {
+                padding: 1.5rem;
+            }
+        }
+        
+        /* تصميم الإشعارات */
+        .notifications-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .notifications-toggle {
+            background: none;
+            border: none;
+            color: var(--surface-color);
+            position: relative;
+            padding: 0.5rem;
+            margin: 1rem 0;
+            width: 100%;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
+
+        .notifications-toggle:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .notifications-badge {
+            background: #FF6B6B;
+            color: white;
+            border-radius: 50%;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.8rem;
+            position: absolute;
+            top: 0;
+            left: 0.5rem;
+        }
+
+        .notifications-panel {
+            position: absolute;
+            left: 0;
+            top: 100%;
+            width: 320px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            z-index: 1000;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notifications-panel.show {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--background-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--background-color);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            background: var(--background-color);
+        }
+
+        .notification-item.unread {
+            background: rgba(108, 99, 255, 0.05);
+        }
+
+        .notification-icon {
+            background: var(--accent-gradient);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex-grow: 1;
+        }
+
+        .notification-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .notification-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-time {
+            color: var (--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .notifications-empty {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 992px) {
+            .notifications-panel {
+                position: fixed;
+                left: 1rem;
+                right: 1rem;
+                width: auto;
+                top: 5rem;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white text-center py-3">
-                    <h3 class="mb-0">الانضمام للفصل</h3>
-                </div>
-                <div class="card-body p-4">
-                    <div class="text-center mb-4">
-                        <i class="fas fa-chalkboard-teacher fa-3x text-primary mb-3"></i>
-                        <p class="lead">أدخل كود الفصل للانضمام إليه</p>
+    <div class="join-container">
+        <div class="join-card">
+            <div class="join-header">
+                <h1 class="join-title">الانضمام للفصل</h1>
+            </div>
+            
+            <!-- إضافة زر الإشعارات -->
+            <div class="notifications-dropdown mb-4">
+                <button class="notifications-toggle" id="notificationsToggle">
+                    <i class="fas fa-bell me-2"></i>
+                    <span>الإشعارات</span>
+                    {% if unread_notifications %}
+                    <span class="notifications-badge">{{ unread_notifications|length }}</span>
+                    {% endif %}
+                </button>
+                <div class="notifications-panel" id="notificationsPanel">
+                    <div class="notification-header">
+                        <h6 class="m-0">الإشعارات</h6>
+                        {% if notifications %}
+                        <button class="btn btn-sm text-primary" id="markAllRead">
+                            <i class="fas fa-check-double"></i>
+                            تعيين الكل كمقروء
+                        </button>
+                        {% endif %}
                     </div>
-
-                    <form method="POST" action="{{ url_for('student.join_classroom') }}">
-                        <div class="mb-4">
-                            <label for="classroom_code" class="form-label fw-bold">كود الفصل</label>
-                            <input type="text" id="classroom_code" name="classroom_code" class="form-control form-control-lg text-center" placeholder="أدخل كود الفصل هنا" required>
-                            <div class="form-text">
-                                <i class="fas fa-info-circle"></i> يمكنك الحصول على كود الفصل من معلمك
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                        <div class="notification-item {{ 'unread' if not notification.is_read }}" data-id="{{ notification.id }}" data-link="{{ notification.link }}">
+                            <div class="notification-icon">
+                                <i class="fas fa-{{ notification.icon|default('bell') }}"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">{{ notification.title }}</div>
+                                <div class="notification-text">{{ notification.text }}</div>
+                                <div class="notification-time">{{ notification.created_at|timeago }}</div>
                             </div>
                         </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-sign-in-alt me-2"></i> انضم للفصل
-                            </button>
+                        {% endfor %}
+                    {% else %}
+                        <div class="notifications-empty">
+                            <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                            <p>لا توجد إشعارات جديدة</p>
                         </div>
-                    </form>
+                    {% endif %}
                 </div>
-                <div class="card-footer bg-light text-center py-3">
-                    <p class="mb-0">
-                        <a href="{{ url_for('student.dashboard') }}" class="text-decoration-none">
-                            <i class="fas fa-arrow-right me-1"></i> العودة إلى الفصول الدراسية
-                        </a>
-                    </p>
+            </div>
+            
+            <div class="join-body">
+                <div class="text-center">
+                    <i class="fas fa-chalkboard-teacher join-icon"></i>
+                    <p class="lead mb-4">أدخل كود الفصل للانضمام إليه</p>
                 </div>
+
+                <form method="POST" action="{{ url_for('student.join_classroom') }}">
+                    <div class="mb-4">
+                        <label for="classroom_code" class="form-label fw-bold mb-2">كود الفصل</label>
+                        <input type="text" 
+                               id="classroom_code" 
+                               name="classroom_code" 
+                               class="form-control form-control-lg" 
+                               placeholder="أدخل كود الفصل هنا" 
+                               required 
+                               autocomplete="off">
+                        <div class="form-text text-center mt-2">
+                            <i class="fas fa-info-circle"></i>
+                            يمكنك الحصول على كود الفصل من معلمك
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-join">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        انضم للفصل
+                    </button>
+                </form>
+            </div>
+
+            <div class="join-footer">
+                <a href="{{ url_for('student.classrooms') }}" class="back-link">
+                    <i class="fas fa-arrow-right"></i>
+                    العودة إلى الفصول الدراسية
+                </a>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تفعيل قائمة الإشعارات
+        const notificationsToggle = document.getElementById('notificationsToggle');
+        const notificationsPanel = document.getElementById('notificationsPanel');
+        const markAllReadBtn = document.getElementById('markAllRead');
+
+        notificationsToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationsPanel.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!notificationsPanel.contains(e.target) && e.target !== notificationsToggle) {
+                notificationsPanel.classList.remove('show');
+            }
+        });
+
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', async () => {
+                try {
+                    await fetch('/api/notifications/mark-all-read', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    // تحديث واجهة المستخدم
+                    document.querySelectorAll('.notification-item.unread').forEach(item => {
+                        item.classList.remove('unread');
+                    });
+                    
+                    const badge = document.querySelector('.notifications-badge');
+                    if (badge) {
+                        badge.remove();
+                    }
+                } catch (error) {
+                    console.error('Error marking notifications as read:', error);
+                }
+            });
+        }
+
+        // التعامل مع النقر على الإشعارات
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', async () => {
+                if (item.classList.contains('unread')) {
+                    try {
+                        const notificationId = item.dataset.id;
+                        await fetch(`/api/notifications/${notificationId}/mark-read`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        item.classList.remove('unread');
+                        
+                        // تحديث عداد الإشعارات غير المقروءة
+                        const badge = document.querySelector('.notifications-badge');
+                        if (badge) {
+                            const currentCount = parseInt(badge.textContent) - 1;
+                            if (currentCount > 0) {
+                                badge.textContent = currentCount;
+                            } else {
+                                badge.remove();
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error marking notification as read:', error);
+                    }
+                }
+                
+                // إذا كان هناك رابط للإشعار، قم بتوجيه المستخدم إليه
+                const link = item.dataset.link;
+                if (link) {
+                    window.location.href = link;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

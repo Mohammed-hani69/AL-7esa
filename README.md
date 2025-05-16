@@ -58,7 +58,7 @@ pip install -r requirements.txt
 4. For future changes:
 ```bash
 git add .
-git commit -m "update to v 1.0.3"
+git commit -m "update to v 1.0.4"
 git push origin main
 ```
 

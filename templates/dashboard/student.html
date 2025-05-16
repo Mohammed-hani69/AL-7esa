@@ -1,361 +1,1015 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الطالب - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <!-- إضافة Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
 
-{% block title %}لوحة تحكم الطالب - الحصة{% endblock %}
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
 
-{% block styles %}
-<style>
-/* Dashboard Cards */
-.stat-card {
-    border-radius: 0.35rem;
-    margin-bottom: 1.5rem;
-    transition: transform 0.2s;
-}
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            padding: 2rem;
+        }
 
-.stat-card:hover {
-    transform: translateY(-5px);
-}
+        .innovative-sidebar {
+            background: var(--accent-gradient);
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 2rem;
+            height: calc(100vh - 4rem);
+            color: var(--surface-color);
+        }
 
-.stat-card .icon {
-    font-size: 2rem;
-    opacity: 0.7;
-}
+        .sidebar-brand {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
 
-/* Progress Cards */
-.progress-card {
-    margin-bottom: 1rem;
-}
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 10px;
+            margin-bottom: 1rem;
+        }
 
-.progress-info {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
+        .brand-text {
+            color: var(--surface-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
 
-.progress {
-    height: 0.5rem;
-    border-radius: 1rem;
-}
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
 
-/* Schedule Timeline */
-.timeline {
-    position: relative;
-    padding: 1rem 0;
-}
+        .nav-item {
+            margin-bottom: 1rem;
+        }
 
-.timeline::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 1rem;
-    height: 100%;
-    width: 2px;
-    background-color: var(--border-color);
-}
+        .nav-link {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
 
-.timeline-item {
-    position: relative;
-    padding: 1rem 2rem 1rem 1rem;
-    margin-bottom: 1rem;
-}
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--surface-color);
+            transform: translateX(-10px);
+        }
 
-.timeline-item::before {
-    content: '';
-    position: absolute;
-    right: 0.85rem;
-    top: 1.5rem;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background-color: var(--primary-color);
-    z-index: 1;
-}
+        .nav-link i {
+            margin-left: 1rem;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
 
-.timeline-item.upcoming::before {
-    background-color: var(--warning-color);
-}
+        .main-content {
+            padding: 2rem;
+        }
 
-.timeline-item.completed::before {
-    background-color: var(--success-color);
-}
+        .page-header {
+            margin-bottom: 2rem;
+        }
 
-.timeline-content {
-    padding: 1rem;
-    background-color: var(--card-bg);
-    border-radius: 0.35rem;
-    box-shadow: 0 0.15rem 1.75rem 0 var(--shadow-color);
-}
+        .page-title {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
 
-.timeline-time {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-bottom: 0.5rem;
-}
+        .overview-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-/* Activity Feed */
-.activity-feed {
-    max-height: 400px;
-    overflow-y: auto;
-}
+        .overview-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s ease;
+        }
 
-.activity-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
+        .overview-card:hover {
+            transform: translateY(-5px);
+        }
 
-.activity-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin-left: 1rem;
-    background-color: rgba(0, 0, 0, 0.05);
-}
+        .overview-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
 
-.activity-content {
-    flex: 1;
-}
+        .overview-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-gradient);
+            color: white;
+            font-size: 1.5rem;
+        }
 
-.activity-time {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
+        .overview-card-title {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin: 0;
+        }
 
-/* Classroom Cards */
-.classroom-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
-}
+        .overview-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
 
-.classroom-card {
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s;
-}
+        .tasks-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-.classroom-card:hover {
-    transform: translateY(-5px);
-}
+        .task-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+        }
 
-.classroom-card .card-img-overlay {
-    background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.8));
-}
+        .task-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--background-color);
+        }
 
-.classroom-card .subject-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.8;
-}
+        .task-card-title {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    .classroom-cards {
-        grid-template-columns: 1fr;
-    }
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
 
-    .timeline::before {
-        right: 0.75rem;
-    }
+        .task-item {
+            display: flex;
+            align-items: start;
+            padding: 1rem;
+            border-bottom: 1px solid var(--background-color);
+            transition: all 0.3s ease;
+        }
 
-    .timeline-item {
-        padding-right: 1.5rem;
-    }
-}
-</style>
-{% endblock %}
+        .task-item:hover {
+            background: var(--background-color);
+            border-radius: var(--border-radius-sm);
+        }
 
-{% block content %}
-<div class="container-fluid dashboard-container">
-    <!-- ترويسة لوحة التحكم -->
-    <div class="content-header mb-4">
-        <h1 class="mb-2">لوحة تحكم الطالب</h1>
-        <p class="content-description text-muted">مرحباً {{ current_user.name }}، مرحباً بك في لوحة التحكم الخاصة بك.</p>
-    </div>
+        .task-item:last-child {
+            border-bottom: none;
+        }
 
-    <!-- إحصائيات سريعة -->
-    <div class="dashboard-section mb-5">
-        <div class="dashboard-section-header mb-3">
-            <h2 class="dashboard-section-title">إحصائيات سريعة</h2>
-        </div>
-        <div class="row g-3">
-            <div class="col-xl-4 col-md-6">
-                <div class="stat-card primary h-100">
-                    <h3>الفصول المسجلة</h3>
-                    <div class="stat-value">{{ enrollments|length }}</div>
-                    <div class="stat-icon">
-                        <i class="fas fa-chalkboard"></i>
+        .task-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-gradient);
+            color: white;
+            margin-left: 1rem;
+            flex-shrink: 0;
+        }
+
+        .task-content {
+            flex-grow: 1;
+        }
+
+        .task-title {
+            font-weight: 500;
+            color: var (--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .task-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .task-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* تصميم الإشعارات */
+        .notifications-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .notifications-toggle {
+            background: none;
+            border: none;
+            color: var(--surface-color);
+            position: relative;
+            padding: 0.5rem;
+            margin: 1rem 0;
+            width: 100%;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
+
+        .notifications-toggle:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .notifications-badge {
+            background: #FF6B6B;
+            color: white;
+            border-radius: 50%;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.8rem;
+            position: absolute;
+            top: 0;
+            left: 0.5rem;
+        }
+
+        .notifications-panel {
+            position: absolute;
+            left: 0;
+            top: 100%;
+            width: 320px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            z-index: 1000;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notifications-panel.show {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--background-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--background-color);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            background: var(--background-color);
+        }
+
+        .notification-item.unread {
+            background: rgba(108, 99, 255, 0.05);
+        }
+
+        .notification-icon {
+            background: var(--accent-gradient);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex-grow: 1;
+        }
+
+        .notification-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .notification-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-time {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .notifications-empty {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .innovative-sidebar {
+                position: fixed;
+                right: -300px;
+                z-index: 1000;
+                transition: 0.3s ease;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .innovative-sidebar.show {
+                right: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                right: 1rem;
+                top: 1rem;
+                z-index: 1001;
+                background: var(--surface-color);
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: var(--box-shadow);
+            }
+
+            .notifications-panel {
+                position: fixed;
+                left: 1rem;
+                right: 1rem;
+                width: auto;
+                top: 5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .overview-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .tasks-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+        }
+
+        .analytics-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--background-color);
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .task-item {
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .task-item:hover {
+            background: var(--background-color);
+        }
+
+        .progress-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .progress {
+            flex-grow: 1;
+            height: 0.5rem;
+            background: var(--background-color);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-gradient);
+            border-radius: var(--border-radius-sm);
+            transition: width 0.3s ease;
+        }
+
+        .btn-back {
+            background: linear-gradient(120deg, #ffc107, #ff9800);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
+            </div>
+            
+            <!-- إضافة زر الإشعارات -->
+            <div class="notifications-dropdown">
+                <button class="notifications-toggle" id="notificationsToggle">
+                    <i class="fas fa-bell me-2"></i>
+                    <span>الإشعارات</span>
+                    {% if unread_notifications %}
+                    <span class="notifications-badge">{{ unread_notifications|length }}</span>
+                    {% endif %}
+                </button>
+                <div class="notifications-panel" id="notificationsPanel">
+                    <div class="notification-header">
+                        <h6 class="m-0">الإشعارات</h6>
+                        {% if notifications %}
+                        <button class="btn btn-sm text-primary" id="markAllRead">
+                            <i class="fas fa-check-double"></i>
+                            تعيين الكل كمقروء
+                        </button>
+                        {% endif %}
                     </div>
-                </div>
-            </div>
-
-            <div class="col-xl-4 col-md-6">
-                <div class="stat-card success h-100">
-                    <h3>الواجبات القادمة</h3>
-                    <div class="stat-value">{{ upcoming_assignments|length }}</div>
-                    <div class="stat-icon">
-                        <i class="fas fa-tasks"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-4 col-md-6">
-                <div class="stat-card info h-100">
-                    <h3>الاختبارات المتاحة</h3>
-                    <div class="stat-value">{{ upcoming_quizzes|length }}</div>
-                    <div class="stat-icon">
-                        <i class="fas fa-question-circle"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- الفصول الدراسية -->
-    <div class="dashboard-section mb-5">
-        <div class="dashboard-section-header mb-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <h2 class="dashboard-section-title">فصولك الدراسية</h2>
-                <a href="{{ url_for('student.join_classroom') }}" class="btn btn-primary">
-                    <i class="fas fa-plus-circle ml-1"></i> الانضمام إلى فصل
-                </a>
-            </div>
-        </div>
-
-        {% if enrollments %}
-            <div class="row g-3">
-                {% for enrollment in enrollments %}
-                    {% set classroom = enrollment.classroom %}
-                    <div class="col-xl-4 col-md-6">
-                        <div class="classroom-card card h-100" style="border-top: 4px solid {{ classroom.color|default('var(--primary-color)') }};">
-                            <div class="card-body">
-                                <h5 class="card-title mb-3">{{ classroom.name }}</h5>
-                                <div class="classroom-info">
-                                    <div>
-                                        <i class="fas fa-book"></i>
-                                        <span>{{ classroom.subject }}</span>
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-graduation-cap"></i>
-                                        <span>{{ classroom.grade }}</span>
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-user-tie"></i>
-                                        <span>{{ classroom.teacher.name }}</span>
-                                    </div>
-                                    <div class="classroom-subject">
-                                        <i class="fas fa-tag"></i>
-                                        <span class="badge {{ 'bg-success' if classroom.is_free else 'bg-primary' }}">
-                                            {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn btn-teacher w-100 mt-3">
-                                    <i class="fas fa-arrow-left ml-1"></i> دخول الفصل
-                                </a>
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                        <div class="notification-item {{ 'unread' if not notification.is_read }}" data-id="{{ notification.id }}" data-link="{{ notification.link }}">
+                            <div class="notification-icon">
+                                <i class="fas fa-{{ notification.icon|default('bell') }}"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">{{ notification.title }}</div>
+                                <div class="notification-text">{{ notification.text }}</div>
+                                <div class="notification-time">{{ notification.created_at|timeago }}</div>
                             </div>
                         </div>
-                    </div>
-                {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="notifications-empty">
+                            <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                            <p>لا توجد إشعارات جديدة</p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-        {% else %}
-            <div class="text-center py-5 card">
-                <div class="card-body">
-                    <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
-                    <h5>لم تنضم إلى أي فصول بعد</h5>
-                    <p class="text-muted">قم بالانضمام إلى فصل دراسي للبدء في رحلتك التعليمية</p>
-                    <a href="{{ url_for('student.join_classroom') }}" class="btn btn-primary mt-2">
-                        <i class="fas fa-plus-circle ml-1"></i> انضم إلى فصل جديد
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('student.dashboard') }}" class="nav-link active">
+                        <i class="fas fa-th-large"></i>
+                        <span>لوحة التحكم</span>
                     </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('student.classrooms') }}" class="nav-link">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>الفصول</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- ترويسة الصفحة -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">لوحة تحكم الطالب</h1>
+                    <p class="text-secondary">مرحباً {{ current_user.name }}، مرحباً بك في لوحة تحكمك</p>
+                </div>
+                <a href="{{ url_for('student.classrooms') }}" class="btn btn-back">
+                    <i class="fas fa-arrow-right me-1"></i>
+                    العودة للفصول
+                </a>
+            </div>
+
+            <!-- بطاقات نظرة عامة -->
+            <div class="overview-cards">
+                <div class="overview-card">
+                    <div class="overview-card-header">
+                        <div class="overview-card-icon">
+                            <i class="fas fa-chalkboard"></i>
+                        </div>
+                        <div class="overview-card-title">الفصول المسجلة</div>
+                    </div>
+                    <div class="overview-card-value">{{ enrollments|length }}</div>
+                </div>
+
+                <div class="overview-card">
+                    <div class="overview-card-header">
+                        <div class="overview-card-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="overview-card-title">الواجبات القادمة</div>
+                    </div>
+                    <div class="overview-card-value">{{ upcoming_assignments|length }}</div>
+                </div>
+
+                <div class="overview-card">
+                    <div class="overview-card-header">
+                        <div class="overview-card-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="overview-card-title">الاختبارات المتاحة</div>
+                    </div>
+                    <div class="overview-card-value">{{ upcoming_quizzes|length }}</div>
                 </div>
             </div>
-        {% endif %}
-    </div>
 
-    <!-- المهام والواجبات -->
-    <div class="dashboard-section mb-4">
-        <div class="dashboard-section-header mb-3">
-            <h2 class="dashboard-section-title">المهام المطلوبة</h2>
-        </div>
-        <div class="row g-3">
-            <div class="col-lg-6">
-                <div class="card h-100">
-                    <div class="card-header">
-                        <h6 class="mb-0 font-weight-bold text-primary">الواجبات القادمة</h6>
+            <!-- قسم التحليلات -->
+            <div class="analytics-section">
+                <!-- رسم بياني للأداء في الواجبات -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">تحليل أداء الواجبات</h3>
                     </div>
-                    <div class="card-body">
-                        {% if upcoming_assignments %}
-                            <div class="list-group">
-                                {% for assignment in upcoming_assignments %}
-                                    <a href="{{ url_for('student.view_assignment', classroom_id=assignment.classroom_id, assignment_id=assignment.id) }}" 
-                                    class="list-group-item list-group-item-action">
-                                        <div class="d-flex w-100 justify-content-between">
-                                            <h6 class="mb-1">{{ assignment.title }}</h6>
-                                            <small class="text-{{ 'danger' if assignment.due_date.date() <= now.date() else 'muted' }}">
-                                                <i class="fas fa-clock ml-1"></i>
-                                                {% if assignment.due_date.date() == now.date() %}
-                                                    اليوم
-                                                {% else %}
-                                                    {{ (assignment.due_date - now).days }} أيام
-                                                {% endif %}
-                                            </small>
+                    <div class="chart-container">
+                        <canvas id="assignmentsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- رسم بياني للأداء في الاختبارات -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">تحليل أداء الاختبارات</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="quizzesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- رسم بياني لتوزيع النقاط -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">توزيع النقاط حسب الفصول</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="pointsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قسم المهام -->
+            <div class="tasks-section">
+                <!-- الواجبات القادمة -->
+                <div class="task-card">
+                    <div class="task-card-header">
+                        <h3 class="task-card-title">الواجبات القادمة</h3>
+                    </div>
+                    {% if upcoming_assignments %}
+                        <ul class="task-list">
+                            {% for assignment in upcoming_assignments %}
+                            <a href="{{ url_for('student.view_assignment', classroom_id=assignment.classroom.id, assignment_id=assignment.id) }}" 
+                               class="task-item">
+                                <li class="task-item">
+                                    <div class="task-icon">
+                                        <i class="fas fa-book"></i>
+                                    </div>
+                                    <div class="task-content">
+                                        <div class="task-title">{{ assignment.title }}</div>
+                                        <div class="task-subtitle">{{ assignment.classroom.name }}</div>
+                                        <div class="task-meta">
+                                            <i class="fas fa-calendar-alt ml-1"></i>
+                                            يستحق {{ assignment.due_date|timeago }}
                                         </div>
-                                        <p class="mb-1 small">{{ assignment.description|truncate(100) }}</p>
-                                        <small class="text-muted">{{ assignment.classroom.name }}</small>
-                                    </a>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="text-center py-4">
-                                <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
-                                <p class="mb-0">لا توجد واجبات قادمة حالياً</p>
-                            </div>
-                        {% endif %}
-                    </div>
+                                        {% if assignment.submission %}
+                                        <div class="progress-info">
+                                            <small class="text-success">تم التسليم</small>
+                                            <div class="progress">
+                                                <div class="progress-bar" style="width: 100%"></div>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <div class="progress-info">
+                                            <small class="text-warning">لم يتم التسليم</small>
+                                            <div class="progress">
+                                                <div class="progress-bar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                            </a>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <p class="mb-0">لا توجد واجبات قادمة حالياً</p>
+                        </div>
+                    {% endif %}
                 </div>
-            </div>
 
-            <div class="col-lg-6">
-                <div class="card h-100">
-                    <div class="card-header">
-                        <h6 class="mb-0 font-weight-bold text-primary">الاختبارات المتاحة</h6>
+                <!-- الاختبارات المتاحة -->
+                <div class="task-card">
+                    <div class="task-card-header">
+                        <h3 class="task-card-title">الاختبارات المتاحة</h3>
                     </div>
-                    <div class="card-body">
-                        {% if upcoming_quizzes %}
-                            <div class="list-group">
-                                {% for quiz in upcoming_quizzes %}
-                                    <a href="{{ url_for('student.quiz', classroom_id=quiz.classroom_id, quiz_id=quiz.id) }}" 
-                                    class="list-group-item list-group-item-action">
-                                        <div class="d-flex w-100 justify-content-between">
-                                            <h6 class="mb-1">{{ quiz.title }}</h6>
-                                            <small class="text-{{ 'success' if now >= quiz.start_time and now <= quiz.end_time else 'muted' }}">
-                                                <i class="fas fa-hourglass-half ml-1"></i>
+                    {% if upcoming_quizzes %}
+                        <ul class="task-list">
+                            {% for quiz in upcoming_quizzes %}
+                            <a href="{{ url_for('student.quizzes', classroom_id=quiz.classroom.id, quiz_id=quiz.id) }}"
+                               class="task-item">
+                                <li class="task-item">
+                                    <div class="task-icon">
+                                        <i class="fas fa-question"></i>
+                                    </div>
+                                    <div class="task-content">
+                                        <div class="task-title">{{ quiz.title }}</div>
+                                        <div class="task-subtitle">{{ quiz.classroom.name }}</div>
+                                        <div class="task-meta">
+                                            <i class="fas fa-clock ml-1"></i>
+                                            {{ quiz.duration_minutes }} دقيقة
+                                            {% if quiz.start_time and quiz.end_time %}
                                                 {% if now >= quiz.start_time and now <= quiz.end_time %}
-                                                    متاح الآن
-                                                {% elif now < quiz.start_time %}
-                                                    يبدأ {{ (quiz.start_time - now).days }} أيام
+                                                    <span class="badge bg-success">متاح الآن</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">يبدأ {{ quiz.start_time|timeago }}</span>
                                                 {% endif %}
-                                            </small>
+                                            {% else %}
+                                                <span class="badge bg-success">متاح دائماً</span>
+                                            {% endif %}
                                         </div>
-                                        <p class="mb-1 small">{{ quiz.description|truncate(100) }}</p>
-                                        <small class="text-muted">{{ quiz.classroom.name }} | {{ quiz.duration_minutes }} دقيقة</small>
-                                    </a>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="text-center py-4">
-                                <i class="fas fa-clipboard-check fa-2x text-info mb-3"></i>
-                                <p class="mb-0">لا توجد اختبارات متاحة حالياً</p>
-                            </div>
-                        {% endif %}
-                    </div>
+                                        {% if quiz.attempt %}
+                                        <div class="progress-info">
+                                            <small class="text-success">تم الإكمال بنسبة {{ quiz.attempt.score }}%</small>
+                                            <div class="progress">
+                                                <div class="progress-bar" style="width: {{ quiz.attempt.score }}%"></div>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <div class="progress-info">
+                                            <small class="text-warning">لم يتم البدء</small>
+                                            <div class="progress">
+                                                <div class="progress-bar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                            </a>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard-check fa-2x text-info mb-2"></i>
+                            <p class="mb-0">لا توجد اختبارات متاحة حالياً</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
-        </div>
+        </main>
     </div>
-</div>
-{% endblock %}
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+
+        // تفعيل قائمة الإشعارات
+        const notificationsToggle = document.getElementById('notificationsToggle');
+        const notificationsPanel = document.getElementById('notificationsPanel');
+        const markAllReadBtn = document.getElementById('markAllRead');
+
+        notificationsToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationsPanel.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!notificationsPanel.contains(e.target) && e.target !== notificationsToggle) {
+                notificationsPanel.classList.remove('show');
+            }
+        });
+
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', async () => {
+                try {
+                    await fetch('/api/notifications/mark-all-read', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    // تحديث واجهة المستخدم
+                    document.querySelectorAll('.notification-item.unread').forEach(item => {
+                        item.classList.remove('unread');
+                    });
+                    
+                    const badge = document.querySelector('.notifications-badge');
+                    if (badge) {
+                        badge.remove();
+                    }
+                } catch (error) {
+                    console.error('Error marking notifications as read:', error);
+                }
+            });
+        }
+
+        // التعامل مع النقر على الإشعارات
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', async () => {
+                if (item.classList.contains('unread')) {
+                    try {
+                        const notificationId = item.dataset.id;
+                        await fetch(`/api/notifications/${notificationId}/mark-read`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        item.classList.remove('unread');
+                        
+                        // تحديث عداد الإشعارات غير المقروءة
+                        const badge = document.querySelector('.notifications-badge');
+                        if (badge) {
+                            const currentCount = parseInt(badge.textContent) - 1;
+                            if (currentCount > 0) {
+                                badge.textContent = currentCount;
+                            } else {
+                                badge.remove();
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error marking notification as read:', error);
+                    }
+                }
+                
+                // إذا كان هناك رابط للإشعار، قم بتوجيه المستخدم إليه
+                const link = item.dataset.link;
+                if (link) {
+                    window.location.href = link;
+                }
+            });
+        });
+
+        // تهيئة الرسوم البيانية
+        Chart.register(ChartDataLabels);
+        
+        // رسم بياني للواجبات
+        const assignmentsCtx = document.getElementById('assignmentsChart').getContext('2d');
+        new Chart(assignmentsCtx, {
+            type: 'line',
+            data: {
+                labels: {{ assignment_dates|tojson }},
+                datasets: [{
+                    label: 'درجات الواجبات',
+                    data: {{ assignment_scores|tojson }},
+                    borderColor: '#6C63FF',
+                    backgroundColor: 'rgba(108, 99, 255, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        backgroundColor: function(context) {
+                            return context.dataset.borderColor;
+                        },
+                        borderRadius: 4,
+                        color: 'white',
+                        font: {
+                            weight: 'bold'
+                        },
+                        formatter: Math.round
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        // رسم بياني للاختبارات
+        const quizzesCtx = document.getElementById('quizzesChart').getContext('2d');
+        new Chart(quizzesCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ quiz_titles|tojson }},
+                datasets: [{
+                    label: 'نتائج الاختبارات',
+                    data: {{ quiz_scores|tojson }},
+                    backgroundColor: 'rgba(108, 99, 255, 0.8)',
+                    borderColor: '#6C63FF',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: Math.round,
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        // رسم بياني للنقاط
+        const pointsCtx = document.getElementById('pointsChart').getContext('2d');
+        new Chart(pointsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ classroom_names|tojson }},
+                datasets: [{
+                    data: {{ classroom_points|tojson }},
+                    backgroundColor: [
+                        'rgba(108, 99, 255, 0.8)',
+                        'rgba(255, 108, 171, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)'
+                    ],
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        color: '#fff',
+                        formatter: (value, ctx) => {
+                            let sum = 0;
+                            let dataArr = ctx.chart.data.datasets[0].data;
+                            dataArr.map(data => {
+                                sum += data;
+                            });
+                            let percentage = (value * 100 / sum).toFixed(1) + "%";
+                            return percentage;
+                        },
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

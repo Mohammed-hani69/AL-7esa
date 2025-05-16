@@ -89,6 +89,12 @@ def dashboard():
     # Get teacher's classrooms
     classrooms = Classroom.query.filter_by(teacher_id=current_user.id).all()
 
+    # Get total number of students across all classrooms
+    total_students = db.session.query(db.func.count(ClassroomEnrollment.id))\
+        .join(Classroom)\
+        .filter(Classroom.teacher_id == current_user.id)\
+        .scalar()
+
     # Get current subscription
     active_sub = Subscription.query.filter(
         Subscription.user_id == current_user.id,
@@ -114,7 +120,9 @@ def dashboard():
                            plans=plans,
                            can_create_classroom=can_create_classroom(),
                            subscription_days_left=subscription_days_left,
-                           has_active_subscription=has_active_sub)
+                           has_active_subscription=has_active_sub,
+                           total_students=total_students,
+                           now=datetime.utcnow())
 
 @teacher_bp.route('/subscribe/<int:plan_id>', methods=['POST'])
 @login_required
@@ -210,6 +218,33 @@ def renew_subscription():
     return redirect(url_for('teacher.dashboard'))
 
 """
+مسار عرض الاشتراكات وإدارتها
+"""
+@teacher_bp.route('/subscriptions')
+@login_required
+@teacher_required
+def subscriptions():
+    # Get all subscription plans
+    plans = SubscriptionPlan.query.all()
+
+    # Get current active subscription
+    active_subscription = Subscription.query.filter(
+        Subscription.user_id == current_user.id,
+        Subscription.end_date > datetime.utcnow(),
+        Subscription.is_active == True
+    ).first()
+
+    # Calculate remaining days if there's an active subscription 
+    subscription_days_left = 0
+    if active_subscription and active_subscription.end_date:
+        subscription_days_left = (active_subscription.end_date - datetime.utcnow()).days
+
+    return render_template('teacher/teacher_plans.html',
+                         plans=plans,
+                         active_subscription=active_subscription,
+                         subscription_days_left=subscription_days_left)
+
+"""
 إدارة الفصول الدراسية
 إنشاء وتعديل وحذف الفصول
 """
@@ -276,6 +311,12 @@ def classroom(classroom_id):
     # التحقق من وجود اشتراك نشط للمعلم
     has_subscription = has_active_subscription()
     if not has_subscription:
+        flash('يجب أن يكون لديك اشتراك نشط للوصول إلى هذه الميزة', 'warning')
+        return redirect(url_for('teacher.subscriptions'))
+        
+    # Get current subscription plan
+    plan = get_current_plan()
+    if not plan:
         flash('لا يمكنك الوصول إلى الفصول الدراسية. يرجى الاشتراك في باقة نشطة أولاً.', 'warning')
         return redirect(url_for('teacher.dashboard'))
         
@@ -305,7 +346,6 @@ def classroom(classroom_id):
 
     # Check if plan allows chat
     can_use_chat = False
-    plan = get_current_plan()
     if plan and plan.has_chat:
         can_use_chat = True
 
@@ -316,7 +356,42 @@ def classroom(classroom_id):
                        assignments=assignments,
                        quizzes=quizzes,
                        assistant=assistant,
-                       can_use_chat=can_use_chat)
+                       can_use_chat=can_use_chat,
+                       plan=plan)
+
+@teacher_bp.route('/classrooms')
+@login_required
+@teacher_required
+def list_classrooms():
+    # التحقق من وجود اشتراك نشط للمعلم
+    has_subscription = has_active_subscription()
+    if not has_subscription:
+        flash('لا يمكنك الوصول إلى الفصول الدراسية. يرجى الاشتراك في باقة نشطة أولاً.', 'warning')
+        return redirect(url_for('teacher.dashboard'))
+        
+    # Get teacher's classrooms
+    classrooms = Classroom.query.filter_by(teacher_id=current_user.id).order_by(Classroom.created_at.desc()).all()
+
+    # Get total number of students for each classroom
+    classroom_stats = {}
+    for classroom in classrooms:
+        enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom.id).all()
+        classroom_stats[classroom.id] = {
+            'total_students': len(enrollments),
+            'active_assignments': Assignment.query.filter(
+                Assignment.classroom_id == classroom.id,
+                Assignment.due_date > datetime.utcnow()
+            ).count(),
+            'active_quizzes': Quiz.query.filter(
+                Quiz.classroom_id == classroom.id,
+                Quiz.end_time > datetime.utcnow()
+            ).count()
+        }
+
+    return render_template('teacher/classrooms.html',
+                         classrooms=classrooms,
+                         classroom_stats=classroom_stats,
+                         can_create_classroom=can_create_classroom())
 
 """
 البث المباشر للفصل
@@ -333,7 +408,9 @@ def live_classroom(classroom_id):
         flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
         return redirect(url_for('teacher.dashboard'))
 
-    return render_template('classroom/live_class.html', classroom=classroom)
+    return render_template('classroom/live_class.html', 
+                         classroom=classroom,
+                         user_type='teacher')
 
 @teacher_bp.route('/classroom/<int:classroom_id>/add_content', methods=['POST'])
 @login_required
@@ -393,10 +470,10 @@ def add_content(classroom_id):
                     except Exception as e:
                         print(f"خطأ في إنشاء مجلد التحميل: {e}")
 
-                # Generate a secure filename with timestamp to avoid conflicts
-                filename = secure_filename(file.filename)
+                # Generate a secure filename with timestamp
+                original_name, file_extension = os.path.splitext(file.filename)
                 timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-                saved_filename = f"{timestamp}_{filename}"
+                saved_filename = f"{timestamp}_{file_extension}"  # إضافة underscore قبل الامتداد
 
                 # Save the file
                 file_path = os.path.join(upload_dir, saved_filename)
@@ -503,13 +580,57 @@ def create_assignment(classroom_id):
                 flash('تنسيق التاريخ غير صالح', 'danger')
                 return redirect(url_for('teacher.create_assignment', classroom_id=classroom.id))
 
+        attachment_url = None
+        if 'assignment_file' in request.files:
+            file = request.files['assignment_file']
+            if file and file.filename:
+                # الحصول على الامتداد الأصلي للملف
+                filename = file.filename
+                if allowed_file(filename):
+                    try:
+                        # Create assignments directory if it doesn't exist
+                        assignments_dir = os.path.join('static', 'uploads', 'assignments')
+                        if not os.path.exists(assignments_dir):
+                            os.makedirs(assignments_dir, exist_ok=True)
+                            
+                        # Create classroom-specific directory if it doesn't exist
+                        upload_dir = os.path.join(assignments_dir, str(classroom_id))
+                        if not os.path.exists(upload_dir):
+                            os.makedirs(upload_dir, exist_ok=True)
+
+                        # Generate filename with timestamp while keeping the original extension
+                        timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+                        original_name, file_extension = os.path.splitext(filename)
+                        saved_filename = f"{timestamp}_{file_extension}"  # إضافة underscore قبل الامتداد
+                        
+                        # Get absolute path for saving
+                        file_path = os.path.join(os.getcwd(), upload_dir, saved_filename)
+                        
+                        # Save file
+                        file.save(file_path)
+                        
+                        # Store relative URL for database
+                        attachment_url = f"/uploads/assignments/{classroom_id}/{saved_filename}"
+                        
+                        print(f"تم حفظ الملف بنجاح في: {file_path}")
+                        print(f"الامتداد الأصلي: {file_extension}")
+                        
+                    except Exception as e:
+                        print(f"خطأ في رفع الملف: {e}")
+                        flash(f'حدث خطأ أثناء رفع الملف: {str(e)}', 'danger')
+                        return redirect(url_for('teacher.assignments', classroom_id=classroom.id))
+                else:
+                    flash('نوع الملف غير مسموح به', 'danger')
+                    return redirect(url_for('teacher.assignments', classroom_id=classroom.id))
+
         # Create assignment
         new_assignment = Assignment(
             classroom_id=classroom.id,
             title=title,
             description=description,
             due_date=due_date,
-            points=points
+            points=points,
+            attachment_url=attachment_url
         )
 
         db.session.add(new_assignment)
@@ -518,7 +639,99 @@ def create_assignment(classroom_id):
         flash('تم إنشاء الواجب بنجاح', 'success')
         return redirect(url_for('teacher.assignments', classroom_id=classroom.id))
 
-    return render_template('classroom/create_assignment.html', classroom=classroom)
+    return render_template('classroom/assignments.html', classroom=classroom)
+
+@teacher_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/edit', methods=['GET', 'POST'])
+@login_required
+@teacher_required
+def edit_assignment(classroom_id, assignment_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    assignment = Assignment.query.get_or_404(assignment_id)
+
+    # Ensure the teacher owns this classroom and assignment
+    if classroom.teacher_id != current_user.id or assignment.classroom_id != classroom.id:
+        flash('غير مصرح لك بتعديل هذا الواجب', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+
+    if request.method == 'POST':
+        title = request.form.get('title')
+        description = request.form.get('description')
+        due_date_str = request.form.get('due_date')
+        points = int(request.form.get('points', 10))
+
+        # Parse due date if provided
+        due_date = None
+        if due_date_str:
+            try:
+                due_date = datetime.strptime(due_date_str, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                flash('تنسيق التاريخ غير صالح', 'danger')
+                return redirect(url_for('teacher.edit_assignment', classroom_id=classroom.id, assignment_id=assignment.id))
+
+        # Handle new file upload if provided
+        if 'assignment_file' in request.files:
+            file = request.files['assignment_file']
+            if file and file.filename:
+                if allowed_file(file.filename):
+                    try:
+                        # Create classroom-specific directory if it doesn't exist
+                        upload_dir = os.path.join('static', 'uploads', 'assignments', str(classroom_id))
+                        os.makedirs(upload_dir, exist_ok=True)
+
+                        # Generate secure filename with timestamp
+                        filename = secure_filename(file.filename)
+                        timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+                        saved_filename = f"{timestamp}_{filename}"
+                        
+                        # Save file
+                        file_path = os.path.join(upload_dir, saved_filename)
+                        file.save(file_path)
+                        
+                        # Update assignment's attachment URL
+                        assignment.attachment_url = f"/uploads/assignments/{classroom_id}/{saved_filename}"
+                        
+                    except Exception as e:
+                        flash(f'حدث خطأ أثناء رفع الملف: {str(e)}', 'danger')
+                        return redirect(url_for('teacher.edit_assignment', classroom_id=classroom.id, assignment_id=assignment.id))
+                else:
+                    flash('نوع الملف غير مسموح به', 'danger')
+                    return redirect(url_for('teacher.edit_assignment', classroom_id=classroom.id, assignment_id=assignment.id))
+
+        # Update assignment
+        assignment.title = title
+        assignment.description = description
+        assignment.due_date = due_date
+        assignment.points = points
+
+        db.session.commit()
+        flash('تم تحديث الواجب بنجاح', 'success')
+        return redirect(url_for('teacher.assignments', classroom_id=classroom.id))
+
+    return render_template('classroom/edit_assignment.html',
+                         classroom=classroom,
+                         assignment=assignment)
+
+@teacher_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/delete', methods=['POST'])
+@login_required
+@teacher_required
+def delete_assignment(classroom_id, assignment_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    assignment = Assignment.query.get_or_404(assignment_id)
+
+    # Ensure the teacher owns this classroom and assignment
+    if classroom.teacher_id != current_user.id or assignment.classroom_id != classroom.id:
+        flash('غير مصرح لك بحذف هذا الواجب', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+
+    # Delete all submissions first
+    AssignmentSubmission.query.filter_by(assignment_id=assignment.id).delete()
+    
+    # Delete the assignment
+    db.session.delete(assignment)
+    db.session.commit()
+
+    flash('تم حذف الواجب بنجاح', 'success')
+    return redirect(url_for('teacher.assignments', classroom_id=classroom.id))
 
 @teacher_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/submissions')
 @login_required
@@ -849,19 +1062,43 @@ def grade_quiz_attempt(classroom_id, quiz_id, attempt_id):
 
     for answer in attempt.answers:
         if answer.question.question_type in ['essay', 'short_answer']:
-            points = request.form.get(f'points_{answer.id}')
+            points_str = request.form.get(f'points_{answer.id}')
             feedback = request.form.get(f'feedback_{answer.id}')
+            
+            if points_str is None:
+                # هذا السؤال لم يتم تصحيحه بعد
+                all_graded = False
+                continue
+                
+            try:
+                points = float(points_str)
+                # التأكد من أن النقاط ضمن الحدود المسموحة
+                points = max(0, min(points, answer.question.points))
+                answer.points_earned = points
+                answer.feedback = feedback
+                total_points += points
+            except ValueError:
+                flash('قيمة النقاط غير صالحة', 'danger')
+                return redirect(url_for('teacher.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
 
-
-        # Update student points
+    if all_graded:
+        # Update attempt total score if all questions are graded
+        current_score = attempt.score or 0
+        attempt.score = current_score + total_points
+        # إضافة النقاط إلى نقاط الطالب
         attempt.enrollment.points += total_points
-
         flash('تم حفظ التصحيح بنجاح', 'success')
     else:
         flash('يرجى تصحيح جميع الأسئلة', 'danger')
         return redirect(url_for('teacher.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        flash('حدث خطأ أثناء حفظ التصحيح', 'danger')
+        return redirect(url_for('teacher.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
+
     return redirect(url_for('teacher.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
 
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/results')
@@ -1101,3 +1338,205 @@ def manage_chat_participants(classroom_id):
 
     db.session.commit()
     return redirect(url_for('teacher.chat_settings', classroom_id=classroom.id))
+
+@teacher_bp.route('/payments')
+@login_required
+@teacher_required
+def payments():
+    # الحصول على الفصول الخاصة بالمعلم
+    classrooms = Classroom.query.filter_by(teacher_id=current_user.id).all()
+    
+    # الحصول على جميع عمليات الدفع المعلقة للفصول
+    pending_payments = Payment.query.join(Classroom)\
+        .filter(
+            Classroom.teacher_id == current_user.id,
+            Payment.status == 'pending'
+        ).order_by(Payment.created_at.desc()).all()
+    
+    # الحصول على جميع عمليات الدفع المكتملة للفصول
+    completed_payments = Payment.query.join(Classroom)\
+        .filter(
+            Classroom.teacher_id == current_user.id,
+            Payment.status.in_(['success', 'failed'])
+        ).order_by(Payment.created_at.desc()).all()
+
+    return render_template('teacher/payments.html',
+                         classrooms=classrooms,
+                         pending_payments=pending_payments,
+                         completed_payments=completed_payments)
+
+@teacher_bp.route('/payment/<int:payment_id>/approve', methods=['POST'])
+@login_required
+@teacher_required
+def approve_payment(payment_id):
+    payment = Payment.query.get_or_404(payment_id)
+    
+    # التحقق من أن المعلم يملك هذا الفصل
+    if payment.classroom.teacher_id != current_user.id:
+        flash('غير مصرح لك بإدارة هذا الدفع', 'danger')
+        return redirect(url_for('teacher.payments'))
+    
+    # تحديث حالة الدفع
+    payment.status = 'success'
+    
+    # تفعيل اشتراك الطالب في الفصل
+    enrollment = ClassroomEnrollment.query.filter_by(
+        user_id=payment.user_id,
+        classroom_id=payment.classroom_id
+    ).first()
+    
+    if enrollment:
+        enrollment.payment_status = 'paid'
+        enrollment.is_active = True
+        enrollment.payment_date = datetime.utcnow()
+    
+    db.session.commit()
+    flash('تم تفعيل اشتراك الطالب بنجاح', 'success')
+    return redirect(url_for('teacher.payments'))
+
+@teacher_bp.route('/payment/<int:payment_id>/reject', methods=['POST'])
+@login_required
+@teacher_required
+def reject_payment(payment_id):
+    payment = Payment.query.get_or_404(payment_id)
+    
+    # التحقق من أن المعلم يملك هذا الفصل
+    if payment.classroom.teacher_id != current_user.id:
+        flash('غير مصرح لك بإدارة هذا الدفع', 'danger')
+        return redirect(url_for('teacher.payments'))
+    
+    # تحديث حالة الدفع
+    payment.status = 'failed'
+    
+    # تعطيل اشتراك الطالب في الفصل
+    enrollment = ClassroomEnrollment.query.filter_by(
+        user_id=payment.user_id,
+        classroom_id=payment.classroom_id
+    ).first()
+    
+    if enrollment:
+        enrollment.payment_status = 'failed'
+        enrollment.is_active = False
+    
+    db.session.commit()
+    flash('تم رفض عملية الدفع', 'danger')
+    return redirect(url_for('teacher.payments'))
+
+@teacher_bp.route('/classroom/<int:classroom_id>/analytics')
+@login_required
+@teacher_required
+def classroom_analytics(classroom_id):
+    """جلب تحليلات إضافية للفصل الدراسي"""
+    classroom = Classroom.query.get_or_404(classroom_id)
+    
+    # التحقق من ملكية الفصل
+    if classroom.teacher_id != current_user.id:
+        return jsonify({'error': 'غير مصرح لك بالوصول إلى هذا الفصل'}), 403
+
+    # تحليلات الواجبات
+    assignments = Assignment.query.filter_by(classroom_id=classroom_id).all()
+    submissions_by_month = db.session.query(
+        db.func.strftime('%Y-%m', AssignmentSubmission.submission_date).label('month'),
+        db.func.count(AssignmentSubmission.id).label('count')
+    ).join(Assignment).filter(Assignment.classroom_id == classroom_id)\
+     .group_by('month').order_by('month').all()
+
+    # تحليلات الاختبارات
+    quizzes = Quiz.query.filter_by(classroom_id=classroom_id).all()
+    quiz_attempts_by_month = db.session.query(
+        db.func.strftime('%Y-%m', QuizAttempt.start_time).label('month'),
+        db.func.avg(QuizAttempt.score).label('average_score')
+    ).join(Quiz).filter(Quiz.classroom_id == classroom_id)\
+     .group_by('month').order_by('month').all()
+
+    # تصنيف الطلاب حسب مستوى الأداء
+    student_grades = []
+    for enrollment in classroom.enrollments:
+        avg_grade = db.session.query(db.func.avg(AssignmentSubmission.grade))\
+            .join(Assignment).filter(
+                AssignmentSubmission.enrollment_id == enrollment.id,
+                Assignment.classroom_id == classroom_id
+            ).scalar() or 0
+        
+        quiz_avg = db.session.query(db.func.avg(QuizAttempt.score))\
+            .join(Quiz).filter(
+                QuizAttempt.enrollment_id == enrollment.id,
+                Quiz.classroom_id == classroom_id
+            ).scalar() or 0
+        
+        final_grade = (avg_grade + quiz_avg) / 2
+        student_grades.append(final_grade)
+
+    # تصنيف الدرجات
+    grade_distribution = {
+        'ممتاز': len([g for g in student_grades if g >= 90]),
+        'جيد جداً': len([g for g in student_grades if 80 <= g < 90]),
+        'جيد': len([g for g in student_grades if 70 <= g < 80]),
+        'مقبول': len([g for g in student_grades if g < 70])
+    }
+
+    # تحليلات تفاعل الطلاب
+    interaction_data = []
+    for month in range(6):
+        date = datetime.now() - timedelta(days=30 * month)
+        month_str = date.strftime('%Y-%m')
+        
+        total_activities = db.session.query(db.func.count(AssignmentSubmission.id))\
+            .join(Assignment).filter(
+                Assignment.classroom_id == classroom_id,
+                db.func.strftime('%Y-%m', AssignmentSubmission.submission_date) == month_str
+            ).scalar() or 0
+            
+        total_activities += db.session.query(db.func.count(QuizAttempt.id))\
+            .join(Quiz).filter(
+                Quiz.classroom_id == classroom_id,
+                db.func.strftime('%Y-%m', QuizAttempt.start_time) == month_str
+            ).scalar() or 0
+        
+        interaction_data.insert(0, {
+            'month': date.strftime('%B'),  # اسم الشهر
+            'activities': total_activities
+        })
+
+    return jsonify({
+        'classroom': {
+            'name': classroom.name,
+            'total_students': len(classroom.enrollments),
+            'interaction_rate': classroom.interaction_rate,
+            'average_grade': classroom.average_grade,
+            'assignments_completion_rate': classroom.assignments_completion_rate,
+            'attendance_rate': classroom.attendance_rate
+        },
+        'grade_distribution': grade_distribution,
+        'interaction_data': interaction_data,
+        'submissions_by_month': [{
+            'month': row.month,
+            'count': row.count
+        } for row in submissions_by_month],
+        'quiz_performance': [{
+            'month': row.month,
+            'average_score': float(row.average_score)
+        } for row in quiz_attempts_by_month]
+    })
+
+@teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/delete', methods=['POST'])
+@login_required
+@teacher_required
+def delete_quiz(classroom_id, quiz_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    quiz = Quiz.query.get_or_404(quiz_id)
+
+    # Ensure the teacher owns this classroom and quiz
+    if classroom.teacher_id != current_user.id or quiz.classroom_id != classroom.id:
+        flash('غير مصرح لك بحذف هذا الاختبار', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+        
+    # Delete quiz attempts and answers first (cascade will handle question options)
+    QuizAttempt.query.filter_by(quiz_id=quiz.id).delete()
+    
+    # Delete the quiz (will cascade delete questions)
+    db.session.delete(quiz)
+    db.session.commit()
+    
+    flash('تم حذف الاختبار بنجاح', 'success')
+    return redirect(url_for('teacher.quizzes', classroom_id=classroom.id))

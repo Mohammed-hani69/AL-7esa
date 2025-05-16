@@ -294,10 +294,10 @@ def logout():
 def profile():
     if request.method == 'POST':
         name = request.form.get('name')
-        email = request.form.get('email')
-        alt_phone = request.form.get('alt_phone')
-        address = request.form.get('address')
-        interests = request.form.get('interests')
+        email = request.form.get('email') or None  # Convert empty string to None
+        alt_phone = request.form.get('alt_phone') or None
+        address = request.form.get('address') or None
+        interests = request.form.get('interests') or None
 
         # Update user info
         current_user.name = name
@@ -332,6 +332,7 @@ def profile():
             else:
                 flash('نوع الملف غير مسموح به. يرجى استخدام صور بامتداد: png, jpg, jpeg, gif', 'danger')
 
+        current_user.updated_at = datetime.utcnow()
         db.session.commit()
         flash('تم تحديث الملف الشخصي بنجاح', 'success')
         return redirect(url_for('auth.profile'))

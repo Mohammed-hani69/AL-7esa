@@ -1,311 +1,280 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - الحصة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
 
-{% block title %}تسجيل الدخول - الحصة{% endblock %}
-
-{% block styles %}
 <style>
-.auth-wrapper {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-}
+    :root {
+        --primary-color: #6C63FF;
+        --secondary-color: #FF6CAB;
+        --card-bg: #FFFFFF;
+        --text-color: #2D3748;
+        --text-muted: #718096;
+        --border-color: #E2E8F0;
+        --bg-color: #F4F7FE;
+    }
 
-.auth-card {
-    width: 100%;
-    max-width: 420px;
-    background-color: var(--card-bg);
-    border-radius: 1rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    overflow: hidden;
-}
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
 
-.auth-header {
-    padding: 2rem;
-    text-align: center;
-    background-color: rgba(0, 0, 0, 0.03);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.auth-logo {
-    max-width: 120px;
-    margin-bottom: 1rem;
-}
-
-.auth-title {
-    margin-bottom: 0.5rem;
-    font-weight: 700;
-    color: var(--text-color);
-}
-
-.auth-subtitle {
-    color: var(--text-muted);
-    font-size: 0.875rem;
-}
-
-.auth-body {
-    padding: 2rem;
-}
-
-.auth-form .form-group {
-    margin-bottom: 1.5rem;
-}
-
-.auth-form .form-control {
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-color);
-    transition: all 0.2s ease;
-}
-
-.auth-form .form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-}
-
-.auth-form .input-group-text {
-    background-color: var(--bg-color);
-    border-color: var(--border-color);
-    color: var(--text-muted);
-}
-
-.auth-form label {
-    color: var(--text-color);
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-}
-
-.auth-btn {
-    width: 100%;
-    padding: 0.75rem;
-    font-weight: 500;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.auth-btn-google {
-    background-color: #fff;
-    color: #333;
-    border: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.auth-btn-google:hover {
-    background-color: #f8f9fa;
-}
-
-.auth-btn-google img {
-    width: 20px;
-    height: 20px;
-}
-
-.auth-divider {
-    text-align: center;
-    position: relative;
-    margin: 1.5rem 0;
-}
-
-.auth-divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background-color: var(--border-color);
-}
-
-.auth-divider span {
-    background-color: var(--card-bg);
-    padding: 0 1rem;
-    color: var(--text-muted);
-    position: relative;
-    font-size: 0.875rem;
-}
-
-.auth-footer {
-    text-align: center;
-    padding: 1rem 2rem;
-    background-color: rgba(0, 0, 0, 0.03);
-    border-top: 1px solid var(--border-color);
-}
-
-.auth-footer a {
-    color: var(--primary-color);
-    text-decoration: none;
-}
-
-.auth-footer a:hover {
-    text-decoration: underline;
-}
-
-.password-toggle {
-    cursor: pointer;
-    color: var(--text-muted);
-    transition: color 0.2s ease;
-}
-
-.password-toggle:hover {
-    color: var(--text-color);
-}
-
-.auth-alert {
-    margin-bottom: 1.5rem;
-    border-radius: 0.5rem;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 576px) {
     .auth-wrapper {
-        padding: 1rem;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
     }
-    
+
     .auth-card {
+        width: 100%;
+        max-width: 500px;
+        background-color: var(--card-bg);
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+    }
+
+    .auth-header {
+        padding: 2rem;
+        text-align: center;
+        background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+        color: white;
+    }
+
+    .auth-title {
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    .auth-subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.875rem;
+    }
+
+    .auth-body {
+        padding: 2rem;
+    }
+
+    .nav-tabs {
+        border: none;
+        margin-bottom: 2rem;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        color: var(--text-muted);
+        font-weight: 500;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        background: none;
+        position: relative;
+    }
+
+    .nav-tabs .nav-link.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        color: var(--text-color);
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control {
+        padding: 0.75rem 1rem;
         border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-color);
+        transition: all 0.2s ease;
     }
-    
-    .auth-header,
-    .auth-body,
-    .auth-footer {
-        padding: 1.5rem;
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(108, 99, 255, 0.25);
     }
-}
+
+    .form-text {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 0.5rem;
+        width: 100%;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+    }
+
+    .text-primary {
+        color: var(--primary-color) !important;
+    }
+
+    a {
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    a:hover {
+        color: var(--secondary-color);
+    }
+
+    @media (max-width: 576px) {
+        .auth-wrapper {
+            padding: 1rem;
+        }
+        
+        .auth-card {
+            border-radius: 0.5rem;
+        }
+        
+        .auth-header,
+        .auth-body {
+            padding: 1.5rem;
+        }
+    }
 </style>
-{% endblock %}
-
-{% block head_extra %}
-<script defer src="{{ url_for('static', filename='js/auth.js') }}"></script>
-{% endblock %}
-
-{% block public_content %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-6 col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white text-center">
-                    <h3>تسجيل الدخول</h3>
-                </div>
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <h4>منصة الحصة</h4>
-                        <p class="text-muted">منصة تعليمية متكاملة للمدارس والدروس الخصوصية</p>
-                    </div>
-                    
-                    <ul class="nav nav-tabs mb-4" id="authTabs" role="tablist">
-                        <li class="nav-item w-50 text-center">
-                            <a class="nav-link active" id="phone-tab" data-toggle="tab" href="#phone-auth" role="tab">
-                                <i class="fas fa-mobile-alt me-2"></i>تسجيل الدخول برقم الهاتف
-                            </a>
-                        </li>
-                        <li class="nav-item w-50 text-center">
-                            <a class="nav-link" id="password-tab" data-toggle="tab" href="#password-auth" role="tab">
-                                <i class="fas fa-key me-2"></i>تسجيل الدخول بكلمة المرور
-                            </a>
-                        </li>
-                    </ul>
-                    
-                    <div class="tab-content" id="authTabsContent">
-                        <!-- Phone Authentication -->
-                        <div class="tab-pane fade show active" id="phone-auth" role="tabpanel">
-                            <div id="phone-auth-step-1">
-                                <div class="form-group mb-3">
-                                    <label for="phone">رقم الهاتف</label>
-                                    <input type="tel" id="phone" class="form-control" placeholder="أدخل رقم الهاتف" dir="ltr">
-                                    <small class="form-text text-muted">مثال: +966512345678</small>
-                                </div>
-                                
-                                <div id="recaptcha-container" class="mb-3"></div>
-                                
-                                <button id="auth-submit-btn" class="btn btn-primary w-100">
-                                    إرسال رمز التحقق
-                                </button>
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h3 class="auth-title">تسجيل الدخول</h3>
+                <p class="auth-subtitle">أهلاً بك في منصة الحصة</p>
+            </div>
+            <div class="auth-body">
+                <ul class="nav nav-tabs nav-justified mb-4" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#phone-auth">
+                            <i class="fas fa-mobile-alt me-2"></i>رقم الهاتف
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#password-auth">
+                            <i class="fas fa-key me-2"></i>كلمة المرور
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="tab-content">
+                    <!-- تسجيل الدخول برقم الهاتف -->
+                    <div class="tab-pane fade show active" id="phone-auth">
+                        <div id="phone-auth-step-1">
+                            <div class="form-group">
+                                <label class="form-label" for="phone">
+                                    <i class="fas fa-phone me-2"></i>رقم الهاتف
+                                </label>
+                                <input type="tel" id="phone" class="form-control" placeholder="05xxxxxxxx" dir="ltr">
+                                <small class="form-text">سيتم إرسال رمز التحقق إلى هذا الرقم</small>
                             </div>
                             
-                            <div id="phone-auth-step-2" class="d-none">
-                                <div class="form-group mb-3">
-                                    <label for="verification-code">رمز التحقق</label>
-                                    <input type="text" id="verification-code" class="form-control" placeholder="أدخل رمز التحقق">
-                                    <small class="form-text text-muted">أدخل الرمز المرسل إلى هاتفك</small>
-                                </div>
-                                
-                                <button id="verify-code-btn" class="btn btn-primary w-100" onclick="verifyCode('verification-code', 'verify-code-btn')">
-                                    تحقق
-                                </button>
-                                
-                                <button class="btn btn-link w-100 mt-2" onclick="document.getElementById('phone-auth-step-1').classList.remove('d-none'); document.getElementById('phone-auth-step-2').classList.add('d-none');">
-                                    العودة
-                                </button>
-                            </div>
+                            <div id="recaptcha-container" class="mb-3"></div>
+                            
+                            <button id="auth-submit-btn" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>إرسال رمز التحقق
+                            </button>
                         </div>
                         
-                        <!-- Password Authentication -->
-                        <div class="tab-pane fade" id="password-auth" role="tabpanel">
-                            <form method="POST" action="{{ url_for('auth.login') }}">
-                                <div class="form-group mb-3">
-                                    <label for="login-phone">رقم الهاتف</label>
-                                    <input type="tel" id="login-phone" name="phone" class="form-control" required dir="ltr">
-                                </div>
-                                
-                                <div class="form-group mb-3">
-                                    <label for="login-password">كلمة المرور</label>
-                                    <input type="password" id="login-password" name="password" class="form-control" required>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <button type="submit" class="btn btn-primary w-100">تسجيل الدخول</button>
-                                </div>
-                            </form>
+                        <div id="phone-auth-step-2" class="d-none">
+                            <div class="form-group">
+                                <label class="form-label" for="verification-code">
+                                    <i class="fas fa-shield-alt me-2"></i>رمز التحقق
+                                </label>
+                                <input type="text" id="verification-code" class="form-control" placeholder="أدخل الرمز">
+                                <small class="form-text">أدخل الرمز المرسل إلى هاتفك</small>
+                            </div>
+                            
+                            <button id="verify-code-btn" class="btn btn-primary mb-3">
+                                <i class="fas fa-check-circle me-2"></i>تحقق
+                            </button>
+                            
+                            <button class="btn btn-link w-100" onclick="showPhoneStep1()">
+                                <i class="fas fa-arrow-right me-2"></i>العودة
+                            </button>
                         </div>
                     </div>
                     
-                    <div class="text-center mt-4">
-                        <p>ليس لديك حساب؟ <a href="{{ url_for('auth.register') }}">إنشاء حساب جديد</a></p>
+                    <!-- تسجيل الدخول بكلمة المرور -->
+                    <div class="tab-pane fade" id="password-auth">
+                        <form method="POST" action="{{ url_for('auth.login') }}">
+                            <div class="form-group">
+                                <label class="form-label" for="login-phone">
+                                    <i class="fas fa-phone me-2"></i>رقم الهاتف
+                                </label>
+                                <input type="tel" id="login-phone" name="phone" class="form-control" required dir="ltr">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="login-password">
+                                    <i class="fas fa-lock me-2"></i>كلمة المرور
+                                </label>
+                                <input type="password" id="login-password" name="password" class="form-control" required>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
+                                </button>
+                            </div>
+                        </form>
                     </div>
+                </div>
+                
+                <div class="text-center">
+                    <p>ليس لديك حساب؟ <a href="{{ url_for('auth.register') }}">إنشاء حساب جديد</a></p>
                 </div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Setup tabs functionality
-        const tabLinks = document.querySelectorAll('.nav-link');
-        const tabPanes = document.querySelectorAll('.tab-pane');
-        
-        tabLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                // Remove active class from all tabs
-                tabLinks.forEach(tab => tab.classList.remove('active'));
-                tabPanes.forEach(pane => {
-                    pane.classList.remove('show');
-                    pane.classList.remove('active');
-                });
-                
-                // Add active class to clicked tab
-                this.classList.add('active');
-                
-                // Show corresponding tab content
-                const tabId = this.getAttribute('href').substring(1);
-                document.getElementById(tabId).classList.add('show');
-                document.getElementById(tabId).classList.add('active');
-            });
-        });
-        
-        // Initialize phone auth (using the global function from auth.js)
-        if (window.initPhoneAuth) {
-            window.initPhoneAuth('phone', 'recaptcha-container', 'auth-submit-btn');
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showPhoneStep1() {
+            document.getElementById('phone-auth-step-1').classList.remove('d-none');
+            document.getElementById('phone-auth-step-2').classList.add('d-none');
         }
-    });
-</script>
-{% endblock %}
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Firebase initialization code should be here
+            if (window.initPhoneAuth) {
+                window.initPhoneAuth('phone', 'recaptcha-container', 'auth-submit-btn');
+            }
+        });
+    </script>
+</body>
+</html>

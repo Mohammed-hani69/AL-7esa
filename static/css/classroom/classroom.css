@@ -528,6 +528,29 @@
     line-height: 1.6;
 }
 
+/* تنسيق عرض المرفقات */
+.attachment-preview {
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.attachment-preview img {
+    max-height: 300px;
+    object-fit: contain;
+    width: 100%;
+    background: #f8f9fa;
+}
+
+.attachment-preview iframe {
+    border: none;
+    background: #f8f9fa;
+}
+
+.attachment-preview .ratio {
+    max-height: 500px;
+}
+
 /* تجاوب لصفحات الفصول */
 @media (max-width: 1200px) {
     .classroom-container {

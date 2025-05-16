@@ -1,310 +1,561 @@
-{% extends "layout.html" %}
-
-{% block title %}{{ classroom.name }} - الحصة{% endblock %}
-
-{% block head_extra %}
-<script defer src="{{ url_for('static', filename='js/classroom.js') }}"></script>
-{% endblock %}
-
-{% block content %}
-<div class="container-fluid" id="classroom-data" data-classroom-id="{{ classroom.id }}">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ classroom.name }}</h1>
-        <div>
-            <a href="{{ url_for('student.live_classroom', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary me-2">
-                <i class="fas fa-video me-1"></i>البث المباشر
-            </a>
-            <a href="{{ url_for('student.dashboard') }}" class="btn btn-sm btn-secondary me-2">
-                <i class="fas fa-arrow-right me-1"></i>العودة للوحة التحكم
-            </a>
-        </div>
-    </div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ classroom.name }} - الحصة</title>
     
-    <!-- Classroom Info Card -->
-    <div class="row mb-4">
-        <div class="col-xl-8">
-            <div class="card shadow" style="border-top: 4px solid {{ classroom.color }};">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h5 class="text-primary">معلومات الفصل</h5>
-                            <div class="mb-2">
-                                <span class="text-muted">المادة:</span>
-                                <span class="ms-2">{{ classroom.subject }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <span class="text-muted">المرحلة:</span>
-                                <span class="ms-2">{{ classroom.grade }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <span class="text-muted">العام الدراسي:</span>
-                                <span class="ms-2">{{ classroom.academic_year }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <span class="text-muted">المعلم:</span>
-                                <span class="ms-2">{{ teacher.name }}</span>
-                            </div>
-                            {% if classroom.description %}
-                                <div class="mb-2">
-                                    <span class="text-muted">الوصف:</span>
-                                    <p class="mt-1">{{ classroom.description }}</p>
-                                </div>
-                            {% endif %}
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Fancybox CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css"/>
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .innovative-sidebar {
+            background: var(--accent-gradient);
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 2rem;
+            height: calc(100vh - 4rem);
+            color: var(--surface-color);
+        }
+
+        .sidebar-brand {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .brand-text {
+            color: var(--surface-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--surface-color);
+            transform: translateX(-10px);
+        }
+
+        .nav-link i {
+            margin-left: 1rem;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .classroom-info-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .content-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .content-list {
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+        }
+
+        .content-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--background-color);
+            transition: all 0.3s ease;
+        }
+
+        .content-item:hover {
+            background: var(--background-color);
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 250px 1fr;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .innovative-sidebar {
+                position: fixed;
+                right: -300px;
+                z-index: 1000;
+                transition: 0.3s ease;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .innovative-sidebar.show {
+                right: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                right: 1rem;
+                top: 1rem;
+                z-index: 1001;
+                background: var(--surface-color);
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: var(--box-shadow);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-primary {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('student.dashboard') }}" class="nav-link">
+                        <i class="fas fa-th-large"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/student/classrooms" class="nav-link active">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>الفصول</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">{{ classroom.name }}</h1>
+                <div class="header-actions">
+                    <a href="{{ url_for('student.live_classroom', classroom_id=classroom.id) }}" class="btn btn-primary">
+                        <i class="fas fa-video me-1"></i>البث المباشر
+                    </a>
+                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right me-1"></i>العودة للوحة التحكم
+                    </a>
+                </div>
+            </div>
+
+            <!-- معلومات الفصل -->
+            <div class="classroom-info-card" style="border-top: 4px solid {{ classroom.color }};">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="text-primary">معلومات الفصل</h5>
+                        <div class="mb-2">
+                            <span class="text-muted">المادة:</span>
+                            <span class="ms-2">{{ classroom.subject }}</span>
                         </div>
-                        <div class="col-md-4 border-start">
-                            <h5 class="text-primary">نقاطك</h5>
-                            <div class="text-center">
-                                <div class="display-4 mb-2">{{ enrollment.points }}</div>
-                                <p class="text-muted">مجموع النقاط المكتسبة</p>
+                        <div class="mb-2">
+                            <span class="text-muted">المرحلة:</span>
+                            <span class="ms-2">{{ classroom.grade }}</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="text-muted">العام الدراسي:</span>
+                            <span class="ms-2">{{ classroom.academic_year }}</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="text-muted">المعلم:</span>
+                            <span class="ms-2">{{ teacher.name }}</span>
+                        </div>
+                        {% if classroom.description %}
+                            <div class="mb-2">
+                                <span class="text-muted">الوصف:</span>
+                                <p class="mt-1">{{ classroom.description }}</p>
                             </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 border-start">
+                        <h5 class="text-primary">نقاطك</h5>
+                        <div class="text-center">
+                            <div class="display-4 mb-2">{{ enrollment.points }}</div>
+                            <p class="text-muted">مجموع النقاط المكتسبة</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-xl-4">
-            <div class="card shadow h-100">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">الروابط السريعة</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('student.assignments', classroom_id=classroom.id) }}" class="btn btn-success btn-block">
-                                <i class="fas fa-tasks me-1"></i>الواجبات
+
+            <!-- الروابط السريعة -->
+            <div class="content-section">
+                <h6 class="text-primary mb-3">الروابط السريعة</h6>
+                <div class="row g-3">
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('student.assignments', classroom_id=classroom.id) }}" class="btn btn-success w-100">
+                            <i class="fas fa-tasks me-1"></i>الواجبات
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('student.quizzes', classroom_id=classroom.id) }}" class="btn btn-info w-100">
+                            <i class="fas fa-question-circle me-1"></i>الاختبارات
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        {% if has_chat %}
+                            <a href="#chat-section" class="btn btn-warning w-100">
+                                <i class="fas fa-comments me-1"></i>المحادثة
                             </a>
-                        </div>
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('student.quizzes', classroom_id=classroom.id) }}" class="btn btn-info btn-block">
-                                <i class="fas fa-question-circle me-1"></i>الاختبارات
-                            </a>
-                        </div>
-                        <div class="col-12 mb-2">
-                            {% if has_chat %}
-                                <a href="#chat-section" class="btn btn-warning btn-block">
-                                    <i class="fas fa-comments me-1"></i>المحادثة
-                                </a>
-                            {% else %}
-                                <button class="btn btn-secondary btn-block" disabled>
-                                    <i class="fas fa-comments me-1"></i>المحادثة غير متاحة
-                                </button>
-                            {% endif %}
-                        </div>
+                        {% else %}
+                            <button class="btn btn-secondary w-100" disabled>
+                                <i class="fas fa-comments me-1"></i>المحادثة غير متاحة
+                            </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Content Section -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">محتوى الفصل</h6>
-        </div>
-        <div class="card-body">
-            {% if contents %}
-                <div class="list-group">
-                    {% for content in contents %}
-                        <div class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">
-                                    {% if content.content_type == 'file' %}
-                                        <i class="fas fa-file me-2 text-primary"></i>
-                                    {% elif content.content_type == 'image' %}
-                                        <i class="fas fa-image me-2 text-info"></i>
-                                    {% elif content.content_type == 'audio' %}
-                                        <i class="fas fa-music me-2 text-warning"></i>
-                                    {% elif content.content_type == 'video' %}
-                                        <i class="fas fa-video me-2 text-danger"></i>
-                                    {% elif content.content_type == 'text' %}
-                                        <i class="fas fa-align-left me-2 text-success"></i>
-                                    {% endif %}
-                                    {{ content.title }}
-                                </h5>
-                                <small class="text-muted">{{ content.created_at.strftime('%Y-%m-%d') }}</small>
-                            </div>
-                            {% if content.description %}
-                                <p class="mb-1">{{ content.description }}</p>
-                            {% endif %}
-                            
-                            {% if content.content_type == 'text' %}
-                                <div class="mt-2 p-3 bg-light rounded">
-                                    {{ content.content_text|safe }}
-                                </div>
-                            {% elif content.content_type == 'image' %}
-                                <div class="mt-2">
-                                    <img src="{{ content.content_url }}" alt="{{ content.title }}" class="img-fluid rounded" style="max-height: 200px;">
-                                </div>
-                            {% elif content.content_type == 'audio' %}
-                                <div class="mt-2">
-                                    <audio controls class="w-100">
-                                        <source src="{{ content.content_url }}" type="audio/mpeg">
-                                        متصفحك لا يدعم تشغيل الصوت.
-                                    </audio>
-                                </div>
-                            {% elif content.content_type == 'video' %}
-                                <div class="mt-2">
-                                    <video controls class="w-100" style="max-height: 300px;">
-                                        <source src="{{ content.content_url }}" type="video/mp4">
-                                        متصفحك لا يدعم تشغيل الفيديو.
-                                    </video>
-                                </div>
-                            {% elif content.content_type == 'file' %}
-                                <div class="mt-2">
-                                    <a href="{{ content.content_url }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                                        <i class="fas fa-download me-1"></i>تحميل الملف
-                                    </a>
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
+
+            <!-- محتوى الفصل -->
+            <div class="content-section">
+                <div class="content-header">
+                    <h6 class="m-0 font-weight-bold text-primary">محتوى الفصل</h6>
                 </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-folder-open fa-3x text-gray-300 mb-3"></i>
-                    <h5>لا يوجد محتوى في الفصل بعد</h5>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Assignments Overview -->
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">الواجبات</h6>
-                    <a href="{{ url_for('student.assignments', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">عرض الكل</a>
-                </div>
-                <div class="card-body">
-                    {% if assignments %}
-                        <div class="list-group">
-                            {% for assignment in assignments %}
-                                <a href="{{ url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}" class="list-group-item list-group-item-action">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h5 class="mb-1">{{ assignment.title }}</h5>
-                                        {% if assignment.due_date %}
-                                            <small class="text-danger">ينتهي: {{ assignment.due_date.strftime('%Y-%m-%d') }}</small>
+                {% if contents %}
+                    <div class="content-list">
+                        {% for content in contents %}
+                            <div class="content-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">
+                                        {% if content.content_type == 'file' %}
+                                            <i class="fas fa-file me-2 text-primary"></i>
+                                        {% elif content.content_type == 'image' %}
+                                            <i class="fas fa-image me-2 text-info"></i>
+                                        {% elif content.content_type == 'audio' %}
+                                            <i class="fas fa-music me-2 text-warning"></i>
+                                        {% elif content.content_type == 'video' %}
+                                            <i class="fas fa-video me-2 text-danger"></i>
+                                        {% elif content.content_type == 'text' %}
+                                            <i class="fas fa-align-left me-2 text-success"></i>
                                         {% endif %}
+                                        {{ content.title }}
+                                    </h5>
+                                    <small class="text-muted">{{ content.created_at.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                                {% if content.description %}
+                                    <p class="mb-1">{{ content.description }}</p>
+                                {% endif %}
+                                
+                                {% if content.content_type == 'text' %}
+                                    <div class="mt-2 p-3 bg-light rounded">
+                                        {{ content.content_text|safe }}
                                     </div>
-                                    <p class="mb-1">{{ assignment.description|truncate(100) }}</p>
-                                    <div class="d-flex justify-content-between">
-                                        <small>النقاط: {{ assignment.points }}</small>
-                                        <small>
-                                            {% set found = False %}
-                                            {% for submission in assignment.submissions %}
-                                                {% if submission.enrollment_id == enrollment.id %}
-                                                    {% set found = True %}
-                                                    {% if submission.grade is not none %}
-                                                        <span class="badge badge-success">تم التقييم: {{ submission.grade }}/{{ assignment.points }}</span>
-                                                    {% else %}
-                                                        <span class="badge badge-warning">تم التسليم، بانتظار التقييم</span>
-                                                    {% endif %}
-                                                {% endif %}
-                                            {% endfor %}
-                                            {% if not found %}
-                                                <span class="badge badge-danger">لم يتم التسليم</span>
-                                            {% endif %}
-                                        </small>
+                                {% elif content.content_type == 'image' %}
+                                    <div class="mt-2">
+                                        <div class="content-preview mb-2">
+                                            <a href="{{ content.content_url }}" 
+                                               data-fancybox="gallery"
+                                               data-caption="{{ content.title }}"
+                                               class="content-preview-link">
+                                                <img src="{{ content.content_url }}" 
+                                                     alt="{{ content.title }}" 
+                                                     class="img-fluid rounded" 
+                                                     style="max-height: 200px;">
+                                            </a>
+                                        </div>
+                                        <a href="{{ content.content_url }}" 
+                                           class="btn btn-sm btn-success" 
+                                           download>
+                                            <i class="fas fa-download me-1"></i>تحميل
+                                        </a>
                                     </div>
-                                </a>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-tasks fa-3x text-gray-300 mb-2"></i>
-                            <p>لا توجد واجبات بعد</p>
-                        </div>
-                    {% endif %}
-                </div>
+                                {% elif content.content_type == 'video' %}
+                                    <div class="mt-2">
+                                        <video src="{{ content.content_url }}" 
+                                               data-fancybox="video"
+                                               data-caption="{{ content.title }}"
+                                               class="w-100" 
+                                               style="max-height: 300px;"
+                                               controls>
+                                        </video>
+                                        <a href="{{ content.content_url }}" 
+                                           class="btn btn-sm btn-success mt-2" 
+                                           download>
+                                            <i class="fas fa-download me-1"></i>تحميل الفيديو
+                                        </a>
+                                    </div>
+                                {% elif content.content_type == 'audio' %}
+                                    <div class="mt-2">
+                                        <audio src="{{ content.content_url }}" 
+                                               class="w-100" 
+                                               controls>
+                                        </audio>
+                                        <a href="{{ content.content_url }}" 
+                                           class="btn btn-sm btn-success mt-2" 
+                                           download>
+                                            <i class="fas fa-download me-1"></i>تحميل الملف الصوتي
+                                        </a>
+                                    </div>
+                                {% elif content.content_type == 'file' %}
+                                    <div class="mt-2">
+                                        <div class="file-preview p-3 bg-light rounded mb-2">
+                                            {% set file_ext = content.content_url.split('.')[-1]|lower %}
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-2x me-3 {% if file_ext in ['jpg', 'jpeg', 'png', 'gif'] %}fa-image text-info
+                                                           {% elif file_ext == 'pdf' %}fa-file-pdf text-danger
+                                                           {% elif file_ext in ['doc', 'docx'] %}fa-file-word text-primary
+                                                           {% elif file_ext in ['xls', 'xlsx'] %}fa-file-excel text-success
+                                                           {% else %}fa-file text-secondary{% endif %}"></i>
+                                                <div class="flex-grow-1">
+                                                    <div class="small">{{ content.content_url.split('/')[-1] }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% if file_ext in ['pdf'] %}
+                                            <a href="{{ content.content_url }}"
+                                               data-fancybox="pdf"
+                                               data-type="pdf"
+                                               data-caption="{{ content.title }}"
+                                               class="btn btn-sm btn-primary me-2">
+                                                <i class="fas fa-eye me-1"></i>معاينة
+                                            </a>
+                                        {% elif file_ext in ['jpg', 'jpeg', 'png', 'gif'] %}
+                                            <a href="{{ content.content_url }}"
+                                               data-fancybox="images"
+                                               data-caption="{{ content.title }}"
+                                               class="btn btn-sm btn-primary me-2">
+                                                <i class="fas fa-eye me-1"></i>معاينة
+                                            </a>
+                                        {% endif %}
+                                        <a href="{{ content.content_url }}" 
+                                           class="btn btn-sm btn-success" 
+                                           download>
+                                            <i class="fas fa-download me-1"></i>تحميل
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-folder-open fa-3x text-gray-300 mb-2"></i>
+                        <p>لا يوجد محتوى في الفصل بعد</p>
+                    </div>
+                {% endif %}
             </div>
-        </div>
-        
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">الاختبارات</h6>
-                    <a href="{{ url_for('student.quizzes', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">عرض الكل</a>
-                </div>
-                <div class="card-body">
-                    {% if quizzes %}
-                        <div class="list-group">
-                            {% for quiz in quizzes %}
-                                <a href="{{ url_for('student.start_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="list-group-item list-group-item-action">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h5 class="mb-1">{{ quiz.title }}</h5>
-                                        <small>
-                                            {% if quiz.start_time and quiz.end_time %}
-                                                <span class="text-danger">
-                                                    {{ quiz.start_time.strftime('%Y-%m-%d') }}
-                                                    إلى
-                                                    {{ quiz.end_time.strftime('%Y-%m-%d') }}
-                                                </span>
-                                            {% elif quiz.end_time %}
-                                                <span class="text-danger">ينتهي: {{ quiz.end_time.strftime('%Y-%m-%d') }}</span>
-                                            {% endif %}
-                                        </small>
-                                    </div>
-                                    <p class="mb-1">{{ quiz.description|default('')|truncate(100) }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small>النقاط: {{ quiz.total_points }}</small>
-                                        <small>
-                                            {% set found = False %}
-                                            {% for attempt in quiz.attempts %}
-                                                {% if attempt.enrollment_id == enrollment.id and attempt.is_completed %}
-                                                    {% set found = True %}
-                                                    <span class="badge badge-success">الدرجة: {{ attempt.score }}/{{ quiz.total_points }}</span>
-                                                {% endif %}
-                                            {% endfor %}
-                                            {% if not found %}
-                                                {% if quiz.start_time and quiz.start_time > now %}
-                                                    <span class="badge badge-secondary">لم يبدأ بعد</span>
-                                                {% elif quiz.end_time and quiz.end_time < now %}
-                                                    <span class="badge badge-danger">انتهى</span>
-                                                {% else %}
-                                                    <span class="badge badge-info">متاح للحل</span>
-                                                {% endif %}
-                                            {% endif %}
-                                        </small>
-                                    </div>
-                                </a>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-question-circle fa-3x text-gray-300 mb-2"></i>
-                            <p>لا توجد اختبارات بعد</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+        </main>
     </div>
-    
-    <!-- Chat Section -->
-    {% if has_chat %}
-    <div id="chat-section" class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">محادثة الفصل</h6>
-        </div>
-        <div class="card-body">
-            <a href="#" class="btn btn-warning">
-                <i class="fas fa-comments me-2"></i>الذهاب إلى المحادثة
-            </a>
-        </div>
-    </div>
-    {% endif %}
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Update student status (active)
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+
+        // تهيئة Fancybox
+        Fancybox.bind("[data-fancybox]", {
+            infinite: false,
+            Thumbs: false,
+            Toolbar: {
+                display: {
+                    right: ["close"],
+                },
+            },
+            Image: {
+                zoom: true,
+                click: "close",
+                wheel: "slide",
+            },
+            animated: true,
+            showClass: "fancybox-zoomIn",
+            hideClass: "fancybox-zoomOut",
+            dragToClose: true,
+            touch: {
+                vertical: true,
+                momentum: true
+            },
+            l10n: {
+                CLOSE: "إغلاق",
+                NEXT: "التالي",
+                PREV: "السابق",
+                MODAL: "يمكنك إغلاق هذا المحتوى بالضغط على زر ESC",
+                ERROR: "حدث خطأ، يرجى المحاولة لاحقاً",
+                IMAGE_ERROR: "لم يتم العثور على الصورة",
+                ELEMENT_NOT_FOUND: "لم يتم العثور على العنصر",
+                AJAX_NOT_FOUND: "حدث خطأ أثناء تحميل المحتوى",
+                AJAX_FORBIDDEN: "تم منع الوصول إلى المحتوى",
+                IFRAME_ERROR: "خطأ في تحميل الصفحة"
+            }
+        });
+
+        // تحديث حالة الطالب النشط
         const updateActiveStatus = () => {
-            // This would normally use Firebase to track active status
-            // For simplicity, we'll just mark ourselves as active
             if (typeof firebase !== 'undefined' && firebase.database) {
                 const classroomId = document.getElementById('classroom-data')?.getAttribute('data-classroom-id');
                 if (classroomId) {
@@ -316,7 +567,6 @@
                         lastActive: Date.now()
                     });
                     
-                    // Clean up when leaving the page
                     window.addEventListener('beforeunload', () => {
                         database.ref(`classrooms/${classroomId}/active_students/${userId}`).remove();
                     });
@@ -324,11 +574,8 @@
             }
         };
         
-        // Call once on load
         updateActiveStatus();
-        
-        // And periodically update
-        setInterval(updateActiveStatus, 60000); // Every minute
-    });
-</script>
-{% endblock %}
+        setInterval(updateActiveStatus, 60000);
+    </script>
+</body>
+</html>

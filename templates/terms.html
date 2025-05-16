@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شروط الاستخدام - منصة الحصة التعليمية</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo2.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='img/logo2.png') }}">
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: {{ primary_color }};
+            --accent-gradient: linear-gradient(120deg, {{ primary_color }}, {{ secondary_color }});
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            background: var(--accent-gradient);
+            color: var(--surface-color);
+            padding: 4rem 0;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .terms-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .terms-section h2 {
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(108, 99, 255, 0.1);
+        }
+
+        .terms-section h3 {
+            color: var(--text-primary);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .terms-section p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .terms-section ul {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            padding-right: 1.5rem;
+        }
+
+        .terms-section ul li {
+            margin-bottom: 0.75rem;
+        }
+
+        .terms-meta {
+            background: rgba(108, 99, 255, 0.05);
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 2rem;
+        }
+
+        .terms-meta p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* تنسيقات متجاوبة للموبايل */
+        @media (max-width: 992px) {
+            .page-title {
+                font-size: 2.5rem;
+            }
+
+            .terms-section {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.5rem 0;
+            }
+
+            .navbar-brand img {
+                height: 30px;
+            }
+
+            .navbar-toggler {
+                padding: 4px 8px;
+                margin-right: 8px;
+            }
+
+            .navbar .btn {
+                width: 100%;
+                margin: 0.25rem 0;
+            }
+
+            .page-title {
+                font-size: 2rem;
+                text-align: center;
+            }
+
+            .page-header {
+                padding: 3rem 0;
+            }
+
+            .lead {
+                font-size: 1rem;
+                text-align: center;
+            }
+
+            .terms-section {
+                padding: 1.5rem;
+            }
+
+            .terms-section h2 {
+                font-size: 1.6rem;
+            }
+
+            .terms-section h3 {
+                font-size: 1.3rem;
+            }
+
+            .terms-meta {
+                padding: 0.75rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .page-title {
+                font-size: 1.75rem;
+            }
+
+            .lead {
+                font-size: 0.9rem;
+            }
+
+            .terms-section {
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .terms-section h2 {
+                font-size: 1.4rem;
+                margin-bottom: 1rem;
+            }
+
+            .terms-section h3 {
+                font-size: 1.2rem;
+            }
+
+            .terms-section p, 
+            .terms-section ul {
+                font-size: 0.95rem;
+            }
+
+            footer {
+                text-align: center;
+                padding: 2rem 0;
+            }
+
+            footer .col-lg-2,
+            footer .col-lg-4 {
+                margin-bottom: 2rem;
+            }
+
+            .social-links {
+                margin-bottom: 1.5rem;
+            }
+
+            .social-links a {
+                width: 32px;
+                height: 32px;
+                margin-right: 0.5rem;
+            }
+        }
+
+        /* تنسيقات الفوتر */
+        footer {
+            background: linear-gradient(to right, #1a1a1a, #2d2d2d);
+            color: var(--surface-color);
+            padding: 3rem 0;
+            margin-top: 4rem;
+        }
+
+        footer h5 {
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        footer .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            color: var(--surface-color);
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+
+        footer .social-links a:hover {
+            background: var(--accent-color);
+            transform: translateY(-3px);
+        }
+
+        footer ul li a {
+            color: var(--surface-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        footer ul li a:hover {
+            color: var(--accent-color);
+            padding-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- القائمة العلوية -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <img src="{{ url_for('static', filename='img/logo2.png') }}" alt="الحصة" height="40">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.index') }}">الرئيسية</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.about') }}">عن المنصة</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.contact') }}">اتصل بنا</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.faq') }}">الأسئلة الشائعة</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.support') }}">الدعم الفني</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.privacy') }}">سياسة الخصوصية</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.terms') }}">شروط الاستخدام</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary me-2">تسجيل الدخول</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">تسجيل جديد</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- العنوان الرئيسي -->
+    <header class="page-header">
+        <div class="container text-center">
+            <h1 class="page-title">شروط الاستخدام</h1>
+            <p class="lead text-white-50">يرجى قراءة شروط الاستخدام بعناية قبل استخدام المنصة</p>
+        </div>
+    </header>
+
+    <main class="container py-5">
+        <div class="terms-meta">
+            <p><strong>آخر تحديث:</strong> 16 مايو 2025</p>
+            <p>باستخدامك للمنصة، فإنك توافق على الالتزام بهذه الشروط</p>
+        </div>
+
+        <div class="terms-section">
+            <h2>القبول بالشروط</h2>
+            <p>باستخدام منصة الحصة التعليمية، فإنك توافق على الالتزام بهذه الشروط والأحكام. إذا كنت لا توافق على أي من هذه الشروط، يرجى عدم استخدام المنصة.</p>
+        </div>
+
+        <div class="terms-section">
+            <h2>شروط التسجيل والعضوية</h2>
+            <h3>متطلبات التسجيل</h3>
+            <ul>
+                <li>يجب أن تكون جميع المعلومات المقدمة صحيحة ودقيقة</li>
+                <li>يجب أن يكون عمرك 16 عاماً على الأقل</li>
+                <li>يجب استخدام بريد إلكتروني صالح</li>
+                <li>يجب اختيار كلمة مرور قوية وآمنة</li>
+            </ul>
+
+            <h3>التزامات العضوية</h3>
+            <ul>
+                <li>الحفاظ على سرية معلومات حسابك</li>
+                <li>عدم مشاركة بيانات الدخول مع الآخرين</li>
+                <li>إخطار المنصة فوراً عند اكتشاف أي استخدام غير مصرح به</li>
+            </ul>
+        </div>
+
+        <div class="terms-section">
+            <h2>قواعد السلوك</h2>
+            <p>يجب على جميع المستخدمين الالتزام بقواعد السلوك التالية:</p>
+            <ul>
+                <li>احترام حقوق الآخرين وخصوصيتهم</li>
+                <li>عدم نشر محتوى مخالف أو مسيء</li>
+                <li>عدم التحرش أو الإساءة للآخرين</li>
+                <li>عدم انتحال شخصية الغير</li>
+                <li>الالتزام بحقوق الملكية الفكرية</li>
+            </ul>
+        </div>
+
+        <div class="terms-section">
+            <h2>المحتوى التعليمي</h2>
+            <h3>حقوق الملكية الفكرية</h3>
+            <ul>
+                <li>جميع المحتوى التعليمي محمي بموجب حقوق الملكية الفكرية</li>
+                <li>يمنع نسخ أو توزيع المحتوى دون إذن</li>
+                <li>يحتفظ المعلمون بحقوق محتواهم الخاص</li>
+            </ul>
+
+            <h3>استخدام المحتوى</h3>
+            <ul>
+                <li>يسمح باستخدام المحتوى للأغراض التعليمية فقط</li>
+                <li>يمنع إعادة بيع أو توزيع المحتوى</li>
+                <li>يجب الإشارة إلى المصادر عند الاقتباس</li>
+            </ul>
+        </div>
+
+        <div class="terms-section">
+            <h2>المدفوعات والاشتراكات</h2>
+            <ul>
+                <li>جميع المدفوعات نهائية وغير قابلة للاسترداد</li>
+                <li>يتم تجديد الاشتراكات تلقائياً ما لم يتم إلغاؤها</li>
+                <li>يمكن تغيير الأسعار مع إشعار مسبق</li>
+                <li>يجب الالتزام بسياسة الإلغاء المحددة</li>
+            </ul>
+        </div>
+
+        <div class="terms-section">
+            <h2>إخلاء المسؤولية</h2>
+            <ul>
+                <li>يتم توفير المنصة "كما هي" دون أي ضمانات</li>
+                <li>لا نتحمل مسؤولية انقطاع الخدمة المؤقت</li>
+                <li>لا نضمن دقة جميع المحتويات المقدمة من المستخدمين</li>
+                <li>نحتفظ بحق تعديل أو إيقاف الخدمة في أي وقت</li>
+            </ul>
+        </div>
+
+        <div class="terms-section">
+            <h2>إنهاء الخدمة</h2>
+            <p>نحتفظ بالحق في:</p>
+            <ul>
+                <li>تعليق أو إنهاء حسابك عند مخالفة الشروط</li>
+                <li>إزالة أي محتوى يخالف سياساتنا</li>
+                <li>رفض تقديم الخدمة لأي مستخدم</li>
+            </ul>
+        </div>
+
+        <div class="terms-section">
+            <h2>التعديلات على الشروط</h2>
+            <p>نحتفظ بحق تعديل هذه الشروط في أي وقت. سيتم إخطار المستخدمين بالتغييرات المهمة عبر:</p>
+            <ul>
+                <li>إشعار على المنصة</li>
+                <li>بريد إلكتروني للمستخدمين المسجلين</li>
+                <li>إعلان في لوحة التحكم</li>
+            </ul>
+        </div>
+
+        <div class="terms-section">
+            <h2>التواصل معنا</h2>
+            <p>إذا كان لديك أي أسئلة حول شروط الاستخدام، يمكنك التواصل معنا عبر:</p>
+            <ul>
+                <li>البريد الإلكتروني: terms@alhessa.com</li>
+                <li>نموذج الاتصال في صفحة <a href="{{ url_for('main.contact') }}">اتصل بنا</a></li>
+                <li>الدعم الفني عبر صفحة <a href="{{ url_for('main.support') }}">الدعم الفني</a></li>
+            </ul>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5>عن منصة الحصة</h5>
+                    <p class="mb-4">منصة تعليمية رقمية متكاملة تهدف إلى تسهيل العملية التعليمية وتحسين تجربة التعلم عن بعد لكل من المعلمين والطلاب.</p>
+                    <div class="social-links">
+                        <a href="#" class="text-light"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h5>روابط سريعة</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{{ url_for('main.index') }}">الرئيسية</a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.about') }}">عن المنصة</a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.contact') }}">اتصل بنا</a></li>
+                        <li class="mb-2"><a href="{{ url_for('auth.register') }}">التسجيل</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h5>الدعم</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{{ url_for('main.faq') }}">الأسئلة الشائعة</a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.support') }}">الدعم الفني</a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.privacy') }}">سياسة الخصوصية</a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.terms') }}">شروط الاستخدام</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 col-md-4">
+                    <h5>تواصل معنا</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i> info@alhessa.com</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i> +201145425207</li>
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> جمهورية مصر العربية</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; {{ current_year }} منصة الحصة - جميع الحقوق محفوظة</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">تم التطوير بواسطة <a href="#" class="text-light text-decoration-none">فريق الحصة</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

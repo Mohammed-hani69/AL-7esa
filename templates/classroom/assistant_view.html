@@ -1,217 +1,708 @@
-{% extends "layout.html" %}
-
-{% block title %}{{ classroom.name }} - مساعد المعلم - الحصة{% endblock %}
-
-{% block head_extra %}
-<script defer src="{{ url_for('static', filename='js/classroom.js') }}"></script>
-{% endblock %}
-
-{% block content %}
-<div class="container-fluid" id="classroom-data" data-classroom-id="{{ classroom.id }}">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ classroom.name }}</h1>
-        <div>
-            <a href="{{ url_for('assistant.dashboard') }}" class="btn btn-sm btn-secondary me-2">
-                <i class="fas fa-arrow-right me-1"></i>العودة للوحة التحكم
-            </a>
-        </div>
-    </div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ classroom.name }} - مساعد المعلم - الحصة</title>
     
-    <!-- Classroom Info Card -->
-    <div class="row mb-4">
-        <div class="col-xl-8">
-            <div class="card shadow" style="border-top: 4px solid {{ classroom.color }};">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h5 class="text-primary">معلومات الفصل</h5>
-                            <div class="mb-2">
-                                <span class="text-muted">المادة:</span>
-                                <span class="ms-2">{{ classroom.subject }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <span class="text-muted">المرحلة:</span>
-                                <span class="ms-2">{{ classroom.grade }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <span class="text-muted">العام الدراسي:</span>
-                                <span class="ms-2">{{ classroom.academic_year }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <span class="text-muted">المعلم:</span>
-                                <span class="ms-2">{{ teacher.name }}</span>
-                            </div>
-                            {% if classroom.description %}
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .innovative-sidebar {
+            background: var(--accent-gradient);
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 2rem;
+            height: calc(100vh - 4rem);
+            color: var(--surface-color);
+        }
+
+        .sidebar-brand {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .brand-text {
+            color: var(--surface-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--surface-color);
+            transform: translateX(-10px);
+        }
+
+        .nav-link i {
+            margin-left: 1rem;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-md);
+            box-shadow: var (--box-shadow);
+        }
+
+        .classroom-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+            border: none;
+        }
+
+        .classroom-info {
+            margin-bottom: 2rem;
+        }
+
+        .classroom-code {
+            background: var(--background-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-sm);
+            text-align: center;
+            margin: 1.5rem 0;
+            border: 2px dashed rgba(108, 99, 255, 0.2);
+            font-family: monospace;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            letter-spacing: 2px;
+        }
+
+        .btn-primary.success {
+            background: #28a745;
+            border-color: #28a745;
+        }
+
+        .copy-btn i {
+            margin-left: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .card {
+            border: none;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(108, 99, 255, 0.15);
+        }
+
+        .card-header {
+            background: none;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 1.5rem;
+        }
+
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table th {
+            background: var(--background-color);
+            color: var(--text-primary);
+            font-weight: 600;
+            padding: 1rem;
+            border: none;
+        }
+
+        .table td {
+            padding: 1rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            vertical-align: middle;
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 250px 1fr;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .innovative-sidebar {
+                position: fixed;
+                right: -300px;
+                z-index: 1000;
+                transition: 0.3s ease;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .innovative-sidebar.show {
+                right: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                right: 1rem;
+                top: 1rem;
+                z-index: 1001;
+                background: var(--surface-color);
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: var(--box-shadow);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .points-badge {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+
+        .toast {
+            background: #28a745;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius-sm);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 250px 1fr;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .innovative-sidebar {
+                position: fixed;
+                right: -300px;
+                z-index: 1000;
+                transition: 0.3s ease;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .innovative-sidebar.show {
+                right: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                right: 1rem;
+                top: 1rem;
+                z-index: 1001;
+                background: var(--surface-color);
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: var(--box-shadow);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .points-badge {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.dashboard') }}" class="nav-link">
+                        <i class="fas fa-th-large"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="nav-link active">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>{{ classroom.name }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="h3 mb-0 text-gray-800">{{ classroom.name }}</h1>
+                <div>
+                    <a href="{{ url_for('assistant.dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right me-1"></i>
+                        العودة للوحة التحكم
+                    </a>
+                </div>
+            </div>
+
+            <!-- معلومات الفصل -->
+            <div class="row mb-4">
+                <div class="col-xl-8">
+                    <div class="classroom-card" style="border-top: 4px solid {{ classroom.color }};">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5 class="text-primary">معلومات الفصل</h5>
                                 <div class="mb-2">
-                                    <span class="text-muted">الوصف:</span>
-                                    <p class="mt-1">{{ classroom.description }}</p>
+                                    <span class="text-muted">المادة:</span>
+                                    <span class="ms-2">{{ classroom.subject }}</span>
                                 </div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-4 border-start">
-                            <h5 class="text-primary">كود الفصل</h5>
-                            <div class="classroom-code" id="classroom-code">{{ classroom.code }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-4">
-            <div class="card shadow h-100">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">الروابط السريعة</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="btn btn-success btn-block">
-                                <i class="fas fa-tasks me-1"></i>الواجبات
-                            </a>
-                        </div>
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="btn btn-info btn-block">
-                                <i class="fas fa-question-circle me-1"></i>الاختبارات
-                            </a>
-                        </div>
-                        <div class="col-6 mb-2">
-                            <a href="{{ url_for('assistant.students', classroom_id=classroom.id) }}" class="btn btn-primary btn-block">
-                                <i class="fas fa-user-graduate me-1"></i>الطلاب
-                            </a>
-                        </div>
-                        <div class="col-12 mb-2">
-                            <div class="d-flex gap-2">
-                                <a href="{{ url_for('assistant.chat', classroom_id=classroom.id) }}" class="btn btn-warning flex-grow-1">
-                                    <i class="fas fa-comments me-1"></i>المحادثة
-                                </a>
-                                <a href="{{ url_for('assistant.chat_settings', classroom_id=classroom.id) }}" class="btn btn-primary">
-                                    <i class="fas fa-cog"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Student Activity -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">نشاط الطلاب</h6>
-            <a href="{{ url_for('assistant.students', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">إدارة الطلاب</a>
-        </div>
-        <div class="card-body">
-            {% if enrollments %}
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>الطالب</th>
-                                <th>النقاط</th>
-                                <th>الحالة</th>
-                                <th>تاريخ الانضمام</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for enrollment in enrollments %}
-                                <tr>
-                                    <td>
-                                        {{ enrollment.user.name }}
-                                        <span class="student-status student-inactive ms-2" 
-                                              data-student-id="{{ enrollment.user.id }}"></span>
-                                    </td>
-                                    <td>
-                                        <span class="points-badge">{{ enrollment.points }}</span>
-                                    </td>
-                                    <td>
-                                        {% if enrollment.is_active %}
-                                            <span class="badge badge-success">مفعل</span>
-                                        {% else %}
-                                            <span class="badge badge-danger">معطل</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-user-graduate fa-3x text-gray-300 mb-3"></i>
-                    <h5>لا يوجد طلاب في الفصل بعد</h5>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Assignments Overview -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">الواجبات</h6>
-            <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">عرض الكل</a>
-        </div>
-        <div class="card-body">
-            {% if assignments %}
-                <div class="list-group">
-                    {% for assignment in assignments %}
-                        <a href="{{ url_for('assistant.assignment_submissions', classroom_id=classroom.id, assignment_id=assignment.id) }}" class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">{{ assignment.title }}</h5>
-                                {% if assignment.due_date %}
-                                    <small class="text-danger">ينتهي: {{ assignment.due_date.strftime('%Y-%m-%d') }}</small>
+                                <div class="mb-2">
+                                    <span class="text-muted">المرحلة:</span>
+                                    <span class="ms-2">{{ classroom.grade }}</span>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-muted">العام الدراسي:</span>
+                                    <span class="ms-2">{{ classroom.academic_year }}</span>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-muted">المعلم:</span>
+                                    <span class="ms-2">{{ teacher.name }}</span>
+                                </div>
+                                {% if classroom.description %}
+                                    <div class="mb-2">
+                                        <span class="text-muted">الوصف:</span>
+                                        <p class="mt-1">{{ classroom.description }}</p>
+                                    </div>
                                 {% endif %}
                             </div>
-                            <p class="mb-1">{{ assignment.description|truncate(100) }}</p>
-                            <div class="d-flex justify-content-between">
-                                <small>النقاط: {{ assignment.points }}</small>
-                                <small>
-                                    <span class="badge badge-info">
-                                        {{ assignment.submissions|length }} تسليم من أصل {{ enrollments|length }} طالب
-                                    </span>
-                                </small>
+                            <div class="col-md-4 border-start">
+                                <h5 class="text-primary">كود الفصل</h5>
+                                <div class="position-relative">
+                                    <div class="classroom-code mb-2" id="classroomCode">{{ classroom.code }}</div>
+                                    <div class="text-center">
+                                        <button class="btn btn-primary" onclick="copyClassroomCode()">
+                                            <i class="fas fa-copy ms-1"></i>
+                                            نسخ الكود
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </a>
-                    {% endfor %}
+                        </div>
+                    </div>
                 </div>
-            {% else %}
-                <div class="text-center py-4">
-                    <i class="fas fa-tasks fa-3x text-gray-300 mb-2"></i>
-                    <p>لا توجد واجبات بعد</p>
+                
+                <div class="col-xl-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-primary">الروابط السريعة</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="btn btn-success w-100">
+                                        <i class="fas fa-tasks"></i>الواجبات
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="btn btn-info w-100">
+                                        <i class="fas fa-question-circle"></i>الاختبارات
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="{{ url_for('assistant.students', classroom_id=classroom.id) }}" class="btn btn-primary w-100">
+                                        <i class="fas fa-user-graduate"></i>الطلاب
+                                    </a>
+                                </div>
+                                <div class="col-12">
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ url_for('assistant.chat', classroom_id=classroom.id) }}" class="btn btn-warning flex-grow-1">
+                                            <i class="fas fa-comments"></i>المحادثة
+                                        </a>
+                                        <a href="{{ url_for('assistant.chat_settings', classroom_id=classroom.id) }}" class="btn btn-primary">
+                                            <i class="fas fa-cog"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Guide for Assistants -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">دليل المساعد</h6>
-        </div>
-        <div class="card-body">
-            <h5>مهام مساعد المعلم في الفصل:</h5>
-            <ul>
-                <li class="mb-2">تقييم واجبات الطلاب وتقديم الملاحظات</li>
-                <li class="mb-2">الإشراف على محادثات الفصل وإدارتها</li>
-                <li class="mb-2">متابعة نشاط الطلاب وتقدمهم</li>
-                <li class="mb-2">مساعدة المعلم في الإجابة على أسئلة الطلاب</li>
-            </ul>
-            
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                <span>يمكنك تقييم واجبات الطلاب من خلال الضغط على الواجب المطلوب ثم الانتقال لصفحة المراجعة والتقييم.</span>
             </div>
+
+            <!-- نشاط الطلاب -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">نشاط الطلاب</h6>
+                    <a href="{{ url_for('assistant.students', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">
+                        إدارة الطلاب
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if enrollments %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>الطالب</th>
+                                        <th>النقاط</th>
+                                        <th>الحالة</th>
+                                        <th>تاريخ الانضمام</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for enrollment in enrollments %}
+                                        <tr>
+                                            <td>
+                                                {{ enrollment.user.name }}
+                                                <span class="student-status student-inactive ms-2" 
+                                                    data-student-id="{{ enrollment.user.id }}"></span>
+                                            </td>
+                                            <td>
+                                                <span class="points-badge">{{ enrollment.points }}</span>
+                                            </td>
+                                            <td>
+                                                {% if enrollment.is_active %}
+                                                    <span class="badge bg-success">مفعل</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">معطل</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-graduate fa-3x text-gray-300 mb-3"></i>
+                            <h5>لا يوجد طلاب في الفصل بعد</h5>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- الواجبات -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">الواجبات</h6>
+                    <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="btn btn-sm btn-primary">
+                        عرض الكل
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if assignments %}
+                        <div class="list-group">
+                            {% for assignment in assignments %}
+                                <a href="{{ url_for('assistant.assignment_submissions', classroom_id=classroom.id, assignment_id=assignment.id) }}" 
+                                   class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ assignment.title }}</h5>
+                                        {% if assignment.due_date %}
+                                            <small class="text-danger">
+                                                ينتهي: {{ assignment.due_date.strftime('%Y-%m-%d') }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    <p class="mb-1">{{ assignment.description|truncate(100) }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small>النقاط: {{ assignment.points }}</small>
+                                        <span class="badge bg-info">
+                                            {{ assignment.submissions|length }} تسليم من أصل {{ enrollments|length }} طالب
+                                        </span>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-tasks fa-3x text-gray-300 mb-2"></i>
+                            <p>لا توجد واجبات بعد</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- دليل المساعد -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">دليل المساعد</h6>
+                </div>
+                <div class="card-body">
+                    <h5>مهام مساعد المعلم في الفصل:</h5>
+                    <ul>
+                        <li class="mb-2">تقييم واجبات الطلاب وتقديم الملاحظات</li>
+                        <li class="mb-2">الإشراف على محادثات الفصل وإدارتها</li>
+                        <li class="mb-2">متابعة نشاط الطلاب وتقدمهم</li>
+                        <li class="mb-2">مساعدة المعلم في الإجابة على أسئلة الطلاب</li>
+                    </ul>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span>يمكنك تقييم واجبات الطلاب من خلال الضغط على الواجب المطلوب ثم الانتقال لصفحة المراجعة والتقييم.</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container">
+        <div class="toast" id="copyToast">
+            <i class="fas fa-check ms-1"></i>
+            تم نسخ الكود بنجاح
         </div>
     </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Track active students
-        trackActiveStudents();
-    });
-</script>
-{% endblock %}
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+
+        // تتبع الطلاب النشطين
+        function trackActiveStudents() {
+            const studentStatuses = document.querySelectorAll('.student-status');
+            
+            // تحديث حالة كل طالب
+            studentStatuses.forEach(status => {
+                const studentId = status.dataset.studentId;
+                // هنا يمكنك إضافة منطق لتحديث حالة الطالب
+                // مثال: التحقق من آخر نشاط للطالب
+            });
+        }
+
+        // تشغيل الوظائف عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            trackActiveStudents();
+        });
+
+        // نسخ كود الفصل
+        async function copyClassroomCode() {
+            const codeElement = document.getElementById('classroomCode');
+            const toast = document.getElementById('copyToast');
+
+            try {
+                await navigator.clipboard.writeText(codeElement.textContent.trim());
+                
+                // Show toast
+                toast.classList.add('show');
+                
+                // Hide toast after 2 seconds
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = codeElement.textContent.trim();
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    // Show success state
+                    copyBtn.classList.add('success');
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> تم النسخ';
+                } catch (err) {
+                    console.error('Fallback failed:', err);
+                    copyBtn.innerHTML = '<i class="fas fa-times"></i> فشل النسخ';
+                }
+                document.body.removeChild(textArea);
+                
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    copyBtn.classList.remove('success');
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>

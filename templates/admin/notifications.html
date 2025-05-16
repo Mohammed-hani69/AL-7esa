@@ -1,28 +1,503 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الإشعارات - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+    /* متغيرات التصميم المخصص */
+    :root {
+        --accent-color: #6C63FF;
+        --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+        --surface-color: #FFFFFF;
+        --background-color: #F4F7FE;
+        --text-primary: #2D3748;
+        --text-secondary: #718096;
+        --border-radius-lg: 24px;
+        --border-radius-md: 16px;
+        --border-radius-sm: 8px;
+        --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+    }
 
-{% block title %}إدارة الإشعارات - الحصة{% endblock %}
+    /* تنسيق عام */
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background: var(--background-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
 
-{% block content %}
-<div class="container-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">إدارة الإشعارات</h1>
-        <button type="button" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#sendNotificationModal">
-            <i class="fas fa-bell fa-sm text-white-50"></i> إرسال إشعار جديد
-        </button>
-    </div>
+    /* تخطيط الصفحة الفريد */
+    .app-container {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+        min-height: 100vh;
+        padding: 2rem;
+    }
 
-    <!-- Content Row -->
-    <div class="row">
-        <!-- Recent Notifications Table -->
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">الإشعارات الأخيرة</h6>
+    /* تصميم السايدبار المبتكر */
+    .innovative-sidebar {
+        background: var(--accent-gradient);
+        padding: 2rem;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        position: sticky;
+        top: 2rem;
+        height: calc(100vh - 4rem);
+        color: var(--surface-color);
+    }
+
+    .sidebar-brand {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .brand-logo {
+        width: 60px;
+        height: 60px;
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .brand-text {
+        color: var(--surface-color);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .nav-item {
+        margin-bottom: 1rem;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        color: rgba(255,255,255,0.8);
+        padding: 1rem;
+        border-radius: var(--border-radius-md);
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        background: rgba(255,255,255,0.1);
+        color: var(--surface-color);
+        transform: translateX(-10px);
+    }
+
+    .nav-link i {
+        margin-left: 1rem;
+        font-size: 1.2rem;
+        width: 24px;
+        text-align: center;
+    }
+
+    /* تصميم المحتوى الرئيسي */
+    .main-content {
+        flex: 1;
+    }
+
+    /* تصميم الهيدر */
+    .page-header {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-lg);
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--box-shadow);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        color: var(--text-primary);
+        margin: 0;
+        position: relative;
+    }
+
+    .page-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        right: 0;
+        width: 50px;
+        height: 4px;
+        background: var(--accent-gradient);
+        border-radius: 2px;
+    }
+
+    /* تصميم البطاقات الإحصائية */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+        transition: all 0.3s ease;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--accent-gradient);
+        border-radius: 2px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--border-radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        background: var(--accent-gradient);
+        color: var(--surface-color);
+    }
+
+    .stat-title {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    /* تصميم جدول الإشعارات */
+    .notifications-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        margin-bottom: 2rem;
+    }
+
+    .card-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 2px solid var(--background-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+        color: var(--text-primary);
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .custom-table {
+        width: 100%;
+        margin: 0;
+    }
+
+    .custom-table th {
+        background: var(--background-color);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 1rem 2rem;
+        border: none;
+    }
+
+    .custom-table td {
+        padding: 1rem 2rem;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--background-color);
+        vertical-align: middle;
+    }
+
+    .custom-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* تصميم الشارات */
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .badge-success {
+        background: linear-gradient(120deg, #00B5B5, #00D68F);
+        color: white;
+    }
+
+    .badge-warning {
+        background: linear-gradient(120deg, #FFB75E, #ED8F03);
+        color: white;
+    }
+
+    /* تصميم النافذة المنبثقة */
+    .modal-content {
+        border: none;
+        border-radius: var(--border-radius-lg);
+    }
+
+    .modal-header {
+        background: var(--accent-gradient);
+        color: white;
+        border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+        padding: 1.5rem 2rem;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .form-control {
+        border: 2px solid #E2E8F0;
+        border-radius: var(--border-radius-sm);
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+    }
+
+    .form-label {
+        color: var(--text-primary);
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .custom-radio {
+        margin-bottom: 0.5rem;
+    }
+
+    .custom-radio .custom-control-label {
+        color: var(--text-primary);
+        padding-right: 0.5rem;
+    }
+
+    .btn-custom {
+        padding: 0.8rem 1.5rem;
+        border-radius: var(--border-radius-sm);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: var(--accent-gradient);
+        border: none;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+    }
+
+    .btn-light {
+        background: var(--background-color);
+        border: none;
+        color: var(--text-primary);
+    }
+
+    .btn-light:hover {
+        background: #E2E8F0;
+    }
+
+    /* تحسينات التجاوب */
+    @media (max-width: 1200px) {
+        .app-container {
+            grid-template-columns: 250px 1fr;
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .app-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .innovative-sidebar {
+            position: fixed;
+            right: -300px;
+            z-index: 1000;
+            transition: 0.3s ease;
+            height: 100vh;
+            border-radius: 0;
+        }
+        
+        .innovative-sidebar.show {
+            right: 0;
+        }
+        
+        .mobile-toggle {
+            display: block;
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            z-index: 1001;
+            background: var(--surface-color);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: var(--box-shadow);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار المبتكر -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.dashboard') }}" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.users') }}" class="nav-link ">
+                        <i class="fas fa-users"></i>
+                        <span>المستخدمين</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.classrooms') }}" class="nav-link ">
+                        <i class="fas fa-school"></i>
+                        <span>الفصول الدراسية</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.subscriptions') }}" class="nav-link">
+                        <i class="fas fa-money-check"></i>
+                        <span>الاشتراكات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.notifications') }}" class="nav-link active">
+                        <i class="fas fa-bell"></i>
+                        <span>الإشعارات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.settings') }}" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>الإعدادات</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- هيدر الصفحة -->
+            <header class="page-header">
+                <h1 class="page-title">إدارة الإشعارات</h1>
+                <button type="button" class="btn-custom btn-primary" data-bs-toggle="modal" data-bs-target="#sendNotificationModal">
+                    <i class="fas fa-bell"></i>
+                    <span>إرسال إشعار جديد</span>
+                </button>
+            </header>
+
+            <!-- البطاقات الإحصائية -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-bell fa-lg"></i>
+                    </div>
+                    <div class="stat-title">إجمالي الإشعارات</div>
+                    <div class="stat-value">{{ notifications|length }}</div>
                 </div>
-                <div class="card-body">
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-bell-slash fa-lg"></i>
+                    </div>
+                    <div class="stat-title">إشعارات غير مقروءة</div>
+                    <div class="stat-value">{{ notifications|selectattr('is_read', 'equalto', false)|list|length }}</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-day fa-lg"></i>
+                    </div>
+                    <div class="stat-title">إشعارات اليوم</div>
+                    <div class="stat-value">{{ notifications|selectattr('created_at', 'ge', now.replace(hour=0, minute=0, second=0))|list|length }}</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users fa-lg"></i>
+                    </div>
+                    <div class="stat-title">فئات المستلمين</div>
+                    <div class="stat-value">4</div>
+                </div>
+            </div>
+
+            <!-- جدول الإشعارات -->
+            <div class="notifications-card">
+                <div class="card-header">
+                    <h2 class="card-title">الإشعارات الأخيرة</h2>
+                </div>
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-bordered" id="notificationsTable" width="100%" cellspacing="0">
+                        <table class="custom-table" id="notificationsTable">
                             <thead>
                                 <tr>
                                     <th>العنوان</th>
@@ -41,9 +516,9 @@
                                     <td>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                     <td>
                                         {% if notification.is_read %}
-                                        <span class="badge badge-success">مقروء</span>
+                                        <span class="status-badge badge-success">مقروء</span>
                                         {% else %}
-                                        <span class="badge badge-warning">غير مقروء</span>
+                                        <span class="status-badge badge-warning">غير مقروء</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -53,191 +528,144 @@
                     </div>
                 </div>
             </div>
+        </main>
+    </div>
+
+    <!-- نافذة إرسال إشعار جديد -->
+    <div class="modal fade" id="sendNotificationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إرسال إشعار جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('admin.send_notification') }}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-4">
+                            <label class="form-label" for="title">عنوان الإشعار <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label" for="message">نص الإشعار <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">المستلمون <span class="text-danger">*</span></label>
+                            <div class="form-check mb-2">
+                                <input type="radio" id="recipient_all" name="recipient_type" value="all" class="form-check-input" checked>
+                                <label class="form-check-label" for="recipient_all">جميع المستخدمين</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="radio" id="recipient_role" name="recipient_type" value="role" class="form-check-input">
+                                <label class="form-check-label" for="recipient_role">حسب الصلاحية</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="radio" id="recipient_user" name="recipient_type" value="user" class="form-check-input">
+                                <label class="form-check-label" for="recipient_user">مستخدم محدد</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="radio" id="recipient_phone" name="recipient_type" value="phone" class="form-check-input">
+                                <label class="form-check-label" for="recipient_phone">رقم هاتف محدد</label>
+                            </div>
+                        </div>
+                        
+                        <div class="role-options mb-4" style="display: none;">
+                            <label class="form-label" for="role">اختر الصلاحية</label>
+                            <select class="form-control" id="role" name="role">
+                                <option value="student">طالب</option>
+                                <option value="teacher">معلم</option>
+                                <option value="assistant">مساعد</option>
+                                <option value="admin">مسؤول</option>
+                            </select>
+                        </div>
+                        
+                        <div class="user-options mb-4" style="display: none;">
+                            <label class="form-label" for="user_id">اختر المستخدم</label>
+                            <select class="form-control" id="user_id" name="user_id">
+                                <option value="">-- اختر مستخدم --</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.name }} ({{ user.phone }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="phone-options mb-4" style="display: none;">
+                            <label class="form-label" for="phone">رقم الهاتف</label>
+                            <input type="text" class="form-control" id="phone" name="phone" placeholder="مثال: 0555555555">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-custom btn-light" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn-custom btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>إرسال</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Statistics Row -->
-    <div class="row">
-        <!-- Total Notifications Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                إجمالي الإشعارات</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ notifications|length }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-bell fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Unread Notifications Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                إشعارات غير مقروءة</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ notifications|selectattr('is_read', 'equalto', false)|list|length }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-bell-slash fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Today's Notifications Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                إشعارات اليوم</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ notifications|selectattr('created_at', 'ge', now.replace(hour=0, minute=0, second=0))|list|length }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recipient Types Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                فئات المستلمين</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">4</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Send Notification Modal -->
-<div class="modal fade" id="sendNotificationModal" tabindex="-1" role="dialog" aria-labelledby="sendNotificationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="sendNotificationModalLabel">إرسال إشعار جديد</h5>
-                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <form action="{{ url_for('admin.send_notification') }}" method="post">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="title">عنوان الإشعار <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="title" name="title" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="message">نص الإشعار <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>المستلمون <span class="text-danger">*</span></label>
-                        <div class="custom-control custom-radio">
-                            <input type="radio" id="recipient_all" name="recipient_type" value="all" class="custom-control-input" checked>
-                            <label class="custom-control-label" for="recipient_all">جميع المستخدمين</label>
-                        </div>
-                        <div class="custom-control custom-radio">
-                            <input type="radio" id="recipient_role" name="recipient_type" value="role" class="custom-control-input">
-                            <label class="custom-control-label" for="recipient_role">حسب الصلاحية</label>
-                        </div>
-                        <div class="custom-control custom-radio">
-                            <input type="radio" id="recipient_user" name="recipient_type" value="user" class="custom-control-input">
-                            <label class="custom-control-label" for="recipient_user">مستخدم محدد</label>
-                        </div>
-                        <div class="custom-control custom-radio">
-                            <input type="radio" id="recipient_phone" name="recipient_type" value="phone" class="custom-control-input">
-                            <label class="custom-control-label" for="recipient_phone">رقم هاتف محدد</label>
-                        </div>
-                    </div>
-                    
-                    <!-- Role Selection (Hidden by default) -->
-                    <div class="form-group role-options" style="display: none;">
-                        <label for="role">اختر الصلاحية</label>
-                        <select class="form-control" id="role" name="role">
-                            <option value="student">طالب</option>
-                            <option value="teacher">معلم</option>
-                            <option value="assistant">مساعد</option>
-                            <option value="admin">مسؤول</option>
-                        </select>
-                    </div>
-                    
-                    <!-- User Selection (Hidden by default) -->
-                    <div class="form-group user-options" style="display: none;">
-                        <label for="user_id">اختر المستخدم</label>
-                        <select class="form-control" id="user_id" name="user_id">
-                            <!-- This would be populated dynamically -->
-                            <option value="">-- اختر مستخدم --</option>
-                            {% for user in users %}
-                            <option value="{{ user.id }}">{{ user.name }} ({{ user.phone }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <!-- Phone Input (Hidden by default) -->
-                    <div class="form-group phone-options" style="display: none;">
-                        <label for="phone">رقم الهاتف</label>
-                        <input type="text" class="form-control" id="phone" name="phone" placeholder="مثال: 0555555555">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i> إرسال
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
-<script>
-    $(document).ready(function() {
-        // Initialize DataTable
-        $('#notificationsTable').DataTable({
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
-            },
-            "order": [[ 3, "desc" ]]
-        });
-        
-        // Show/hide recipient options based on selection
-        $('input[name="recipient_type"]').change(function() {
-            $('.role-options, .user-options, .phone-options').hide();
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تفعيل DataTable
+            $('#notificationsTable').DataTable({
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
+                },
+                "order": [[ 3, "desc" ]],
+                "pageLength": 10,
+                "responsive": true
+            });
             
-            if ($(this).val() === 'role') {
-                $('.role-options').show();
-            } else if ($(this).val() === 'user') {
-                $('.user-options').show();
-            } else if ($(this).val() === 'phone') {
-                $('.phone-options').show();
+            // تفعيل زر القائمة للموبايل
+            const menuToggle = document.querySelector('.mobile-toggle');
+            const sidebar = document.querySelector('.innovative-sidebar');
+            
+            if (menuToggle) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('show');
+                });
             }
+            
+            // إغلاق السايدبار عند النقر خارجه
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth < 992 && 
+                    !e.target.closest('.innovative-sidebar') && 
+                    !e.target.closest('.mobile-toggle')) {
+                    sidebar.classList.remove('show');
+                }
+            });
+            
+            // إظهار/إخفاء خيارات المستلمين
+            const recipientInputs = document.querySelectorAll('input[name="recipient_type"]');
+            const roleOptions = document.querySelector('.role-options');
+            const userOptions = document.querySelector('.user-options');
+            const phoneOptions = document.querySelector('.phone-options');
+            
+            recipientInputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    roleOptions.style.display = 'none';
+                    userOptions.style.display = 'none';
+                    phoneOptions.style.display = 'none';
+                    
+                    if (input.value === 'role') {
+                        roleOptions.style.display = 'block';
+                    } else if (input.value === 'user') {
+                        userOptions.style.display = 'block';
+                    } else if (input.value === 'phone') {
+                        phoneOptions.style.display = 'block';
+                    }
+                });
+            });
         });
-    });
-</script>
-{% endblock %}
+    </script>
+</body>
+</html>

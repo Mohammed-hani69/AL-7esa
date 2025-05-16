@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الدعم الفني - منصة الحصة التعليمية</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo2.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='img/logo2.png') }}">
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: {{ primary_color }};
+            --accent-gradient: linear-gradient(120deg, {{ primary_color }}, {{ secondary_color }});
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            background: var(--accent-gradient);
+            color: var(--surface-color);
+            padding: 4rem 0;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .support-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .support-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px -5px rgba(108, 99, 255, 0.15);
+        }
+
+        .support-icon {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .support-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .support-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .support-action {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: var(--accent-gradient);
+            color: var(--surface-color);
+            border-radius: var(--border-radius-sm);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .support-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.2);
+            color: var(--surface-color);
+        }
+
+        .support-action i {
+            margin-left: 0.5rem;
+        }
+
+        .working-hours {
+            background: rgba(108, 99, 255, 0.05);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .working-hours p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        .working-hours strong {
+            color: var(--accent-color);
+        }
+
+        /* تنسيقات متجاوبة للموبايل */
+        @media (max-width: 992px) {
+            .page-title {
+                font-size: 2.5rem;
+            }
+
+            .support-card {
+                margin-bottom: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.5rem 0;
+            }
+
+            .navbar-brand img {
+                height: 30px;
+            }
+
+            .navbar-toggler {
+                padding: 4px 8px;
+                margin-right: 8px;
+            }
+
+            .navbar .btn {
+                width: 100%;
+                margin: 0.25rem 0;
+            }
+
+            .page-title {
+                font-size: 2rem;
+                text-align: center;
+            }
+
+            .page-header {
+                padding: 3rem 0;
+            }
+
+            .lead {
+                font-size: 1rem;
+                text-align: center;
+            }
+
+            .support-card {
+                padding: 1.5rem;
+            }
+
+            .support-icon {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+            }
+
+            .support-title {
+                font-size: 1.3rem;
+            }
+
+            .support-action {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .working-hours {
+                padding: 0.75rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .page-title {
+                font-size: 1.75rem;
+            }
+
+            .lead {
+                font-size: 0.9rem;
+            }
+
+            .support-card {
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .support-icon {
+                font-size: 1.75rem;
+            }
+
+            .support-title {
+                font-size: 1.2rem;
+            }
+
+            .support-description {
+                font-size: 0.95rem;
+            }
+
+            footer {
+                text-align: center;
+                padding: 2rem 0;
+            }
+
+            footer .col-lg-2,
+            footer .col-lg-4 {
+                margin-bottom: 2rem;
+            }
+
+            .social-links {
+                margin-bottom: 1.5rem;
+            }
+
+            .social-links a {
+                width: 32px;
+                height: 32px;
+                margin-right: 0.5rem;
+            }
+        }
+
+        /* تنسيقات الفوتر */
+        footer {
+            background: linear-gradient(to right, #1a1a1a, #2d2d2d);
+            color: var(--surface-color);
+            padding: 3rem 0;
+            margin-top: 4rem;
+        }
+
+        footer h5 {
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        footer .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            color: var(--surface-color);
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+
+        footer .social-links a:hover {
+            background: var(--accent-color);
+            transform: translateY(-3px);
+        }
+
+        footer ul li a {
+            color: var(--surface-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        footer ul li a:hover {
+            color: var(--accent-color);
+            padding-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- القائمة العلوية -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <img src="{{ url_for('static', filename='img/logo2.png') }}" alt="الحصة" height="40">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.index') }}">الرئيسية</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.about') }}">عن المنصة</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.contact') }}">اتصل بنا</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.faq') }}">الأسئلة الشائعة</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.support') }}">الدعم الفني</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.privacy') }}">سياسة الخصوصية</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.terms') }}">شروط الاستخدام</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary me-2">تسجيل الدخول</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">تسجيل جديد</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- العنوان الرئيسي -->
+    <header class="page-header">
+        <div class="container text-center">
+            <h1 class="page-title">الدعم الفني</h1>
+            <p class="lead text-white-50">نحن هنا لمساعدتك! اختر طريقة التواصل المناسبة لك</p>
+        </div>
+    </header>
+
+    <main class="container py-5">
+        <div class="row g-4">
+            <!-- المحادثة المباشرة -->
+            <div class="col-md-6 col-lg-4">
+                <div class="support-card text-center">
+                    <div class="support-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="support-title">المحادثة المباشرة</h3>
+                    <p class="support-description">تحدث مباشرة مع أحد ممثلي خدمة العملاء للحصول على مساعدة فورية</p>
+                    <div class="working-hours">
+                        <p><strong>ساعات العمل:</strong></p>
+                        <p>السبت - الخميس: 9 صباحاً - 10 مساءً</p>
+                    </div>
+                    <a href="#" class="support-action mt-3">
+                        <i class="fas fa-comments"></i>
+                        بدء المحادثة
+                    </a>
+                </div>
+            </div>
+
+            <!-- البريد الإلكتروني -->
+            <div class="col-md-6 col-lg-4">
+                <div class="support-card text-center">
+                    <div class="support-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h3 class="support-title">البريد الإلكتروني</h3>
+                    <p class="support-description">راسلنا عبر البريد الإلكتروني وسنرد عليك خلال 24 ساعة عمل</p>
+                    <div class="working-hours">
+                        <p><strong>وقت الرد المتوقع:</strong></p>
+                        <p>خلال 24 ساعة عمل</p>
+                    </div>
+                    <a href="mailto:support@alhessa.com" class="support-action mt-3">
+                        <i class="fas fa-envelope"></i>
+                        إرسال بريد إلكتروني
+                    </a>
+                </div>
+            </div>
+
+            <!-- الأسئلة الشائعة -->
+            <div class="col-md-6 col-lg-4">
+                <div class="support-card text-center">
+                    <div class="support-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <h3 class="support-title">الأسئلة الشائعة</h3>
+                    <p class="support-description">اطلع على إجابات الأسئلة الأكثر شيوعاً من مستخدمينا</p>
+                    <div class="working-hours">
+                        <p><strong>متاح:</strong></p>
+                        <p>24 ساعة / 7 أيام</p>
+                    </div>
+                    <a href="{{ url_for('main.faq') }}" class="support-action mt-3">
+                        <i class="fas fa-external-link-alt"></i>
+                        تصفح الأسئلة الشائعة
+                    </a>
+                </div>
+            </div>
+
+            <!-- الاتصال الهاتفي -->
+            <div class="col-md-6 col-lg-4">
+                <div class="support-card text-center">
+                    <div class="support-icon">
+                        <i class="fas fa-phone-alt"></i>
+                    </div>
+                    <h3 class="support-title">الاتصال الهاتفي</h3>
+                    <p class="support-description">تحدث مباشرة مع فريق الدعم الفني عبر الهاتف للحصول على مساعدة فورية</p>
+                    <div class="working-hours">
+                        <p><strong>ساعات العمل:</strong></p>
+                        <p>السبت - الخميس: 9 صباحاً - 5 مساءً</p>
+                    </div>
+                    <a href="tel:+201145425207" class="support-action mt-3">
+                        <i class="fas fa-phone-alt"></i>
+                        اتصل بنا
+                    </a>
+                </div>
+            </div>
+
+            <!-- الواتساب -->
+            <div class="col-md-6 col-lg-4">
+                <div class="support-card text-center">
+                    <div class="support-icon">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <h3 class="support-title">واتساب</h3>
+                    <p class="support-description">تواصل معنا عبر الواتساب للحصول على مساعدة سريعة ومباشرة</p>
+                    <div class="working-hours">
+                        <p><strong>ساعات العمل:</strong></p>
+                        <p>السبت - الخميس: 9 صباحاً - 10 مساءً</p>
+                    </div>
+                    <a href="https://wa.me/201145425207" class="support-action mt-3">
+                        <i class="fab fa-whatsapp"></i>
+                        مراسلة عبر واتساب
+                    </a>
+                </div>
+            </div>
+
+            <!-- الدعم الفني للمدارس -->
+            <div class="col-md-6 col-lg-4">
+                <div class="support-card text-center">
+                    <div class="support-icon">
+                        <i class="fas fa-school"></i>
+                    </div>
+                    <h3 class="support-title">دعم المؤسسات التعليمية</h3>
+                    <p class="support-description">خدمة دعم خاصة للمدارس والمؤسسات التعليمية مع مدير حساب مخصص</p>
+                    <div class="working-hours">
+                        <p><strong>ساعات العمل:</strong></p>
+                        <p>السبت - الخميس: 9 صباحاً - 5 مساءً</p>
+                    </div>
+                    <a href="{{ url_for('main.contact') }}" class="support-action mt-3">
+                        <i class="fas fa-envelope"></i>
+                        طلب خدمة مؤسسات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5>عن منصة الحصة</h5>
+                    <p class="mb-4">منصة تعليمية رقمية متكاملة تهدف إلى تسهيل العملية التعليمية وتحسين تجربة التعلم عن بعد لكل من المعلمين والطلاب.</p>
+                    <div class="social-links">
+                        <a href="#" class="text-light"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h5>روابط سريعة</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{{ url_for('main.index') }}">الرئيسية</a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.about') }}">عن المنصة</a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.contact') }}">اتصل بنا</a></li>
+                        <li class="mb-2"><a href="{{ url_for('auth.register') }}">التسجيل</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h5>الدعم</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{{ url_for('main.faq') }}">الأسئلة الشائعة</a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.support') }}">الدعم الفني</a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.privacy') }}">سياسة الخصوصية</a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.terms') }}">شروط الاستخدام</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 col-md-4">
+                    <h5>تواصل معنا</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i> info@alhessa.com</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i> +201145425207</li>
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> جمهورية مصر العربية</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; {{ current_year }} منصة الحصة - جميع الحقوق محفوظة</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">تم التطوير بواسطة <a href="#" class="text-light text-decoration-none">فريق الحصة</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

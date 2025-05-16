@@ -1,86 +1,525 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ assignment.title }} - {{ classroom.name }} - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
 
-{% block title %}{{ assignment.title }} - {{ classroom.name }} - الحصة{% endblock %}
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
 
-{% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ assignment.title }}</h1>
-        <a href="{{ url_for('student.assignments', classroom_id=classroom.id) }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-right me-1"></i>العودة للواجبات
-        </a>
-    </div>
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            padding: 2rem;
+        }
 
-    <!-- Assignment Details -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">تفاصيل الواجب</h6>
-        </div>
-        <div class="card-body">
-            <div class="row mb-4">
-                <div class="col-md-8">
-                    <div class="mb-3">
-                        <h5>الوصف</h5>
-                        <p>{{ assignment.description|default('لا يوجد وصف') }}</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="assignment-info">
-                        <p><i class="fas fa-calendar me-2"></i>تاريخ التسليم: 
-                            {% if assignment.due_date %}
-                                <span class="text-danger">{{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
-                            {% else %}
-                                <span class="text-muted">غير محدد</span>
-                            {% endif %}
-                        </p>
-                        <p><i class="fas fa-star me-2"></i>النقاط: {{ assignment.points }}</p>
-                    </div>
-                </div>
+        .innovative-sidebar {
+            background: var(--accent-gradient);
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 2rem;
+            height: calc(100vh - 4rem);
+            color: var(--surface-color);
+        }
+
+        .sidebar-brand {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var (--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .brand-text {
+            color: var(--surface-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--surface-color);
+            transform: translateX(-10px);
+        }
+
+        .nav-link i {
+            margin-left: 1rem;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .assignment-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .assignment-header {
+            background: var(--accent-gradient);
+            color: var(--surface-color);
+            padding: 2rem;
+        }
+
+        .assignment-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .assignment-meta {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .assignment-content {
+            padding: 2rem;
+        }
+
+        .content-section {
+            margin-bottom: 2rem;
+        }
+
+        .content-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .attachment-preview {
+            border: 1px solid var(--background-color);
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+        }
+
+        .attachment-preview img {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: contain;
+        }
+
+        .attachment-info {
+            padding: 1rem;
+            background: var(--background-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .submission-status {
+            padding: 1.5rem;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 2rem;
+        }
+
+        .status-graded {
+            background: linear-gradient(120deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+        }
+
+        .status-pending {
+            background: linear-gradient(120deg, #FF9800, #F7971E);
+            color: white;
+        }
+
+        .feedback-section {
+            background: rgba(40, 167, 69, 0.1);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-md);
+            margin-top: 1rem;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+
+        .submission-form {
+            background: var(--background-color);
+            padding: 2rem;
+            border-radius: var (--border-radius-md);
+        }
+
+        .form-control {
+            border: 2px solid var(--background-color);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: none;
+        }
+
+        .btn-submit {
+            background: var(--accent-gradient);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius-sm);
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .expired-alert {
+            background: linear-gradient(120deg, #FF5252, #FF1744);
+            color: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius-md);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .badge.text-success {
+            background-color: rgba(40, 167, 69, 0.15);
+            color: #28a745 !important;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+        }
+
+        @media (max-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .innovative-sidebar {
+                position: fixed;
+                right: -300px;
+                z-index: 1000;
+                transition: 0.3s ease;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .innovative-sidebar.show {
+                right: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                right: 1rem;
+                top: 1rem;
+                z-index: 1001;
+                background: var(--surface-color);
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: var(--box-shadow);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .assignment-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
             </div>
 
-            {% if submission %}
-                <div class="submission-status mb-4">
-                    <h5>حالة التسليم</h5>
-                    {% if submission.grade is not none %}
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle me-2"></i>تم التقييم
-                            <span class="badge badge-success ms-2">{{ submission.grade }}/{{ assignment.points }}</span>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('student.dashboard') }}" class="nav-link">
+                        <i class="fas fa-th-large"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('student.classrooms') }}" class="nav-link active">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>الفصول</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">{{ assignment.title }}</h1>
+                <a href="{{ url_for('student.assignments', classroom_id=classroom.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-right me-1"></i>
+                    العودة للواجبات
+                </a>
+            </div>
+
+            <div class="assignment-card">
+                <div class="assignment-header">
+                    <h2 class="assignment-title">{{ assignment.title }}</h2>
+                    <div class="assignment-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>تاريخ التسليم: 
+                                {% if assignment.due_date %}
+                                    {{ assignment.due_date.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </span>
                         </div>
-                        {% if submission.feedback %}
-                            <div class="mt-3">
-                                <h6>ملاحظات المعلم:</h6>
-                                <p class="bg-light p-3 rounded">{{ submission.feedback }}</p>
+                        <div class="meta-item">
+                            <i class="fas fa-star"></i>
+                            <span>النقاط: {{ assignment.points }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-chalkboard"></i>
+                            <span>{{ classroom.name }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="assignment-content">
+                    <!-- وصف الواجب -->
+                    <div class="content-section">
+                        <h3 class="section-title">الوصف</h3>
+                        <p>{{ assignment.description|default('لا يوجد وصف') }}</p>
+                    </div>
+
+                    <!-- الملفات المرفقة -->
+                    {% if assignment.attachment_url %}
+                    <div class="content-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-paperclip me-2"></i>الملفات المرفقة
+                        </h3>
+                        <div class="attachment-preview">
+                            {% set file_ext = assignment.attachment_url.split('.')[-1].lower() %}
+                            
+                            {% if file_ext in ['jpg', 'jpeg', 'png', 'gif'] %}
+                                <img src="{{ url_for('static', filename=assignment.attachment_url) }}" alt="معاينة الصورة">
+                            {% elif file_ext == 'pdf' %}
+                                <div class="ratio ratio-16x9">
+                                    <iframe src="{{ url_for('static', filename=assignment.attachment_url) }}"></iframe>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="attachment-info">
+                                <i class="fas {% if file_ext in ['jpg', 'jpeg', 'png', 'gif'] %}fa-image
+                                           {% elif file_ext == 'pdf' %}fa-file-pdf
+                                           {% elif file_ext in ['doc', 'docx'] %}fa-file-word
+                                           {% elif file_ext in ['xls', 'xlsx'] %}fa-file-excel
+                                           {% else %}fa-file{% endif %} fa-2x text-primary"></i>
+                                
+                                <div class="flex-grow-1">
+                                    <div>{{ assignment.attachment_url.split('/')[-1] }}</div>
+                                </div>
+                                
+                                <a href="{{ url_for('static', filename=assignment.attachment_url) }}" 
+                                   class="btn btn-primary" download>
+                                    <i class="fas fa-download me-1"></i>تنزيل
+                                </a>
                             </div>
-                        {% endif %}
-                    {% else %}
-                        <div class="alert alert-warning">
-                            <i class="fas fa-clock me-2"></i>تم التسليم، بانتظار التقييم
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- حالة التسليم -->
+                    {% if submission %}
+                        <div class="content-section">
+                            <div class="submission-status {% if submission.grade is not none %}status-graded{% else %}status-pending{% endif %}">
+                                {% if submission.grade is not none %}
+                                    <h3 class="mb-3">
+                                        <i class="fas fa-check-circle me-2"></i>تم التقييم
+                                        <span class="badge bg-light text-success ms-2" style="font-size: 1rem;">
+                                            {{ submission.grade }}/{{ assignment.points }}
+                                        </span>
+                                    </h3>
+                                    {% if submission.feedback %}
+                                        <div class="feedback-section">
+                                            <h4 class="mb-3" style="color: #28a745;">ملاحظات المعلم:</h4>
+                                            <p class="mb-0" style="color: #333;">{{ submission.feedback }}</p>
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <h3 class="mb-0">
+                                        <i class="fas fa-clock me-2"></i>تم التسليم، بانتظار التقييم
+                                    </h3>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- نموذج التسليم -->
+                    <div class="content-section">
+                        <h3 class="section-title">الحل</h3>
+                        <div class="submission-form">
+                            <form method="POST" action="{{ url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}">
+                                <div class="mb-3">
+                                    {% if submission %}
+                                        <label for="content" class="form-label">الحل المقدم</label>
+                                        <textarea class="form-control" id="content" name="content" rows="6" readonly>{{ submission.content }}</textarea>
+                                    {% else %}
+                                        <label for="content" class="form-label">الحل</label>
+                                        <textarea class="form-control" id="content" name="content" rows="6" required></textarea>
+                                    {% endif %}
+                                </div>
+                                {% if (not assignment.due_date or assignment.due_date > now) and (not submission or submission.grade is none) %}
+                                    <button type="submit" class="btn btn-submit">
+                                        <i class="fas fa-paper-plane me-2"></i>
+                                        {% if submission %}تحديث الحل{% else %}تسليم الحل{% endif %}
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+
+                    {% if not submission and (assignment.due_date and assignment.due_date < now) %}
+                        <div class="expired-alert">
+                            <i class="fas fa-exclamation-circle fa-2x"></i>
+                            <div>
+                                <h4 class="mb-1">انتهت مهلة التسليم</h4>
+                                <p class="mb-0">لم يعد بإمكانك تسليم هذا الواجب</p>
+                            </div>
                         </div>
                     {% endif %}
                 </div>
-            {% endif %}
-
-            {% if not assignment.due_date or assignment.due_date > now %}
-                <div class="submit-section">
-                    <h5>{% if submission %}تعديل الحل{% else %}تسليم الحل{% endif %}</h5>
-                    <form method="POST">
-                        <div class="form-group">
-                            <label for="content">الحل</label>
-                            <textarea class="form-control" id="content" name="content" rows="6" required>{{ submission.content if submission else '' }}</textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary mt-3">
-                            <i class="fas fa-paper-plane me-2"></i>
-                            {% if submission %}تحديث الحل{% else %}تسليم الحل{% endif %}
-                        </button>
-                    </form>
-                </div>
-            {% elif not submission %}
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    انتهت مهلة تسليم الواجب
-                </div>
-            {% endif %}
-        </div>
+            </div>
+        </main>
     </div>
-</div>
-{% endblock %}
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+    </script>
+</body>
+</html>
