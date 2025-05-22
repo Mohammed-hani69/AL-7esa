@@ -1,0 +1,1193 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الاشتراكات - الحصة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.15);
+        }
+
+        /* تنسيق عام */
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            padding-bottom: 70px; /* مساحة للقائمة السفلية */
+        }
+
+        /* تصميم هيدر الصفحة */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .mobile-header-logo {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+            object-fit: contain;
+        }
+
+        .mobile-header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* تصميم القائمة */
+        .mobile-nav {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            left: 0;
+            background: white;
+            padding: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 999;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-nav.show {
+            transform: translateY(0);
+        }
+
+        .mobile-nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mobile-nav-item {
+            margin: 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .mobile-nav-item:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-link i {
+            width: 24px;
+            margin-left: 15px;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+        }
+
+        .mobile-nav-link.active {
+            background: var(--accent-gradient);
+            color: white;
+            border-radius: 0;
+        }
+
+        .mobile-nav-link.active i {
+            color: white;
+        }
+
+        /* تصميم المحتوى */
+        .main-content {
+            margin-top: 70px;
+            padding: 15px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            text-align: center;
+            position: relative;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: 50%;
+            transform: translateX(50%);
+            width: 50px;
+            height: 3px;
+            background: var(--accent-gradient);
+            border-radius: 2px;
+        }
+
+        /* تصميم البطاقات الإحصائية */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            background: var(--accent-gradient);
+            color: var(--surface-color);
+        }
+
+        .stat-title {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* تصميم البطاقات والجداول */
+        .card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 20px;
+            border: none;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--background-color);
+            background: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        /* تصميم بطاقات الباقات */
+        .plan-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .plan-card-body {
+            padding: 15px;
+        }
+
+        .plan-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .plan-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            margin: 0 0 5px;
+        }
+
+        .plan-price {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .plan-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .plan-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .plan-feature {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .plan-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--border-radius-sm);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        /* تصميم بطاقات الاشتراكات النشطة */
+        .subscription-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .subscription-header {
+            padding: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .subscription-user {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin: 0 0 5px;
+        }
+
+        .subscription-plan {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .subscription-body {
+            padding: 15px;
+        }
+
+        .subscription-dates {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .date-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .date-value {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .subscription-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .status-active {
+            background: linear-gradient(120deg, #00B5B5, #00D68F);
+            color: white;
+        }
+
+        .status-expired {
+            background: linear-gradient(120deg, #9CA3AF, #6B7280);
+            color: white;
+        }
+
+        .subscription-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* تصميم جدول طلبات الدفع */
+        .payment-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .payment-header {
+            padding: 12px 15px;
+            background: var(--background-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .payment-id {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .payment-date {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .payment-body {
+            padding: 15px;
+        }
+
+        .payment-user {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            margin: 0 0 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .payment-phone {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .payment-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        .payment-plan {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .payment-amount {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .payment-method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            background: rgba(108, 99, 255, 0.1);
+            color: var(--accent-color);
+            margin: 5px 0;
+        }
+
+        .payment-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 5px 0;
+        }
+
+        .status-pending {
+            background: linear-gradient(120deg, #FFB75E, #ED8F03);
+            color: white;
+        }
+
+        .status-approved {
+            background: linear-gradient(120deg, #00B5B5, #00D68F);
+            color: white;
+        }
+
+        .status-rejected {
+            background: linear-gradient(120deg, #EF4444, #DC2626);
+            color: white;
+        }
+
+        .payment-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+        }
+
+        /* قائمة التنقل السفلية */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--accent-color);
+        }
+
+        .bottom-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        /* زر الإضافة الثابت */
+        .floating-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: var(--accent-gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+            border: none;
+            z-index: 99;
+            transition: all 0.3s ease;
+        }
+
+        .floating-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* التبويبات */
+        .nav-tabs {
+            border: none;
+            margin-bottom: 20px;
+            display: flex;
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            padding: 5px;
+        }
+
+        .nav-tabs .nav-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--text-secondary);
+            padding: 10px;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--accent-gradient);
+            color: white;
+            font-weight: 500;
+        }
+
+        /* النوافذ المنبثقة */
+        .modal-content {
+            border-radius: var(--border-radius-md);
+            border: none;
+        }
+
+        .modal-header {
+            background: var(--accent-gradient);
+            color: white;
+            border-bottom: none;
+            border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 20px 15px;
+        }
+
+        /* تنسيق النموذج */
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius-sm);
+            padding: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .form-check-input {
+            width: 1.2rem;
+            height: 1.2rem;
+            margin-left: 10px;
+        }
+
+        .form-check-label {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.2);
+        }
+
+        .mb-3 {
+            margin-bottom: 1rem !important;
+        }
+
+        /* معرض الصور */
+        .payment-proof {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .payment-proof img {
+            max-width: 100%;
+            border-radius: var(--border-radius-sm);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- هيدر الموبايل -->
+    <header class="mobile-header">
+        <a href="{{ url_for('admin.dashboard') }}" class="mobile-header-brand">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+            <h1 class="mobile-header-title">الحصة</h1>
+        </a>
+        <button class="mobile-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- قائمة الموبايل -->
+    <nav class="mobile-nav">
+        <ul class="mobile-nav-list">
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.dashboard') }}" class="mobile-nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.users') }}" class="mobile-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>المستخدمين</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.classrooms') }}" class="mobile-nav-link">
+                    <i class="fas fa-school"></i>
+                    <span>الفصول الدراسية</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.subscriptions') }}" class="mobile-nav-link active">
+                    <i class="fas fa-money-check"></i>
+                    <span>الاشتراكات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.notifications') }}" class="mobile-nav-link">
+                    <i class="fas fa-bell"></i>
+                    <span>الإشعارات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.settings') }}" class="mobile-nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span>الإعدادات</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <h1 class="page-title">إدارة الاشتراكات</h1>
+
+        <!-- البطاقات الإحصائية -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users fa-lg"></i>
+                </div>
+                <div class="stat-title">المشتركين النشطين</div>
+                <div class="stat-value">{{ active_subs|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-box fa-lg"></i>
+                </div>
+                <div class="stat-title">باقات الاشتراك</div>
+                <div class="stat-value">{{ plans|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock fa-lg"></i>
+                </div>
+                <div class="stat-title">الاشتراكات المنتهية</div>
+                <div class="stat-value">{{ all_subscriptions|selectattr('end_date', '<', now)|list|length }}</div>
+            </div>
+        </div>
+
+        <!-- التبويبات -->
+        <ul class="nav nav-tabs" id="subscriptionTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="plans-tab" data-bs-toggle="tab" data-bs-target="#plans" type="button" role="tab" aria-controls="plans" aria-selected="true">
+                    <i class="fas fa-box me-1"></i> الباقات
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab" aria-controls="active" aria-selected="false">
+                    <i class="fas fa-check-circle me-1"></i> النشطة
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab" aria-controls="payments" aria-selected="false">
+                    <i class="fas fa-credit-card me-1"></i> المدفوعات
+                </button>
+            </li>
+        </ul>
+
+        <!-- محتوى التبويبات -->
+        <div class="tab-content" id="subscriptionTabsContent">
+            <!-- تبويب باقات الاشتراك -->
+            <div class="tab-pane fade show active" id="plans" role="tabpanel" aria-labelledby="plans-tab">
+                {% for plan in plans %}
+                <div class="plan-card">
+                    <div class="plan-card-body">
+                        <div class="plan-card-header">
+                            <div>
+                                <h3 class="plan-title">{{ plan.name }}</h3>
+                                <p class="plan-price">{{ plan.price }} ريال / {{ plan.duration_days }} يوم</p>
+                            </div>
+                            <div class="plan-actions">
+                                <a href="{{ url_for('admin.edit_subscription_plan', plan_id=plan.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('admin.delete_subscription_plan', plan_id=plan.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذه الباقة؟')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <p class="plan-description">{{ plan.description }}</p>
+                        <div class="plan-features">
+                            <div class="plan-feature">
+                                <i class="fas fa-school"></i>
+                                <span>عدد الفصول: {{ plan.max_classrooms }}</span>
+                            </div>
+                            <div class="plan-feature">
+                                {% if plan.has_chat %}
+                                <i class="fas fa-check text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                                {% endif %}
+                                <span>خدمة الدردشة</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- تبويب الاشتراكات النشطة -->
+            <div class="tab-pane fade" id="active" role="tabpanel" aria-labelledby="active-tab">
+                {% for sub in active_subs %}
+                <div class="subscription-card">
+                    <div class="subscription-header">
+                        <h3 class="subscription-user">{{ sub.user.name }}</h3>
+                        <p class="subscription-plan">{{ sub.plan.name }}</p>
+                    </div>
+                    <div class="subscription-body">
+                        <div class="subscription-dates">
+                            <div>
+                                <div class="date-label">تاريخ البدء</div>
+                                <div class="date-value">{{ sub.start_date.strftime('%Y-%m-%d') }}</div>
+                            </div>
+                            <div>
+                                <div class="date-label">تاريخ الانتهاء</div>
+                                <div class="date-value">{{ sub.end_date.strftime('%Y-%m-%d') }}</div>
+                            </div>
+                        </div>
+                        
+                        {% if sub.end_date < now %}
+                        <span class="subscription-status status-expired">منتهي</span>
+                        {% else %}
+                        <span class="subscription-status status-active">نشط</span>
+                        <div class="subscription-actions">
+                            <a href="{{ url_for('admin.cancel_subscription', subscription_id=sub.id) }}" 
+                               class="btn btn-sm btn-warning" 
+                               onclick="return confirm('هل أنت متأكد من إلغاء هذا الاشتراك؟')" 
+                               title="إلغاء الاشتراك">
+                                <i class="fas fa-ban me-1"></i> إلغاء
+                            </a>
+                            <form action="{{ url_for('admin.delete_subscription') }}" 
+                                  method="POST" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('هل أنت متأكد من حذف هذا الاشتراك نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')">
+                                <input type="hidden" name="subscription_id" value="{{ sub.id }}">
+                                <button type="submit" 
+                                        class="btn btn-sm btn-danger" 
+                                        title="حذف الاشتراك نهائياً">
+                                    <i class="fas fa-trash me-1"></i> حذف
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if active_subs|length == 0 %}
+                <div class="alert alert-info">
+                    لا توجد اشتراكات نشطة حالياً
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- تبويب طلبات الدفع -->
+            <div class="tab-pane fade" id="payments" role="tabpanel" aria-labelledby="payments-tab">
+                {% for payment in payments %}
+                <div class="payment-card {% if payment.status == 'pending' %}bg-warning-subtle{% endif %}">
+                    <div class="payment-header">
+                        <div class="payment-id">#{{ payment.id }}</div>
+                        <div class="payment-date">{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
+                    <div class="payment-body">
+                        <div class="payment-user">
+                            <span>{{ payment.user.name }}</span>
+                            <span class="payment-phone">{{ payment.user.phone }}</span>
+                        </div>
+                        
+                        <div class="payment-info">
+                            <span class="payment-plan">{{ payment.plan.name }}</span>
+                            <span class="payment-amount">{{ "%.2f"|format(payment.amount) }} ريال</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="payment-method">
+                                {% if payment.payment_method == 'bank_transfer' %}
+                                <i class="fas fa-university me-1"></i>تحويل بنكي
+                                {% else %}
+                                <i class="fas fa-money-bill me-1"></i>{{ payment.payment_method }}
+                                {% endif %}
+                            </span>
+                            
+                            {% if payment.status == 'approved' %}
+                            <span class="payment-status status-approved">مقبول</span>
+                            {% elif payment.status == 'rejected' %}
+                            <span class="payment-status status-rejected">مرفوض</span>
+                            {% else %}
+                            <span class="payment-status status-pending">قيد المراجعة</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if payment.payment_proof %}
+                        <div class="payment-proof">
+                            <button type="button"
+                                   class="btn btn-sm btn-info"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#imageModal{{ payment.id }}">
+                               <i class="fas fa-image me-1"></i> عرض صورة الإثبات
+                            </button>
+
+                            <!-- Modal for payment proof image -->
+                            <div class="modal fade" id="imageModal{{ payment.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">صورة إثبات الدفع</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <img src="{{ url_for('static', filename=payment.payment_proof) }}" 
+                                                 class="img-fluid" 
+                                                 alt="صورة إثبات الدفع">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if payment.status == 'pending' %}
+                        <div class="payment-actions">
+                            <form action="{{ url_for('admin.approve_payment', payment_id=payment.id) }}" 
+                                  method="POST" 
+                                  style="display: inline;">
+                                <button type="submit"
+                                        class="btn btn-sm btn-success w-100"
+                                        onclick="return confirm('هل أنت متأكد من قبول هذا الطلب؟')">
+                                    <i class="fas fa-check me-1"></i> قبول الطلب
+                                </button>
+                            </form>
+                            <form action="{{ url_for('admin.reject_payment', payment_id=payment.id) }}" 
+                                  method="POST"
+                                  style="display: inline;">
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger w-100"
+                                        onclick="return confirm('هل أنت متأكد من رفض هذا الطلب؟')">
+                                    <i class="fas fa-times me-1"></i> رفض الطلب
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if payments|length == 0 %}
+                <div class="alert alert-info">
+                    لا توجد طلبات دفع حالياً
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- زر إضافة باقة جديدة -->
+    <button type="button" class="floating-btn" data-bs-toggle="modal" data-bs-target="#newPlanModal">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- نافذة إضافة باقة جديدة -->
+    <div class="modal fade" id="newPlanModal" tabindex="-1" aria-labelledby="newPlanModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newPlanModalLabel">إضافة باقة اشتراك جديدة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('admin.new_subscription_plan') }}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="name" class="form-label fw-bold">
+                                <i class="fas fa-tag me-2"></i>اسم الباقة
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="name" 
+                                   name="name" 
+                                   placeholder="مثال: الباقة الذهبية" 
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label fw-bold">
+                                <i class="fas fa-align-left me-2"></i>وصف الباقة
+                            </label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="3"
+                                      placeholder="اكتب وصفاً مختصراً للباقة ومميزاتها"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="price" class="form-label fw-bold">
+                                <i class="fas fa-money-bill-wave me-2"></i>السعر
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="price" 
+                                       name="price" 
+                                       step="0.01" 
+                                       min="0" 
+                                       placeholder="0.00"
+                                       required>
+                                <span class="input-group-text">ريال</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="duration_days" class="form-label fw-bold">
+                                <i class="fas fa-calendar-day me-2"></i>مدة الاشتراك
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="duration_days" 
+                                       name="duration_days" 
+                                       min="1"
+                                       placeholder="30"
+                                       required>
+                                <span class="input-group-text">يوم</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="max_classrooms" class="form-label fw-bold">
+                                <i class="fas fa-school me-2"></i>عدد الفصول المسموح
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="max_classrooms" 
+                                   name="max_classrooms" 
+                                   min="1"
+                                   placeholder="5"
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="max_students" class="form-label fw-bold">
+                                <i class="fas fa-users me-2"></i>عدد الطلاب لكل فصل
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="max_students" 
+                                   name="max_students" 
+                                   min="1"
+                                   placeholder="30"
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <hr>
+                            <h6 class="mb-3 fw-bold">
+                                <i class="fas fa-gift me-2"></i>المميزات الإضافية
+                            </h6>
+                            <div class="row">
+                                <div class="col-6 mb-2">
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" 
+                                               class="form-check-input" 
+                                               id="has_chat" 
+                                               name="has_chat">
+                                        <label class="form-check-label" for="has_chat">
+                                            خدمة الدردشة
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" 
+                                               class="form-check-input" 
+                                               id="allow_assistant" 
+                                               name="allow_assistant">
+                                        <label class="form-check-label" for="allow_assistant">
+                                            تعيين مساعد
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" 
+                                               class="form-check-input" 
+                                               id="advanced_analytics" 
+                                               name="advanced_analytics">
+                                        <label class="form-check-label" for="advanced_analytics">
+                                            تحليلات متقدمة
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" 
+                                               class="form-check-input" 
+                                               id="allow_recording" 
+                                               name="allow_recording">
+                                        <label class="form-check-label" for="allow_recording">
+                                            تسجيل المحاضرات
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>إلغاء
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>إضافة الباقة
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- القائمة السفلية -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('admin.dashboard') }}" class="bottom-nav-item">
+            <i class="fas fa-chart-line"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('admin.users') }}" class="bottom-nav-item">
+            <i class="fas fa-users"></i>
+            <span>المستخدمين</span>
+        </a>
+        <a href="{{ url_for('admin.classrooms') }}" class="bottom-nav-item">
+            <i class="fas fa-school"></i>
+            <span>الفصول</span>
+        </a>
+        <a href="{{ url_for('admin.subscriptions') }}" class="bottom-nav-item active">
+            <i class="fas fa-money-check"></i>
+            <span>الاشتراكات</span>
+        </a>
+        <a href="{{ url_for('admin.settings') }}" class="bottom-nav-item">
+            <i class="fas fa-cog"></i>
+            <span>الإعدادات</span>
+        </a>
+    </nav>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تفعيل زر القائمة للموبايل
+            const menuToggle = document.querySelector('.mobile-toggle');
+            const mobileNav = document.querySelector('.mobile-nav');
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    mobileNav.classList.toggle('show');
+                    this.querySelector('i').classList.toggle('fa-bars');
+                    this.querySelector('i').classList.toggle('fa-times');
+                });
+            }
+
+            // إغلاق القائمة عند النقر خارجها
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.mobile-nav') && 
+                    !e.target.closest('.mobile-toggle') &&
+                    mobileNav.classList.contains('show')) {
+                    mobileNav.classList.remove('show');
+                    menuToggle.querySelector('i').classList.add('fa-bars');
+                    menuToggle.querySelector('i').classList.remove('fa-times');
+                }
+            });
+
+            // تحسين تصفح الصور
+            const imageModals = document.querySelectorAll('.payment-proof .modal');
+            
+            imageModals.forEach(modal => {
+                modal.addEventListener('shown.bs.modal', function() {
+                    const img = this.querySelector('img');
+                    if (img.naturalHeight > window.innerHeight * 0.8) {
+                        img.style.maxHeight = '80vh';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
