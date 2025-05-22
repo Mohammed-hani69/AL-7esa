@@ -153,10 +153,10 @@ def users():
     page = request.args.get('page', 1, type=int)
     users = query.order_by(User.created_at.desc()).paginate(page=page, per_page=20)
 
-    template = 'admin/admin-mobile/users.html' if is_mobile() 
+    template = 'admin/admin-mobile/users.html' if is_mobile() else 'admin/users.html'
     
     # Add current time for template filters
-    from datetime import datetime else 'admin/users.html'
+    from datetime import datetime
 
     return render_template(template, users=users, role=role_filter, status=status_filter, search=search, current_time=datetime.now())
 
