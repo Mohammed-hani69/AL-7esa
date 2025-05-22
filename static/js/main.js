@@ -10,10 +10,98 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
     if (sidebarToggleBtn) {
         const sidebar = document.querySelector('.sidebar');
-        sidebarToggleBtn.addEventListener('click', function() {
-            if (sidebar) {
-                sidebar.classList.toggle('show');
+        
+        // إضافة خلفية للقائمة الجانبية عند الأجهزة المحمولة
+        if (window.innerWidth < 992) {
+            // إنشاء عنصر الخلفية إذا لم يكن موجوداً
+            let backdrop = document.querySelector('.sidebar-backdrop');
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.className = 'sidebar-backdrop';
+                document.body.appendChild(backdrop);
+                
+                // إغلاق القائمة عند الضغط على الخلفية
+                backdrop.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    backdrop.classList.remove('show');
+                });
             }
+            
+            // تبديل القائمة والخلفية
+            sidebarToggleBtn.addEventListener('click', function() {
+                if (sidebar) {
+                    sidebar.classList.toggle('show');
+                    backdrop.classList.toggle('show');
+                }
+            });
+        } else {
+            // السلوك العادي للأجهزة الكبيرة
+            sidebarToggleBtn.addEventListener('click', function() {
+                if (sidebar) {
+                    sidebar.classList.toggle('show');
+                }
+            });
+        }
+    }
+    
+    // إضافة زر العودة للأعلى
+    if (window.innerWidth <= 768) {
+        // إنشاء زر العودة للأعلى
+        const backToTopBtn = document.createElement('div');
+        backToTopBtn.className = 'back-to-top';
+        backToTopBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+        document.body.appendChild(backToTopBtn);
+        
+        // إظهار/إخفاء الزر عند التمرير
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.style.display = 'block';
+            } else {
+                backToTopBtn.style.display = 'none';
+            }
+        });
+        
+        // التمرير للأعلى عند النقر
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+    
+    // تحسين سلوك القوائم المنسدلة على الأجهزة المحمولة
+    if (window.innerWidth <= 768) {
+        const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+        
+        dropdownToggles.forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const dropdownMenu = this.nextElementSibling;
+                if (!dropdownMenu) return;
+                
+                // إنشاء خلفية للقوائم المنسدلة إذا لم تكن موجودة
+                let backdrop = document.querySelector('.dropdown-backdrop');
+                if (!backdrop) {
+                    backdrop = document.createElement('div');
+                    backdrop.className = 'dropdown-backdrop';
+                    document.body.appendChild(backdrop);
+                    
+                    // إغلاق القائمة عند الضغط على الخلفية
+                    backdrop.addEventListener('click', function() {
+                        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                            menu.classList.remove('show');
+                        });
+                        backdrop.classList.remove('show');
+                    });
+                }
+                
+                // إظهار القائمة والخلفية
+                dropdownMenu.classList.toggle('show');
+                backdrop.classList.toggle('show');
+            });
         });
     }
 
