@@ -549,6 +549,8 @@
                 <div class="stat-value">{{ users.items|selectattr('role', 'equalto', 'admin')|list|length }}</div>
             </div>
         </div>
+        
+        {% set current_time = now() %}
 
         <!-- فلاتر البحث -->
         <div class="card mb-4">
