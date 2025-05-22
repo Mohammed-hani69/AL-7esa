@@ -1430,7 +1430,7 @@
                     <i class="fas fa-users fa-lg"></i>
                 </div>
                 <div class="stat-title">إجمالي المستخدمين</div>
-                <div class="stat-value">{{ users|length }}</div>
+                <div class="stat-value">{{ users.total }}</div>
             </div>
 
             <div class="stat-card">
@@ -1438,7 +1438,7 @@
                     <i class="fas fa-chalkboard-teacher fa-lg"></i>
                 </div>
                 <div class="stat-title">المعلمين</div>
-                <div class="stat-value">{{ users|selectattr('role', 'equalto', 'teacher')|list|length }}</div>
+                <div class="stat-value">{{ users.items|selectattr('role', 'equalto', 'teacher')|list|length }}</div>
             </div>
 
             <div class="stat-card">
@@ -1446,7 +1446,7 @@
                     <i class="fas fa-user-graduate fa-lg"></i>
                 </div>
                 <div class="stat-title">الطلاب</div>
-                <div class="stat-value">{{ users|selectattr('role', 'equalto', 'student')|list|length }}</div>
+                <div class="stat-value">{{ users.items|selectattr('role', 'equalto', 'student')|list|length }}</div>
             </div>
 
             <div class="stat-card">
@@ -1454,7 +1454,7 @@
                     <i class="fas fa-user-shield fa-lg"></i>
                 </div>
                 <div class="stat-title">المشرفين</div>
-                <div class="stat-value">{{ users|selectattr('role', 'equalto', 'admin')|list|length }}</div>
+                <div class="stat-value">{{ users.items|selectattr('role', 'equalto', 'admin')|list|length }}</div>
             </div>
         </div>
 
