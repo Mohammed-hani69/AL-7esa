@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -8,7 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
-    
+
     <style>
         :root {
             --accent-color: #6C63FF;
@@ -168,34 +167,14 @@
             overflow: hidden;
         }
 
-        .settings-header {
-            padding: 15px;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .settings-icon {
-            width: 40px;
-            height: 40px;
+        .settings-card-header {
             background: var(--accent-gradient);
-            border-radius: var(--border-radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
             color: white;
-            font-size: 1.2rem;
-        }
-
-        .settings-title {
+            padding: 15px;
             font-weight: 600;
-            color: var(--text-primary);
-            font-size: 1.1rem;
-            margin: 0;
         }
 
-        .settings-body {
+        .settings-card-body {
             padding: 15px;
         }
 
@@ -204,13 +183,13 @@
             font-weight: 500;
             color: var(--text-primary);
             font-size: 0.9rem;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
         }
 
         .form-control, .form-select {
             border: 2px solid #e2e8f0;
             border-radius: var(--border-radius-sm);
-            padding: 10px;
+            padding: 10px 15px;
             font-size: 0.9rem;
             margin-bottom: 15px;
         }
@@ -220,20 +199,14 @@
             box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
         }
 
-        .form-switch .form-check-input {
-            width: 3em;
-            height: 1.5em;
-            margin-left: 10px;
-        }
-        
-        .form-switch .form-check-input:checked {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-        }
-
-        .form-check-label {
-            font-size: 0.95rem;
-            color: var(--text-primary);
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            display: inline-block;
+            border-radius: 50%;
+            margin-right: 10px;
+            vertical-align: middle;
+            border: 2px solid #e2e8f0;
         }
 
         .btn {
@@ -284,46 +257,13 @@
             font-size: 1.2rem;
             margin-bottom: 4px;
         }
-
-        /* Accordion تصميم */
-        .accordion-button {
-            background-color: var(--surface-color);
-            color: var(--text-primary);
-            font-weight: 500;
-            padding: 15px;
-            border: none;
-            border-radius: 0 !important;
-        }
-
-        .accordion-button:not(.collapsed) {
-            background-color: var(--accent-color);
-            color: white;
-        }
-
-        .accordion-button:focus {
-            box-shadow: none;
-            border-color: rgba(0,0,0,0.1);
-        }
-
-        .accordion-body {
-            padding: 15px;
-            background-color: var(--surface-color);
-        }
-
-        .accordion-button::after {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232D3748'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-        }
-
-        .accordion-button:not(.collapsed)::after {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-        }
     </style>
 </head>
 <body>
     <!-- هيدر الموبايل -->
     <header class="mobile-header">
         <a href="{{ url_for('admin.dashboard') }}" class="mobile-header-brand">
-            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
             <h1 class="mobile-header-title">الحصة</h1>
         </a>
         <button class="mobile-toggle">
@@ -377,233 +317,115 @@
     <main class="main-content">
         <h1 class="page-title">إعدادات النظام</h1>
 
-        <div class="accordion" id="settingsAccordion">
-            <!-- إعدادات النظام العامة -->
-            <div class="accordion-item shadow-sm mb-3 border-0 rounded-3">
-                <h2 class="accordion-header" id="generalSettings">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#generalSettingsBody" aria-expanded="true" aria-controls="generalSettingsBody">
-                        <i class="fas fa-cogs me-2"></i> الإعدادات العامة
-                    </button>
-                </h2>
-                <div id="generalSettingsBody" class="accordion-collapse collapse show" aria-labelledby="generalSettings" data-bs-parent="#settingsAccordion">
-                    <div class="accordion-body">
-                        <form action="{{ url_for('admin.update_general_settings') }}" method="post">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="mb-3">
-                                <label for="site_name" class="form-label">اسم الموقع</label>
-                                <input type="text" class="form-control" id="site_name" name="site_name" value="{{ settings.site_name }}">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="site_description" class="form-label">وصف الموقع</label>
-                                <textarea class="form-control" id="site_description" name="site_description" rows="3">{{ settings.site_description }}</textarea>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="support_email" class="form-label">البريد الإلكتروني للدعم</label>
-                                <input type="email" class="form-control" id="support_email" name="support_email" value="{{ settings.support_email }}">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="support_phone" class="form-label">رقم هاتف الدعم</label>
-                                <input type="tel" class="form-control" id="support_phone" name="support_phone" value="{{ settings.support_phone }}">
-                            </div>
-                            
-                            <div class="mb-3 form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="maintenance_mode" name="maintenance_mode" {% if settings.maintenance_mode %}checked{% endif %}>
-                                <label class="form-check-label" for="maintenance_mode">وضع الصيانة</label>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-save me-2"></i>حفظ الإعدادات
-                            </button>
-                        </form>
+        <form action="{{ url_for('admin.settings') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- الإعدادات العامة -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <i class="fas fa-cogs me-2"></i>
+                    الإعدادات العامة
+                </div>
+                <div class="settings-card-body">
+                    <div class="mb-3">
+                        <label for="system_name" class="form-label">اسم النظام</label>
+                        <input type="text" class="form-control" id="system_name" name="system_name" value="{{ settings.system_name }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="system_description" class="form-label">وصف النظام</label>
+                        <textarea class="form-control" id="system_description" name="system_description" rows="3">{{ settings.system_description }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="default_language" class="form-label">اللغة الافتراضية</label>
+                        <select class="form-select" id="default_language" name="default_language">
+                            <option value="ar" {% if settings.default_language == 'ar' %}selected{% endif %}>العربية</option>
+                            <option value="en" {% if settings.default_language == 'en' %}selected{% endif %}>الإنجليزية</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="default_currency" class="form-label">العملة الافتراضية</label>
+                        <select class="form-select" id="default_currency" name="default_currency">
+                            <option value="SAR" {% if settings.default_currency == 'SAR' %}selected{% endif %}>ريال سعودي (SAR)</option>
+                            <option value="USD" {% if settings.default_currency == 'USD' %}selected{% endif %}>دولار أمريكي (USD)</option>
+                            <option value="AED" {% if settings.default_currency == 'AED' %}selected{% endif %}>درهم إماراتي (AED)</option>
+                            <option value="EGP" {% if settings.default_currency == 'EGP' %}selected{% endif %}>جنيه مصري (EGP)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="trial_days" class="form-label">فترة التجربة المجانية (بالأيام)</label>
+                        <input type="number" class="form-control" id="trial_days" name="trial_days" value="{{ settings.trial_days }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="max_file_size" class="form-label">الحجم الأقصى للملفات (بالميجابايت)</label>
+                        <input type="number" class="form-control" id="max_file_size" name="max_file_size" value="{{ settings.max_file_size }}">
                     </div>
                 </div>
             </div>
-            
-            <!-- إعدادات المدفوعات -->
-            <div class="accordion-item shadow-sm mb-3 border-0 rounded-3">
-                <h2 class="accordion-header" id="paymentSettings">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#paymentSettingsBody" aria-expanded="false" aria-controls="paymentSettingsBody">
-                        <i class="fas fa-money-bill-wave me-2"></i> إعدادات المدفوعات
-                    </button>
-                </h2>
-                <div id="paymentSettingsBody" class="accordion-collapse collapse" aria-labelledby="paymentSettings" data-bs-parent="#settingsAccordion">
-                    <div class="accordion-body">
-                        <form action="{{ url_for('admin.update_payment_settings') }}" method="post">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="mb-3 form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="enable_payments" name="enable_payments" {% if settings.enable_payments %}checked{% endif %}>
-                                <label class="form-check-label" for="enable_payments">تفعيل نظام المدفوعات</label>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="bank_name" class="form-label">اسم البنك</label>
-                                <input type="text" class="form-control" id="bank_name" name="bank_name" value="{{ settings.bank_name }}">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="bank_account_name" class="form-label">اسم صاحب الحساب</label>
-                                <input type="text" class="form-control" id="bank_account_name" name="bank_account_name" value="{{ settings.bank_account_name }}">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="bank_account_number" class="form-label">رقم الحساب</label>
-                                <input type="text" class="form-control" id="bank_account_number" name="bank_account_number" value="{{ settings.bank_account_number }}">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="bank_iban" class="form-label">رقم الـ IBAN</label>
-                                <input type="text" class="form-control" id="bank_iban" name="bank_iban" value="{{ settings.bank_iban }}">
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-save me-2"></i>حفظ الإعدادات
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- إعدادات التسجيل -->
-            <div class="accordion-item shadow-sm mb-3 border-0 rounded-3">
-                <h2 class="accordion-header" id="registrationSettings">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#registrationSettingsBody" aria-expanded="false" aria-controls="registrationSettingsBody">
-                        <i class="fas fa-user-plus me-2"></i> إعدادات التسجيل
-                    </button>
-                </h2>
-                <div id="registrationSettingsBody" class="accordion-collapse collapse" aria-labelledby="registrationSettings" data-bs-parent="#settingsAccordion">
-                    <div class="accordion-body">
-                        <form action="{{ url_for('admin.update_registration_settings') }}" method="post">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="mb-3 form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="enable_registration" name="enable_registration" {% if settings.enable_registration %}checked{% endif %}>
-                                <label class="form-check-label" for="enable_registration">تفعيل التسجيل</label>
-                            </div>
-                            
-                            <div class="mb-3 form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="require_email_verification" name="require_email_verification" {% if settings.require_email_verification %}checked{% endif %}>
-                                <label class="form-check-label" for="require_email_verification">تفعيل التحقق من البريد الإلكتروني</label>
-                            </div>
-                            
-                            <div class="mb-3 form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="auto_activate_accounts" name="auto_activate_accounts" {% if settings.auto_activate_accounts %}checked{% endif %}>
-                                <label class="form-check-label" for="auto_activate_accounts">تفعيل الحسابات تلقائياً</label>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="free_trial_days" class="form-label">عدد أيام الفترة التجريبية</label>
-                                <input type="number" class="form-control" id="free_trial_days" name="free_trial_days" value="{{ settings.free_trial_days }}" min="0">
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-save me-2"></i>حفظ الإعدادات
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            
+
             <!-- إعدادات المظهر -->
-            <div class="accordion-item shadow-sm mb-3 border-0 rounded-3">
-                <h2 class="accordion-header" id="appearanceSettings">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#appearanceSettingsBody" aria-expanded="false" aria-controls="appearanceSettingsBody">
-                        <i class="fas fa-palette me-2"></i> إعدادات المظهر
-                    </button>
-                </h2>
-                <div id="appearanceSettingsBody" class="accordion-collapse collapse" aria-labelledby="appearanceSettings" data-bs-parent="#settingsAccordion">
-                    <div class="accordion-body">
-                        <form action="{{ url_for('admin.update_appearance_settings') }}" method="post" enctype="multipart/form-data">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="mb-3">
-                                <label for="primary_color" class="form-label">اللون الرئيسي</label>
-                                <div class="input-group">
-                                    <input type="color" class="form-control form-control-color" id="primary_color" name="primary_color" value="{{ settings.primary_color }}" title="اختر اللون الرئيسي">
-                                    <input type="text" class="form-control" value="{{ settings.primary_color }}" readonly>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="secondary_color" class="form-label">اللون الثانوي</label>
-                                <div class="input-group">
-                                    <input type="color" class="form-control form-control-color" id="secondary_color" name="secondary_color" value="{{ settings.secondary_color }}" title="اختر اللون الثانوي">
-                                    <input type="text" class="form-control" value="{{ settings.secondary_color }}" readonly>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="site_logo" class="form-label">شعار الموقع</label>
-                                {% if settings.logo_url %}
-                                <div class="mb-2">
-                                    <img src="{{ settings.logo_url }}" alt="شعار الموقع" class="img-thumbnail" style="max-height: 80px;">
-                                </div>
-                                {% endif %}
-                                <input type="file" class="form-control" id="site_logo" name="site_logo" accept="image/*">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="favicon" class="form-label">أيقونة التبويب (Favicon)</label>
-                                {% if settings.favicon_url %}
-                                <div class="mb-2">
-                                    <img src="{{ settings.favicon_url }}" alt="أيقونة التبويب" class="img-thumbnail" style="max-height: 32px;">
-                                </div>
-                                {% endif %}
-                                <input type="file" class="form-control" id="favicon" name="favicon" accept="image/x-icon,image/png">
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-save me-2"></i>حفظ الإعدادات
-                            </button>
-                        </form>
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <i class="fas fa-palette me-2"></i>
+                    إعدادات المظهر
+                </div>
+                <div class="settings-card-body">
+                    <div class="mb-3">
+                        <label for="primary_color" class="form-label">اللون الرئيسي</label>
+                        <div class="d-flex align-items-center">
+                            <div class="color-preview" id="primary_color_preview" style="background-color: {{ settings.primary_color }};"></div>
+                            <input type="text" class="form-control" id="primary_color" name="primary_color" value="{{ settings.primary_color }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="secondary_color" class="form-label">اللون الثانوي</label>
+                        <div class="d-flex align-items-center">
+                            <div class="color-preview" id="secondary_color_preview" style="background-color: {{ settings.secondary_color }};"></div>
+                            <input type="text" class="form-control" id="secondary_color" name="secondary_color" value="{{ settings.secondary_color }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="logo_url" class="form-label">رابط الشعار</label>
+                        <input type="text" class="form-control" id="logo_url" name="logo_url" value="{{ settings.logo_url }}">
+                    </div>
+
+                    <div class="mb-3 text-center">
+                        <img src="{{ settings.logo_url }}" alt="شعار النظام" class="img-fluid mt-2" style="max-width: 150px; max-height: 150px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'12\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
                     </div>
                 </div>
             </div>
-            
-            <!-- إعدادات النسخ الاحتياطي -->
-            <div class="accordion-item shadow-sm mb-3 border-0 rounded-3">
-                <h2 class="accordion-header" id="backupSettings">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#backupSettingsBody" aria-expanded="false" aria-controls="backupSettingsBody">
-                        <i class="fas fa-database me-2"></i> النسخ الاحتياطي
-                    </button>
-                </h2>
-                <div id="backupSettingsBody" class="accordion-collapse collapse" aria-labelledby="backupSettings" data-bs-parent="#settingsAccordion">
-                    <div class="accordion-body">
-                        <div class="mb-3">
-                            <p class="text-secondary mb-3">يمكنك إنشاء نسخة احتياطية من قاعدة البيانات أو استعادة نسخة سابقة.</p>
-                            <form action="{{ url_for('admin.create_backup') }}" method="post" class="mb-3">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fas fa-download me-2"></i>إنشاء نسخة احتياطية
-                                </button>
-                            </form>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="mb-3">
-                            <h5 class="mb-3">استعادة نسخة احتياطية</h5>
-                            <form action="{{ url_for('admin.restore_backup') }}" method="post" enctype="multipart/form-data">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <div class="mb-3">
-                                    <label for="backup_file" class="form-label">ملف النسخة الاحتياطية</label>
-                                    <input type="file" class="form-control" id="backup_file" name="backup_file" accept=".sql,.gz,.zip" required>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="confirm_restore" name="confirm_restore" required>
-                                    <label class="form-check-label" for="confirm_restore">
-                                        أنا أفهم أن استعادة النسخة الاحتياطية سيؤدي إلى استبدال البيانات الحالية
-                                    </label>
-                                </div>
-                                <button type="submit" class="btn btn-danger w-100" onclick="return confirm('هل أنت متأكد من استعادة النسخة الاحتياطية؟ سيتم استبدال جميع البيانات الحالية!')">
-                                    <i class="fas fa-upload me-2"></i>استعادة النسخة الاحتياطية
-                                </button>
-                            </form>
-                        </div>
+
+            <!-- بيانات الاتصال -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <i class="fas fa-address-card me-2"></i>
+                    بيانات الاتصال
+                </div>
+                <div class="settings-card-body">
+                    <div class="mb-3">
+                        <label for="contact_email" class="form-label">البريد الإلكتروني للدعم</label>
+                        <input type="email" class="form-control" id="contact_email" name="contact_email" value="{{ settings.contact_email }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contact_phone" class="form-label">رقم هاتف الدعم</label>
+                        <input type="tel" class="form-control" id="contact_phone" name="contact_phone" value="{{ settings.contact_phone }}">
                     </div>
                 </div>
             </div>
-        </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>حفظ الإعدادات
+                </button>
+            </div>
+        </form>
     </main>
 
     <!-- القائمة السفلية -->
@@ -633,7 +455,7 @@
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // تفعيل زر القائمة للموبايل
@@ -659,13 +481,18 @@
                 }
             });
 
-            // تحديث قيمة حقل النص عند تغيير اللون
-            const colorInputs = document.querySelectorAll('input[type="color"]');
-            colorInputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    const textInput = this.nextElementSibling;
-                    textInput.value = this.value;
-                });
+            // تحديث معاينة الألوان
+            const primaryColorInput = document.getElementById('primary_color');
+            const secondaryColorInput = document.getElementById('secondary_color');
+            const primaryColorPreview = document.getElementById('primary_color_preview');
+            const secondaryColorPreview = document.getElementById('secondary_color_preview');
+
+            primaryColorInput.addEventListener('input', function() {
+                primaryColorPreview.style.backgroundColor = this.value;
+            });
+
+            secondaryColorInput.addEventListener('input', function() {
+                secondaryColorPreview.style.backgroundColor = this.value;
             });
         });
     </script>

@@ -159,6 +159,26 @@
             border-radius: 2px;
         }
 
+        /* تصميم بطاقة إنشاء الإشعار */
+        .notification-form-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .notification-form-header {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+        }
+
+        .notification-form-body {
+            padding: 15px;
+        }
+
         /* تصميم بطاقات الإشعارات */
         .notification-card {
             background: var(--surface-color);
@@ -169,11 +189,25 @@
         }
 
         .notification-header {
-            padding: 12px 15px;
+            padding: 15px;
             border-bottom: 1px solid rgba(0,0,0,0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notification-title i {
+            color: var(--accent-color);
         }
 
         .notification-date {
@@ -185,115 +219,36 @@
             padding: 15px;
         }
 
-        .notification-title {
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 1rem;
-            margin: 0 0 8px;
-        }
-
-        .notification-text {
+        .notification-message {
             color: var(--text-secondary);
-            font-size: 0.9rem;
             margin-bottom: 10px;
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
 
-        .notification-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 0.85rem;
-        }
-
-        /* تصميم الفلاتر */
-        .filters-section {
-            background: var(--surface-color);
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--box-shadow);
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .filter-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .filter-label {
-            font-weight: 500;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-
-        .form-group {
-            flex: 1;
-        }
-
-        /* فئات الإشعارات */
-        .category-badge {
+        .notification-recipient {
             display: inline-block;
             padding: 4px 8px;
             font-size: 0.7rem;
             font-weight: 500;
             border-radius: 12px;
             color: white;
-            margin-bottom: 10px;
-        }
-
-        .category-system {
-            background: linear-gradient(120deg, #6C63FF, #8B5CF6);
-        }
-
-        .category-payment {
-            background: linear-gradient(120deg, #10B981, #059669);
-        }
-
-        .category-subscription {
-            background: linear-gradient(120deg, #F59E0B, #D97706);
-        }
-
-        .category-classroom {
-            background: linear-gradient(120deg, #3B82F6, #2563EB);
-        }
-
-        .category-user {
-            background: linear-gradient(120deg, #EC4899, #DB2777);
-        }
-
-        /* نافذة إنشاء إشعار جديد */
-        .modal-content {
-            border-radius: var(--border-radius-md);
-            border: none;
-        }
-
-        .modal-header {
             background: var(--accent-gradient);
-            color: white;
-            border-bottom: none;
-            border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+            margin-top: 5px;
         }
 
-        .modal-title {
-            font-weight: 600;
-        }
-
+        /* تصميم الفورم */
         .form-label {
             font-weight: 500;
             color: var(--text-primary);
             font-size: 0.9rem;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
         }
 
         .form-control, .form-select {
             border: 2px solid #e2e8f0;
             border-radius: var(--border-radius-sm);
-            padding: 10px;
+            padding: 10px 15px;
             font-size: 0.9rem;
             margin-bottom: 15px;
         }
@@ -301,6 +256,23 @@
         .form-control:focus, .form-select:focus {
             border-color: var(--accent-color);
             box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .btn {
+            font-weight: 500;
+            padding: 10px 15px;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.2);
         }
 
         /* قائمة التنقل السفلية */
@@ -357,13 +329,30 @@
         .floating-btn:active {
             transform: scale(0.95);
         }
+
+        /* النوافذ المنبثقة */
+        .modal-content {
+            border-radius: var(--border-radius-md);
+            border: none;
+        }
+
+        .modal-header {
+            background: var(--accent-gradient);
+            color: white;
+            border-bottom: none;
+            border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <!-- هيدر الموبايل -->
     <header class="mobile-header">
         <a href="{{ url_for('admin.dashboard') }}" class="mobile-header-brand">
-            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
             <h1 class="mobile-header-title">الحصة</h1>
         </a>
         <button class="mobile-toggle">
@@ -417,86 +406,35 @@
     <main class="main-content">
         <h1 class="page-title">إدارة الإشعارات</h1>
 
-        <!-- قسم الفلاتر -->
-        <div class="filters-section">
-            <form action="{{ url_for('admin.notifications') }}" method="get">
-                <div class="row">
-                    <div class="col-12 mb-3">
-                        <label class="filter-label">الفئة</label>
-                        <select class="form-select" name="category">
-                            <option value="">جميع الفئات</option>
-                            <option value="system" {% if category == 'system' %}selected{% endif %}>النظام</option>
-                            <option value="payment" {% if category == 'payment' %}selected{% endif %}>المدفوعات</option>
-                            <option value="subscription" {% if category == 'subscription' %}selected{% endif %}>الاشتراكات</option>
-                            <option value="classroom" {% if category == 'classroom' %}selected{% endif %}>الفصول الدراسية</option>
-                            <option value="user" {% if category == 'user' %}selected{% endif %}>المستخدمين</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-12 mb-3">
-                        <label class="filter-label">بحث</label>
-                        <input type="text" class="form-control" name="search" 
-                               placeholder="بحث عن إشعار..."
-                               value="{{ search }}">
-                    </div>
-                    
-                    <div class="col-6">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-search me-2"></i>تصفية
-                        </button>
-                    </div>
-                    
-                    <div class="col-6">
-                        <a href="{{ url_for('admin.notifications') }}" class="btn btn-light w-100">
-                            <i class="fas fa-redo me-1"></i>إعادة تعيين
-                        </a>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- قائمة الإشعارات -->
+        <!-- قائمة الإشعارات الحديثة -->
         <div class="notifications-list">
-            {% for notification in notifications %}
-            <div class="notification-card">
-                <div class="notification-header">
-                    {% if notification.category == 'system' %}
-                    <span class="category-badge category-system">النظام</span>
-                    {% elif notification.category == 'payment' %}
-                    <span class="category-badge category-payment">المدفوعات</span>
-                    {% elif notification.category == 'subscription' %}
-                    <span class="category-badge category-subscription">الاشتراكات</span>
-                    {% elif notification.category == 'classroom' %}
-                    <span class="category-badge category-classroom">الفصول الدراسية</span>
-                    {% elif notification.category == 'user' %}
-                    <span class="category-badge category-user">المستخدمين</span>
-                    {% endif %}
-                    <span class="notification-date">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
-                </div>
-                <div class="notification-body">
-                    <h3 class="notification-title">{{ notification.title }}</h3>
-                    <p class="notification-text">{{ notification.content }}</p>
-                    <div class="notification-actions">
-                        {% if notification.url %}
-                        <a href="{{ notification.url }}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-external-link-alt me-1"></i> مشاهدة
-                        </a>
-                        {% endif %}
-                        <form action="{{ url_for('admin.delete_notification', notification_id=notification.id) }}" method="POST" style="display: inline;">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذا الإشعار؟')">
-                                <i class="fas fa-trash-alt me-1"></i> حذف
+            <h2 class="section-title mb-3">الإشعارات الأخيرة</h2>
+            
+            {% if notifications %}
+                {% for notification in notifications %}
+                <div class="notification-card">
+                    <div class="notification-header">
+                        <h3 class="notification-title">
+                            <i class="fas fa-bell"></i>
+                            {{ notification.title }}
+                        </h3>
+                        <span class="notification-date">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </div>
+                    <div class="notification-body">
+                        <p class="notification-message">{{ notification.message }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="notification-recipient">{{ notification.user.name }}</span>
+                            <button class="btn btn-sm btn-light delete-notification" data-notification-id="{{ notification.id }}">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
-                        </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-            {% endfor %}
-
-            {% if notifications|length == 0 %}
+                {% endfor %}
+            {% else %}
             <div class="alert alert-info text-center">
-                <i class="fas fa-bell-slash mb-2 fa-2x"></i>
-                <p class="mb-0">لا توجد إشعارات حالياً</p>
+                <i class="fas fa-info-circle mb-2"></i>
+                <p>لا توجد إشعارات</p>
             </div>
             {% endif %}
         </div>
@@ -508,61 +446,60 @@
     </button>
 
     <!-- نافذة إضافة إشعار جديد -->
-    <div class="modal fade" id="addNotificationModal" tabindex="-1" aria-labelledby="addNotificationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen-sm-down">
+    <div class="modal fade" id="addNotificationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addNotificationModalLabel">إنشاء إشعار جديد</h5>
+                    <h5 class="modal-title">إرسال إشعار جديد</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="{{ url_for('admin.send_notification') }}" method="post">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="title" class="form-label">عنوان الإشعار <span class="text-danger">*</span></label>
+                            <label for="title" class="form-label">عنوان الإشعار</label>
                             <input type="text" class="form-control" id="title" name="title" required>
                         </div>
-
+                        
                         <div class="mb-3">
-                            <label for="content" class="form-label">محتوى الإشعار <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+                            <label for="message" class="form-label">نص الإشعار</label>
+                            <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
                         </div>
-
+                        
                         <div class="mb-3">
-                            <label for="category" class="form-label">الفئة <span class="text-danger">*</span></label>
-                            <select class="form-select" id="category" name="category" required>
-                                <option value="system">النظام</option>
-                                <option value="payment">المدفوعات</option>
-                                <option value="subscription">الاشتراكات</option>
-                                <option value="classroom">الفصول الدراسية</option>
-                                <option value="user">المستخدمين</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="url" class="form-label">رابط (اختياري)</label>
-                            <input type="url" class="form-control" id="url" name="url" placeholder="https://...">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="recipient_type" class="form-label">الجهة المستلمة <span class="text-danger">*</span></label>
-                            <select class="form-select" id="recipient_type" name="recipient_type">
+                            <label for="recipient_type" class="form-label">نوع المستلم</label>
+                            <select class="form-select" id="recipient_type" name="recipient_type" onchange="showRelevantFields()" required>
+                                <option value="">اختر نوع المستلم</option>
                                 <option value="all">جميع المستخدمين</option>
-                                <option value="students">الطلاب فقط</option>
-                                <option value="teachers">المعلمين فقط</option>
-                                <option value="admins">المشرفين فقط</option>
-                                <option value="specific">مستخدم محدد</option>
+                                <option value="role">حسب الدور</option>
+                                <option value="user">مستخدم محدد</option>
+                                <option value="phone">حسب رقم الهاتف</option>
                             </select>
                         </div>
-
-                        <div class="mb-3" id="specificUserDiv" style="display: none;">
-                            <label for="user_id" class="form-label">المستخدم المحدد <span class="text-danger">*</span></label>
+                        
+                        <div class="mb-3 recipient-field" id="role_field" style="display: none;">
+                            <label for="role" class="form-label">الدور</label>
+                            <select class="form-select" id="role" name="role">
+                                <option value="student">طالب</option>
+                                <option value="teacher">معلم</option>
+                                <option value="admin">مشرف</option>
+                                <option value="assistant">مساعد</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3 recipient-field" id="user_field" style="display: none;">
+                            <label for="user_id" class="form-label">المستخدم</label>
                             <select class="form-select" id="user_id" name="user_id">
                                 <option value="">اختر مستخدم</option>
                                 {% for user in users %}
-                                <option value="{{ user.id }}">{{ user.name }} ({{ user.phone }})</option>
+                                <option value="{{ user.id }}">{{ user.name }} ({{ user.email }})</option>
                                 {% endfor %}
                             </select>
+                        </div>
+                        
+                        <div class="mb-3 recipient-field" id="phone_field" style="display: none;">
+                            <label for="phone" class="form-label">رقم الهاتف</label>
+                            <input type="text" class="form-control" id="phone" name="phone" placeholder="أدخل رقم الهاتف...">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -626,19 +563,27 @@
                     menuToggle.querySelector('i').classList.remove('fa-times');
                 }
             });
-
-            // إظهار حقل المستخدم المحدد عند اختيار "مستخدم محدد"
-            const recipientTypeSelect = document.getElementById('recipient_type');
-            const specificUserDiv = document.getElementById('specificUserDiv');
-            
-            recipientTypeSelect.addEventListener('change', function() {
-                if (this.value === 'specific') {
-                    specificUserDiv.style.display = 'block';
-                } else {
-                    specificUserDiv.style.display = 'none';
-                }
-            });
         });
+
+        // إظهار الحقول المناسبة حسب نوع المستلم
+        function showRelevantFields() {
+            const recipientType = document.getElementById('recipient_type').value;
+            const recipientFields = document.querySelectorAll('.recipient-field');
+            
+            // إخفاء جميع الحقول
+            recipientFields.forEach(field => {
+                field.style.display = 'none';
+            });
+            
+            // إظهار الحقل المناسب
+            if (recipientType === 'role') {
+                document.getElementById('role_field').style.display = 'block';
+            } else if (recipientType === 'user') {
+                document.getElementById('user_field').style.display = 'block';
+            } else if (recipientType === 'phone') {
+                document.getElementById('phone_field').style.display = 'block';
+            }
+        }
     </script>
 </body>
 </html>
