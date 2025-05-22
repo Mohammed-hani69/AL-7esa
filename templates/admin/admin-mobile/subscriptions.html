@@ -564,7 +564,7 @@
                     <i class="fas fa-money-bill-wave fa-lg"></i>
                 </div>
                 <div class="stat-title">إجمالي الإيرادات</div>
-                <div class="stat-value">{{ "%.2f"|format(total_revenue) }} ر.س</div>
+                <div class="stat-value">{{ "%.2f"|format(total_revenue|default(0)) }} ر.س</div>
             </div>
 
             <div class="stat-card">

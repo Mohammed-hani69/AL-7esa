@@ -126,6 +126,25 @@ def toggle_user_status(user_id):
     flash(f'تم {status} المستخدم بنجاح', 'success')
     return redirect(url_for('admin.users'))
 
+@admin_bp.route('/user/<int:user_id>/reset_password', methods=['POST'])
+@login_required
+@admin_required
+def reset_user_password(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # إعادة تعيين كلمة المرور (مثال: كلمة مرور عشوائية أو كلمة مرور افتراضية)
+    # يمكنك تغيير كلمة المرور حسب احتياجاتك
+    default_password = "Password123"
+    
+    # في حالة استخدام bcrypt
+    from werkzeug.security import generate_password_hash
+    user.password = generate_password_hash(default_password)
+    
+    db.session.commit()
+    
+    flash(f'تم إعادة تعيين كلمة المرور للمستخدم {user.name} بنجاح', 'success')
+    return redirect(url_for('admin.users'))
+
 @admin_bp.route('/subscriptions')
 @login_required
 @admin_required
@@ -142,6 +161,13 @@ def subscriptions():
     # Get all subscription payments
     payments = SubscriptionPayment.query.order_by(SubscriptionPayment.created_at.desc()).all()
 
+    # حساب إجمالي الإيرادات
+    total_revenue = 0
+    if payments:
+        for payment in payments:
+            if payment.status == 'approved' and payment.amount:
+                total_revenue += payment.amount
+
     # Get current time for template
     now = datetime.utcnow()
 
@@ -152,7 +178,8 @@ def subscriptions():
                          active_subs=active_subs, 
                          all_subscriptions=all_subscriptions, 
                          payments=payments,
-                         now=now)
+                         now=now,
+                         total_revenue=total_revenue)
 
 @admin_bp.route('/subscription_plan/new', methods=['GET', 'POST'])
 @login_required
@@ -438,7 +465,10 @@ def classrooms():
                          classrooms=classrooms,
                          teachers=teachers, 
                          currency="ريال",
-                         pagination=pagination)
+                         pagination=pagination,
+                         teacher_id=teacher_id or 0,  # توفير قيمة افتراضية
+                         is_free=is_free,
+                         search=search)
 
 @admin_bp.route('/classroom/<int:classroom_id>/confirm_delete')
 @login_required

@@ -554,7 +554,7 @@
                             <select class="form-select" name="teacher_id">
                                 <option value="">الكل</option>
                                 {% for teacher in teachers %}
-                                <option value="{{ teacher.id }}" {% if teacher_id|int == teacher.id %}selected{% endif %}>
+                                <option value="{{ teacher.id }}" {% if teacher_id and teacher_id|int == teacher.id %}selected{% endif %}>
                                     {{ teacher.name }}
                                 </option>
                                 {% endfor %}
