@@ -78,7 +78,7 @@ def users():
     # إذا كان طلب POST، فقم بمعالجة تحديث أو إضافة المستخدم
     if request.method == 'POST':
         action = request.form.get('action')
-        
+
         if action == 'update':
             user_id = request.form.get('user_id', type=int)
             if user_id:
@@ -87,27 +87,27 @@ def users():
                 user.email = request.form.get('email')
                 user.phone = request.form.get('phone')
                 user.role = request.form.get('role')
-                
+
                 db.session.commit()
                 flash('تم تحديث بيانات المستخدم بنجاح', 'success')
                 return redirect(url_for('admin.users'))
-        
+
         elif action == 'add':
             # إضافة مستخدم جديد
             from werkzeug.security import generate_password_hash
-            
+
             name = request.form.get('name')
             email = request.form.get('email')
             phone = request.form.get('phone')
             role = request.form.get('role')
             password = request.form.get('password')
-            
+
             # التحقق من البريد الإلكتروني
             existing_email = User.query.filter_by(email=email).first()
             if existing_email:
                 flash('البريد الإلكتروني مسجل بالفعل', 'danger')
                 return redirect(url_for('admin.users'))
-            
+
             # إنشاء مستخدم جديد
             new_user = User(
                 name=name,
@@ -117,13 +117,13 @@ def users():
                 password=generate_password_hash(password),
                 is_active=True
             )
-            
+
             db.session.add(new_user)
             db.session.commit()
-            
+
             flash('تمت إضافة المستخدم بنجاح', 'success')
             return redirect(url_for('admin.users'))
-    
+
     # Get filter parameters
     role_filter = request.args.get('role', '')
     status_filter = request.args.get('status', '')
@@ -180,17 +180,17 @@ def toggle_user_status(user_id):
 @admin_required
 def reset_user_password(user_id):
     user = User.query.get_or_404(user_id)
-    
+
     # إعادة تعيين كلمة المرور (مثال: كلمة مرور عشوائية أو كلمة مرور افتراضية)
     # يمكنك تغيير كلمة المرور حسب احتياجاتك
     default_password = "Password123"
-    
+
     # في حالة استخدام bcrypt
     from werkzeug.security import generate_password_hash
     user.password = generate_password_hash(default_password)
-    
+
     db.session.commit()
-    
+
     flash(f'تم إعادة تعيين كلمة المرور للمستخدم {user.name} بنجاح', 'success')
     return redirect(url_for('admin.users'))
 
@@ -221,7 +221,7 @@ def subscriptions():
     # Calculate monthly revenue
     start_of_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     end_of_month = (start_of_month + timedelta(days=32)).replace(day=1) - timedelta(seconds=1)
-    
+
     # Get all approved subscription payments for current month
     month_revenue = db.session.query(db.func.sum(SubscriptionPayment.amount))\
         .filter(SubscriptionPayment.created_at.between(start_of_month, end_of_month))\
@@ -230,6 +230,7 @@ def subscriptions():
 
     # Get current time for template
     now = datetime.utcnow()
+    current_time = now  # نسخة من الوقت الحالي لاستخدامها في القالب
 
     # قم بحساب عدد المدفوعات قيد الانتظار
     pending_payments = SubscriptionPayment.query.filter_by(status='pending').count()
@@ -499,7 +500,7 @@ def classrooms():
     teacher_id = request.args.get('teacher_id', type=int)
     is_free = request.args.get('is_free')
     search = request.args.get('search', '')
-    
+
     # Get counts for stats
     student_count = User.query.filter_by(role=Role.STUDENT).count()
     teacher_count = User.query.filter_by(role=Role.TEACHER).count()
