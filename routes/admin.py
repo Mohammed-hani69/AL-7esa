@@ -201,6 +201,11 @@ def reset_user_password(user_id):
 @login_required
 @admin_required
 def subscriptions():
+    # Get filter parameters
+    status = request.args.get('status', '')
+    plan_id = request.args.get('plan_id', type=int)
+    search = request.args.get('search', '')
+    
     # Get subscription plans
     plans = SubscriptionPlan.query.all()
 
@@ -251,7 +256,10 @@ def subscriptions():
                          total_revenue=total_revenue,
                          month_revenue=month_revenue,
                          pending_payments=pending_payments,
-                         subscription_plans=plans)
+                         subscription_plans=plans,
+                         status=status,
+                         plan_id=plan_id,
+                         search=search)
 
 @admin_bp.route('/subscription_plan/new', methods=['GET', 'POST'])
 @login_required
