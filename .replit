@@ -7,7 +7,6 @@ packages = ["iana-etc", "libmysqlclient", "openssl", "postgresql", "pkg-config"]
 [deployment]
 deploymentTarget = "autoscale"
 run = ["sh", "-c", "python main.py"]
-build = ["sh", "-c", "python -m flask db upgrade"]
 
 [workflows]
 runButton = "تشغيل_التطبيق"
