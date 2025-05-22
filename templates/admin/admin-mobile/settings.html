@@ -1,0 +1,673 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعدادات النظام - الحصة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.15);
+        }
+
+        /* تنسيق عام */
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            padding-bottom: 70px; /* مساحة للقائمة السفلية */
+        }
+
+        /* تصميم هيدر الصفحة */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .mobile-header-logo {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+            object-fit: contain;
+        }
+
+        .mobile-header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* تصميم القائمة */
+        .mobile-nav {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            left: 0;
+            background: white;
+            padding: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 999;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-nav.show {
+            transform: translateY(0);
+        }
+
+        .mobile-nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mobile-nav-item {
+            margin: 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .mobile-nav-item:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-link i {
+            width: 24px;
+            margin-left: 15px;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+        }
+
+        .mobile-nav-link.active {
+            background: var(--accent-gradient);
+            color: white;
+            border-radius: 0;
+        }
+
+        .mobile-nav-link.active i {
+            color: white;
+        }
+
+        /* تصميم المحتوى */
+        .main-content {
+            margin-top: 70px;
+            padding: 15px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            text-align: center;
+            position: relative;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: 50%;
+            transform: translateX(50%);
+            width: 50px;
+            height: 3px;
+            background: var(--accent-gradient);
+            border-radius: 2px;
+        }
+
+        /* تصميم بطاقات الإعدادات */
+        .settings-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .settings-header {
+            padding: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-gradient);
+            border-radius: var(--border-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .settings-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .settings-body {
+            padding: 15px;
+        }
+
+        /* تصميم الفورم */
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius-sm);
+            padding: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .form-switch .form-check-input {
+            width: 3em;
+            height: 1.5em;
+            margin-left: 10px;
+        }
+        
+        .form-switch .form-check-input:checked {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .form-check-label {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .btn {
+            font-weight: 500;
+            padding: 10px 15px;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.2);
+        }
+
+        /* قائمة التنقل السفلية */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--accent-color);
+        }
+
+        .bottom-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        /* Accordion تصميم */
+        .accordion-button {
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            font-weight: 500;
+            padding: 15px;
+            border: none;
+            border-radius: 0 !important;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .accordion-button:focus {
+            box-shadow: none;
+            border-color: rgba(0,0,0,0.1);
+        }
+
+        .accordion-body {
+            padding: 15px;
+            background-color: var(--surface-color);
+        }
+
+        .accordion-button::after {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232D3748'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+        }
+
+        .accordion-button:not(.collapsed)::after {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+        }
+    </style>
+</head>
+<body>
+    <!-- هيدر الموبايل -->
+    <header class="mobile-header">
+        <a href="{{ url_for('admin.dashboard') }}" class="mobile-header-brand">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+            <h1 class="mobile-header-title">الحصة</h1>
+        </a>
+        <button class="mobile-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- قائمة الموبايل -->
+    <nav class="mobile-nav">
+        <ul class="mobile-nav-list">
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.dashboard') }}" class="mobile-nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.users') }}" class="mobile-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>المستخدمين</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.classrooms') }}" class="mobile-nav-link">
+                    <i class="fas fa-school"></i>
+                    <span>الفصول الدراسية</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.subscriptions') }}" class="mobile-nav-link">
+                    <i class="fas fa-money-check"></i>
+                    <span>الاشتراكات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.notifications') }}" class="mobile-nav-link">
+                    <i class="fas fa-bell"></i>
+                    <span>الإشعارات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.settings') }}" class="mobile-nav-link active">
+                    <i class="fas fa-cog"></i>
+                    <span>الإعدادات</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <h1 class="page-title">إعدادات النظام</h1>
+
+        <div class="accordion" id="settingsAccordion">
+            <!-- إعدادات النظام العامة -->
+            <div class="accordion-item shadow-sm mb-3 border-0 rounded-3">
+                <h2 class="accordion-header" id="generalSettings">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#generalSettingsBody" aria-expanded="true" aria-controls="generalSettingsBody">
+                        <i class="fas fa-cogs me-2"></i> الإعدادات العامة
+                    </button>
+                </h2>
+                <div id="generalSettingsBody" class="accordion-collapse collapse show" aria-labelledby="generalSettings" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form action="{{ url_for('admin.update_general_settings') }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="mb-3">
+                                <label for="site_name" class="form-label">اسم الموقع</label>
+                                <input type="text" class="form-control" id="site_name" name="site_name" value="{{ settings.site_name }}">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="site_description" class="form-label">وصف الموقع</label>
+                                <textarea class="form-control" id="site_description" name="site_description" rows="3">{{ settings.site_description }}</textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="support_email" class="form-label">البريد الإلكتروني للدعم</label>
+                                <input type="email" class="form-control" id="support_email" name="support_email" value="{{ settings.support_email }}">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="support_phone" class="form-label">رقم هاتف الدعم</label>
+                                <input type="tel" class="form-control" id="support_phone" name="support_phone" value="{{ settings.support_phone }}">
+                            </div>
+                            
+                            <div class="mb-3 form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="maintenance_mode" name="maintenance_mode" {% if settings.maintenance_mode %}checked{% endif %}>
+                                <label class="form-check-label" for="maintenance_mode">وضع الصيانة</label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-save me-2"></i>حفظ الإعدادات
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- إعدادات المدفوعات -->
+            <div class="accordion-item shadow-sm mb-3 border-0 rounded-3">
+                <h2 class="accordion-header" id="paymentSettings">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#paymentSettingsBody" aria-expanded="false" aria-controls="paymentSettingsBody">
+                        <i class="fas fa-money-bill-wave me-2"></i> إعدادات المدفوعات
+                    </button>
+                </h2>
+                <div id="paymentSettingsBody" class="accordion-collapse collapse" aria-labelledby="paymentSettings" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form action="{{ url_for('admin.update_payment_settings') }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="mb-3 form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="enable_payments" name="enable_payments" {% if settings.enable_payments %}checked{% endif %}>
+                                <label class="form-check-label" for="enable_payments">تفعيل نظام المدفوعات</label>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="bank_name" class="form-label">اسم البنك</label>
+                                <input type="text" class="form-control" id="bank_name" name="bank_name" value="{{ settings.bank_name }}">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="bank_account_name" class="form-label">اسم صاحب الحساب</label>
+                                <input type="text" class="form-control" id="bank_account_name" name="bank_account_name" value="{{ settings.bank_account_name }}">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="bank_account_number" class="form-label">رقم الحساب</label>
+                                <input type="text" class="form-control" id="bank_account_number" name="bank_account_number" value="{{ settings.bank_account_number }}">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="bank_iban" class="form-label">رقم الـ IBAN</label>
+                                <input type="text" class="form-control" id="bank_iban" name="bank_iban" value="{{ settings.bank_iban }}">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-save me-2"></i>حفظ الإعدادات
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- إعدادات التسجيل -->
+            <div class="accordion-item shadow-sm mb-3 border-0 rounded-3">
+                <h2 class="accordion-header" id="registrationSettings">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#registrationSettingsBody" aria-expanded="false" aria-controls="registrationSettingsBody">
+                        <i class="fas fa-user-plus me-2"></i> إعدادات التسجيل
+                    </button>
+                </h2>
+                <div id="registrationSettingsBody" class="accordion-collapse collapse" aria-labelledby="registrationSettings" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form action="{{ url_for('admin.update_registration_settings') }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="mb-3 form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="enable_registration" name="enable_registration" {% if settings.enable_registration %}checked{% endif %}>
+                                <label class="form-check-label" for="enable_registration">تفعيل التسجيل</label>
+                            </div>
+                            
+                            <div class="mb-3 form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="require_email_verification" name="require_email_verification" {% if settings.require_email_verification %}checked{% endif %}>
+                                <label class="form-check-label" for="require_email_verification">تفعيل التحقق من البريد الإلكتروني</label>
+                            </div>
+                            
+                            <div class="mb-3 form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto_activate_accounts" name="auto_activate_accounts" {% if settings.auto_activate_accounts %}checked{% endif %}>
+                                <label class="form-check-label" for="auto_activate_accounts">تفعيل الحسابات تلقائياً</label>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="free_trial_days" class="form-label">عدد أيام الفترة التجريبية</label>
+                                <input type="number" class="form-control" id="free_trial_days" name="free_trial_days" value="{{ settings.free_trial_days }}" min="0">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-save me-2"></i>حفظ الإعدادات
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- إعدادات المظهر -->
+            <div class="accordion-item shadow-sm mb-3 border-0 rounded-3">
+                <h2 class="accordion-header" id="appearanceSettings">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#appearanceSettingsBody" aria-expanded="false" aria-controls="appearanceSettingsBody">
+                        <i class="fas fa-palette me-2"></i> إعدادات المظهر
+                    </button>
+                </h2>
+                <div id="appearanceSettingsBody" class="accordion-collapse collapse" aria-labelledby="appearanceSettings" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form action="{{ url_for('admin.update_appearance_settings') }}" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="mb-3">
+                                <label for="primary_color" class="form-label">اللون الرئيسي</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control form-control-color" id="primary_color" name="primary_color" value="{{ settings.primary_color }}" title="اختر اللون الرئيسي">
+                                    <input type="text" class="form-control" value="{{ settings.primary_color }}" readonly>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="secondary_color" class="form-label">اللون الثانوي</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control form-control-color" id="secondary_color" name="secondary_color" value="{{ settings.secondary_color }}" title="اختر اللون الثانوي">
+                                    <input type="text" class="form-control" value="{{ settings.secondary_color }}" readonly>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="site_logo" class="form-label">شعار الموقع</label>
+                                {% if settings.logo_url %}
+                                <div class="mb-2">
+                                    <img src="{{ settings.logo_url }}" alt="شعار الموقع" class="img-thumbnail" style="max-height: 80px;">
+                                </div>
+                                {% endif %}
+                                <input type="file" class="form-control" id="site_logo" name="site_logo" accept="image/*">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="favicon" class="form-label">أيقونة التبويب (Favicon)</label>
+                                {% if settings.favicon_url %}
+                                <div class="mb-2">
+                                    <img src="{{ settings.favicon_url }}" alt="أيقونة التبويب" class="img-thumbnail" style="max-height: 32px;">
+                                </div>
+                                {% endif %}
+                                <input type="file" class="form-control" id="favicon" name="favicon" accept="image/x-icon,image/png">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-save me-2"></i>حفظ الإعدادات
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- إعدادات النسخ الاحتياطي -->
+            <div class="accordion-item shadow-sm mb-3 border-0 rounded-3">
+                <h2 class="accordion-header" id="backupSettings">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#backupSettingsBody" aria-expanded="false" aria-controls="backupSettingsBody">
+                        <i class="fas fa-database me-2"></i> النسخ الاحتياطي
+                    </button>
+                </h2>
+                <div id="backupSettingsBody" class="accordion-collapse collapse" aria-labelledby="backupSettings" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <div class="mb-3">
+                            <p class="text-secondary mb-3">يمكنك إنشاء نسخة احتياطية من قاعدة البيانات أو استعادة نسخة سابقة.</p>
+                            <form action="{{ url_for('admin.create_backup') }}" method="post" class="mb-3">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-download me-2"></i>إنشاء نسخة احتياطية
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="mb-3">
+                            <h5 class="mb-3">استعادة نسخة احتياطية</h5>
+                            <form action="{{ url_for('admin.restore_backup') }}" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="mb-3">
+                                    <label for="backup_file" class="form-label">ملف النسخة الاحتياطية</label>
+                                    <input type="file" class="form-control" id="backup_file" name="backup_file" accept=".sql,.gz,.zip" required>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirm_restore" name="confirm_restore" required>
+                                    <label class="form-check-label" for="confirm_restore">
+                                        أنا أفهم أن استعادة النسخة الاحتياطية سيؤدي إلى استبدال البيانات الحالية
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-danger w-100" onclick="return confirm('هل أنت متأكد من استعادة النسخة الاحتياطية؟ سيتم استبدال جميع البيانات الحالية!')">
+                                    <i class="fas fa-upload me-2"></i>استعادة النسخة الاحتياطية
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- القائمة السفلية -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('admin.dashboard') }}" class="bottom-nav-item">
+            <i class="fas fa-chart-line"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('admin.users') }}" class="bottom-nav-item">
+            <i class="fas fa-users"></i>
+            <span>المستخدمين</span>
+        </a>
+        <a href="{{ url_for('admin.classrooms') }}" class="bottom-nav-item">
+            <i class="fas fa-school"></i>
+            <span>الفصول</span>
+        </a>
+        <a href="{{ url_for('admin.subscriptions') }}" class="bottom-nav-item">
+            <i class="fas fa-money-check"></i>
+            <span>الاشتراكات</span>
+        </a>
+        <a href="{{ url_for('admin.settings') }}" class="bottom-nav-item active">
+            <i class="fas fa-cog"></i>
+            <span>الإعدادات</span>
+        </a>
+    </nav>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تفعيل زر القائمة للموبايل
+            const menuToggle = document.querySelector('.mobile-toggle');
+            const mobileNav = document.querySelector('.mobile-nav');
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    mobileNav.classList.toggle('show');
+                    this.querySelector('i').classList.toggle('fa-bars');
+                    this.querySelector('i').classList.toggle('fa-times');
+                });
+            }
+
+            // إغلاق القائمة عند النقر خارجها
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.mobile-nav') && 
+                    !e.target.closest('.mobile-toggle') &&
+                    mobileNav.classList.contains('show')) {
+                    mobileNav.classList.remove('show');
+                    menuToggle.querySelector('i').classList.add('fa-bars');
+                    menuToggle.querySelector('i').classList.remove('fa-times');
+                }
+            });
+
+            // تحديث قيمة حقل النص عند تغيير اللون
+            const colorInputs = document.querySelectorAll('input[type="color"]');
+            colorInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const textInput = this.nextElementSibling;
+                    textInput.value = this.value;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
