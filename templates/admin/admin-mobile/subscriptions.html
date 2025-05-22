@@ -580,7 +580,7 @@
                     <i class="fas fa-user-check fa-lg"></i>
                 </div>
                 <div class="stat-title">الاشتراكات النشطة</div>
-                <div class="stat-value">{{ subscriptions.items|selectattr('end_date', 'ge', current_time)|list|length }}</div>
+                <div class="stat-value">{{ subscriptions.items|selectattr('end_date', 'ge', now)|list|length }}</div>
             </div>
 
             <div class="stat-card">
