@@ -370,6 +370,39 @@ def delete_subscription():
     flash(f'تم حذف اشتراك {user_name} في باقة {plan_name} بنجاح', 'success')
     return redirect(url_for('admin.subscriptions'))
 
+@admin_bp.route('/subscription/<int:subscription_id>/extend', methods=['POST'])
+@login_required
+@admin_required
+def extend_subscription(subscription_id):
+    subscription = Subscription.query.get_or_404(subscription_id)
+    
+    # الحصول على عدد الأيام المراد إضافتها من النموذج
+    days = request.form.get('days', type=int, default=30)
+    note = request.form.get('note', '')
+    
+    if days <= 0:
+        flash('يجب أن يكون عدد الأيام أكبر من صفر', 'danger')
+        return redirect(url_for('admin.subscriptions'))
+    
+    # إذا كان الاشتراك منتهي، يتم تعيين تاريخ البدء الجديد من الآن
+    if subscription.end_date < datetime.utcnow():
+        subscription.start_date = datetime.utcnow()
+        subscription.end_date = datetime.utcnow() + timedelta(days=days)
+    else:
+        # إذا كان الاشتراك نشطًا، يتم إضافة الأيام إلى تاريخ الانتهاء الحالي
+        subscription.end_date = subscription.end_date + timedelta(days=days)
+    
+    # تنشيط الاشتراك
+    subscription.is_active = True
+    
+    # إضافة ملاحظة للإدارة (يمكن إضافة حقل في النموذج)
+    # يمكن إضافة حقل notes في جدول الاشتراكات في المستقبل
+    
+    db.session.commit()
+    
+    flash(f'تم تمديد اشتراك {subscription.user.name} بنجاح لمدة {days} يوم', 'success')
+    return redirect(url_for('admin.subscriptions'))
+
 @admin_bp.route('/assign_trial/<int:user_id>', methods=['POST'])
 @login_required
 @admin_required
