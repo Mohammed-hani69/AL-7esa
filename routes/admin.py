@@ -204,8 +204,9 @@ def subscriptions():
     # Get active subscriptions
     active_subs = Subscription.query.filter(Subscription.end_date > datetime.utcnow()).order_by(Subscription.start_date.desc()).all()
 
-    # Get all subscriptions for the comprehensive table
-    all_subscriptions = Subscription.query.order_by(Subscription.start_date.desc()).all()
+    # Get all subscriptions for the comprehensive table with pagination
+    page = request.args.get('page', 1, type=int)
+    subscriptions = Subscription.query.order_by(Subscription.start_date.desc()).paginate(page=page, per_page=10)
 
     # Get all subscription payments
     payments = SubscriptionPayment.query.order_by(SubscriptionPayment.created_at.desc()).all()
@@ -238,7 +239,8 @@ def subscriptions():
     return render_template(template, 
                          plans=plans, 
                          active_subs=active_subs, 
-                         all_subscriptions=all_subscriptions, 
+                         subscriptions=subscriptions, 
+                         all_subscriptions=Subscription.query.order_by(Subscription.start_date.desc()).all(),
                          payments=payments,
                          now=now,
                          total_revenue=total_revenue,
