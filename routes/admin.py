@@ -617,6 +617,33 @@ def delete_classroom():
     flash(f'تم حذف الفصل "{classroom_name}" بنجاح', 'success')
     return redirect(url_for('admin.classrooms'))
 
+@admin_bp.route('/classroom/<int:classroom_id>/view')
+@login_required
+@admin_required
+def view_classroom(classroom_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+    
+    # Get students of this classroom
+    students = classroom.students
+    
+    # Get assignments for this classroom
+    assignments = classroom.assignments
+    
+    # Get quizzes for this classroom
+    quizzes = classroom.quizzes if hasattr(classroom, 'quizzes') else []
+    
+    # Get teacher information
+    teacher = classroom.teacher
+    
+    template = 'admin/view_classroom.html'
+    
+    return render_template(template, 
+                           classroom=classroom,
+                           students=students,
+                           assignments=assignments,
+                           quizzes=quizzes,
+                           teacher=teacher)
+
 @admin_bp.route('/classroom/<int:classroom_id>/toggle_status')
 @login_required
 @admin_required

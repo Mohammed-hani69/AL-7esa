@@ -1,0 +1,308 @@
+
+{% extends 'layout.html' %}
+
+{% block title %}عرض الفصل - {{ classroom.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- عنوان الصفحة -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">الفصل الدراسي: {{ classroom.name }}</h1>
+        <a href="{{ url_for('admin.classrooms') }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-right ml-1"></i> العودة إلى قائمة الفصول
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- معلومات الفصل -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">معلومات الفصل</h6>
+                    <span class="badge {% if classroom.is_active %}badge-success{% else %}badge-danger{% endif %}">
+                        {{ 'نشط' if classroom.is_active else 'غير نشط' }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5>المادة</h5>
+                        <p>{{ classroom.subject }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h5>الرمز</h5>
+                        <p>{{ classroom.code }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h5>الوصف</h5>
+                        <p>{{ classroom.description or 'لا يوجد وصف' }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h5>نوع الفصل</h5>
+                        <p>{{ 'مجاني' if classroom.is_free else 'مدفوع' }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h5>تاريخ الإنشاء</h5>
+                        <p>{{ classroom.created_at.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                    <div class="d-flex">
+                        <a href="{{ url_for('admin.toggle_classroom_status', classroom_id=classroom.id) }}" class="btn btn-warning btn-sm mr-2">
+                            <i class="fas fa-sync ml-1"></i> {{ 'تعطيل' if classroom.is_active else 'تفعيل' }}
+                        </a>
+                        <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteClassroomModal">
+                            <i class="fas fa-trash-alt ml-1"></i> حذف
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- معلومات المعلم -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">معلومات المعلم</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="ml-3">
+                            <img src="{{ teacher.profile_picture or '/static/img/avatar.png' }}" alt="{{ teacher.name }}" class="rounded-circle" width="50" height="50">
+                        </div>
+                        <div>
+                            <h5 class="mb-0">{{ teacher.name }}</h5>
+                            <small class="text-muted">{{ teacher.email }}</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <h5>رقم الهاتف</h5>
+                        <p>{{ teacher.phone or 'غير متوفر' }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h5>حالة الحساب</h5>
+                        <p>
+                            <span class="badge {% if teacher.is_active %}badge-success{% else %}badge-danger{% endif %}">
+                                {{ 'نشط' if teacher.is_active else 'غير نشط' }}
+                            </span>
+                        </p>
+                    </div>
+                    <a href="{{ url_for('admin.users') }}?search={{ teacher.name }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-user ml-1"></i> عرض ملف المعلم
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- إحصائيات الفصل -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">إحصائيات الفصل</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <div class="text-center">
+                                <h1 class="display-4 text-primary">{{ students|length }}</h1>
+                                <p class="text-muted">الطلاب</p>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="text-center">
+                                <h1 class="display-4 text-info">{{ assignments|length }}</h1>
+                                <p class="text-muted">الواجبات</p>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="text-center">
+                                <h1 class="display-4 text-success">{{ quizzes|length }}</h1>
+                                <p class="text-muted">الاختبارات</p>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="text-center">
+                                <h1 class="display-4 text-warning">{{ classroom.lessons|length if hasattr(classroom, 'lessons') else 0 }}</h1>
+                                <p class="text-muted">الدروس</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة الطلاب -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">الطلاب المسجلين ({{ students|length }})</h6>
+                </div>
+                <div class="card-body">
+                    {% if students %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="studentsTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>اسم الطالب</th>
+                                    <th>البريد الإلكتروني</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>تاريخ الانضمام</th>
+                                    <th>الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ student.user.name }}</td>
+                                    <td>{{ student.user.email }}</td>
+                                    <td>{{ student.user.phone or 'غير متوفر' }}</td>
+                                    <td>{{ student.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <span class="badge {% if student.user.is_active %}badge-success{% else %}badge-danger{% endif %}">
+                                            {{ 'نشط' if student.user.is_active else 'غير نشط' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-users fa-4x text-gray-300 mb-3"></i>
+                        <p class="text-muted">لا يوجد طلاب مسجلين في هذا الفصل</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة الواجبات والاختبارات -->
+    <div class="row">
+        <!-- الواجبات -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">الواجبات ({{ assignments|length }})</h6>
+                </div>
+                <div class="card-body">
+                    {% if assignments %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>العنوان</th>
+                                    <th>تاريخ التسليم</th>
+                                    <th>عدد التسليمات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in assignments %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ assignment.title }}</td>
+                                    <td>{{ assignment.due_date.strftime('%Y-%m-%d') if assignment.due_date else 'غير محدد' }}</td>
+                                    <td>{{ assignment.submissions|length if hasattr(assignment, 'submissions') else 0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-clipboard-list fa-4x text-gray-300 mb-3"></i>
+                        <p class="text-muted">لا توجد واجبات في هذا الفصل</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- الاختبارات -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">الاختبارات ({{ quizzes|length }})</h6>
+                </div>
+                <div class="card-body">
+                    {% if quizzes %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>العنوان</th>
+                                    <th>تاريخ النهاية</th>
+                                    <th>الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for quiz in quizzes %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ quiz.title }}</td>
+                                    <td>{{ quiz.end_time.strftime('%Y-%m-%d') if quiz.end_time else 'غير محدد' }}</td>
+                                    <td>
+                                        <span class="badge {% if quiz.is_active %}badge-success{% else %}badge-danger{% endif %}">
+                                            {{ 'نشط' if quiz.is_active else 'مغلق' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-question-circle fa-4x text-gray-300 mb-3"></i>
+                        <p class="text-muted">لا توجد اختبارات في هذا الفصل</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة تأكيد الحذف -->
+<div class="modal fade" id="deleteClassroomModal" tabindex="-1" aria-labelledby="deleteClassroomModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteClassroomModalLabel">تأكيد حذف الفصل</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف الفصل "{{ classroom.name }}"؟</p>
+                <p class="text-danger">ملاحظة: سيتم حذف جميع بيانات الفصل بما في ذلك الواجبات والاختبارات والطلاب المسجلين.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                <form action="{{ url_for('admin.delete_classroom') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="classroom_id" value="{{ classroom.id }}">
+                    <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // تهيئة جدول الطلاب
+        $('#studentsTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
+            }
+        });
+    });
+</script>
+{% endblock %}
