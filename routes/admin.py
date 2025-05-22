@@ -247,6 +247,7 @@ def subscriptions():
                          all_subscriptions=Subscription.query.order_by(Subscription.start_date.desc()).all(),
                          payments=payments,
                          now=now,
+                         current_time=now,  # إضافة متغير current_time ليكون متاحًا في القالب
                          total_revenue=total_revenue,
                          month_revenue=month_revenue,
                          pending_payments=pending_payments,
