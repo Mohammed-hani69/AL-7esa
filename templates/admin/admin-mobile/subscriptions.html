@@ -658,12 +658,32 @@
                     </div>
                     <div class="plan-body">
                         <ul class="plan-features">
-                            {% for feature in plan.features.split('\n') %}
+                            {% if plan.has_chat %}
                             <li class="plan-feature">
                                 <i class="fas fa-check-circle"></i>
-                                <span>{{ feature }}</span>
+                                <span>دردشة مباشرة مع الطلاب</span>
                             </li>
-                            {% endfor %}
+                            {% endif %}
+                            {% if plan.allow_assistant %}
+                            <li class="plan-feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>إمكانية إضافة مساعدين</span>
+                            </li>
+                            {% endif %}
+                            {% if plan.advanced_analytics %}
+                            <li class="plan-feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>تحليلات متقدمة</span>
+                            </li>
+                            {% endif %}
+                            <li class="plan-feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>{{ plan.max_classrooms }} فصل دراسي</span>
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>مدة الاشتراك {{ plan.duration_days }} يوم</span>
+                            </li>
                         </ul>
                         <div class="plan-actions">
                             <a href="{{ url_for('admin.edit_subscription_plan', plan_id=plan.id) }}" class="btn btn-sm btn-primary w-50">
