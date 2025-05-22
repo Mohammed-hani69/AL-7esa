@@ -15,6 +15,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager
 from flask_socketio import SocketIO
 from config import Config
+from flask_wtf.csrf import CSRFProtect
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -28,6 +29,7 @@ db = SQLAlchemy(model_class=Base)
 
 # Create Flask app
 app = Flask(__name__)
+csrf = CSRFProtect(app)
 app.config.from_object(Config)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
@@ -73,12 +75,12 @@ def timeago_filter(value):
     """تحويل التاريخ إلى صيغة نصية سهلة القراءة (مثل: منذ دقيقتين)"""
     if not value:
         return ''
-    
+
     now = datetime.utcnow()
     diff = now - value
-    
+
     seconds = diff.total_seconds()
-    
+
     if seconds < 60:
         return 'الآن'
     elif seconds < 3600:
@@ -120,7 +122,7 @@ def create_upload_directories():
         'static/uploads/chat_images',
         'static/uploads/assignments'  # إضافة مجلد الواجبات
     ]
-    
+
     for directory in upload_dirs:
         if not os.path.exists(directory):
             os.makedirs(directory)

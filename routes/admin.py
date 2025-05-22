@@ -5,6 +5,7 @@ from functools import wraps
 from app import db
 from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings, SubscriptionPayment
 import re
+from flask_wtf.csrf import CSRFProtect
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -56,7 +57,7 @@ def dashboard():
     now = datetime.utcnow()
     enrollment_dates = [(now - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(30, 0, -1)]
     enrollment_counts = [0] * 30  # Will be populated with actual data in a real implementation
-    
+
     template = 'admin/admin-mobile/dashboard.html' if is_mobile() else 'admin/dashboard.html'
 
     return render_template(template,
@@ -321,7 +322,7 @@ def notifications():
     now = datetime.utcnow()
 
     template = 'admin/admin-mobile/notifications.html' if is_mobile() else 'admin/notifications.html'
-    
+
     return render_template(template, notifications=recent_notifications, users=users, now=now)
 
 @admin_bp.route('/send_notification', methods=['POST'])
