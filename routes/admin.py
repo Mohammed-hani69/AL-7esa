@@ -4,11 +4,9 @@ from flask_login import login_required, current_user
 from functools import wraps
 from app import db
 from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings, SubscriptionPayment
+import re
 
 admin_bp = Blueprint('admin', __name__)
-
-
-
 
 
 # Admin required decorator
@@ -21,6 +19,15 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# دالة للتحقق من نوع الجهاز (موبايل أو جهاز مكتبي)
+def is_mobile():
+    user_agent = request.headers.get('User-Agent', '').lower()
+    mobile_patterns = [
+        'android', 'iphone', 'ipod', 'windows phone', 'mobile', 'tablet',
+        'blackberry', 'opera mini', 'opera mobi', 'webos', 'fennec'
+    ]
+    return any(pattern in user_agent for pattern in mobile_patterns)
+
 @admin_bp.route('/dashboard')
 @login_required
 @admin_required
@@ -31,26 +38,28 @@ def dashboard():
     students_count = User.query.filter_by(role=Role.STUDENT).count()
     classrooms_count = Classroom.query.count()
     active_subscriptions = Subscription.query.filter(Subscription.end_date > datetime.utcnow()).count()
-    
+
     # Calculate monthly revenue from subscription payments only
     start_of_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     end_of_month = (start_of_month + timedelta(days=32)).replace(day=1) - timedelta(seconds=1)
-    
+
     # Get all approved subscription payments for current month
     monthly_revenue = db.session.query(db.func.sum(SubscriptionPayment.amount))\
         .filter(SubscriptionPayment.created_at.between(start_of_month, end_of_month))\
         .filter(SubscriptionPayment.status == 'approved')\
         .scalar() or 0
-    
+
     # Get recent users
     recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
-    
+
     # Sample data for enrollment chart
     now = datetime.utcnow()
     enrollment_dates = [(now - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(30, 0, -1)]
     enrollment_counts = [0] * 30  # Will be populated with actual data in a real implementation
     
-    return render_template('admin/dashboard.html',
+    template = 'admin/admin-mobile/dashboard.html' if is_mobile() else 'admin/dashboard.html'
+
+    return render_template(template,
                         user_count=users_count,
                         teacher_count=teachers_count,
                         student_count=students_count,
@@ -69,47 +78,49 @@ def users():
     role_filter = request.args.get('role', '')
     status_filter = request.args.get('status', '')
     search = request.args.get('search', '')
-    
+
     # Base query
     query = User.query
-    
+
     # Apply filters
     if role_filter and role_filter in [Role.STUDENT, Role.TEACHER, Role.ASSISTANT, Role.ADMIN]:
         query = query.filter_by(role=role_filter)
-    
+
     if status_filter:
         if status_filter == 'active':
             query = query.filter_by(is_active=True)
         elif status_filter == 'inactive':
             query = query.filter_by(is_active=False)
-    
+
     if search:
         query = query.filter(
             (User.name.ilike(f'%{search}%')) | 
             (User.phone.ilike(f'%{search}%')) |
             (User.email.ilike(f'%{search}%'))
         )
-    
+
     # Get paginated results
     page = request.args.get('page', 1, type=int)
     users = query.order_by(User.created_at.desc()).paginate(page=page, per_page=20)
-    
-    return render_template('admin/users.html', users=users)
+
+    template = 'admin/admin-mobile/users.html' if is_mobile() else 'admin/users.html'
+
+    return render_template(template, users=users)
 
 @admin_bp.route('/user/<int:user_id>/toggle_status', methods=['POST'])
 @login_required
 @admin_required
 def toggle_user_status(user_id):
     user = User.query.get_or_404(user_id)
-    
+
     # Don't allow deactivating the current admin
     if user.id == current_user.id:
         flash('لا يمكنك تعطيل حسابك الخاص', 'danger')
         return redirect(url_for('admin.users'))
-    
+
     user.is_active = not user.is_active
     db.session.commit()
-    
+
     status = "تفعيل" if user.is_active else "تعطيل"
     flash(f'تم {status} المستخدم بنجاح', 'success')
     return redirect(url_for('admin.users'))
@@ -120,20 +131,22 @@ def toggle_user_status(user_id):
 def subscriptions():
     # Get subscription plans
     plans = SubscriptionPlan.query.all()
-    
+
     # Get active subscriptions
     active_subs = Subscription.query.filter(Subscription.end_date > datetime.utcnow()).order_by(Subscription.start_date.desc()).all()
-    
+
     # Get all subscriptions for the comprehensive table
     all_subscriptions = Subscription.query.order_by(Subscription.start_date.desc()).all()
-    
+
     # Get all subscription payments
     payments = SubscriptionPayment.query.order_by(SubscriptionPayment.created_at.desc()).all()
-    
+
     # Get current time for template
     now = datetime.utcnow()
-    
-    return render_template('admin/subscriptions.html', 
+
+    template = 'admin/admin-mobile/subscriptions.html' if is_mobile() else 'admin/subscriptions.html'
+
+    return render_template(template, 
                          plans=plans, 
                          active_subs=active_subs, 
                          all_subscriptions=all_subscriptions, 
@@ -153,7 +166,7 @@ def new_subscription_plan():
         has_chat = 'has_chat' in request.form
         allow_assistant = 'allow_assistant' in request.form
         advanced_analytics = 'advanced_analytics' in request.form
-        
+
         new_plan = SubscriptionPlan(
             name=name,
             description=description,
@@ -164,13 +177,13 @@ def new_subscription_plan():
             allow_assistant=allow_assistant,
             advanced_analytics=advanced_analytics
         )
-        
+
         db.session.add(new_plan)
         db.session.commit()
-        
+
         flash('تم إنشاء باقة الاشتراك بنجاح', 'success')
         return redirect(url_for('admin.subscriptions'))
-    
+
     return render_template('admin/edit_subscription_plan.html')
 
 @admin_bp.route('/subscription_plan/<int:plan_id>/edit', methods=['GET', 'POST'])
@@ -178,7 +191,7 @@ def new_subscription_plan():
 @admin_required
 def edit_subscription_plan(plan_id):
     plan = SubscriptionPlan.query.get_or_404(plan_id)
-    
+
     if request.method == 'POST':
         plan.name = request.form.get('name')
         plan.description = request.form.get('description')
@@ -188,12 +201,12 @@ def edit_subscription_plan(plan_id):
         plan.has_chat = 'has_chat' in request.form
         plan.allow_assistant = 'allow_assistant' in request.form
         plan.advanced_analytics = 'advanced_analytics' in request.form
-        
+
         db.session.commit()
-        
+
         flash('تم تحديث باقة الاشتراك بنجاح', 'success')
         return redirect(url_for('admin.subscriptions'))
-    
+
     return render_template('admin/edit_subscription_plan.html', plan=plan)
 
 @admin_bp.route('/subscription_plan/<int:plan_id>/delete', methods=['POST'])
@@ -201,15 +214,15 @@ def edit_subscription_plan(plan_id):
 @admin_required
 def delete_subscription_plan(plan_id):
     plan = SubscriptionPlan.query.get_or_404(plan_id)
-    
+
     # Check if plan is in use
     if plan.subscriptions:
         flash('لا يمكن حذف الباقة لأن هناك مستخدمين مشتركين بها', 'danger')
         return redirect(url_for('admin.subscriptions'))
-    
+
     db.session.delete(plan)
     db.session.commit()
-    
+
     flash('تم حذف باقة الاشتراك بنجاح', 'success')
     return redirect(url_for('admin.subscriptions'))
 
@@ -218,12 +231,12 @@ def delete_subscription_plan(plan_id):
 @admin_required
 def cancel_subscription(subscription_id):
     subscription = Subscription.query.get_or_404(subscription_id)
-    
+
     # Set end date to now to effectively cancel the subscription
     subscription.end_date = datetime.utcnow()
     subscription.is_active = False
     db.session.commit()
-    
+
     flash(f'تم إلغاء اشتراك {subscription.user.name} في باقة {subscription.plan.name} بنجاح', 'success')
     return redirect(url_for('admin.subscriptions'))
 
@@ -235,17 +248,17 @@ def delete_subscription():
     if not subscription_id:
         flash('معرف الاشتراك غير صالح', 'danger')
         return redirect(url_for('admin.subscriptions'))
-    
+
     subscription = Subscription.query.get_or_404(subscription_id)
-    
+
     # Save the subscription info for flash message
     user_name = subscription.user.name
     plan_name = subscription.plan.name
-    
+
     # Delete the subscription
     db.session.delete(subscription)
     db.session.commit()
-    
+
     flash(f'تم حذف اشتراك {user_name} في باقة {plan_name} بنجاح', 'success')
     return redirect(url_for('admin.subscriptions'))
 
@@ -254,29 +267,29 @@ def delete_subscription():
 @admin_required
 def assign_trial(user_id):
     user = User.query.get_or_404(user_id)
-    
+
     # Only assign trial to teachers
     if user.role != Role.TEACHER:
         flash('يمكن تعيين فترة تجريبية للمعلمين فقط', 'danger')
         return redirect(url_for('admin.users'))
-    
+
     # Get the premium plan
     premium_plan = SubscriptionPlan.query.order_by(SubscriptionPlan.price.desc()).first()
-    
+
     if not premium_plan:
         flash('لا توجد باقات اشتراك بعد', 'danger')
         return redirect(url_for('admin.subscriptions'))
-    
+
     # Check if user already has an active subscription
     active_sub = Subscription.query.filter(
         Subscription.user_id == user.id,
         Subscription.end_date > datetime.utcnow()
     ).first()
-    
+
     if active_sub:
         flash('المستخدم لديه اشتراك فعال بالفعل', 'warning')
         return redirect(url_for('admin.users'))
-    
+
     # Create trial subscription
     trial_days = int(request.form.get('trial_days', 14))
     trial_subscription = Subscription(
@@ -287,10 +300,10 @@ def assign_trial(user_id):
         is_active=True,
         is_trial=True
     )
-    
+
     db.session.add(trial_subscription)
     db.session.commit()
-    
+
     flash(f'تم تعيين فترة تجريبية لمدة {trial_days} يوم للمستخدم بنجاح', 'success')
     return redirect(url_for('admin.users'))
 
@@ -300,14 +313,16 @@ def assign_trial(user_id):
 def notifications():
     # Get recent notifications
     recent_notifications = Notification.query.order_by(Notification.created_at.desc()).limit(50).all()
-    
+
     # Get all users for the notification form
     users = User.query.order_by(User.name).all()
-    
+
     # Get current time for template
     now = datetime.utcnow()
+
+    template = 'admin/admin-mobile/notifications.html' if is_mobile() else 'admin/notifications.html'
     
-    return render_template('admin/notifications.html', notifications=recent_notifications, users=users, now=now)
+    return render_template(template, notifications=recent_notifications, users=users, now=now)
 
 @admin_bp.route('/send_notification', methods=['POST'])
 @login_required
@@ -317,13 +332,13 @@ def send_notification():
     message = request.form.get('message')
     recipient_type = request.form.get('recipient_type')
     user_id = request.form.get('user_id')
-    
+
     if not title or not message:
         flash('الرجاء إدخال العنوان والرسالة', 'danger')
         return redirect(url_for('admin.notifications'))
-    
+
     notifications = []
-    
+
     if recipient_type == 'all':
         # Send to all users
         users = User.query.all()
@@ -334,7 +349,7 @@ def send_notification():
                 message=message
             )
             notifications.append(notification)
-    
+
     elif recipient_type == 'role':
         role = request.form.get('role')
         if role in [Role.STUDENT, Role.TEACHER, Role.ASSISTANT, Role.ADMIN]:
@@ -347,7 +362,7 @@ def send_notification():
                     message=message
                 )
                 notifications.append(notification)
-    
+
     elif recipient_type == 'user':
         # Send to specific user
         if user_id:
@@ -359,7 +374,7 @@ def send_notification():
                     message=message
                 )
                 notifications.append(notification)
-    
+
     elif recipient_type == 'phone':
         phone = request.form.get('phone')
         if phone:
@@ -371,14 +386,14 @@ def send_notification():
                     message=message
                 )
                 notifications.append(notification)
-    
+
     if notifications:
         db.session.add_all(notifications)
         db.session.commit()
         flash(f'تم إرسال {len(notifications)} إشعار بنجاح', 'success')
     else:
         flash('لم يتم العثور على مستخدمين للإرسال إليهم', 'warning')
-    
+
     return redirect(url_for('admin.notifications'))
 
 @admin_bp.route('/classrooms')
@@ -389,34 +404,36 @@ def classrooms():
     teacher_id = request.args.get('teacher_id', type=int)
     is_free = request.args.get('is_free')
     search = request.args.get('search', '')
-    
+
     # Base query
     query = Classroom.query
-    
+
     # Apply filters
     if teacher_id:
         query = query.filter_by(teacher_id=teacher_id)
-    
+
     if is_free is not None:
         is_free_bool = (is_free == 'true')
         query = query.filter_by(is_free=is_free_bool)
-    
+
     if search:
         query = query.filter(
             (Classroom.name.ilike(f'%{search}%')) | 
             (Classroom.code.ilike(f'%{search}%')) |
             (Classroom.subject.ilike(f'%{search}%'))
         )
-    
+
     # Get paginated results
     page = request.args.get('page', 1, type=int)
     pagination = query.order_by(Classroom.created_at.desc()).paginate(page=page, per_page=20)
     classrooms = pagination.items
-    
+
     # Get all teachers for the filter dropdown
     teachers = User.query.filter_by(role=Role.TEACHER).all()
-    
-    return render_template('admin/classrooms.html', 
+
+    template = 'admin/admin-mobile/classrooms.html' if is_mobile() else 'admin/classrooms.html'
+
+    return render_template(template, 
                          classrooms=classrooms,
                          teachers=teachers, 
                          currency="ريال",
@@ -437,16 +454,16 @@ def delete_classroom():
     if not classroom_id:
         flash('معرف الفصل غير صالح', 'danger')
         return redirect(url_for('admin.classrooms'))
-    
+
     classroom = Classroom.query.get_or_404(classroom_id)
-    
+
     # Save the classroom name for the flash message
     classroom_name = classroom.name
-    
+
     # Delete the classroom (will cascade delete all related records)
     db.session.delete(classroom)
     db.session.commit()
-    
+
     flash(f'تم حذف الفصل "{classroom_name}" بنجاح', 'success')
     return redirect(url_for('admin.classrooms'))
 
@@ -455,10 +472,10 @@ def delete_classroom():
 @admin_required
 def toggle_classroom_status(classroom_id):
     classroom = Classroom.query.get_or_404(classroom_id)
-    
+
     classroom.is_active = not classroom.is_active
     db.session.commit()
-    
+
     status = "تفعيل" if classroom.is_active else "تعطيل"
     flash(f'تم {status} الفصل بنجاح', 'success')
     return redirect(url_for('admin.classrooms'))
@@ -476,30 +493,30 @@ def settings():
             'default_currency': ('general', request.form.get('default_currency')),
             'trial_days': ('general', request.form.get('trial_days')),
             'max_file_size': ('general', request.form.get('max_file_size')),
-            
+
             # Appearance settings
             'primary_color': ('appearance', request.form.get('primary_color')),
             'secondary_color': ('appearance', request.form.get('secondary_color')),
             'logo_url': ('appearance', request.form.get('logo_url')),
-            
+
             # Contact settings
             'contact_email': ('contact', request.form.get('contact_email')),
             'contact_phone': ('contact', request.form.get('contact_phone'))
         }
-        
+
         # Save all settings
         success = True
         for key, (group, value) in settings_map.items():
             if not SystemSettings.set_setting(key, value, group):
                 success = False
-                
+
         if success:
             flash('تم حفظ الإعدادات بنجاح', 'success')
         else:
             flash('حدث خطأ أثناء حفظ الإعدادات', 'danger')
-            
+
         return redirect(url_for('admin.settings'))
-    
+
     # Load current settings
     settings = {
         'system_name': SystemSettings.get_setting('system_name', 'الحصة'),
@@ -514,6 +531,9 @@ def settings():
         'contact_email': SystemSettings.get_setting('contact_email', 'support@alhesa.com'),
         'contact_phone': SystemSettings.get_setting('contact_phone', '+966 55 555 5555')
     }
-    
+
     now = datetime.utcnow()
-    return render_template('admin/settings.html', settings=settings, now=now)
+
+    template = 'admin/admin-mobile/settings.html' if is_mobile() else 'admin/settings.html'
+
+    return render_template(template, settings=settings, now=now)

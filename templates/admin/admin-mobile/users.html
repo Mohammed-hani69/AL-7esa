@@ -202,7 +202,102 @@
             font-weight: 700;
         }
 
-        /* تصميم البطاقات والفلاتر */
+        /* تصميم بطاقات المستخدمين */
+        .user-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .user-header {
+            padding: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-role-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            border-radius: 12px;
+            color: white;
+        }
+
+        .badge-admin {
+            background: linear-gradient(120deg, #6C63FF, #8B5CF6);
+        }
+
+        .badge-teacher {
+            background: linear-gradient(120deg, #3B82F6, #2563EB);
+        }
+
+        .badge-student {
+            background: linear-gradient(120deg, #10B981, #059669);
+        }
+
+        .badge-assistant {
+            background: linear-gradient(120deg, #F59E0B, #D97706);
+        }
+
+        .badge-active {
+            background: linear-gradient(120deg, #00B5B5, #00D68F);
+        }
+
+        .badge-inactive {
+            background: linear-gradient(120deg, #9CA3AF, #6B7280);
+        }
+
+        .user-body {
+            padding: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .user-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .user-detail i {
+            width: 18px;
+            color: var(--accent-color);
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        /* تصميم فلاتر البحث */
         .card {
             background: var(--surface-color);
             border-radius: var(--border-radius-md);
@@ -266,108 +361,27 @@
             box-shadow: 0 5px 15px rgba(108, 99, 255, 0.2);
         }
 
-        /* تصميم بطاقات المستخدمين */
-        .user-card {
-            background: var(--surface-color);
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--box-shadow);
-            margin-bottom: 15px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .user-card-header {
-            padding: 15px;
+        /* تصميم الصفحات */
+        .pagination {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-
-        .user-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 1rem;
-            margin: 0 0 5px;
-        }
-
-        .user-email, .user-phone {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin: 0;
-        }
-
-        .user-card-body {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .user-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .user-role, .user-status {
-            border-radius: 50px;
-            padding: 5px 12px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .role-student {
-            background: linear-gradient(120deg, #00B5B5, #00D68F);
-            color: white;
-        }
-
-        .role-teacher {
-            background: linear-gradient(120deg, #6C63FF, #8B5CF6);
-            color: white;
-        }
-
-        .role-assistant {
-            background: linear-gradient(120deg, #F59E0B, #FFA600);
-            color: white;
-        }
-
-        .role-admin {
-            background: linear-gradient(120deg, #EF4444, #DC2626);
-            color: white;
-        }
-
-        .status-active {
-            background: linear-gradient(120deg, #00B5B5, #00D68F);
-            color: white;
-        }
-
-        .status-inactive {
-            background: linear-gradient(120deg, #9CA3AF, #6B7280);
-            color: white;
-        }
-
-        .user-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .action-btn {
-            width: 35px;
-            height: 35px;
-            display: flex;
-            align-items: center;
             justify-content: center;
+            margin: 20px 0;
+        }
+
+        .page-link {
+            padding: 8px 12px;
+            margin: 0 5px;
             border-radius: var(--border-radius-sm);
             border: none;
+            background: var(--surface-color);
+            color: var(--text-primary);
+            box-shadow: var(--box-shadow);
             transition: all 0.3s ease;
+        }
+
+        .page-item.active .page-link {
+            background: var(--accent-gradient);
+            color: white;
         }
 
         /* قائمة التنقل السفلية */
@@ -402,27 +416,21 @@
             margin-bottom: 4px;
         }
 
-        /* تصميم الصفحات */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-        }
-
-        .page-link {
-            padding: 8px 12px;
-            margin: 0 5px;
-            border-radius: var(--border-radius-sm);
+        /* النوافذ المنبثقة */
+        .modal-content {
+            border-radius: var(--border-radius-md);
             border: none;
-            background: var(--surface-color);
-            color: var(--text-primary);
-            box-shadow: var(--box-shadow);
-            transition: all 0.3s ease;
         }
 
-        .page-item.active .page-link {
+        .modal-header {
             background: var(--accent-gradient);
             color: white;
+            border-bottom: none;
+            border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+        }
+
+        .modal-title {
+            font-weight: 600;
         }
 
         /* زر الإضافة الثابت */
@@ -447,30 +455,13 @@
         .floating-btn:active {
             transform: scale(0.95);
         }
-
-        /* النوافذ المنبثقة */
-        .modal-content {
-            border-radius: var(--border-radius-md);
-            border: none;
-        }
-
-        .modal-header {
-            background: var(--accent-gradient);
-            color: white;
-            border-bottom: none;
-            border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-        }
-
-        .modal-title {
-            font-weight: 600;
-        }
     </style>
 </head>
 <body>
     <!-- هيدر الموبايل -->
     <header class="mobile-header">
         <a href="{{ url_for('admin.dashboard') }}" class="mobile-header-brand">
-            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
             <h1 class="mobile-header-title">الحصة</h1>
         </a>
         <button class="mobile-toggle">
@@ -568,13 +559,13 @@
                 <form action="{{ url_for('admin.users') }}" method="get">
                     <div class="row">
                         <div class="col-12 mb-3">
-                            <label class="form-label">الصلاحية</label>
+                            <label class="form-label">الدور</label>
                             <select class="form-select" name="role">
                                 <option value="">الكل</option>
                                 <option value="student" {% if role == 'student' %}selected{% endif %}>طالب</option>
                                 <option value="teacher" {% if role == 'teacher' %}selected{% endif %}>معلم</option>
+                                <option value="admin" {% if role == 'admin' %}selected{% endif %}>مشرف</option>
                                 <option value="assistant" {% if role == 'assistant' %}selected{% endif %}>مساعد</option>
-                                <option value="admin" {% if role == 'admin' %}selected{% endif %}>مسؤول</option>
                             </select>
                         </div>
                         
@@ -590,7 +581,7 @@
                         <div class="col-12 mb-3">
                             <label class="form-label">بحث</label>
                             <input type="text" class="form-control" name="search" 
-                                   placeholder="بحث بالاسم، البريد، رقم الهاتف..."
+                                   placeholder="بحث بالاسم، البريد الإلكتروني أو رقم الهاتف..."
                                    value="{{ search }}">
                         </div>
                         
@@ -614,43 +605,120 @@
         <div class="users-list">
             {% for user in users.items %}
             <div class="user-card">
-                <div class="user-card-header">
-                    <div class="user-info">
-                        <h3 class="user-name">{{ user.name }}</h3>
-                        <p class="user-phone">{{ user.phone }}</p>
-                        {% if user.email %}
-                        <p class="user-email">{{ user.email }}</p>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="user-card-body">
-                    <div class="user-meta">
-                        {% if user.role == 'student' %}
-                        <span class="user-role role-student">طالب</span>
+                <div class="user-header">
+                    <h3 class="user-title">
+                        {{ user.name }}
+                    </h3>
+                    <div>
+                        {% if user.role == 'admin' %}
+                        <span class="user-role-badge badge-admin">مشرف</span>
                         {% elif user.role == 'teacher' %}
-                        <span class="user-role role-teacher">معلم</span>
+                        <span class="user-role-badge badge-teacher">معلم</span>
+                        {% elif user.role == 'student' %}
+                        <span class="user-role-badge badge-student">طالب</span>
                         {% elif user.role == 'assistant' %}
-                        <span class="user-role role-assistant">مساعد</span>
-                        {% elif user.role == 'admin' %}
-                        <span class="user-role role-admin">مسؤول</span>
+                        <span class="user-role-badge badge-assistant">مساعد</span>
                         {% endif %}
                         
                         {% if user.is_active %}
-                        <span class="user-status status-active">نشط</span>
+                        <span class="user-role-badge badge-active">نشط</span>
                         {% else %}
-                        <span class="user-status status-inactive">معطل</span>
+                        <span class="user-role-badge badge-inactive">معطل</span>
                         {% endif %}
                     </div>
+                </div>
+                <div class="user-body">
+                    <div class="user-info">
+                        <div class="user-detail">
+                            <i class="fas fa-envelope"></i>
+                            <span>{{ user.email }}</span>
+                        </div>
+                        <div class="user-detail">
+                            <i class="fas fa-phone"></i>
+                            <span>{{ user.phone }}</span>
+                        </div>
+                        <div class="user-detail">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>تاريخ التسجيل: {{ user.created_at.strftime('%Y-%m-%d') }}</span>
+                        </div>
+                        <div class="user-detail">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>آخر دخول: {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'لم يسجل الدخول بعد' }}</span>
+                        </div>
+                    </div>
                     <div class="user-actions">
-                        <form action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" method="POST">
-                            <button type="submit" class="action-btn {% if user.is_active %}btn-warning{% else %}btn-success{% endif %}">
-                                <i class="fas {% if user.is_active %}fa-toggle-off{% else %}fa-toggle-on{% endif %}"></i>
+                        <form action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" method="POST" style="flex: 1;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm {% if user.is_active %}btn-warning{% else %}btn-success{% endif %} w-100">
+                                <i class="fas {% if user.is_active %}fa-toggle-off{% else %}fa-toggle-on{% endif %} me-1"></i>
+                                {% if user.is_active %}تعطيل{% else %}تفعيل{% endif %}
                             </button>
+                        </form>
+                        
+                        <form action="{{ url_for('admin.reset_user_password', user_id=user.id) }}" method="POST" style="flex: 1;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-info w-100" onclick="return confirm('هل أنت متأكد من إعادة تعيين كلمة المرور؟')">
+                                <i class="fas fa-key me-1"></i> إعادة تعيين كلمة المرور
+                            </button>
+                        </form>
+                    </div>
+                    <div class="user-actions mt-2">
+                        <button type="button" class="btn btn-sm btn-primary w-100" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">
+                            <i class="fas fa-edit me-1"></i> تعديل البيانات
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نافذة تعديل المستخدم -->
+            <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">تعديل بيانات {{ user.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form action="{{ url_for('admin.update_user', user_id=user.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="name{{ user.id }}" class="form-label">الاسم الكامل</label>
+                                    <input type="text" class="form-control" id="name{{ user.id }}" name="name" value="{{ user.name }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email{{ user.id }}" class="form-label">البريد الإلكتروني</label>
+                                    <input type="email" class="form-control" id="email{{ user.id }}" name="email" value="{{ user.email }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="phone{{ user.id }}" class="form-label">رقم الهاتف</label>
+                                    <input type="tel" class="form-control" id="phone{{ user.id }}" name="phone" value="{{ user.phone }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="role{{ user.id }}" class="form-label">الدور</label>
+                                    <select class="form-select" id="role{{ user.id }}" name="role" required>
+                                        <option value="student" {% if user.role == 'student' %}selected{% endif %}>طالب</option>
+                                        <option value="teacher" {% if user.role == 'teacher' %}selected{% endif %}>معلم</option>
+                                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>مشرف</option>
+                                        <option value="assistant" {% if user.role == 'assistant' %}selected{% endif %}>مساعد</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                                <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
             {% endfor %}
+
+            {% if users.items|length == 0 %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle mb-2 fa-2x"></i>
+                <p class="mb-0">لا يوجد مستخدمين تطابق معايير البحث</p>
+            </div>
+            {% endif %}
         </div>
 
         <!-- الترقيم -->
@@ -658,7 +726,7 @@
         <nav aria-label="صفحات المستخدمين">
             <ul class="pagination">
                 <li class="page-item {% if not users.has_prev %}disabled{% endif %}">
-                    <a class="page-link" href="{{ url_for('admin.users', page=users.prev_num) }}" tabindex="-1">
+                    <a class="page-link" href="{{ url_for('admin.users', page=users.prev_num, role=role, status=status, search=search) }}" tabindex="-1">
                         <i class="fas fa-chevron-right"></i>
                     </a>
                 </li>
@@ -671,7 +739,7 @@
                         </li>
                         {% else %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('admin.users', page=page_num) }}">{{ page_num }}</a>
+                            <a class="page-link" href="{{ url_for('admin.users', page=page_num, role=role, status=status, search=search) }}">{{ page_num }}</a>
                         </li>
                         {% endif %}
                     {% else %}
@@ -682,7 +750,7 @@
                 {% endfor %}
                 
                 <li class="page-item {% if not users.has_next %}disabled{% endif %}">
-                    <a class="page-link" href="{{ url_for('admin.users', page=users.next_num) }}">
+                    <a class="page-link" href="{{ url_for('admin.users', page=users.next_num, role=role, status=status, search=search) }}">
                         <i class="fas fa-chevron-left"></i>
                     </a>
                 </li>
@@ -691,121 +759,51 @@
         {% endif %}
     </main>
 
-    <!-- زر إضافة مستخدم ثابت -->
+    <!-- زر إضافة مستخدم جديد -->
     <button type="button" class="floating-btn" data-bs-toggle="modal" data-bs-target="#addUserModal">
-        <i class="fas fa-plus"></i>
+        <i class="fas fa-user-plus"></i>
     </button>
 
-    <!-- نافذة إضافة مستخدم -->
-    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen-sm-down">
+    <!-- نافذة إضافة مستخدم جديد -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addUserModalLabel">إضافة مستخدم جديد</h5>
+                    <h5 class="modal-title">إضافة مستخدم جديد</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ url_for('admin.users') }}" method="post">
+                <form action="{{ url_for('admin.add_user') }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <h6 class="mb-3 fw-bold text-primary">
-                                <i class="fas fa-user-circle me-2"></i>البيانات الأساسية
-                            </h6>
-                            
-                            <div class="mb-3">
-                                <label for="name" class="form-label">
-                                    <i class="fas fa-user me-2"></i>الاسم الكامل <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" class="form-control" id="name" name="name" placeholder="مثال: محمد أحمد" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="phone" class="form-label">
-                                    <i class="fas fa-phone me-2"></i>رقم الهاتف <span class="text-danger">*</span>
-                                </label>
-                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="05xxxxxxxx" pattern="[0-9]{10}" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="email" class="form-label">
-                                    <i class="fas fa-envelope me-2"></i>البريد الإلكتروني
-                                </label>
-                                <input type="email" class="form-control" id="email" name="email" placeholder="example@domain.com">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="role" class="form-label">
-                                    <i class="fas fa-user-tag me-2"></i>نوع الحساب <span class="text-danger">*</span>
-                                </label>
-                                <select class="form-select" id="role" name="role" required>
-                                    <option value="">اختر نوع الحساب</option>
-                                    <option value="student">طالب</option>
-                                    <option value="teacher">معلم</option>
-                                    <option value="assistant">مساعد</option>
-                                    <option value="admin">مسؤول</option>
-                                </select>
-                            </div>
+                            <label for="name" class="form-label">الاسم الكامل</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
                         </div>
-
-                        <!-- بيانات الأمان -->
                         <div class="mb-3">
-                            <hr>
-                            <h6 class="mb-3 fw-bold text-primary">
-                                <i class="fas fa-lock me-2"></i>بيانات الأمان
-                            </h6>
-
-                            <div class="mb-3">
-                                <label for="password" class="form-label">
-                                    <i class="fas fa-key me-2"></i>كلمة المرور <span class="text-danger">*</span>
-                                </label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                                <small class="text-muted">يجب أن تحتوي على 8 أحرف على الأقل</small>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="password_confirm" class="form-label">
-                                    <i class="fas fa-key me-2"></i>تأكيد كلمة المرور <span class="text-danger">*</span>
-                                </label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="password_confirm" name="password_confirm" required>
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePasswordConfirm">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
+                            <label for="email" class="form-label">البريد الإلكتروني</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
                         </div>
-
-                        <!-- الإعدادات الإضافية -->
                         <div class="mb-3">
-                            <hr>
-                            <h6 class="mb-3 fw-bold text-primary">
-                                <i class="fas fa-cog me-2"></i>الإعدادات الإضافية
-                            </h6>
-
-                            <div class="form-check form-switch mb-3">
-                                <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
-                                <label class="form-check-label" for="is_active">تفعيل الحساب مباشرة</label>
-                            </div>
-
-                            <div id="teacherOptions" style="display: none;">
-                                <div class="form-check form-switch">
-                                    <input type="checkbox" class="form-check-input" id="can_create_classroom" name="can_create_classroom">
-                                    <label class="form-check-label" for="can_create_classroom">السماح بإنشاء فصول دراسية</label>
-                                </div>
-                            </div>
+                            <label for="phone" class="form-label">رقم الهاتف</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="role" class="form-label">الدور</label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="student">طالب</option>
+                                <option value="teacher">معلم</option>
+                                <option value="admin">مشرف</option>
+                                <option value="assistant">مساعد</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">كلمة المرور</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-2"></i>إلغاء
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-user-plus me-2"></i>إضافة المستخدم
-                        </button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">إضافة المستخدم</button>
                     </div>
                 </form>
             </div>
@@ -862,43 +860,6 @@
                     mobileNav.classList.remove('show');
                     menuToggle.querySelector('i').classList.add('fa-bars');
                     menuToggle.querySelector('i').classList.remove('fa-times');
-                }
-            });
-
-            // التحكم في عرض خيارات المعلم
-            const roleSelect = document.getElementById('role');
-            const teacherOptions = document.getElementById('teacherOptions');
-            
-            roleSelect.addEventListener('change', function() {
-                teacherOptions.style.display = this.value === 'teacher' ? 'block' : 'none';
-            });
-
-            // إظهار/إخفاء كلمة المرور
-            const togglePassword = document.getElementById('togglePassword');
-            const togglePasswordConfirm = document.getElementById('togglePasswordConfirm');
-            const password = document.getElementById('password');
-            const passwordConfirm = document.getElementById('password_confirm');
-
-            togglePassword.addEventListener('click', function() {
-                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-                password.setAttribute('type', type);
-                this.querySelector('i').classList.toggle('fa-eye');
-                this.querySelector('i').classList.toggle('fa-eye-slash');
-            });
-
-            togglePasswordConfirm.addEventListener('click', function() {
-                const type = passwordConfirm.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordConfirm.setAttribute('type', type);
-                this.querySelector('i').classList.toggle('fa-eye');
-                this.querySelector('i').classList.toggle('fa-eye-slash');
-            });
-
-            // التحقق من تطابق كلمات المرور
-            const form = document.querySelector('#addUserModal form');
-            form.addEventListener('submit', function(e) {
-                if (password.value !== passwordConfirm.value) {
-                    e.preventDefault();
-                    alert('كلمات المرور غير متطابقة');
                 }
             });
         });
