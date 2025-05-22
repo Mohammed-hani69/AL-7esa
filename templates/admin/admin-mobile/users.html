@@ -678,8 +678,10 @@
                             <h5 class="modal-title">تعديل بيانات {{ user.name }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <form action="{{ url_for('admin.update_user', user_id=user.id) }}" method="POST">
+                        <form action="{{ url_for('admin.users') }}" method="POST">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            <input type="hidden" name="action" value="update">
                             <div class="modal-body">
                                 <div class="mb-3">
                                     <label for="name{{ user.id }}" class="form-label">الاسم الكامل</label>
@@ -772,8 +774,9 @@
                     <h5 class="modal-title">إضافة مستخدم جديد</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ url_for('admin.add_user') }}" method="post">
+                <form action="{{ url_for('admin.users') }}" method="post">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="add">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="name" class="form-label">الاسم الكامل</label>

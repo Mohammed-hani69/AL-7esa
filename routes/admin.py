@@ -71,10 +71,59 @@ def dashboard():
                         enrollment_counts=enrollment_counts,
                         revenue=monthly_revenue)
 
-@admin_bp.route('/users')
+@admin_bp.route('/users', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def users():
+    # إذا كان طلب POST، فقم بمعالجة تحديث أو إضافة المستخدم
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'update':
+            user_id = request.form.get('user_id', type=int)
+            if user_id:
+                user = User.query.get_or_404(user_id)
+                user.name = request.form.get('name')
+                user.email = request.form.get('email')
+                user.phone = request.form.get('phone')
+                user.role = request.form.get('role')
+                
+                db.session.commit()
+                flash('تم تحديث بيانات المستخدم بنجاح', 'success')
+                return redirect(url_for('admin.users'))
+        
+        elif action == 'add':
+            # إضافة مستخدم جديد
+            from werkzeug.security import generate_password_hash
+            
+            name = request.form.get('name')
+            email = request.form.get('email')
+            phone = request.form.get('phone')
+            role = request.form.get('role')
+            password = request.form.get('password')
+            
+            # التحقق من البريد الإلكتروني
+            existing_email = User.query.filter_by(email=email).first()
+            if existing_email:
+                flash('البريد الإلكتروني مسجل بالفعل', 'danger')
+                return redirect(url_for('admin.users'))
+            
+            # إنشاء مستخدم جديد
+            new_user = User(
+                name=name,
+                email=email,
+                phone=phone,
+                role=role,
+                password=generate_password_hash(password),
+                is_active=True
+            )
+            
+            db.session.add(new_user)
+            db.session.commit()
+            
+            flash('تمت إضافة المستخدم بنجاح', 'success')
+            return redirect(url_for('admin.users'))
+    
     # Get filter parameters
     role_filter = request.args.get('role', '')
     status_filter = request.args.get('status', '')
@@ -106,7 +155,7 @@ def users():
 
     template = 'admin/admin-mobile/users.html' if is_mobile() else 'admin/users.html'
 
-    return render_template(template, users=users)
+    return render_template(template, users=users, role=role_filter, status=status_filter, search=search)
 
 @admin_bp.route('/user/<int:user_id>/toggle_status', methods=['POST'])
 @login_required
@@ -168,8 +217,21 @@ def subscriptions():
             if payment.status == 'approved' and payment.amount:
                 total_revenue += payment.amount
 
+    # Calculate monthly revenue
+    start_of_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    end_of_month = (start_of_month + timedelta(days=32)).replace(day=1) - timedelta(seconds=1)
+    
+    # Get all approved subscription payments for current month
+    month_revenue = db.session.query(db.func.sum(SubscriptionPayment.amount))\
+        .filter(SubscriptionPayment.created_at.between(start_of_month, end_of_month))\
+        .filter(SubscriptionPayment.status == 'approved')\
+        .scalar() or 0
+
     # Get current time for template
     now = datetime.utcnow()
+
+    # قم بحساب عدد المدفوعات قيد الانتظار
+    pending_payments = SubscriptionPayment.query.filter_by(status='pending').count()
 
     template = 'admin/admin-mobile/subscriptions.html' if is_mobile() else 'admin/subscriptions.html'
 
@@ -179,7 +241,10 @@ def subscriptions():
                          all_subscriptions=all_subscriptions, 
                          payments=payments,
                          now=now,
-                         total_revenue=total_revenue)
+                         total_revenue=total_revenue,
+                         month_revenue=month_revenue,
+                         pending_payments=pending_payments,
+                         subscription_plans=plans)
 
 @admin_bp.route('/subscription_plan/new', methods=['GET', 'POST'])
 @login_required
@@ -432,6 +497,10 @@ def classrooms():
     teacher_id = request.args.get('teacher_id', type=int)
     is_free = request.args.get('is_free')
     search = request.args.get('search', '')
+    
+    # Get counts for stats
+    student_count = User.query.filter_by(role=Role.STUDENT).count()
+    teacher_count = User.query.filter_by(role=Role.TEACHER).count()
 
     # Base query
     query = Classroom.query
@@ -454,7 +523,7 @@ def classrooms():
     # Get paginated results
     page = request.args.get('page', 1, type=int)
     pagination = query.order_by(Classroom.created_at.desc()).paginate(page=page, per_page=20)
-    classrooms = pagination.items
+    classrooms = pagination
 
     # Get all teachers for the filter dropdown
     teachers = User.query.filter_by(role=Role.TEACHER).all()
@@ -468,7 +537,9 @@ def classrooms():
                          pagination=pagination,
                          teacher_id=teacher_id or 0,  # توفير قيمة افتراضية
                          is_free=is_free,
-                         search=search)
+                         search=search,
+                         student_count=student_count,
+                         teacher_count=teacher_count)
 
 @admin_bp.route('/classroom/<int:classroom_id>/confirm_delete')
 @login_required
