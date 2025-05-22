@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الدفع - {{ plan.name }} - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .innovative-sidebar {
+            background: var(--accent-gradient);
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 2rem;
+            height: calc(100vh - 4rem);
+            color: var(--surface-color);
+        }
+
+        .main-content {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin: 0;
+            position: relative;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            right: 0;
+            width: 50px;
+            height: 4px;
+            background: var(--accent-gradient);
+            border-radius: 2px;
+        }
+
+        .plan-details {
+            background: linear-gradient(135deg, #6C63FF0A, #FF6CAB0A);
+            border: 2px solid #6C63FF22;
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .plan-name {
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-duration {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .bank-details {
+            background: #F7FAFC;
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .bank-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: white;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .bank-info-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .bank-info-value {
+            color: var(--text-primary);
+            font-weight: 600;
+            direction: ltr;
+            text-align: right;
+        }
+
+        .upload-area {
+            border: 2px dashed #E2E8F0;
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-color);
+            background: linear-gradient(135deg, #6C63FF0A, #FF6CAB0A);
+        }
+
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .upload-area p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        .btn-submit {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius-md);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .form-control {
+            border: 2px solid #E2E8F0;
+            border-radius: var(--border-radius-sm);
+            padding: 0.75rem 1rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .preview-image {
+            max-width: 100%;
+            border-radius: var(--border-radius-md);
+            margin-top: 1rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 1rem;
+        }
+
+        .back-link:hover {
+            color: var(--accent-color);
+        }
+
+        .back-link i {
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.dashboard') }}" class="nav-link">
+                        <i class="fas fa-th-large"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/teacher.classrooms" class="nav-link">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>الفصول</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.payments') }}" class="nav-link">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>المدفوعات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.subscriptions') }}" class="nav-link active">
+                        <i class="fas fa-crown"></i>
+                        <span>الاشتراكات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">تأكيد الدفع - اشتراك معلم</h1>
+                <a href="{{ url_for('teacher.subscriptions') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-1"></i>العودة للباقات
+                </a>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-crown me-2"></i>
+                        الدفع - {{ plan.name }}
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- تفاصيل الباقة -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-primary mb-3">تفاصيل الباقة</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <i class="fas fa-crown me-2"></i>
+                                    اسم الباقة: {{ plan.name }}
+                                </p>
+                                <p class="mb-2">
+                                    <i class="fas fa-money-bill-wave me-2"></i>
+                                    السعر: {{ plan.price }} ريال
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <i class="fas fa-calendar me-2"></i>
+                                    مدة الاشتراك: {{ plan.duration_days }} يوم
+                                </p>
+                                <p class="mb-2">
+                                    <i class="fas fa-chalkboard me-2"></i>
+                                    عدد الفصول: {{ plan.max_classrooms }} فصل
+                                </p>
+                            </div>
+                        </div>
+                    </div>                    <!-- تعليمات الدفع -->
+                    <hr>
+                    <div class="mt-4">
+                        <div class="alert alert-info">
+                            <h6 class="fw-bold mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                تعليمات الدفع:
+                            </h6>
+                            <ol class="mb-0">
+                                <li>قم بالتحويل إلى رقم المحفظة الإلكترونية التالي: <strong class="text-primary">{{ ewallet_number }}</strong></li>
+                                <li>خذ لقطة شاشة للتحويل</li>
+                                <li>قم بتعبئة النموذج أدناه وإرفاق لقطة الشاشة</li>
+                                <li>اضغط على زر تأكيد الدفع</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- نموذج تأكيد الدفع -->
+                    <div class="mt-4">
+                        <h6 class="fw-bold text-primary mb-3">تأكيد الدفع</h6>
+                        <form id="payment-form" action="{{ url_for('teacher.payment', plan_id=plan.id) }}" method="POST" enctype="multipart/form-data">
+                            <!-- بيانات المستخدم -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">الاسم</label>
+                                    <input type="text" class="form-control" value="{{ current_user.name }}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">رقم الجوال</label>
+                                    <input type="text" class="form-control" value="{{ current_user.phone }}" readonly>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">المبلغ المحول</label>
+                                    <input type="text" class="form-control" value="{{ plan.price }} ريال" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">ملاحظات التحويل (اختياري)</label>
+                                    <input type="text" class="form-control" name="transfer_note" placeholder="مثال: رقم الحوالة">
+                                </div>
+                            </div>                            <!-- حقل رفع لقطة الشاشة -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-image me-2"></i>
+                                    لقطة شاشة التحويل (صورة فقط)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input type="file" 
+                                       class="form-control" 
+                                       name="screenshot" 
+                                       accept="image/png,image/jpeg,image/jpg"
+                                       required>
+                                <small class="text-muted">يجب أن تكون الصورة واضحة وتظهر تفاصيل التحويل وحجمها لا يتجاوز 5 ميجابايت</small>
+                            </div>
+                            <div id="preview" style="display: none;">
+                                <img src="" alt="معاينة إثبات الدفع" class="preview-image">
+                            </div>                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary" id="confirm-payment-btn">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    تأكيد الدفع
+                                </button>
+                                <a href="{{ url_for('teacher.subscriptions') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-right me-2"></i>
+                                    العودة للباقات
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+
+        // معاينة الصورة المرفوعة
+        $('input[type="file"]').on('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.querySelector('#preview img').src = e.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+
+                // التحقق من حجم الملف
+                const maxSize = 5 * 1024 * 1024; // 5 MB
+                if (file.size > maxSize) {
+                    alert('حجم الملف كبير جداً. يجب أن لا يتجاوز 5 ميجابايت');
+                    this.value = '';
+                    document.getElementById('preview').style.display = 'none';
+                }
+            }
+        });
+
+        // التحقق من النموذج قبل الإرسال
+        $('#payment-form').on('submit', function(e) {
+            if (!confirm('هل أنت متأكد من إتمام عملية الدفع؟')) {
+                e.preventDefault();
+                return;
+            }
+            
+            const submitBtn = $('#confirm-payment-btn');
+            submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري التأكيد...');
+            submitBtn.prop('disabled', true);
+        });
+    </script>
+</body>
+</html>

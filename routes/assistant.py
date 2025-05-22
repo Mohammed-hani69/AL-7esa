@@ -23,7 +23,7 @@ def assistant_required(f):
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or current_user.role != Role.ASSISTANT:
             flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'danger')
-            return redirect(url_for('index'))
+            return redirect(url_for('main.index'))
         return f(*args, **kwargs)
     return decorated_function
 

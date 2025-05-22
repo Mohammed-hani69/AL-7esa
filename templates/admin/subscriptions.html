@@ -57,6 +57,21 @@
         color: var(--surface-color);
     }
 
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: none;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+    }
+
     .sidebar-brand {
         text-align: center;
         margin-bottom: 3rem;
@@ -286,42 +301,516 @@
         .innovative-sidebar {
             position: fixed;
             right: -300px;
+            top: 0;
+            height: 100%;
+            width: 280px;
             z-index: 1000;
-            transition: 0.3s ease;
-            height: 100vh;
-            border-radius: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 20px 0 0 20px;
+            padding: 1.5rem 1rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.95), rgba(255, 108, 171, 0.95));
+            overflow-y: auto;
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
         }
         
         .innovative-sidebar.show {
             right: 0;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            opacity: 1;
+            visibility: visible;
         }
         
         .mobile-toggle {
-            display: block;
+            display: flex !important;
             position: fixed;
             right: 1rem;
             top: 1rem;
             z-index: 1001;
-            background: var(--surface-color);
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            background: var(--accent-gradient);
             border: none;
-            border-radius: 50%;
+            color: white;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(108, 99, 255, 0.3);
+        }
+
+        .mobile-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .nav-menu {
+            margin-top: 2rem;
+        }
+
+        .nav-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .nav-link {
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-8px);
+        }
+
+        .nav-link i {
+            font-size: 1.1rem;
+        }
+
+        .brand-logo {
             width: 50px;
             height: 50px;
-            box-shadow: var(--box-shadow);
+            margin-bottom: 0.75rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .brand-text {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* تحسين التمرير للسايدبار */
+        .innovative-sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .innovative-sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .innovative-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        .innovative-sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        body.sidebar-open {
+            overflow: hidden;
         }
     }
 
-    @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
+    @media (max-width: 576px) {
+        .innovative-sidebar {
+            display: none;
+        }
+
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 0.75rem;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+        }
+
+        .mobile-header-logo {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+        }
+
+        .mobile-header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            left: 0;
+            bottom: 0;
+            background: var(--surface-color);
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999;
+            width: 100%;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+
+        .mobile-nav.show {
+            transform: translateX(0);
+        }
+
+        .mobile-nav-list {
+            list-style: none;
+            padding: 1rem;
+            margin: 0;
+        }
+
+        .mobile-nav-item {
+            margin: 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-link i {
+            width: 24px;
+            margin-left: 1rem;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+        }
+
+        .mobile-nav-link.active {
+            background: var(--accent-gradient);
+            color: white;
+        .table-responsive::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 3px;
+        }
+
+        .custom-table {
+            width: 100%;
+            font-size: 0.85rem;
+        }
+
+        .custom-table th {
+            background: var(--accent-gradient);
+            color: white;
+            font-weight: 500;
+            padding: 1rem 0.75rem;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .custom-table td {
+            padding: 0.75rem;
+            vertical-align: middle;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .custom-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .custom-table tr:hover {
+            background: rgba(108, 99, 255, 0.02);
+        }
+
+        /* تحسين عرض البادجات */
+        .badge {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .badge i {
+            font-size: 0.7rem;
+        }
+
+        .badge-success {
+            background: linear-gradient(145deg, #00b09b, #96c93d);
+            color: white;
+        }
+
+        .badge-info {
+            background: linear-gradient(145deg, #2193b0, #6dd5ed);
+            color: white;
+        }
+
+        /* تحسين النموذج */
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+        }
+
+        .modal-header {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            border-radius: 20px 20px 0 0;
+            padding: 1.25rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem 1rem;
+        }
+
+        .form-control {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .form-switch .form-check-input {
+            width: 3rem;
+            height: 1.5rem;
+            border-radius: 1rem;
+            background-image: linear-gradient(145deg, #e2e8f0, #f8fafc);
+            cursor: pointer;
+        }
+
+        .form-switch .form-check-input:checked {
+            background: var(--accent-gradient);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .innovative-sidebar {
+            display: none;
+        }
+
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 0.75rem;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+        }
+
+        .mobile-header-logo {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+        }
+
+        .mobile-header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            left: 0;
+            background: white;
+            padding: 0.5rem;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            z-index: 999;
+        }
+
+        .mobile-nav.show {
+            transform: translateY(0);
+        }
+
+        .mobile-nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mobile-nav-item {
+            margin: 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .mobile-nav-item:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-link i {
+            width: 24px;
+            margin-left: 0.75rem;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+        }
+
+        .mobile-nav-link.active {
+            background: var(--accent-gradient);
+            color: white;
+            border-radius: 8px;
+        }
+
+        .mobile-nav-link.active i {
+            color: white;
+        }
+
+        .mobile-toggle {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .main-content {
+            margin-top: 70px;
+            padding: 0.75rem;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 0 0 1rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
     }
     </style>
 </head>
 <body>
-    <button class="mobile-toggle d-lg-none">
-        <i class="fas fa-bars"></i>
-    </button>
+    <header class="mobile-header d-sm-none">
+        <a href="{{ url_for('admin.dashboard') }}" class="mobile-header-brand">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+            <h1 class="mobile-header-title">الحصة</h1>
+        </a>
+        <button class="mobile-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <nav class="mobile-nav d-sm-none">
+        <ul class="mobile-nav-list">
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.dashboard') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.dashboard' }}">
+                    <i class="fas fa-chart-line"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.users') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.users' }}">
+                    <i class="fas fa-users"></i>
+                    <span>المستخدمين</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.classrooms') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.classrooms' }}">
+                    <i class="fas fa-school"></i>
+                    <span>الفصول الدراسية</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.subscriptions') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.subscriptions' }}">
+                    <i class="fas fa-money-check"></i>
+                    <span>الاشتراكات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.notifications') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.notifications' }}">
+                    <i class="fas fa-bell"></i>
+                    <span>الإشعارات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.settings') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.settings' }}">
+                    <i class="fas fa-cog"></i>
+                    <span>الإعدادات</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 
     <div class="app-container">
         <!-- السايدبار -->
@@ -487,6 +976,25 @@
                                                 <span class="badge badge-danger">منتهي</span>
                                                 {% else %}
                                                 <span class="badge badge-success">نشط</span>
+                                                <div class="btn-group mt-2">
+                                                    <a href="{{ url_for('admin.cancel_subscription', subscription_id=sub.id) }}" 
+                                                       class="btn btn-sm btn-warning" 
+                                                       onclick="return confirm('هل أنت متأكد من إلغاء هذا الاشتراك؟')" 
+                                                       title="إلغاء الاشتراك">
+                                                        <i class="fas fa-ban"></i>
+                                                    </a>
+                                                    <form action="{{ url_for('admin.delete_subscription') }}" 
+                                                          method="POST" 
+                                                          style="display: inline;"
+                                                          onsubmit="return confirm('هل أنت متأكد من حذف هذا الاشتراك نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')">
+                                                        <input type="hidden" name="subscription_id" value="{{ sub.id }}">
+                                                        <button type="submit" 
+                                                                class="btn btn-sm btn-danger" 
+                                                                title="حذف الاشتراك نهائياً">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -500,82 +1008,117 @@
             </div>
 
             <!-- جميع الاشتراكات -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="card shadow mb-4">
-                        <div class="card-header">
-                            <h6 class="card-title">سجل جميع الاشتراكات</h6>
-                            <div class="btn-group">
-                                <button id="exportSubscriptions" class="btn btn-sm btn-success">
-                                    <i class="fas fa-file-excel"></i> تصدير
-                                </button>
-                                <button id="printSubscriptions" class="btn btn-sm btn-info">
-                                    <i class="fas fa-print"></i> طباعة
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="custom-table" id="allSubscriptionsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>المستخدم</th>
-                                            <th>الباقة</th>
-                                            <th>السعر</th>
-                                            <th>تاريخ البدء</th>
-                                            <th>تاريخ الانتهاء</th>
-                                            <th>المدة (يوم)</th>
-                                            <th>النوع</th>
-                                            <th>الحالة</th>
-                                            <th>الإجراءات</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for sub in all_subscriptions %}
-                                        <tr>
-                                            <td>
-                                                <a href="{{ url_for('admin.users') }}?search={{ sub.user.phone }}">
-                                                    {{ sub.user.name }}
-                                                    <small class="d-block text-muted">{{ sub.user.phone }}</small>
-                                                </a>
-                                            </td>
-                                            <td>{{ sub.plan.name }}</td>
-                                            <td>{{ sub.plan.price }} ريال</td>
-                                            <td>{{ sub.start_date.strftime('%Y-%m-%d') }}</td>
-                                            <td>{{ sub.end_date.strftime('%Y-%m-%d') }}</td>
-                                            <td>{{ sub.plan.duration_days }}</td>
-                                            <td>
-                                                {% if sub.is_trial %}
-                                                <span class="badge badge-info">تجريبي</span>
-                                                {% else %}
-                                                <span class="badge badge-success">مدفوع</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if sub.end_date < now %}
-                                                <span class="badge badge-danger">منتهي</span>
-                                                {% else %}
-                                                <span class="badge badge-success">نشط</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <div class="btn-group">
-                                                    <a href="#" class="btn btn-sm btn-primary view-subscription" data-subscription-id="{{ sub.id }}" title="عرض التفاصيل">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    {% if sub.end_date > now %}
-                                                    <a href="{{ url_for('admin.cancel_subscription', subscription_id=sub.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من إلغاء هذا الاشتراك؟')" title="إلغاء الاشتراك">
-                                                        <i class="fas fa-ban"></i>
-                                                    </a>
-                                                    {% endif %}
+            <!-- سجل طلبات الدفع -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">سجل طلبات الدفع</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="custom-table" id="historyPaymentsTable">
+                            <thead>
+                                <tr>
+                                    <th>رقم الطلب</th>
+                                    <th>المستخدم</th>
+                                    <th>الباقة</th>
+                                    <th>المبلغ</th>
+                                    <th>طريقة الدفع</th>
+                                    <th>تاريخ الطلب</th>
+                                    <th>تاريخ المعالجة</th>
+                                    <th>الحالة</th>
+                                    <th>صورة التحويل</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr class="{{ 'table-warning' if payment.status == 'pending' }}">
+                                    <td>{{ payment.id }}</td>
+                                    <td>
+                                        <a href="#" class="text-primary">
+                                            {{ payment.user.name }}
+                                            <small class="d-block text-muted">{{ payment.user.phone }}</small>
+                                        </a>
+                                    </td>
+                                    <td>{{ payment.plan.name }}</td>
+                                    <td>{{ "%.2f"|format(payment.amount) }} جنيه</td>
+                                    <td>
+                                        {% if payment.payment_method == 'bank_transfer' %}
+                                        <span class="badge bg-info">تحويل بنكي</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ payment.payment_method }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ payment.updated_at.strftime('%Y-%m-%d %H:%M') if payment.updated_at else '-' }}</td>
+                                    <td>
+                                        {% if payment.status == 'approved' %}
+                                        <span class="badge bg-success">مقبول</span>
+                                        {% elif payment.status == 'rejected' %}
+                                        <span class="badge bg-danger">مرفوض</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">قيد المراجعة</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payment.payment_proof %}
+                                        <button type="button"
+                                                class="btn btn-sm btn-info btn-xs"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#imageModal{{ payment.id }}">
+                                            <i class="fas fa-image"></i>
+                                        </button>
+
+                                        <!-- Modal for payment proof image -->
+                                        <div class="modal fade" id="imageModal{{ payment.id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">صورة إثبات الدفع</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body text-center">
+                                                        <img src="{{ url_for('static', filename=payment.payment_proof) }}" 
+                                                             class="img-fluid" 
+                                                             alt="صورة إثبات الدفع">
+                                                    </div>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">لا يوجد</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payment.status == 'pending' %}
+                                        <div class="btn-group">
+                                            <form action="{{ url_for('admin.approve_payment', payment_id=payment.id) }}" 
+                                                  method="POST" 
+                                                  style="display: inline;">
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-success"
+                                                        onclick="return confirm('هل أنت متأكد من قبول هذا الطلب؟')"
+                                                        title="قبول الطلب">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                            <form action="{{ url_for('admin.reject_payment', payment_id=payment.id) }}" 
+                                                  method="POST"
+                                                  style="display: inline;">
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('هل أنت متأكد من رفض هذا الطلب؟')"
+                                                        title="رفض الطلب">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -852,27 +1395,71 @@
     <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // إعداد القائمة المتنقلة
+            const mobileToggle = document.querySelector('.mobile-toggle');
+            const mobileNav = document.querySelector('.mobile-nav');
+
+            if (mobileToggle && mobileNav) {
+                mobileToggle.addEventListener('click', function() {
+                    mobileNav.classList.toggle('show');
+                    this.querySelector('i').classList.toggle('fa-bars');
+                    this.querySelector('i').classList.toggle('fa-times');
+                });
+
+                // إغلاق القائمة عند النقر على أي رابط
+                const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+                mobileLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileNav.classList.remove('show');
+                        mobileToggle.querySelector('i').classList.add('fa-bars');
+                        mobileToggle.querySelector('i').classList.remove('fa-times');
+                    });
+                });
+
+                // إغلاق القائمة عند النقر خارجها
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.mobile-nav') && 
+                        !e.target.closest('.mobile-toggle') &&
+                        mobileNav.classList.contains('show')) {
+                        mobileNav.classList.remove('show');
+                        mobileToggle.querySelector('i').classList.add('fa-bars');
+                        mobileToggle.querySelector('i').classList.remove('fa-times');
+                    }
+                });
+            }
+
             // تفعيل DataTable للجداول
-            $('#activeSubsTable').DataTable({
+            const commonOptions = {
                 language: {
                     url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
                 },
+                responsive: true,
+                autoWidth: false,
+                scrollX: true,
+                scrollCollapse: true,
+                columnDefs: [{
+                    targets: '_all',
+                    className: 'text-center'
+                }]
+            };
+
+            $('#activeSubsTable').DataTable({
+                ...commonOptions,
                 "order": [[ 3, "desc" ]],
-                "pageLength": 10
+                "pageLength": 5,
+                "lengthMenu": [[5, 10, 25], [5, 10, 25]]
             });
 
             $('#allSubscriptionsTable').DataTable({
-                language: {
-                    url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
-                },
+                ...commonOptions,
                 "order": [[ 3, "desc" ]],
-                "pageLength": 25,
-                responsive: true,
-                dom: 'Bfrtip',
+                "pageLength": 10,
+                "lengthMenu": [[10, 25, 50], [10, 25, 50]],
+                dom: '<"d-flex justify-content-between align-items-center flex-wrap gap-2"lf>rt<"d-flex justify-content-between align-items-center flex-wrap gap-2"ip>',
                 buttons: [
                     {
                         extend: 'excel',
-                        text: '<i class="fas fa-file-excel"></i> تصدير Excel',
+                        text: '<i class="fas fa-file-excel"></i> تصدير',
                         className: 'btn btn-sm btn-success'
                     },
                     {
@@ -883,32 +1470,137 @@
                 ]
             });
 
-            // تفعيل زر القائمة للموبايل
+            // تحسين تجربة السحب في الجداول
+            const tableContainers = document.querySelectorAll('.table-responsive');
+            tableContainers.forEach(container => {
+                let isDragging = false;
+                let startX;
+                let scrollLeft;
+
+                container.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    startX = e.pageX - container.offsetLeft;
+                    scrollLeft = container.scrollLeft;
+                    container.style.cursor = 'grabbing';
+                });
+
+                container.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    const x = e.pageX - container.offsetLeft;
+                    const walk = (x - startX) * 2;
+                    container.scrollLeft = scrollLeft - walk;
+                });
+
+                container.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    container.style.cursor = 'grab';
+                });
+
+                container.addEventListener('mouseleave', () => {
+                    isDragging = false;
+                    container.style.cursor = 'grab';
+                });
+
+                // تلميح بإمكانية السحب
+                setTimeout(() => {
+                    if (container.scrollWidth > container.clientWidth) {
+                        container.scrollLeft = 50;
+                        setTimeout(() => {
+                            container.scrollLeft = 0;
+                            container.style.scrollBehavior = 'smooth';
+                        }, 500);
+                    }
+                }, 1000);
+            });
+
+            // تحسين أداء النقر على الأزرار في الموبايل
+            const touchButtons = document.querySelectorAll('.btn, .nav-link');
+            touchButtons.forEach(button => {
+                button.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                }, { passive: true });
+                
+                button.addEventListener('touchend', function() {
+                    this.style.transform = 'scale(1)';
+                }, { passive: true });
+            });
+
+            // تحسين أداء السايدبار
             const menuToggle = document.querySelector('.mobile-toggle');
             const sidebar = document.querySelector('.innovative-sidebar');
+            const overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            document.body.appendChild(overlay);
+            
+            function toggleSidebar() {
+                sidebar.classList.toggle('show');
+                overlay.classList.toggle('show');
+                document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+            }
             
             if (menuToggle) {
-                menuToggle.addEventListener('click', () => {
-                    sidebar.classList.toggle('show');
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleSidebar();
                 });
             }
             
-            // إغلاق السايدبار عند النقر خارجه
-            document.addEventListener('click', (e) => {
-                if (window.innerWidth < 992 && 
-                    !e.target.closest('.innovative-sidebar') && 
-                    !e.target.closest('.mobile-toggle')) {
+            overlay.addEventListener('click', toggleSidebar);
+            
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 992) {
                     sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.querySelector('.mobile-toggle');
+            const sidebar = document.querySelector('.innovative-sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            
+            function toggleSidebar() {
+                sidebar.classList.toggle('show');
+                overlay.classList.toggle('show');
+                document.body.classList.toggle('sidebar-open');
+            }
+
+            // تفعيل زر القائمة
+            if (menuToggle) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleSidebar();
+                });
+            }
+
+            // إغلاق السايدبار عند النقر على الظل
+            overlay.addEventListener('click', toggleSidebar);
+
+            // إغلاق السايدبار عند النقر على أي رابط
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth < 992) {
+                        toggleSidebar();
+                    }
+                });
+            });
+
+            // إغلاق السايدبار عند تغيير حجم النافذة
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 992) {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                    document.body.classList.remove('sidebar-open');
                 }
             });
 
-            // ربط أزرار التصدير
-            $('#exportSubscriptions').on('click', function() {
-                $('#allSubscriptionsTable').DataTable().button(0).trigger();
-            });
-            
-            $('#printSubscriptions').on('click', function() {
-                $('#allSubscriptionsTable').DataTable().button(1).trigger();
+            // منع انتشار النقر من السايدبار
+            sidebar.addEventListener('click', (e) => {
+                e.stopPropagation();
             });
         });
     </script>

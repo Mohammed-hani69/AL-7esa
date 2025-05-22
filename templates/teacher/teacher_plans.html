@@ -478,7 +478,7 @@
                     <div class="plan-card {% if plan.is_popular %}popular{% endif %}">
                         <div class="plan-card-header">
                             <h3 class="plan-name">{{ plan.name }}</h3>
-                            <div class="plan-price">{{ plan.price }} ريال</div>
+                            <div class="plan-price">{{ plan.price }} جنيه</div>
                             <div class="plan-duration">{{ plan.duration_days }} يوم</div>
                         </div>
                         <div class="plan-card-body">
@@ -504,10 +504,10 @@
                         <div class="plan-card-footer">
                             {% if active_subscription and active_subscription.plan_id == plan.id %}
                                 <button class="btn btn-subscribe current" disabled>الباقة الحالية</button>
-                            {% else %}
-                                <form action="{{ url_for('teacher.subscribe_to_plan', plan_id=plan.id) }}" method="post">
-                                    <button type="submit" class="btn btn-subscribe">اشترك الآن</button>
-                                </form>
+                            {% else %}                                
+                            <a href="{{ url_for('teacher.payment', plan_id=plan.id) }}" class="btn btn-subscribe">
+                                    ادفع الآن
+                                </a>
                             {% endif %}
                         </div>
                     </div>

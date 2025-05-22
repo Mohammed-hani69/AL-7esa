@@ -87,6 +87,9 @@ class Subscription(db.Model):
 
     def __repr__(self):
         return f'<Subscription {self.user.name} - {self.plan.name}>'
+    
+
+
 
 """
 نموذج الفصل الدراسي (Classroom)
@@ -475,6 +478,29 @@ class Payment(db.Model):
 
     def __repr__(self):
         return f'<Payment {self.id} - {self.amount} {self.currency}>'
+
+"""
+نموذج مدفوعات الاشتراكات (SubscriptionPayment)
+يخزن عمليات دفع اشتراكات المعلمين
+"""
+class SubscriptionPayment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    plan_id = db.Column(db.Integer, db.ForeignKey('subscription_plan.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    payment_method = db.Column(db.String(50), nullable=False)  # bank_transfer, credit_card, etc
+    payment_proof = db.Column(db.String(255), nullable=True)  # صورة إثبات الدفع
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    notes = db.Column(db.Text, nullable=True)  # ملاحظات الدفع
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    user = db.relationship('User', backref=db.backref('subscription_payments', lazy=True))
+    plan = db.relationship('SubscriptionPlan', backref=db.backref('payments', lazy=True))
+
+    def __repr__(self):
+        return f'<SubscriptionPayment {self.id} - {self.user.name} - {self.plan.name}>'
 
 """
 نموذج الاتصال (Contact)

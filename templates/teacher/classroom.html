@@ -618,6 +618,53 @@
                                 <p class="mt-1">{{ classroom.description }}</p>
                             </div>
                         {% endif %}
+                        <!-- قسم المساعد -->
+                        <div class="mt-4">
+                            <h5 class="text-primary d-flex align-items-center">
+                                <i class="fas fa-user-shield me-2"></i>مساعد المعلم
+                                {% if not plan or not plan.allow_assistant %}
+                                    <span class="badge bg-warning ms-2" data-bs-toggle="tooltip" title="هذه الميزة متوفرة في الباقات المدفوعة فقط">
+                                        <i class="fas fa-crown"></i> ميزة مدفوعة
+                                    </span>
+                                {% endif %}
+                            </h5>
+
+                            {% if plan and plan.allow_assistant %}
+                                {% if classroom.assistant %}
+                                <!-- عرض بيانات المساعد -->
+                                <div class="d-flex align-items-center justify-content-between bg-light p-3 rounded">
+                                    <div>
+                                        <strong>{{ classroom.assistant.name }}</strong>
+                                        <div class="text-muted small">{{ classroom.assistant.phone }}</div>
+                                    </div>
+                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#removeAssistantModal">
+                                        <i class="fas fa-user-minus"></i> إزالة المساعد
+                                    </button>
+                                </div>
+                                {% else %}
+                                <!-- زر لفتح مودال الإضافة -->
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAssistantModal">
+                                    <i class="fas fa-user-plus me-1"></i>إضافة مساعد
+                                </button>
+                                <div class="text-muted small mt-2">
+                                    <i class="fas fa-info-circle"></i>
+                                    يمكنك إضافة مساعد للفصل لمساعدتك في إدارة المحتوى والطلاب
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <!-- إشعار بالترقية -->
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    لإضافة مساعد، يرجى ترقية اشتراكك إلى باقة تدعم هذه الميزة
+                                    <a href="{{ url_for('teacher.subscriptions') }}" class="btn btn-warning btn-sm ms-2">
+                                        <i class="fas fa-crown me-1"></i>ترقية الاشتراك
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        
+
                     </div>
                     <div class="col-md-4 border-start">
                         <h5 class="text-primary">كود الفصل</h5>
@@ -874,6 +921,51 @@
             </div>
             {% endif %}
         </main>
+    </div>
+
+    <!-- Modal إضافة مساعد -->
+    <div class="modal fade" id="addAssistantModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة مساعد للفصل</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>                <form method="POST" action="{{ url_for('teacher.set_assistant', classroom_id=classroom.id) }}">
+                    <div class="modal-body">
+                        <div class="mb-3">                            <label class="form-label">رقم هاتف المساعد</label>
+                            <input type="tel" class="form-control" name="assistant_phone" required 
+                                   placeholder="أدخل رقم الهاتف">
+                            <div class="form-text">يجب إدخال رقم الهاتف بصيغة صحيحة</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">إضافة</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal إزالة مساعد -->
+    <div class="modal fade" id="removeAssistantModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إزالة المساعد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>هل أنت متأكد من أنك تريد إزالة المساعد من هذا الفصل؟</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>                    <form method="POST" action="{{ url_for('teacher.set_assistant', classroom_id=classroom.id) }}" class="d-inline">
+                        <input type="hidden" name="remove" value="1">
+                        <button type="submit" class="btn btn-danger">إزالة</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal إضافة محتوى -->

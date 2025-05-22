@@ -1,5 +1,6 @@
 import os
 
+
 class Config:
     # Flask Configuration
     SECRET_KEY = os.environ.get("SESSION_SECRET", "al-hesa-default-secret")
@@ -12,6 +13,7 @@ class Config:
         "pool_recycle": 300,
         "pool_pre_ping": True,
     }
+
 
     # Firebase Configuration
     FIREBASE_API_KEY = os.environ.get("FIREBASE_API_KEY", "")

@@ -407,6 +407,189 @@
         }
     }
 
+    @media (max-width: 576px) {
+        .innovative-sidebar {
+            display: none;
+        }
+
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 0.75rem;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+        }
+
+        .mobile-header-logo {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+        }
+
+        .mobile-header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            left: 0;
+            background: white;
+            padding: 0.5rem;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            z-index: 999;
+        }
+
+        .mobile-nav.show {
+            transform: translateY(0);
+        }
+
+        .mobile-nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mobile-nav-item {
+            margin: 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .mobile-nav-item:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-link i {
+            width: 24px;
+            margin-left: 0.75rem;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+        }
+
+        .mobile-nav-link.active {
+            background: var(--accent-gradient);
+            color: white;
+            border-radius: 8px;
+        }
+
+        .mobile-nav-link.active i {
+            color: white;
+        }
+
+        .mobile-toggle {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .main-content {
+            margin-top: 70px;
+            padding: 0.75rem;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 0 0 1rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .page-title {
+            font-size: 1.3rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .page-title::after {
+            right: 50%;
+            transform: translateX(50%);
+            width: 40px;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+            margin: 0.75rem 0;
+        }
+
+        .stat-card {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0;
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .users-filter-card, .users-table-card {
+            margin: 0.75rem 0;
+            border-radius: 12px;
+        }
+
+        .card-header {
+            padding: 1rem;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .btn-group {
+            width: 100%;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+    }
+
     /* تصميم إضافي للجدول */
     .action-btn {
         width: 32px;
@@ -588,6 +771,63 @@
     </style>
 </head>
 <body>
+    <header class="mobile-header d-sm-none">
+        <a href="{{ url_for('admin.dashboard') }}" class="mobile-header-brand">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+            <h1 class="mobile-header-title">الحصة</h1>
+        </a>
+        <button class="mobile-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <nav class="mobile-nav d-sm-none">
+        <ul class="mobile-nav-list">
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.dashboard') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.dashboard' }}">
+                    <i class="fas fa-chart-line"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.users') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.users' }}">
+                    <i class="fas fa-users"></i>
+                    <span>المستخدمين</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.classrooms') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.classrooms' }}">
+                    <i class="fas fa-school"></i>
+                    <span>الفصول الدراسية</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.subscriptions') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.subscriptions' }}">
+                    <i class="fas fa-money-check"></i>
+                    <span>الاشتراكات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.notifications') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.notifications' }}">
+                    <i class="fas fa-bell"></i>
+                    <span>الإشعارات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.settings') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'admin.settings' }}">
+                    <i class="fas fa-cog"></i>
+                    <span>الإعدادات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('teacher.dashboard') }}" class="mobile-nav-link {{ 'active' if request.endpoint == 'teacher.dashboard' }}">
+                    <i class="fas fa-crown"></i>
+                    <span>اشتراكاتي</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
     <button class="mobile-toggle d-lg-none">
         <i class="fas fa-bars"></i>
     </button>
@@ -750,14 +990,9 @@
             <div class="card shadow">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="card-title">قائمة المستخدمين ({{ users.total }})</h6>
-                    <div class="btn-group">
-                        <button class="btn btn-success btn-sm" id="exportUsers">
-                            <i class="fas fa-file-excel"></i> تصدير
-                        </button>
-                        <button class="btn btn-info btn-sm" id="printUsers">
-                            <i class="fas fa-print"></i> طباعة
-                        </button>
-                    </div>
+                    <button class="btn btn-success btn-sm" id="exportUsers">
+                        <i class="fas fa-file-excel"></i> تصدير لملف Excel
+                    </button>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -805,17 +1040,11 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewUserModal">
-                                                <i class="fas fa-eye"></i>
+                                        <form action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" method="POST">
+                                            <button type="submit" class="btn btn-sm {% if user.is_active %}btn-warning{% else %}btn-success{% endif %}">
+                                                <i class="fas {% if user.is_active %}fa-toggle-off{% else %}fa-toggle-on{% endif %}"></i>
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editUserModal">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
+                                        </form>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -1100,26 +1329,127 @@
     <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // تفعيل DataTable
-            $('#usersTable').DataTable({
+            // إعداد القائمة المتنقلة
+            const mobileToggle = document.querySelector('.mobile-toggle');
+            const mobileNav = document.querySelector('.mobile-nav');
+
+            if (mobileToggle && mobileNav) {
+                mobileToggle.addEventListener('click', function() {
+                    mobileNav.classList.toggle('show');
+                    this.querySelector('i').classList.toggle('fa-bars');
+                    this.querySelector('i').classList.toggle('fa-times');
+                });
+
+                // إغلاق القائمة عند النقر على أي رابط
+                const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+                mobileLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileNav.classList.remove('show');
+                        mobileToggle.querySelector('i').classList.add('fa-bars');
+                        mobileToggle.querySelector('i').classList.remove('fa-times');
+                    });
+                });
+
+                // إغلاق القائمة عند النقر خارجها
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.mobile-nav') && 
+                        !e.target.closest('.mobile-toggle') &&
+                        mobileNav.classList.contains('show')) {
+                        mobileNav.classList.remove('show');
+                        mobileToggle.querySelector('i').classList.add('fa-bars');
+                        mobileToggle.querySelector('i').classList.remove('fa-times');
+                    }
+                });
+            }
+
+            // تفعيل DataTable للجداول
+            const usersTable = $('#usersTable').DataTable({
                 language: {
                     url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json",
                     lengthMenu: "عرض _MENU_ سجل في الصفحة",
-                    search: "بحث:",
-                    info: "عرض _START_ إلى _END_ من _TOTAL_ سجل",
+                    search: '<i class="fas fa-search ml-2"></i>بحث:',
+                    info: "عرض _START_ إلى _END_ من أصل _TOTAL_ سجل",
                     infoEmpty: "لا توجد سجلات متاحة",
-                    infoFiltered: "(تصفية من _MAX_ سجل)",
-                    zeroRecords: "لا توجد نتائج مطابقة",
+                    infoFiltered: "(تم التصفية من _MAX_ سجل)",
+                    zeroRecords: '<div class="text-center p-3"><i class="fas fa-search fa-3x text-muted mb-2"></i><br>لا توجد نتائج مطابقة للبحث</div>',
+                    emptyTable: '<div class="text-center p-3"><i class="fas fa-users fa-3x text-muted mb-2"></i><br>لا توجد بيانات متاحة</div>',
                     paginate: {
-                        first: "الأول",
-                        last: "الأخير",
-                        next: "التالي",
-                        previous: "السابق"
+                        first: '<i class="fas fa-angle-double-right"></i>',
+                        last: '<i class="fas fa-angle-double-left"></i>',
+                        next: '<i class="fas fa-angle-left"></i>',
+                        previous: '<i class="fas fa-angle-right"></i>'
                     }
                 },
                 order: [[4, "desc"]],
-                pageLength: 10,
-                dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>rtip'
+                pageLength: 15,
+                lengthMenu: [[10, 15, 25, 50, -1], ['10', '15', '25', '50', 'الكل']],
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",,
+                initComplete: function() {
+                    // تخصيص حقل البحث
+                    $('.dataTables_filter input')
+                        .addClass('form-control form-control-lg')
+                        .attr('placeholder', 'ابحث عن مستخدم...')
+                        .parent()
+                        .prepend('<i class="fas fa-search search-icon"></i>');
+                    
+                    // تخصيص قائمة عدد النتائج
+                    $('.dataTables_length select').addClass('form-select form-select-lg');
+                    
+                    // تحسين مظهر معلومات النتائج
+                    $('.dataTables_info').addClass('text-muted');
+                },
+                drawCallback: function() {
+                    // تحسين مظهر أزرار الترقيم
+                    $('.paginate_button').addClass('btn btn-sm');
+                    $('.paginate_button.current').addClass('btn-primary').removeClass('btn-sm');
+                    $('.paginate_button:not(.current)').addClass('btn-light');
+                }
+            });
+
+            // تصدير البيانات إلى ملف Excel
+            $('#exportUsers').on('click', function() {
+                const rows = [];
+                // إضافة عناوين الأعمدة
+                rows.push([
+                    'الاسم',
+                    'رقم الهاتف',
+                    'البريد الإلكتروني',
+                    'الصلاحية',
+                    'تاريخ التسجيل',
+                    'الحالة'
+                ]);
+
+                // إضافة بيانات المستخدمين
+                usersTable.rows().every(function() {
+                    const data = this.data();
+                    const role = $(data[3]).text(); // استخراج النص من HTML
+                    const status = $(data[5]).text(); // استخراج النص من HTML
+                    rows.push([
+                        $(data[0]).text().trim(), // الاسم
+                        data[1], // رقم الهاتف
+                        data[2], // البريد الإلكتروني
+                        role, // الصلاحية
+                        data[4], // تاريخ التسجيل
+                        status // الحالة
+                    ]);
+                });
+
+                // إنشاء CSV string
+                let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM for Excel Arabic support
+                rows.forEach(row => {
+                    csvContent += row.join(',') + '\n';
+                });
+
+                // إنشاء رابط التحميل
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "users_" + new Date().toISOString().slice(0,10) + ".csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             });
 
             // تفعيل زر القائمة للموبايل
@@ -1175,6 +1505,115 @@
                 if (password.value !== passwordConfirm.value) {
                     e.preventDefault();
                     alert('كلمات المرور غير متطابقة');
+                }
+            });
+
+            // تفعيل أزرار الإجراءات
+            // عرض تفاصيل المستخدم
+            $(document).on('click', '.view-user', function() {
+                const userId = $(this).data('user-id');
+                const modal = $('#viewUserModal');
+                const loader = $('#userModalLoader');
+                const content = $('#userModalContent');
+
+                loader.removeClass('d-none');
+                content.addClass('d-none');
+
+                // جلب تفاصيل المستخدم
+                $.get(`/admin/users/${userId}/details`)
+                    .done(function(data) {
+                        content.html(data);
+                        content.removeClass('d-none');
+                    })
+                    .fail(function() {
+                        content.html('<div class="alert alert-danger">حدث خطأ أثناء جلب بيانات المستخدم</div>');
+                        content.removeClass('d-none');
+                    })
+                    .always(function() {
+                        loader.addClass('d-none');
+                    });
+
+                modal.modal('show');
+            });
+
+            // تعديل بيانات المستخدم
+            $(document).on('click', '.edit-user', function() {
+                const userId = $(this).data('user-id');
+                const modal = $('#editUserModal');
+                const loader = $('#editUserLoader');
+                const form = $('#editUserForm');
+
+                loader.removeClass('d-none');
+                form.addClass('d-none');
+
+                // جلب نموذج تعديل المستخدم
+                $.get(`/admin/users/${userId}/edit`)
+                    .done(function(data) {
+                        form.html(data);
+                        form.removeClass('d-none');
+                        
+                        // تحديث action النموذج
+                        form.attr('action', `/admin/users/${userId}/edit`);
+                    })
+                    .fail(function() {
+                        form.html('<div class="alert alert-danger">حدث خطأ أثناء جلب نموذج التعديل</div>');
+                        form.removeClass('d-none');
+                    })
+                    .always(function() {
+                        loader.addClass('d-none');
+                    });
+
+                modal.modal('show');
+            });
+
+            // حذف مستخدم
+            $(document).on('click', '.delete-user', function() {
+                const userId = $(this).data('user-id');
+                const userName = $(this).data('user-name');
+
+                if (confirm(`هل أنت متأكد من حذف المستخدم "${userName}"؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+                    $.post(`/admin/users/${userId}/delete`)
+                        .done(function() {
+                            // تحديث الجدول
+                            window.location.reload();
+                        })
+                        .fail(function() {
+                            alert('حدث خطأ أثناء حذف المستخدم');
+                        });
+                }
+            });
+
+            // تغيير حالة المستخدم (تفعيل/تعطيل)
+            $(document).on('click', '.toggle-user-status', function() {
+                const userId = $(this).data('user-id');
+                const isActive = $(this).data('is-active');
+                const action = isActive ? 'تعطيل' : 'تفعيل';
+
+                if (confirm(`هل أنت متأكد من ${action} هذا المستخدم؟`)) {
+                    $.post(`/admin/users/${userId}/toggle-status`)
+                        .done(function() {
+                            // تحديث الجدول
+                            window.location.reload();
+                        })
+                        .fail(function() {
+                            alert(`حدث خطأ أثناء ${action} المستخدم`);
+                        });
+                }
+            });
+
+            // إعادة تعيين كلمة المرور
+            $(document).on('click', '.reset-password', function() {
+                const userId = $(this).data('user-id');
+                const userName = $(this).data('user-name');
+
+                if (confirm(`هل أنت متأكد من إعادة تعيين كلمة المرور للمستخدم "${userName}"؟`)) {
+                    $.post(`/admin/users/${userId}/reset-password`)
+                        .done(function(response) {
+                            alert(`تم إعادة تعيين كلمة المرور بنجاح. كلمة المرور الجديدة هي: ${response.password}`);
+                        })
+                        .fail(function() {
+                            alert('حدث خطأ أثناء إعادة تعيين كلمة المرور');
+                        });
                 }
             });
         });

@@ -503,7 +503,7 @@ def start_quiz(classroom_id, quiz_id):
         payment = Payment.query.filter_by(
             user_id=current_user.id,
             classroom_id=classroom.id,
-            status='approved'  # Only allow access if payment is approved
+            status='success'  # Only allow access if payment is successful
         ).order_by(Payment.created_at.desc()).first()
         
         if not payment:

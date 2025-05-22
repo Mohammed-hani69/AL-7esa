@@ -3,9 +3,13 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from flask_login import login_required, current_user
 from functools import wraps
 from app import db
-from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings
+from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings, SubscriptionPayment
 
 admin_bp = Blueprint('admin', __name__)
+
+
+
+
 
 # Admin required decorator
 def admin_required(f):
@@ -13,7 +17,7 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or current_user.role != Role.ADMIN:
             flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'danger')
-            return redirect(url_for('index'))
+            return redirect(url_for('main.index'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -28,11 +32,18 @@ def dashboard():
     classrooms_count = Classroom.query.count()
     active_subscriptions = Subscription.query.filter(Subscription.end_date > datetime.utcnow()).count()
     
+    # Calculate monthly revenue from subscription payments only
+    start_of_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    end_of_month = (start_of_month + timedelta(days=32)).replace(day=1) - timedelta(seconds=1)
+    
+    # Get all approved subscription payments for current month
+    monthly_revenue = db.session.query(db.func.sum(SubscriptionPayment.amount))\
+        .filter(SubscriptionPayment.created_at.between(start_of_month, end_of_month))\
+        .filter(SubscriptionPayment.status == 'approved')\
+        .scalar() or 0
+    
     # Get recent users
     recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
-    
-    # Get recent payments
-    recent_payments = Payment.query.order_by(Payment.created_at.desc()).limit(10).all()
     
     # Sample data for enrollment chart
     now = datetime.utcnow()
@@ -40,16 +51,15 @@ def dashboard():
     enrollment_counts = [0] * 30  # Will be populated with actual data in a real implementation
     
     return render_template('admin/dashboard.html',
-                           user_count=users_count,
-                           teacher_count=teachers_count,
-                           student_count=students_count,
-                           classroom_count=classrooms_count,
-                           subscription_count=active_subscriptions,
-                           recent_users=recent_users,
-                           recent_payments=recent_payments,
-                           enrollment_dates=enrollment_dates,
-                           enrollment_counts=enrollment_counts,
-                           revenue=0)
+                        user_count=users_count,
+                        teacher_count=teachers_count,
+                        student_count=students_count,
+                        classroom_count=classrooms_count,
+                        subscription_count=active_subscriptions,
+                        recent_users=recent_users,
+                        enrollment_dates=enrollment_dates,
+                        enrollment_counts=enrollment_counts,
+                        revenue=monthly_revenue)
 
 @admin_bp.route('/users')
 @login_required
@@ -117,10 +127,18 @@ def subscriptions():
     # Get all subscriptions for the comprehensive table
     all_subscriptions = Subscription.query.order_by(Subscription.start_date.desc()).all()
     
+    # Get all subscription payments
+    payments = SubscriptionPayment.query.order_by(SubscriptionPayment.created_at.desc()).all()
+    
     # Get current time for template
     now = datetime.utcnow()
     
-    return render_template('admin/subscriptions.html', plans=plans, active_subs=active_subs, all_subscriptions=all_subscriptions, now=now)
+    return render_template('admin/subscriptions.html', 
+                         plans=plans, 
+                         active_subs=active_subs, 
+                         all_subscriptions=all_subscriptions, 
+                         payments=payments,
+                         now=now)
 
 @admin_bp.route('/subscription_plan/new', methods=['GET', 'POST'])
 @login_required
@@ -207,6 +225,28 @@ def cancel_subscription(subscription_id):
     db.session.commit()
     
     flash(f'تم إلغاء اشتراك {subscription.user.name} في باقة {subscription.plan.name} بنجاح', 'success')
+    return redirect(url_for('admin.subscriptions'))
+
+@admin_bp.route('/subscription/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_subscription():
+    subscription_id = request.form.get('subscription_id', type=int)
+    if not subscription_id:
+        flash('معرف الاشتراك غير صالح', 'danger')
+        return redirect(url_for('admin.subscriptions'))
+    
+    subscription = Subscription.query.get_or_404(subscription_id)
+    
+    # Save the subscription info for flash message
+    user_name = subscription.user.name
+    plan_name = subscription.plan.name
+    
+    # Delete the subscription
+    db.session.delete(subscription)
+    db.session.commit()
+    
+    flash(f'تم حذف اشتراك {user_name} في باقة {plan_name} بنجاح', 'success')
     return redirect(url_for('admin.subscriptions'))
 
 @admin_bp.route('/assign_trial/<int:user_id>', methods=['POST'])

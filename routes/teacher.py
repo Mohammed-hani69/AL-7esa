@@ -7,14 +7,15 @@ import random
 import string
 import os
 from werkzeug.utils import secure_filename
-from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
+from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from functools import wraps
 from datetime import datetime, timedelta
 from app import db
-from models import QuizAnswer, QuizAttempt, User, Role, Classroom, ClassroomEnrollment, ClassroomContent, ContentType
+from models import Payment, QuizAnswer, QuizAttempt, User, Role, Classroom, ClassroomEnrollment, ClassroomContent, ContentType
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizQuestionOption
-from models import Subscription, SubscriptionPlan, ChatSettings, ChatParticipant, Payment
+from models import Subscription, SubscriptionPlan, ChatSettings, ChatParticipant, SubscriptionPayment, SubscriptionPayment
+from models import SystemSettings
 
 teacher_bp = Blueprint('teacher', __name__)
 
@@ -311,12 +312,6 @@ def classroom(classroom_id):
     # التحقق من وجود اشتراك نشط للمعلم
     has_subscription = has_active_subscription()
     if not has_subscription:
-        flash('يجب أن يكون لديك اشتراك نشط للوصول إلى هذه الميزة', 'warning')
-        return redirect(url_for('teacher.subscriptions'))
-        
-    # Get current subscription plan
-    plan = get_current_plan()
-    if not plan:
         flash('لا يمكنك الوصول إلى الفصول الدراسية. يرجى الاشتراك في باقة نشطة أولاً.', 'warning')
         return redirect(url_for('teacher.dashboard'))
         
@@ -346,6 +341,7 @@ def classroom(classroom_id):
 
     # Check if plan allows chat
     can_use_chat = False
+    plan = get_current_plan()
     if plan and plan.has_chat:
         can_use_chat = True
 
@@ -1540,3 +1536,61 @@ def delete_quiz(classroom_id, quiz_id):
     
     flash('تم حذف الاختبار بنجاح', 'success')
     return redirect(url_for('teacher.quizzes', classroom_id=classroom.id))
+
+@teacher_bp.route('/payment/<int:plan_id>', methods=['GET', 'POST'])
+@login_required
+@teacher_required 
+def payment(plan_id):
+    """
+    عرض صفحة الدفع ومعالجة تأكيد الدفع لخطة اشتراك معينة
+    """
+    # Get the subscription plan
+    plan = SubscriptionPlan.query.get_or_404(plan_id)
+    
+    # Get e-wallet number from system settings
+    ewallet_number = SystemSettings.get_setting('ewallet_number', '0000000000')
+
+    if request.method == 'POST':
+        # Handle file upload
+        if 'screenshot' not in request.files:
+            flash('يجب إرفاق صورة إثبات الدفع', 'danger')
+            return redirect(url_for('teacher.payment', plan_id=plan.id))
+
+        file = request.files['screenshot']
+        if file.filename == '':
+            flash('لم يتم اختيار ملف', 'danger')
+            return redirect(url_for('teacher.payment', plan_id=plan.id))
+
+        if not allowed_file(file.filename):
+            flash('نوع الملف غير مسموح به. يجب أن يكون الملف صورة (PNG, JPG, JPEG)', 'danger')
+            return redirect(url_for('teacher.payment', plan_id=plan.id))
+
+        # Save screenshot
+        filename = secure_filename(f"payment_{plan_id}_{current_user.id}_{int(datetime.utcnow().timestamp())}.{file.filename.rsplit('.', 1)[1].lower()}")
+        screenshots_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'subscription_payments')
+        os.makedirs(screenshots_dir, exist_ok=True)
+        file_path = os.path.join(screenshots_dir, filename)
+        file.save(file_path)
+
+        
+        
+        # Create payment record using SubscriptionPayment
+        payment = SubscriptionPayment(
+            user_id=current_user.id,
+            plan_id=plan.id,
+            amount=plan.price,
+            payment_method='ewallet',
+            payment_proof=f'uploads/subscription_payments/{filename}',
+            status='pending',
+            notes=request.form.get('transfer_note')
+        )
+
+        db.session.add(payment)
+        db.session.commit()
+
+        flash('تم إرسال طلب الدفع بنجاح. سيتم تفعيل اشتراكك بعد مراجعة عملية الدفع', 'success')
+        return redirect(url_for('teacher.subscriptions'))
+
+    return render_template('teacher/payment.html', 
+                         plan=plan,
+                         ewallet_number=ewallet_number)
