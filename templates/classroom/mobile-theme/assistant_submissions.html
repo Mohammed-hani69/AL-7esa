@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسليمات الواجب - {{ classroom.name }} - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
+
+        /* تنسيق عام */
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* تخطيط الصفحة */
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        /* السايدبار */
+        .innovative-sidebar {
+            background: var(--surface-color);
+            box-shadow: var(--box-shadow);
+            padding: 2rem 1rem;
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: 300px;
+            z-index: 1000;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .innovative-sidebar .nav-link {
+            color: var(--text-secondary);
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.2s ease;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .innovative-sidebar .nav-link:hover,
+        .innovative-sidebar .nav-link.active {
+            color: var(--accent-color);
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        .innovative-sidebar .nav-link i {
+            width: 1.5rem;
+            text-align: center;
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            padding: 2rem;
+            margin-right: 300px;
+            transition: margin 0.3s ease;
+        }
+
+        /* الهيدر */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        /* بطاقة تفاصيل الواجب */
+        .assignment-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .assignment-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: rgba(108, 99, 255, 0.05);
+            border-radius: var(--border-radius-sm);
+        }
+
+        .info-item i {
+            color: var(--accent-color);
+            width: 1.5rem;
+            text-align: center;
+        }
+
+        /* بطاقة التسليم */
+        .submission-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .submission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .student-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .submission-date {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .submission-content {
+            background: rgba(108, 99, 255, 0.05);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+
+        .grade-section {
+            background: #f8f9fa;
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+        }
+
+        .grade-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .grade-form .form-control {
+            border-radius: var(--border-radius-sm);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .grade-form .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        /* قائمة الطلاب غير المسلمين */
+        .missing-students {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .student-item:last-child {
+            border-bottom: none;
+        }
+
+        /* التجاوب مع الشاشات الصغيرة */
+        @media (max-width: 991.98px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .innovative-sidebar {
+                transform: translateX(100%);
+            }
+
+            .innovative-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-right: 0;
+                padding: 1rem;
+            }
+
+            .mobile-toggle {
+                display: block !important;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .assignment-info {
+                grid-template-columns: 1fr;
+            }
+
+            .submission-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .grade-form {
+                margin-top: 1rem;
+            }
+
+            .student-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+
+        /* زر القائمة للموبايل */
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        /* أزرار التنقل السفلية */
+        .bottom-navigation {
+            display: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .bottom-navigation {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--surface-color);
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+                padding: 0.75rem;
+                z-index: 1000;
+            }
+
+            .nav-pill {
+                flex: 1;
+                text-align: center;
+                padding: 0.5rem;
+                color: var(--text-secondary);
+                text-decoration: none;
+                font-size: 0.8rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.25rem;
+            }
+
+            .nav-pill.active {
+                color: var(--accent-color);
+            }
+
+            .nav-pill i {
+                font-size: 1.2rem;
+            }
+
+            .main-content {
+                padding-bottom: 5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- القائمة الجانبية -->
+        <aside class="innovative-sidebar">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="الحصة" height="40">
+                <button class="mobile-toggle d-lg-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.dashboard') }}" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="nav-link">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>{{ classroom.name }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- الهيدر -->
+            <header class="page-header">
+                <div>
+                    <button class="mobile-toggle d-lg-none me-3">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>{{ assignment.title }}</h1>
+                </div>
+                <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-1"></i>العودة للواجبات
+                </a>
+            </header>
+
+            <!-- تفاصيل الواجب -->
+            <div class="assignment-card">
+                <h5 class="text-primary mb-3">تفاصيل الواجب</h5>
+                <div class="mb-3">
+                    <p class="mb-0">{{ assignment.description|default('لا يوجد وصف') }}</p>
+                </div>
+                <div class="assignment-info">
+                    <div class="info-item">
+                        <i class="fas fa-calendar"></i>
+                        <div>
+                            <div class="text-muted">تاريخ التسليم</div>
+                            {% if assignment.due_date %}
+                                <strong class="text-danger">{{ assignment.due_date.strftime('%Y-%m-%d') }}</strong>
+                            {% else %}
+                                <span class="text-muted">غير محدد</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-star"></i>
+                        <div>
+                            <div class="text-muted">النقاط</div>
+                            <strong>{{ assignment.points }}</strong>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-users"></i>
+                        <div>
+                            <div class="text-muted">التسليمات</div>
+                            <strong>{{ submissions|length }} / {{ classroom.enrollments|length }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قائمة التسليمات -->
+            {% if submissions %}
+                <div class="submissions-list">
+                    {% for submission in submissions %}
+                        <div class="submission-card">
+                            <div class="submission-header">
+                                <div class="student-name">{{ submission.enrollment.user.name }}</div>
+                                <div class="submission-date">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ submission.submission_date.strftime('%Y-%m-%d %H:%M') }}
+                                </div>
+                            </div>
+                            <div class="submission-content">
+                                {{ submission.content }}
+                            </div>
+                            {% if submission.grade is not none %}
+                                <div class="grade-section">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <div>
+                                            <i class="fas fa-check-circle text-success me-2"></i>تم التقييم
+                                            <span class="badge bg-success ms-2">{{ submission.grade }}/{{ assignment.points }}</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-primary" onclick="editGrade({{ submission.id }})">
+                                            <i class="fas fa-edit me-1"></i>تعديل التقييم
+                                        </button>
+                                    </div>
+                                    {% if submission.feedback %}
+                                        <div class="mt-3">
+                                            <h6>الملاحظات:</h6>
+                                            <p class="mb-0">{{ submission.feedback }}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <form method="POST" action="{{ url_for('assistant.grade_submission', classroom_id=classroom.id, assignment_id=assignment.id, submission_id=submission.id) }}" class="grade-form">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label for="grade-{{ submission.id }}">الدرجة</label>
+                                            <input type="number" class="form-control" id="grade-{{ submission.id }}" name="grade" min="0" max="{{ assignment.points }}" required>
+                                            <small class="form-text text-muted">من {{ assignment.points }} نقطة</small>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label for="feedback-{{ submission.id }}">ملاحظات (اختياري)</label>
+                                            <textarea class="form-control" id="feedback-{{ submission.id }}" name="feedback" rows="2"></textarea>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary mt-3">
+                                        <i class="fas fa-save me-1"></i>حفظ التقييم
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="submission-card text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-gray-300 mb-3"></i>
+                    <h5>لا توجد تسليمات بعد</h5>
+                </div>
+            {% endif %}
+
+            <!-- الطلاب غير المسلمين -->
+            {% if missing_submissions %}
+                <div class="missing-students">
+                    <h5 class="mb-3">الطلاب الذين لم يسلموا بعد</h5>
+                    {% for enrollment in missing_submissions %}
+                        <div class="student-item">
+                            <div class="student-name">{{ enrollment.user.name }}</div>
+                            <div class="text-muted">
+                                <i class="fas fa-phone me-1"></i>{{ enrollment.user.phone }}
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-calendar me-1"></i>انضم: {{ enrollment.joined_at.strftime('%Y-%m-%d') }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </main>
+
+        <!-- شريط التنقل السفلي للموبايل -->
+        <nav class="bottom-navigation">
+            <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="nav-pill active">
+                <i class="fas fa-tasks"></i>
+                <span>الواجبات</span>
+            </a>
+            <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="nav-pill">
+                <i class="fas fa-question-circle"></i>
+                <span>الاختبارات</span>
+            </a>
+            <a href="{{ url_for('assistant.students', classroom_id=classroom.id) }}" class="nav-pill">
+                <i class="fas fa-users"></i>
+                <span>الطلاب</span>
+            </a>
+            {% for item in classrooms_with_chat %}
+                    {% set classroom = item.classroom %}
+                    {% if item.can_use_chat %}
+                        <a href="{{ url_for('assistant.chat', classroom_id=classroom.id) }}" class="bottom-nav-item">
+                            <i class="fas fa-comments"></i>
+                            <span>المحادثة</span>
+                        </a>
+                    {% endif %}
+            {% endfor %}
+        </nav>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+
+        // تعديل التقييم
+        function editGrade(submissionId) {
+            const gradeForm = document.querySelector(`#grade-${submissionId}`).closest('form');
+            const gradeSection = gradeForm.previousElementSibling;
+            gradeForm.classList.remove('d-none');
+            gradeSection.classList.add('d-none');
+        }
+    </script>
+</body>
+</html>

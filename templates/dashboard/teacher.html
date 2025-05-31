@@ -570,7 +570,7 @@
                                 </div>
                                 <p class="card-text">
                                     <small class="text-muted">
-                                        <i class="fas fa-user-graduate me-1"></i>{{ classroom.students|length }} طالب
+                                        <i class="fas fa-user-graduate me-1"></i>{{ classroom.enrollments|length }} طالب
                                     </small>
                                 </p>
                                 <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-teacher-primary w-100">

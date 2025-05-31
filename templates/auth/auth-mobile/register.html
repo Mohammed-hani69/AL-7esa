@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل حساب جديد - الحصة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.15);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 8px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .main-content {
+            margin-top: 70px;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .auth-header {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .auth-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            background: white;
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .auth-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: var(--background-color);
+            padding: 5px;
+            border-radius: var(--border-radius-sm);
+            margin: 0 20px 20px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            color: var(--text-secondary);
+            border-radius: var(--border-radius-sm);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .auth-tab.active {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-control {
+            border: 2px solid #E2E8F0;
+            border-radius: var(--border-radius-sm);
+            padding: 0.75rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: var(--border-radius-sm);
+            color: white;
+            font-weight: 500;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .btn-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .btn-link i {
+            margin-left: 5px;
+        }
+
+        .role-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 0 20px 20px;
+        }
+
+        .role-option {
+            background: var(--background-color);
+            border: 2px solid #E2E8F0;
+            border-radius: var(--border-radius-sm);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .role-option.active {
+            border-color: var(--accent-color);
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        .role-option i {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+        }
+
+        .role-option span {
+            display: block;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .login-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-secondary);
+        }
+
+        .login-link a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- هيدر الموبايل -->
+    <header class="mobile-header">
+        <button onclick="window.location.href='{{ url_for('auth.login') }}'" class="btn-back">
+            <i class="fas fa-arrow-right"></i>
+        </button>
+        <h1 class="mobile-header-title">إنشاء حساب جديد</h1>
+        <div style="width: 40px"></div>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                </div>
+                <p class="text-muted">انضم إلى منصة الحصة</p>
+            </div>
+
+            <div class="auth-tabs">
+                <a href="#phone-auth" class="auth-tab active" data-bs-toggle="tab">
+                    <i class="fas fa-mobile-alt me-2"></i>رقم الهاتف
+                </a>
+                <a href="#password-auth" class="auth-tab" data-bs-toggle="tab">
+                    <i class="fas fa-key me-2"></i>كلمة المرور
+                </a>
+            </div>
+                
+            <div class="tab-content p-4">
+                <!-- تسجيل حساب برقم الهاتف -->
+                <div class="tab-pane fade show active" id="phone-auth">
+                    <div id="phone-auth-step-1">
+                        <form id="phone-auth-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="form-group">
+                                <label class="form-label" for="phone">
+                                    <i class="fas fa-phone me-2"></i>رقم الهاتف
+                                </label>
+                                <input type="tel" id="phone" class="form-control" placeholder="+20xxxxxxxx" dir="ltr">
+                                <small class="form-text">سيتم إرسال رمز التحقق إلى هذا الرقم</small>
+                            </div>
+                            
+                            <div id="recaptcha-container" class="mb-3"></div>
+                            
+                            <button id="auth-submit-btn" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>إرسال رمز التحقق
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div id="phone-auth-step-2" class="d-none">
+                        <form id="verification-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="form-group">
+                                <label class="form-label" for="verification-code">
+                                    <i class="fas fa-shield-alt me-2"></i>رمز التحقق
+                                </label>
+                                <input type="text" id="verification-code" class="form-control" placeholder="أدخل الرمز">
+                                <small class="form-text">أدخل الرمز المرسل إلى هاتفك</small>
+                            </div>
+                            
+                            <button id="verify-code-btn" class="btn btn-primary mb-3">
+                                <i class="fas fa-check-circle me-2"></i>تحقق
+                            </button>
+                            
+                            <button class="btn btn-link" onclick="showPhoneStep1()">
+                                <i class="fas fa-arrow-right"></i>العودة للخلف
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- تسجيل حساب بكلمة المرور -->
+                <div class="tab-pane fade" id="password-auth">
+                    <form method="POST" action="{{ url_for('auth.register') }}" class="needs-validation" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-group">
+                            <label class="form-label" for="name">
+                                <i class="fas fa-user me-2"></i>الاسم الكامل
+                            </label>
+                            <input type="text" id="name" name="name" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="register-phone">
+                                <i class="fas fa-phone me-2"></i>رقم الهاتف
+                            </label>
+                            <input type="tel" id="register-phone" name="phone" class="form-control" required dir="ltr">
+                            <small class="form-text">مثال: +20xxxxxxxx</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="register-password">
+                                <i class="fas fa-lock me-2"></i>كلمة المرور
+                            </label>
+                            <input type="password" id="register-password" name="password" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-user-tag me-2"></i>نوع الحساب
+                            </label>
+                            <div class="role-options">
+                                <label class="role-option active">
+                                    <input type="radio" name="role" value="student" checked hidden>
+                                    <i class="fas fa-user-graduate"></i>
+                                    <span>طالب</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="radio" name="role" value="teacher" hidden>
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                    <span>معلم</span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="radio" name="role" value="assistant" hidden>
+                                    <i class="fas fa-user-tie"></i>
+                                    <span>مساعد</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>إنشاء حساب
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="login-link">
+            لديك حساب بالفعل؟ <a href="{{ url_for('auth.login') }}">تسجيل الدخول</a>
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تهيئة Firebase للمصادقة برقم الهاتف
+            if (window.initPhoneAuth) {
+                window.initPhoneAuth('phone', 'recaptcha-container', 'auth-submit-btn');
+            }
+
+            // تنسيق رقم الهاتف
+            const phoneInputs = document.querySelectorAll('input[type="tel"]');
+            phoneInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    let phone = this.value.trim();
+                    if (phone && !phone.startsWith('+')) {
+                        if (phone.startsWith('0')) {
+                            phone = '+20' + phone.substring(1);
+                        } else {
+                            phone = '+20' + phone;
+                        }
+                        this.value = phone;
+                    }
+                });
+            });
+
+            // تبديل الأدوار
+            const roleOptions = document.querySelectorAll('.role-option');
+            roleOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    roleOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    this.querySelector('input[type="radio"]').checked = true;
+                });
+            });
+
+            // التبديل بين علامات التبويب
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    const target = this.getAttribute('href');
+                    document.querySelectorAll('.tab-pane').forEach(pane => {
+                        pane.classList.remove('show', 'active');
+                    });
+                    document.querySelector(target).classList.add('show', 'active');
+                });
+            });
+        });
+
+        function showPhoneStep1() {
+            document.getElementById('phone-auth-step-1').classList.remove('d-none');
+            document.getElementById('phone-auth-step-2').classList.add('d-none');
+        }
+    </script>
+</body>
+</html>

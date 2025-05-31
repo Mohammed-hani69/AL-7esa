@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ classroom.name }}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" rel="stylesheet">
+</head>
+<body>    <!-- هيدر الموبايل -->
+    <header class="mobile-header">
+        <a href="{{ url_for('student.dashboard') }}" class="mobile-header-brand">
+            <i class="fas fa-arrow-right"></i>
+            <h1 class="mobile-header-title">{{ classroom.name }}</h1>
+        </a>        
+        <a href="" class="notifications-btn">
+            <i class="fas fa-bell"></i>
+            <span class="notifications-badge" id="notificationCount"></span>
+        </a>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <!-- معلومات الفصل -->
+        <div class="classroom-info-card" style="border-top: 4px solid {{ classroom.color }};">
+            <div class="points-badge">
+                <span class="points-value">{{ enrollment.points }}</span>
+                <span class="points-label">نقطة</span>
+            </div>
+            
+            <h5 class="text-primary mb-3">معلومات الفصل</h5>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">المادة:</span>
+                    <span class="info-value">{{ classroom.subject }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">المرحلة:</span>
+                    <span class="info-value">{{ classroom.grade }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">العام الدراسي:</span>
+                    <span class="info-value">{{ classroom.academic_year }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">المعلم:</span>
+                    <span class="info-value">{{ teacher.name }}</span>
+                </div>
+            </div>
+            {% if classroom.description %}
+                <div class="mt-3">
+                    <span class="info-label">الوصف:</span>
+                    <p class="mt-2 description-text">{{ classroom.description }}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- الروابط السريعة -->
+        <div class="quick-actions">
+            <div class="action-grid">
+                <a href="{{ url_for('student.live_classroom', classroom_id=classroom.id) }}" class="action-btn live-btn">
+                    <i class="fas fa-video"></i>
+                    <span>البث المباشر</span>
+                </a>
+                <a href="{{ url_for('student.assignments', classroom_id=classroom.id) }}" class="action-btn assignments-btn">
+                    <i class="fas fa-tasks"></i>
+                    <span>الواجبات</span>
+                </a>
+                <a href="{{ url_for('student.quizzes', classroom_id=classroom.id) }}" class="action-btn quizzes-btn">
+                    <i class="fas fa-question-circle"></i>
+                    <span>الاختبارات</span>
+                </a>                
+                {% if classroom in classrooms_with_chat %}
+                    {% for item in classrooms_with_chat %}
+                        {% if item.classroom.id == classroom.id and item.can_use_chat %}
+                            <a href="{{ url_for('assistant.chat', classroom_id=classroom.id) }}" class="action-btn chat-btn">
+                                <i class="fas fa-comments"></i>
+                                <span>المحادثة</span>
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <button class="action-btn chat-btn disabled" disabled>
+                        <i class="fas fa-comments"></i>
+                        <span>المحادثة غير متاحة</span>
+                    </button>
+                {% endif %}
+            </div>
+        </div>        <!-- محتوى الفصل -->
+        <div class="content-section">
+            <h6 class="section-title">محتوى الفصل</h6>
+            {% if contents %}
+                <div class="accordion" id="contentAccordion">
+                    {% for content in contents|sort(attribute='created_at', reverse=true) %}
+                    <div class="accordion-item content-card mb-3">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed content-header" type="button" data-bs-toggle="collapse" data-bs-target="#content{{ content.id }}">
+                                <div class="content-icon">
+                                    {% if content.content_type == 'file' %}
+                                        <i class="fas fa-file text-primary"></i>
+                                    {% elif content.content_type == 'image' %}
+                                        <i class="fas fa-image text-info"></i>
+                                    {% elif content.content_type == 'audio' %}
+                                        <i class="fas fa-music text-warning"></i>
+                                    {% elif content.content_type == 'video' %}
+                                        <i class="fas fa-video text-danger"></i>
+                                    {% elif content.content_type == 'text' %}
+                                        <i class="fas fa-align-left text-success"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="content-info">
+                                    <div class="content-title">{{ content.title }}</div>
+                                    <span class="content-date">{{ content.created_at.strftime('%Y-%m-%d') }}</span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="content{{ content.id }}" class="accordion-collapse collapse" data-bs-parent="#contentAccordion">
+                            <div class="accordion-body">
+                                {% if content.description %}
+                                    <p class="content-description">{{ content.description }}</p>
+                                    <hr>
+                                {% endif %}
+
+                                <div class="content-preview">
+                                    {% if content.content_type == 'text' %}
+                                        <div class="text-content">
+                                            {{ content.content_text|safe }}
+                                        </div>
+                                    {% elif content.content_type == 'image' %}
+                                        <div class="image-preview">
+                                            <a href="{{ content.content_url }}" 
+                                               data-fancybox="gallery"
+                                               data-caption="{{ content.title }}">
+                                                <img src="{{ content.content_url }}" 
+                                                     alt="{{ content.title }}"
+                                                     loading="lazy">
+                                            </a>
+                                        </div>
+                                    {% elif content.content_type == 'video' %}
+                                        <div class="video-preview">
+                                            <div class="ratio ratio-16x9">
+                                                <video src="{{ content.content_url }}"
+                                                       controls
+                                                       preload="metadata"
+                                                       poster="{{ content.thumbnail_url if content.thumbnail_url else '' }}">
+                                                </video>
+                                            </div>
+                                        </div>
+                                    {% elif content.content_type == 'audio' %}
+                                        <div class="audio-preview">
+                                            <audio src="{{ content.content_url }}" controls></audio>
+                                        </div>
+                                    {% elif content.content_type == 'file' %}
+                                        <div class="file-preview">
+                                            {% set file_ext = content.content_url.split('.')[-1]|lower %}
+                                            <i class="fas fa-2x {% if file_ext in ['jpg', 'jpeg', 'png', 'gif'] %}fa-image text-info
+                                                       {% elif file_ext == 'pdf' %}fa-file-pdf text-danger
+                                                       {% elif file_ext in ['doc', 'docx'] %}fa-file-word text-primary
+                                                       {% elif file_ext in ['xls', 'xlsx'] %}fa-file-excel text-success
+                                                       {% else %}fa-file text-secondary{% endif %}"></i>
+                                            <span class="file-name">{{ content.content_url.split('/')[-1] }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="content-actions">
+                                    {% if content.content_type in ['image', 'video', 'audio', 'file'] %}
+                                        <a href="{{ content.content_url }}" 
+                                           class="action-button download-btn" 
+                                           download>
+                                            <i class="fas fa-download"></i>
+                                            <span>تحميل</span>
+                                        </a>
+                                    {% endif %}
+                                    
+                                    {% if content.content_type == 'file' and file_ext in ['pdf', 'jpg', 'jpeg', 'png', 'gif'] %}
+                                        <a href="{{ content.content_url }}"
+                                           data-fancybox="preview"
+                                           data-type="{{ 'pdf' if file_ext == 'pdf' else 'image' }}"
+                                           class="action-button preview-btn">
+                                            <i class="fas fa-eye"></i>
+                                            <span>معاينة</span>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-folder-open"></i>
+                    <p>لا يوجد محتوى في الفصل بعد</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- القائمة السفلية -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('student.dashboard') }}" class="bottom-nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('student.classrooms') }}" class="bottom-nav-item active">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصول</span>
+        </a>
+        <a href="{{ url_for('student.assignments', classroom_id=classroom.id) }}" class="bottom-nav-item">
+            <i class="fas fa-tasks"></i>
+            <span>الواجبات</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="bottom-nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+
+    <style>
+    :root {
+        --accent-color: #6C63FF;
+        --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+        --surface-color: #FFFFFF;
+        --background-color: #F4F7FE;
+        --text-primary: #2D3748;
+        --text-secondary: #718096;
+        --border-radius-lg: 20px;
+        --border-radius-md: 16px;
+        --border-radius-sm: 8px;
+        --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.15);
+    }
+
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background: var(--background-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 70px;
+        padding-top: 60px;
+    }
+
+    /* هيدر الموبايل */
+    .mobile-header {
+        background: var(--accent-gradient);
+        padding: 15px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .mobile-header-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        text-decoration: none;
+    }
+
+    .mobile-header-title {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 0;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        transition: color 0.3s ease;
+    }
+
+    .bottom-nav-item i {
+        font-size: 1.2rem;
+        margin-bottom: 4px;
+    }
+
+    .bottom-nav-item.active {
+        color: var(--accent-color);
+    }
+
+    .bottom-nav-item:active {
+        transform: scale(0.95);
+    }
+
+    /* المحتوى الرئيسي */
+    .main-content {
+        padding: 20px;
+    }
+
+    /* معلومات الفصل */
+    .classroom-info-card {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: 20px;
+        margin-bottom: 20px;
+        position: relative;
+        box-shadow: var(--box-shadow);
+    }
+
+    .points-badge {
+        position: absolute;
+        top: -15px;
+        left: 20px;
+        background: var(--accent-gradient);
+        color: white;
+        padding: 10px 20px;
+        border-radius: var(--border-radius-md);
+        text-align: center;
+        box-shadow: var(--box-shadow);
+    }
+
+    .points-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+        display: block;
+    }
+
+    .points-label {
+        font-size: 0.8rem;
+        opacity: 0.9;
+    }
+
+    .info-grid {
+        display: grid;
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .info-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .info-value {
+        font-weight: 500;
+    }
+
+    .description-text {
+        background: var(--background-color);
+        padding: 15px;
+        border-radius: var(--border-radius-sm);
+        margin: 0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    /* الروابط السريعة */
+    .quick-actions {
+        margin-bottom: 20px;
+    }
+
+    .action-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+        background: white;
+        border-radius: var(--border-radius-md);
+        text-decoration: none;
+        color: var(--text-primary);
+        gap: 8px;
+        box-shadow: var(--box-shadow);
+        transition: transform 0.2s ease;
+    }
+
+    .action-btn i {
+        font-size: 1.5rem;
+    }
+
+    .action-btn span {
+        font-size: 0.9rem;
+    }
+
+    .action-btn.live-btn i { color: #FF4B4B; }
+    .action-btn.assignments-btn i { color: #00C48C; }
+    .action-btn.quizzes-btn i { color: #0084F4; }
+    .action-btn.chat-btn i { color: #FFA26B; }
+
+    .action-btn:active {
+        transform: scale(0.95);
+    }
+
+    .action-btn.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    /* محتوى الفصل */
+    .content-section {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: 20px;
+        box-shadow: var(--box-shadow);
+    }
+
+    .section-title {
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        font-weight: 600;
+        position: relative;
+        display: inline-block;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        right: 0;
+        left: 0;
+        height: 3px;
+        background: var(--accent-gradient);
+        border-radius: 2px;
+    }
+
+    /* تنسيق الأكورديون */
+    .accordion-item {
+        background: var(--background-color);
+        border: none;
+        margin-bottom: 10px;
+        border-radius: var(--border-radius-md) !important;
+        overflow: hidden;
+    }
+
+    .accordion-button {
+        padding: 15px;
+        background: var(--background-color);
+        border: none;
+        width: 100%;
+        text-align: right;
+        position: relative;
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .accordion-button:not(.collapsed) {
+        background: var(--background-color);
+        color: var(--accent-color);
+    }
+
+    .accordion-button::after {
+        margin-right: auto;
+        margin-left: 0;
+    }
+
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: transparent;
+    }
+
+    .accordion-body {
+        padding: 15px;
+        background: white;
+    }
+
+    /* تنسيق محتوى الأكورديون */
+    .content-card {
+        background: var(--background-color);
+        border-radius: var(--border-radius-md);
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .content-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 10px;
+    }
+
+    .content-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .content-icon i {
+        font-size: 1.2rem;
+    }
+
+    .content-info {
+        flex: 1;
+    }
+
+    .content-title {
+        font-size: 1rem;
+        margin: 0 0 5px;
+    }
+
+    .content-date {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .content-description {
+        font-size: 0.9rem;
+        margin: 10px 0;
+        color: var(--text-secondary);
+    }    /* المعاينات */
+    .content-preview {
+        margin: 15px -15px;
+        border-radius: var(--border-radius-sm);
+        overflow: hidden;
+    }
+
+    .text-content {
+        background: white;
+        padding: 20px;
+        border-radius: var(--border-radius-sm);
+        font-size: 1rem;
+        line-height: 1.7;
+    }
+
+    .image-preview {
+        margin: 0 -15px;
+    }
+
+    .image-preview img {
+        width: 100%;
+        height: auto;
+        max-height: 500px;
+        object-fit: contain;
+        border-radius: 0;
+        background: black;
+    }
+
+    .video-preview {
+        margin: 0 -15px;
+        background: black;
+    }
+
+    .video-preview video,
+    .audio-preview audio {
+        width: 100%;
+        border-radius: 0;
+        background: black;
+        max-height: 500px;
+    }
+
+    .file-preview {
+        background: white;
+        padding: 15px;
+        border-radius: var(--border-radius-sm);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .file-name {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        word-break: break-word;
+    }
+
+    /* أزرار الإجراءات */
+    .content-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .action-button {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px;
+        background: white;
+        border: none;
+        border-radius: var(--border-radius-sm);
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: background 0.2s ease;
+    }
+
+    .action-button:hover {
+        background: var(--background-color);
+    }
+
+    .download-btn {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .preview-btn {
+        background: white;
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    /* حالة فارغة */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    .empty-state p {
+        margin: 0;
+        font-size: 1rem;
+    }
+
+    .notifications-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .notifications-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #FF4B4B;
+        color: white;
+        font-size: 0.7rem;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+        font-weight: bold;
+    }
+    </style>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+    <script>
+
+        // تهيئة Fancybox
+        Fancybox.bind("[data-fancybox]", {
+            infinite: false,
+            Thumbs: false,
+            Toolbar: {
+                display: {
+                    right: ["close"],
+                },
+            },
+            Image: {
+                zoom: true,
+                click: "close",
+                wheel: "slide",
+            },
+            animated: true,
+            showClass: "fancybox-zoomIn",
+            hideClass: "fancybox-zoomOut",
+            dragToClose: true,
+            touch: {
+                vertical: true,
+                momentum: true
+            },
+            l10n: {
+                CLOSE: "إغلاق",
+                NEXT: "التالي",
+                PREV: "السابق",
+                MODAL: "يمكنك إغلاق هذا المحتوى بالضغط على زر ESC",
+                ERROR: "حدث خطأ، يرجى المحاولة لاحقاً",
+                IMAGE_ERROR: "لم يتم العثور على الصورة",
+                ELEMENT_NOT_FOUND: "لم يتم العثور على العنصر",
+                AJAX_NOT_FOUND: "حدث خطأ أثناء تحميل المحتوى",
+                AJAX_FORBIDDEN: "تم منع الوصول إلى المحتوى",
+                IFRAME_ERROR: "خطأ في تحميل الصفحة"
+            }
+        });
+
+        // تحديث حالة الطالب النشط
+        const updateActiveStatus = () => {
+            if (typeof firebase !== 'undefined' && firebase.database) {
+                // حافظ على نفس منطق تحديث الحالة
+            }
+        };
+        
+        updateActiveStatus();
+        setInterval(updateActiveStatus, 60000);
+
+        // تفعيل السحب للتحديث
+        let touchStartY = 0;
+        let touchEndY = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+        }, false);
+
+        document.addEventListener('touchmove', (e) => {
+            touchEndY = e.touches[0].clientY;
+        }, false);
+
+        document.addEventListener('touchend', () => {
+            const swipeDistance = touchEndY - touchStartY;
+            if (swipeDistance > 100 && window.scrollY === 0) {
+                location.reload();
+            }
+        }, false);
+    </script>
+</body>
+</html>

@@ -319,6 +319,7 @@
                 </div>
                 <div class="quiz-form-content">
                     <form method="POST" action="{{ url_for('teacher.create_quiz', classroom_id=classroom.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group">
                             <label class="form-label" for="title">عنوان الاختبار</label>
                             <input type="text" class="form-control" id="title" name="title" required>

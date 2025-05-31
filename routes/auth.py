@@ -9,11 +9,28 @@ from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired
 from app import db
 from models import User, Role, Subscription, SubscriptionPlan
 from firebase_utils import verify_firebase_token
 
+# دالة للتحقق من نوع الجهاز (موبايل أو جهاز مكتبي)
+def is_mobile():
+    user_agent = request.headers.get('User-Agent', '').lower()
+    mobile_patterns = [
+        'android', 'iphone', 'ipod', 'windows phone', 'mobile', 'tablet',
+        'blackberry', 'opera mini', 'opera mobi', 'webos', 'fennec'
+    ]
+    return any(pattern in user_agent for pattern in mobile_patterns)
+
 auth_bp = Blueprint('auth', __name__)
+
+class LoginForm(FlaskForm):
+    phone = StringField('رقم الهاتف', validators=[DataRequired()])
+    password = PasswordField('كلمة المرور', validators=[DataRequired()])
+    submit = SubmitField('تسجيل الدخول')
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -28,13 +45,10 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
 
-    if request.method == 'POST':
-        phone = request.form.get('phone')
-        password = request.form.get('password')
-
-        user = User.query.filter_by(phone=phone).first()
-
-        if user and user.check_password(password):
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(phone=form.phone.data).first()
+        if user and user.check_password(form.password.data):
             login_user(user)
             next_page = request.args.get('next')
             return redirect(next_page or url_for('main.index'))
@@ -45,7 +59,10 @@ def login():
     firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "")
     firebase_app_id = os.environ.get("FIREBASE_APP_ID", "")
 
-    return render_template('auth/login.html', 
+    template = 'auth/auth-mobile/login.html' if is_mobile() else 'auth/login.html'
+    
+    return render_template(template,
+                          form=form,
                           firebase_api_key=firebase_api_key,
                           firebase_project_id=firebase_project_id,
                           firebase_app_id=firebase_app_id)
@@ -130,7 +147,9 @@ def register():
     firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "")
     firebase_app_id = os.environ.get("FIREBASE_APP_ID", "")
 
-    return render_template('auth/register.html',
+    template = 'auth/auth-mobile/register.html' if is_mobile() else 'auth/register.html'
+    
+    return render_template(template,
                           firebase_api_key=firebase_api_key,
                           firebase_project_id=firebase_project_id,
                           firebase_app_id=firebase_app_id)
@@ -292,6 +311,8 @@ def logout():
 @auth_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
+    template = 'auth/auth-mobile/profile.html' if is_mobile() else 'auth/profile.html'
+    
     if request.method == 'POST':
         name = request.form.get('name')
         email = request.form.get('email') or None  # Convert empty string to None
@@ -337,4 +358,4 @@ def profile():
         flash('تم تحديث الملف الشخصي بنجاح', 'success')
         return redirect(url_for('auth.profile'))
 
-    return render_template('auth/profile.html', now=datetime.utcnow())
+    return render_template(template, now=datetime.utcnow())

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نتائج الاختبار - {{ quiz.title }} - {{ classroom.name }}</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
+
+        /* تنسيق عام */
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* تخطيط الصفحة الفريد */
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        /* السايدبار */
+        .innovative-sidebar {
+            background: var(--surface-color);
+            box-shadow: var(--box-shadow);
+            padding: 2rem 1rem;
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: 300px;
+            z-index: 1000;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .innovative-sidebar .nav-link {
+            color: var(--text-secondary);
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.2s ease;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .innovative-sidebar .nav-link:hover,
+        .innovative-sidebar .nav-link.active {
+            color: var(--accent-color);
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        .innovative-sidebar .nav-link i {
+            width: 1.5rem;
+            text-align: center;
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            padding: 2rem;
+            margin-right: 300px;
+            transition: margin 0.3s ease;
+        }
+
+        /* الهيدر المتجاوب */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .page-header p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        /* البطاقات الإحصائية */
+        .stats-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1rem;
+            border-right: 4px solid var(--accent-color);
+        }
+
+        .stats-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(108, 99, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .stats-title {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-value {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* جدول المحاولات */
+        .attempts-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .attempts-card .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .attempts-card .card-body {
+            padding: 0;
+        }
+
+        .attempt-item {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .attempt-item:last-child {
+            border-bottom: none;
+        }
+
+        .attempt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .student-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .attempt-time {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .attempt-score {
+            margin-bottom: 0.5rem;
+        }
+
+        .attempt-actions {
+            margin-top: 0.5rem;
+        }
+
+        /* التجاوب مع الشاشات الصغيرة */
+        @media (max-width: 991.98px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .innovative-sidebar {
+                transform: translateX(100%);
+            }
+
+            .innovative-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-right: 0;
+                padding: 1rem;
+            }
+
+            .mobile-toggle {
+                display: block !important;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+                display: flex;
+                gap: 0.5rem;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .attempt-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .attempt-actions {
+                display: flex;
+                gap: 0.5rem;
+            }
+
+            .attempt-actions .btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+
+        /* زر القائمة للموبايل */
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        /* أزرار التنقل السفلية */
+        .bottom-navigation {
+            display: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .bottom-navigation {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--surface-color);
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+                padding: 0.75rem;
+                z-index: 1000;
+            }
+
+            .nav-pill {
+                flex: 1;
+                text-align: center;
+                padding: 0.5rem;
+                color: var(--text-secondary);
+                text-decoration: none;
+                font-size: 0.8rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.25rem;
+            }
+
+            .nav-pill.active {
+                color: var(--accent-color);
+            }
+
+            .nav-pill i {
+                font-size: 1.2rem;
+            }
+
+            .main-content {
+                padding-bottom: 5rem;
+            }
+        }
+
+        /* البحث والتصفية */
+        .search-container {
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: var(--border-radius-sm);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- القائمة الجانبية -->
+        <aside class="innovative-sidebar">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="الحصة" height="40">
+                <button class="mobile-toggle d-lg-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.dashboard') }}" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="nav-link">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>{{ classroom.name }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- الهيدر -->
+            <header class="page-header">
+                <div>
+                    <button class="mobile-toggle d-lg-none me-3">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>{{ quiz.title }}</h1>
+                    <p>{{ classroom.name }}</p>
+                </div>
+                <div class="header-actions">
+                    <a href="{{ url_for('assistant.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="btn btn-warning">
+                        <i class="fas fa-check-circle me-1"></i>تصحيح الإجابات المقالية
+                    </a>
+                    <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right me-1"></i>العودة للاختبارات
+                    </a>
+                </div>
+            </header>
+
+            <!-- القسم الإحصائي -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-6">
+                    <div class="stats-card">
+                        <div class="d-flex align-items-center">
+                            <div class="stats-icon">
+                                <i class="fas fa-users fa-lg"></i>
+                            </div>
+                            <div class="ms-3">
+                                <div class="stats-title">إجمالي المحاولات</div>
+                                <div class="stats-value">{{ attempts|length }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="stats-card" style="border-right-color: #28a745;">
+                        <div class="d-flex align-items-center">
+                            <div class="stats-icon" style="color: #28a745; background: rgba(40, 167, 69, 0.1);">
+                                <i class="fas fa-chart-line fa-lg"></i>
+                            </div>
+                            <div class="ms-3">
+                                <div class="stats-title">متوسط الدرجات</div>
+                                <div class="stats-value">
+                                    {% if attempts %}
+                                        {{ "%.1f"|format(attempts|map(attribute='score')|sum / attempts|length) }}/{{ quiz.total_points }}
+                                    {% else %}
+                                        0/{{ quiz.total_points }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- محاولات الطلاب -->
+            <div class="attempts-card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">محاولات الطلاب</h6>
+                </div>
+                <div class="card-body">
+                    {% if attempts %}
+                        <div class="search-container px-3 pt-3">
+                            <input type="text" class="search-input" placeholder="ابحث عن طالب...">
+                        </div>
+
+                        <div class="attempts-list">
+                            {% for attempt in attempts %}
+                                <div class="attempt-item">
+                                    <div class="attempt-header">
+                                        <div class="student-name">{{ attempt.enrollment.user.name }}</div>
+                                        <div class="attempt-score">
+                                            {% if attempt.is_completed %}
+                                                <span class="badge bg-success">{{ attempt.score }}/{{ quiz.total_points }}</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">جاري الحل</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="attempt-time">
+                                        <i class="fas fa-clock me-1"></i>
+                                        <span>بدأ: {{ attempt.start_time.strftime('%Y-%m-%d %H:%M') }}</span>
+                                    </div>
+                                    <div class="attempt-time">
+                                        <i class="fas fa-flag-checkered me-1"></i>
+                                        <span>انتهى: {{ attempt.end_time.strftime('%Y-%m-%d %H:%M') if attempt.end_time else 'لم ينته بعد' }}</span>
+                                    </div>
+                                    {% if attempt.is_completed %}
+                                        <div class="attempt-actions">
+                                            <a href="{{ url_for('assistant.view_student_attempt', classroom_id=classroom.id, quiz_id=quiz.id, attempt_id=attempt.id) }}" 
+                                               class="btn btn-info w-100">
+                                                <i class="fas fa-eye me-1"></i>عرض الإجابات
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                            <h5>لا توجد محاولات بعد</h5>
+                            <p class="text-muted">سيظهر هنا محاولات الطلاب عندما يبدؤون في حل الاختبار</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+
+        <!-- شريط التنقل السفلي للموبايل -->
+        <nav class="bottom-navigation">
+            <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="nav-pill">
+                <i class="fas fa-tasks"></i>
+                <span>الواجبات</span>
+            </a>
+            <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="nav-pill active">
+                <i class="fas fa-question-circle"></i>
+                <span>الاختبارات</span>
+            </a>
+            <a href="{{ url_for('assistant.students', classroom_id=classroom.id) }}" class="nav-pill">
+                <i class="fas fa-users"></i>
+                <span>الطلاب</span>
+            </a>
+            <a href="{{ url_for('assistant.chat', classroom_id=classroom.id) }}" class="nav-pill">
+                <i class="fas fa-comments"></i>
+                <span>المحادثة</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+
+        // وظيفة البحث في محاولات الطلاب
+        $('.search-input').on('keyup', function() {
+            const searchText = $(this).val().toLowerCase();
+            $('.attempt-item').each(function() {
+                const studentName = $(this).find('.student-name').text().toLowerCase();
+                if (studentName.includes(searchText)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

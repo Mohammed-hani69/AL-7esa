@@ -15,6 +15,7 @@
                 </div>
                 <div class="card-body p-5">
                     <form action="{{ url_for('admin.new_subscription_plan') }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="row mb-4">
                             <div class="col-12">
                                 <div class="form-group">
@@ -36,7 +37,7 @@
                         <div class="row mb-4">
                             <div class="col-md-6 mb-3 mb-md-0">
                                 <div class="form-group">
-                                    <label class="form-label fw-bold" for="price">السعر (ريال) <span class="text-danger">*</span></label>
+                                    <label class="form-label fw-bold" for="price">السعر (جنيه) <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <input type="number" class="form-control shadow-sm" id="price" name="price" step="0.01" min="0" required>
                                         <span class="input-group-text">جنيه</span>

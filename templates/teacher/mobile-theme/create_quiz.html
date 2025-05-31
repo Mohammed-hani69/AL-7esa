@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>إنشاء اختبار جديد - {{ classroom.name }} - الحصة</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+            padding-top: var(--header-height);
+            min-height: 100vh;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            color: white;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Logo Styles */
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-container {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            text-decoration: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 1rem;
+        }
+
+        /* Quiz Form Card */
+        .quiz-form-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .quiz-form-header {
+            background: var(--accent-gradient);
+            color: var(--surface-color);
+            padding: 1.5rem;
+        }
+
+        .quiz-form-title {
+            font-size: 1.2rem;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .quiz-form-content {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-control {
+            border: 2px solid var(--background-color);
+            border-radius: var(--border-radius-sm);
+            padding: 0.75rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: none;
+            outline: none;
+        }
+
+        .form-text {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .alert-info {
+            background: rgba(108, 99, 255, 0.1);
+            border: none;
+            border-radius: var(--border-radius-md);
+            color: var(--accent-color);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius-sm);
+            color: white;
+            font-weight: 500;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: var(--surface-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+            z-index: 1000;
+            padding: 0.25rem;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.35rem;
+            font-size: 0.7rem;
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <h1 class="header-title">إنشاء اختبار جديد</h1>
+        <div style="width: 40px"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="quiz-form-card">
+            <div class="quiz-form-header">
+                <h2 class="quiz-form-title">بيانات الاختبار</h2>
+            </div>
+            <div class="quiz-form-content">
+                <form method="POST" action="{{ url_for('teacher.create_quiz', classroom_id=classroom.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="form-group">
+                        <label class="form-label" for="title">عنوان الاختبار</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="description">وصف الاختبار</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="duration_minutes">مدة الاختبار (بالدقائق)</label>
+                        <input type="number" class="form-control" id="duration_minutes" name="duration_minutes" min="1" value="30" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="start_time">وقت البدء</label>
+                        <input type="datetime-local" class="form-control" id="start_time" name="start_time">
+                        <small class="form-text">اتركه فارغاً للسماح بالبدء فوراً</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="end_time">وقت الانتهاء</label>
+                        <input type="datetime-local" class="form-control" id="end_time" name="end_time">
+                        <small class="form-text">اتركه فارغاً للسماح بالحل في أي وقت</small>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        سيتم إضافة الأسئلة بعد إنشاء الاختبار.
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>إنشاء الاختبار</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="nav-item">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصل</span>
+        </a>
+        <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="nav-item active">
+            <i class="fas fa-question-circle"></i>
+            <span>الاختبارات</span>
+        </a>
+        <a href="{{ url_for('teacher.subscriptions') }}" class="nav-item">
+            <i class="fas fa-crown"></i>
+            <span>اشتراكاتي</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -370,125 +370,113 @@
 
             <!-- محتوى الفصل -->
             <div class="content-section">
-                <div class="content-header">
-                    <h6 class="m-0 font-weight-bold text-primary">محتوى الفصل</h6>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 text-primary">محتوى الفصل</h6>
                 </div>
                 {% if contents %}
-                    <div class="content-list">
-                        {% for content in contents %}
-                            <div class="content-item">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">
-                                        {% if content.content_type == 'file' %}
-                                            <i class="fas fa-file me-2 text-primary"></i>
-                                        {% elif content.content_type == 'image' %}
-                                            <i class="fas fa-image me-2 text-info"></i>
-                                        {% elif content.content_type == 'audio' %}
-                                            <i class="fas fa-music me-2 text-warning"></i>
-                                        {% elif content.content_type == 'video' %}
-                                            <i class="fas fa-video me-2 text-danger"></i>
-                                        {% elif content.content_type == 'text' %}
-                                            <i class="fas fa-align-left me-2 text-success"></i>
-                                        {% endif %}
+                <div class="accordion" id="contentAccordion">
+                    {% for content in contents|sort(attribute='created_at', reverse=true) %}
+                    <div class="accordion-item mb-2">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#content{{ content.id }}">
+                                <div>
+                                    <div class="fw-bold">
+                                        <i class="fas
+                                        {%- if content.content_type == 'text' -%} fa-align-left text-success
+                                        {%- elif content.content_type == 'image' -%} fa-image text-info
+                                        {%- elif content.content_type == 'video' -%} fa-video text-danger
+                                        {%- elif content.content_type == 'audio' -%} fa-music text-warning
+                                        {%- else -%} fa-file text-primary
+                                        {%- endif %} me-2"></i>
                                         {{ content.title }}
-                                    </h5>
-                                    <small class="text-muted">{{ content.created_at.strftime('%Y-%m-%d') }}</small>
+                                    </div>
+                                    <small class="text-muted">{{ content.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                                 </div>
+                            </button>
+                        </h2>
+                        <div id="content{{ content.id }}" class="accordion-collapse collapse" data-bs-parent="#contentAccordion">
+                            <div class="accordion-body">
                                 {% if content.description %}
-                                    <p class="mb-1">{{ content.description }}</p>
+                                    <p class="text-muted mb-3">{{ content.description }}</p>
+                                    <hr>
                                 {% endif %}
-                                
+
                                 {% if content.content_type == 'text' %}
-                                    <div class="mt-2 p-3 bg-light rounded">
+                                    <div class="text-content p-3 bg-light rounded" style="max-height: 400px; overflow-y: auto;">
                                         {{ content.content_text|safe }}
                                     </div>
+
                                 {% elif content.content_type == 'image' %}
-                                    <div class="mt-2">
-                                        <div class="content-preview mb-2">
-                                            <a href="{{ content.content_url }}" 
-                                               data-fancybox="gallery"
-                                               data-caption="{{ content.title }}"
-                                               class="content-preview-link">
-                                                <img src="{{ content.content_url }}" 
-                                                     alt="{{ content.title }}" 
-                                                     class="img-fluid rounded" 
-                                                     style="max-height: 200px;">
-                                            </a>
-                                        </div>
-                                        <a href="{{ content.content_url }}" 
-                                           class="btn btn-sm btn-success" 
-                                           download>
-                                            <i class="fas fa-download me-1"></i>تحميل
-                                        </a>
+                                <div class="mb-3">
+                                    <div class="image-container" style="max-width: 600px; margin: 0 auto;">
+                                        <img src="{{ content.content_url }}" 
+                                             class="img-fluid rounded" 
+                                             alt="{{ content.title }}"
+                                             style="max-height: 400px; object-fit: contain; width: 100%;">
                                     </div>
+                                </div>
+                                <div class="d-flex justify-content-center">
+                                    <a href="{{ content.content_url }}" class="btn btn-primary btn-sm" download>
+                                        <i class="fas fa-download me-1"></i>تحميل الصورة
+                                    </a>
+                                </div>
+
                                 {% elif content.content_type == 'video' %}
-                                    <div class="mt-2">
-                                        <video src="{{ content.content_url }}" 
-                                               data-fancybox="video"
-                                               data-caption="{{ content.title }}"
-                                               class="w-100" 
-                                               style="max-height: 300px;"
-                                               controls>
-                                        </video>
-                                        <a href="{{ content.content_url }}" 
-                                           class="btn btn-sm btn-success mt-2" 
-                                           download>
-                                            <i class="fas fa-download me-1"></i>تحميل الفيديو
-                                        </a>
-                                    </div>
-                                {% elif content.content_type == 'audio' %}
-                                    <div class="mt-2">
-                                        <audio src="{{ content.content_url }}" 
-                                               class="w-100" 
-                                               controls>
-                                        </audio>
-                                        <a href="{{ content.content_url }}" 
-                                           class="btn btn-sm btn-success mt-2" 
-                                           download>
-                                            <i class="fas fa-download me-1"></i>تحميل الملف الصوتي
-                                        </a>
-                                    </div>
-                                {% elif content.content_type == 'file' %}
-                                    <div class="mt-2">
-                                        <div class="file-preview p-3 bg-light rounded mb-2">
-                                            {% set file_ext = content.content_url.split('.')[-1]|lower %}
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-2x me-3 {% if file_ext in ['jpg', 'jpeg', 'png', 'gif'] %}fa-image text-info
-                                                           {% elif file_ext == 'pdf' %}fa-file-pdf text-danger
-                                                           {% elif file_ext in ['doc', 'docx'] %}fa-file-word text-primary
-                                                           {% elif file_ext in ['xls', 'xlsx'] %}fa-file-excel text-success
-                                                           {% else %}fa-file text-secondary{% endif %}"></i>
-                                                <div class="flex-grow-1">
-                                                    <div class="small">{{ content.content_url.split('/')[-1] }}</div>
-                                                </div>
-                                            </div>
+                                <div class="mb-3">
+                                    <div class="video-container" style="max-width: 600px; margin: 0 auto;">
+                                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                            <video class="rounded" 
+                                                   style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; max-height: 400px; object-fit: contain;" 
+                                                   controls 
+                                                   preload="metadata"
+                                                   poster="{{ url_for('static', filename='img/video-poster.jpg') }}">
+                                                <source src="{{ content.content_url }}" type="video/mp4">
+                                                المتصفح الخاص بك لا يدعم تشغيل الفيديو.
+                                            </video>
                                         </div>
-                                        {% if file_ext in ['pdf'] %}
-                                            <a href="{{ content.content_url }}"
-                                               data-fancybox="pdf"
-                                               data-type="pdf"
-                                               data-caption="{{ content.title }}"
-                                               class="btn btn-sm btn-primary me-2">
-                                                <i class="fas fa-eye me-1"></i>معاينة
-                                            </a>
-                                        {% elif file_ext in ['jpg', 'jpeg', 'png', 'gif'] %}
-                                            <a href="{{ content.content_url }}"
-                                               data-fancybox="images"
-                                               data-caption="{{ content.title }}"
-                                               class="btn btn-sm btn-primary me-2">
-                                                <i class="fas fa-eye me-1"></i>معاينة
-                                            </a>
-                                        {% endif %}
-                                        <a href="{{ content.content_url }}" 
-                                           class="btn btn-sm btn-success" 
-                                           download>
-                                            <i class="fas fa-download me-1"></i>تحميل
-                                        </a>
                                     </div>
+                                </div>
+                                <div class="d-flex justify-content-center">
+                                    <a href="{{ content.content_url }}" class="btn btn-primary btn-sm" download>
+                                        <i class="fas fa-download me-1"></i>تحميل الفيديو
+                                    </a>
+                                </div>
+
+                                {% elif content.content_type == 'audio' %}
+                                <div class="mb-3">
+                                    <div class="audio-container" style="max-width: 400px; margin: 0 auto;">
+                                        <audio class="w-100" controls style="border-radius: 8px;">
+                                            <source src="{{ content.content_url }}" type="audio/mpeg">
+                                            المتصفح الخاص بك لا يدعم تشغيل الملفات الصوتية.
+                                        </audio>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-center">
+                                    <a href="{{ content.content_url }}" class="btn btn-primary btn-sm" download>
+                                        <i class="fas fa-download me-1"></i>تحميل الملف الصوتي
+                                    </a>
+                                </div>
+
+                                {% else %}
+                                <div class="mb-3">
+                                    <div class="file-container" style="max-width: 400px; margin: 0 auto;">
+                                        <div class="p-3 bg-light rounded d-flex align-items-center">
+                                            <i class="fas fa-file fa-2x text-primary me-3"></i>
+                                            <span>{{ content.title }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-start">
+                                    <a href="{{ content.content_url }}" class="btn btn-primary btn-sm" download>
+                                        <i class="fas fa-download me-1"></i>تحميل الملف
+                                    </a>
+                                </div>
                                 {% endif %}
                             </div>
-                        {% endfor %}
+                        </div>
                     </div>
+                    {% endfor %}
+                </div>
                 {% else %}
                     <div class="text-center py-4">
                         <i class="fas fa-folder-open fa-3x text-gray-300 mb-2"></i>

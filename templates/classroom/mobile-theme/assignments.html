@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الواجبات - {{ classroom.name }} - الحصة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.15);
+        }
+
+        /* تنسيق عام */
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+
+        /* تصميم زر القائمة */
+        .mobile-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .mobile-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .mobile-toggle i {
+            font-size: 1.4rem;
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-toggle i.fa-times {
+            transform: rotate(180deg);
+        }
+
+        /* تصميم هيدر الصفحة */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .mobile-header-logo {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+            object-fit: contain;
+        }
+
+        .mobile-header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* تصميم القائمة */
+        .mobile-nav {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            left: 0;
+            background: white;
+            padding: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 999;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-nav.show {
+            transform: translateY(0);
+        }
+
+        .mobile-nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mobile-nav-item {
+            margin: 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .mobile-nav-item:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-link i {
+            width: 24px;
+            margin-left: 15px;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+        }
+
+        .mobile-nav-link.active {
+            background: var(--accent-gradient);
+            color: white;
+            border-radius: 0;
+        }
+
+        .mobile-nav-link.active i {
+            color: white;
+        }
+
+        /* تصميم المحتوى */
+        .main-content {
+            margin-top: 70px;
+            padding: 15px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            text-align: center;
+            position: relative;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: 50%;
+            transform: translateX(50%);
+            width: 50px;
+            height: 3px;
+            background: var(--accent-gradient);
+            border-radius: 2px;
+        }
+
+        /* تصميم البطاقات الإحصائية */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            background: var(--accent-gradient);
+            color: var(--surface-color);
+        }
+
+        .stat-title {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        /* تصميم قائمة الواجبات */
+        .assignment-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .assignment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .assignment-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .assignment-badge {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            color: white;
+            background: var(--accent-gradient);
+        }
+
+        .assignment-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .assignment-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .assignment-detail i {
+            width: 20px;
+            color: var(--accent-color);
+        }
+
+        .assignment-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* قائمة التنقل السفلية */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--accent-color);
+        }
+
+        .bottom-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        /* زر الإضافة العائم */
+        .floating-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: var(--accent-gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+            border: none;
+            z-index: 99;
+            transition: all 0.3s ease;
+        }
+
+        .floating-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* تصميم النوافذ المنبثقة */
+        .modal-content {
+            border-radius: var(--border-radius-md);
+            border: none;
+        }
+
+        .modal-header {
+            background: var(--accent-gradient);
+            color: white;
+            border-bottom: none;
+            border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- هيدر الموبايل -->
+    <header class="mobile-header">
+        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="mobile-header-brand">
+            <i class="fas fa-arrow-right"></i>
+            <h1 class="mobile-header-title">{{ classroom.name }}</h1>
+        </a>
+        <button class="mobile-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- قائمة الموبايل -->
+    <nav class="mobile-nav">
+        <ul class="mobile-nav-list">
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('teacher.dashboard') }}" class="mobile-nav-link">
+                    <i class="fas fa-th-large"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="mobile-nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>الرئيسية</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="mobile-nav-link active">
+                    <i class="fas fa-tasks"></i>
+                    <span>الواجبات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="mobile-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>الطلاب</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="mobile-nav-link">
+                    <i class="fas fa-book"></i>
+                    <span>الاختبارات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('teacher.chat_settings', classroom_id=classroom.id) }}" class="mobile-nav-link">
+                    <i class="fas fa-comments"></i>
+                    <span>المحادثات</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <h1 class="page-title">الواجبات</h1>
+
+        <!-- البطاقات الإحصائية -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-tasks fa-lg"></i>
+                </div>
+                <div class="stat-title">إجمالي الواجبات</div>
+                <div class="stat-value">{{ assignments|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock fa-lg"></i>
+                </div>
+                <div class="stat-title">قيد التسليم</div>
+                <div class="stat-value">{{ active_assignments|default(0) }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle fa-lg"></i>
+                </div>
+                <div class="stat-title">مكتملة</div>
+                <div class="stat-value">{{ completed_assignments|default(0) }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users fa-lg"></i>
+                </div>
+                <div class="stat-title">نسبة المشاركة</div>
+                <div class="stat-value">{{ participation_rate|default(0) }}%</div>
+            </div>
+        </div>
+
+        <!-- قائمة الواجبات -->
+        {% for assignment in assignments %}
+        <div class="assignment-card">
+            <div class="assignment-header">
+                <h3 class="assignment-title">{{ assignment.title }}</h3>
+                <span class="assignment-badge">
+                    {{ assignment.submissions|length }}/{{ classroom.enrollments|length }}
+                </span>
+            </div>
+            <div class="assignment-info">
+                <div class="assignment-detail">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>تاريخ التسليم: {{ assignment.due_date.strftime('%Y-%m-%d') if assignment.due_date else 'غير محدد' }}</span>
+                </div>
+                <div class="assignment-detail">
+                    <i class="fas fa-trophy"></i>
+                    <span>الدرجة: {{ assignment.points }}</span>
+                </div>
+                <div class="assignment-detail">
+                    <i class="fas fa-clock"></i>
+                    <span>تم الإنشاء: {{ assignment.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+            </div>
+            <div class="assignment-actions">
+                <a href="{{ url_for('teacher.assignment_submissions', classroom_id=classroom.id, assignment_id=assignment.id) }}" 
+                   class="btn btn-primary btn-sm w-100">
+                    <i class="fas fa-eye me-1"></i>عرض التسليمات
+                </a>
+                <a href="{{ url_for('teacher.edit_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}"
+                   class="btn btn-info btn-sm w-100">
+                    <i class="fas fa-edit me-1"></i>تعديل
+                </a>
+                <button type="button" 
+                        class="btn btn-danger btn-sm w-100"
+                        onclick="deleteAssignment({{ assignment.id }}, '{{ assignment.title }}')">
+                    <i class="fas fa-trash me-1"></i>حذف
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not assignments %}
+        <div class="text-center py-4">
+            <i class="fas fa-tasks text-muted fa-3x mb-3"></i>
+            <p class="text-muted">لا توجد واجبات حالياً</p>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- زر إضافة واجب جديد -->
+    <button type="button" class="floating-btn" data-bs-toggle="modal" data-bs-target="#addAssignmentModal">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- القائمة السفلية -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="bottom-nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="bottom-nav-item active">
+            <i class="fas fa-tasks"></i>
+            <span>الواجبات</span>
+        </a>
+        <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="bottom-nav-item">
+            <i class="fas fa-book"></i>
+            <span>الاختبارات</span>
+        </a>
+        <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="bottom-nav-item">
+            <i class="fas fa-users"></i>
+            <span>الطلاب</span>
+        </a>
+        <a href="{{ url_for('teacher.chat_settings', classroom_id=classroom.id) }}" class="bottom-nav-item">
+            <i class="fas fa-comments"></i>
+            <span>المحادثات</span>
+        </a>
+    </nav>
+
+    <!-- Modal إضافة واجب جديد -->
+    <div class="modal fade" id="addAssignmentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة واجب جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('teacher.create_assignment', classroom_id=classroom.id) }}" method="post" enctype="multipart/form-data">
+                    {{ form.csrf_token }}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">عنوان الواجب</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الوصف</label>
+                            <textarea class="form-control" name="description" rows="4"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">تاريخ التسليم</label>
+                            <input type="datetime-local" class="form-control" name="due_date">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">الدرجة</label>
+                            <input type="number" class="form-control" name="points" value="100" min="0" max="100" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ملف مرفق (اختياري)</label>
+                            <input type="file" class="form-control" name="assignment_file">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">إضافة الواجب</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تفعيل زر القائمة للموبايل
+            const menuToggle = document.querySelector('.mobile-toggle');
+            const mobileNav = document.querySelector('.mobile-nav');
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    mobileNav.classList.toggle('show');
+                    this.querySelector('i').classList.toggle('fa-bars');
+                    this.querySelector('i').classList.toggle('fa-times');
+                });
+            }
+
+            // إغلاق القائمة عند النقر خارجها
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.mobile-nav') && 
+                    !e.target.closest('.mobile-toggle') &&
+                    mobileNav.classList.contains('show')) {
+                    mobileNav.classList.remove('show');
+                    menuToggle.querySelector('i').classList.add('fa-bars');
+                    menuToggle.querySelector('i').classList.remove('fa-times');
+                }
+            });
+        });
+
+        // دالة حذف الواجب
+        function deleteAssignment(assignmentId, assignmentTitle) {
+            if (confirm(`هل أنت متأكد من حذف الواجب "${assignmentTitle}"؟`)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/teacher/classroom/{{ classroom.id }}/assignment/${assignmentId}/delete`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

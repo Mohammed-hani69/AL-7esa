@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعدادات المحادثة - {{ classroom.name }}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- هيدر الموبايل -->
+<header class="mobile-header">
+    <a href="{{ url_for((user_type + '.classroom')|string, classroom_id=classroom.id) }}" class="mobile-header-brand">
+        <i class="fas fa-arrow-right"></i>
+        <h1 class="mobile-header-title">{{ classroom.name }}</h1>
+    </a>    
+    <button class="notification-btn">
+        <i class="fas fa-bell"></i>
+        <span class="notification-badge">0</span>
+    </button>
+</header>
+
+
+
+<!-- المحتوى الرئيسي -->
+<main class="main-content">
+    <h1 class="page-title">إعدادات المحادثة</h1>
+
+    <!-- الإعدادات العامة -->
+    <div class="mobile-card">
+        <div class="mobile-card-header">
+            <h2 class="mobile-card-title">الإعدادات العامة</h2>
+        </div>
+        <div class="mobile-card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                {% if user_type == 'teacher' %}
+                <div class="form-group mb-4">
+                    <div class="form-switch">
+                        <input class="form-check-input" type="checkbox" id="is_enabled" name="is_enabled" {% if settings.is_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="is_enabled">
+                            تمكين المحادثة
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-group mb-4">
+                    <label class="form-label">لون الخلفية</label>
+                    <div class="color-palette">
+                        <div class="color-option" style="background-color: #ffffff;" data-color="#ffffff"></div>
+                        <div class="color-option" style="background-color: #f8f9fa;" data-color="#f8f9fa"></div>
+                        <div class="color-option" style="background-color: #e9ecef;" data-color="#e9ecef"></div>
+                        <div class="color-option" style="background-color: #dee2e6;" data-color="#dee2e6"></div>
+                        <div class="color-option" style="background-color: #ced4da;" data-color="#ced4da"></div>
+                    </div>
+                    <input type="hidden" id="background_color" name="background_color" value="{{ settings.background_color or '#ffffff' }}">
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="form-label" for="chat_image">صورة المحادثة</label>
+                    <div class="upload-container">
+                        <input type="file" class="form-control" id="chat_image" name="chat_image" accept="image/*">
+                        {% if settings.image_url %}
+                        <div class="preview-box">
+                            <img src="{{ url_for('static', filename=settings.image_url) }}" alt="صورة المحادثة" class="chat-image-preview">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-save me-2"></i>حفظ الإعدادات
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- إدارة المشاركين -->
+    <div class="mobile-card">
+        <div class="mobile-card-header">
+            <h2 class="mobile-card-title">المشاركين</h2>
+            <span class="mobile-card-badge">{{ enrollments|length }} طالب</span>
+        </div>
+        <div class="mobile-card-body p-0">
+            {% if enrollments %}
+            <div class="participants-list">
+                {% for enrollment in enrollments %}
+                    {% set participant = chat_participants|selectattr('enrollment_id', 'equalto', enrollment.id)|first %}
+                    <div class="participant-item">
+                        <div class="participant-info">
+                            <h3>{{ enrollment.user.name }}</h3>
+                            <span>{{ enrollment.user.phone }}</span>
+                        </div>
+                        <form method="POST" action="{{ url_for((user_type + '.manage_chat_participants')|string, classroom_id=classroom.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
+                            {% if participant and participant.is_enabled %}
+                                <input type="hidden" name="action" value="remove">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-user-slash me-1"></i>منع
+                                </button>
+                            {% else %}
+                                <input type="hidden" name="action" value="add">
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-user-plus me-1"></i>إضافة
+                                </button>
+                            {% endif %}
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <p>لا يوجد طلاب في هذا الفصل بعد</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+
+<!-- شريط التنقل السفلي -->
+<nav class="bottom-nav">
+    <a href="{{ url_for(user_type + '.classroom', classroom_id=classroom.id) }}" class="bottom-nav-item">
+        <i class="fas fa-home"></i>
+        <span>الرئيسية</span>
+    </a>
+    <a href="{{ url_for(user_type + '.assignments', classroom_id=classroom.id) }}" class="bottom-nav-item">
+        <i class="fas fa-tasks"></i>
+        <span>الواجبات</span>
+    </a>
+    <a href="{{ url_for(user_type + '.chat', classroom_id=classroom.id) }}" class="bottom-nav-item">
+        <i class="fas fa-comments"></i>
+        <span>المحادثة</span>
+    </a>
+    <a href="{{ url_for(user_type + '.chat_settings', classroom_id=classroom.id) }}" class="bottom-nav-item active">
+        <i class="fas fa-cog"></i>
+        <span>الإعدادات</span>
+    </a>
+</nav>
+
+<style>
+:root {
+    --accent-color: #6C63FF;
+    --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+    --surface-color: #FFFFFF;
+    --background-color: #F4F7FE;
+    --text-primary: #2D3748;
+    --text-secondary: #718096;
+    --border-radius-lg: 20px;
+    --border-radius-md: 16px;
+    --border-radius-sm: 8px;
+    --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.15);
+}
+
+body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--background-color);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    padding-bottom: 70px;
+}
+
+/* هيدر الموبايل */
+.mobile-header {
+    background: var(--accent-gradient);
+    padding: 15px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.mobile-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    text-decoration: none;
+}
+
+.mobile-header-title {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.mobile-toggle {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* القائمة الجانبية */
+.mobile-nav {
+    position: fixed;
+    top: 60px;
+    right: 0;
+    left: 0;
+    background: white;
+    z-index: 999;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.mobile-nav.show {
+    transform: translateY(0);
+}
+
+.mobile-nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mobile-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.mobile-nav-link i {
+    width: 24px;
+    margin-left: 15px;
+    color: var(--accent-color);
+}
+
+.mobile-nav-link.active {
+    background: var(--accent-gradient);
+    color: white;
+}
+
+.mobile-nav-link.active i {
+    color: white;
+}
+
+/* المحتوى الرئيسي */
+.main-content {
+    margin-top: 70px;
+    padding: 15px;
+}
+
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+    text-align: center;
+    position: relative;
+}
+
+.page-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    right: 50%;
+    transform: translateX(50%);
+    width: 50px;
+    height: 3px;
+    background: var(--accent-gradient);
+    border-radius: 2px;
+}
+
+/* البطاقات */
+.mobile-card {
+    background: white;
+    border-radius: var(--border-radius-md);
+    margin-bottom: 20px;
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+}
+
+.mobile-card-header {
+    padding: 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mobile-card-title {
+    font-size: 1.1rem;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.mobile-card-badge {
+    background: var(--accent-gradient);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.mobile-card-body {
+    padding: 15px;
+}
+
+/* الأزرار */
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.btn i {
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: 0 4px 15px rgba(108, 99, 255, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 99, 255, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(120deg, #34D399, #10B981);
+    color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(120deg, #F87171, #EF4444);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+}
+
+.btn-sm i {
+    font-size: 0.9rem;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+/* منتقي الألوان */
+.color-palette {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.color-option {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #e3e6f0;
+    transition: all 0.2s ease;
+}
+
+.color-option.selected {
+    border-color: var(--accent-color);
+    transform: scale(1.1);
+}
+
+/* معاينة الصورة */
+.upload-container {
+    background: var(--background-color);
+    padding: 15px;
+    border-radius: var(--border-radius-sm);
+    margin-top: 10px;
+}
+
+.preview-box {
+    width: 100%;
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    margin-top: 15px;
+    aspect-ratio: 16/9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-image-preview {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* قائمة المشاركين */
+.participants-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.participant-item {
+    padding: 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.participant-info h3 {
+    font-size: 1rem;
+    margin: 0 0 5px 0;
+    color: var(--text-primary);
+}
+
+.participant-info span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* حالة فارغة */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    opacity: 0.3;
+}
+
+/* شريط التنقل السفلي */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.8rem;
+}
+
+.bottom-nav-item.active {
+    color: var(--accent-color);
+}
+
+.bottom-nav-item i {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+}
+
+/* تحسينات للموبايل */
+@media (max-width: 576px) {
+    .mobile-card {
+        margin-left: -15px;
+        margin-right: -15px;
+        border-radius: 0;
+    }
+    
+    .color-option {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+.notification-btn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.notification-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #EF4444;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تفعيل زر القائمة
+    const menuToggle = document.querySelector('.mobile-toggle');
+    const mobileNav = document.querySelector('.mobile-nav');
+    
+    menuToggle.addEventListener('click', function() {
+        mobileNav.classList.toggle('show');
+        this.querySelector('i').classList.toggle('fa-times');
+    });
+
+    // إغلاق القائمة عند النقر خارجها
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.mobile-nav') && 
+            !e.target.closest('.mobile-toggle') && 
+            mobileNav.classList.contains('show')) {
+            mobileNav.classList.remove('show');
+            menuToggle.querySelector('i').classList.remove('fa-times');
+        }
+    });
+
+    // تفعيل اختيار الألوان
+    const colorOptions = document.querySelectorAll('.color-option');
+    const backgroundColorInput = document.getElementById('background_color');
+    
+    colorOptions.forEach(option => {
+        if (option.dataset.color === backgroundColorInput.value) {
+            option.classList.add('selected');
+        }
+        
+        option.addEventListener('click', function() {
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            backgroundColorInput.value = this.dataset.color;
+            
+            const previewBox = document.querySelector('.preview-box');
+            if (previewBox) {
+                previewBox.style.backgroundColor = this.dataset.color;
+            }
+        });
+    });
+
+    // معاينة الصورة
+    const chatImageInput = document.getElementById('chat_image');
+    if (chatImageInput) {
+        chatImageInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewBox = document.querySelector('.preview-box') || document.createElement('div');
+                    previewBox.className = 'preview-box';
+                    previewBox.style.backgroundColor = backgroundColorInput.value;
+                    previewBox.innerHTML = `<img src="${e.target.result}" alt="صورة المحادثة" class="chat-image-preview">`;
+                    
+                    if (!document.querySelector('.preview-box')) {
+                        document.querySelector('.upload-container').appendChild(previewBox);
+                    }
+                }
+                reader.readAsDataURL(this.files[0]);
+            }        });
+    }
+});
+</script>
+</body>
+</html>

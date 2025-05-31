@@ -6,13 +6,15 @@
 import random
 import string
 import os
+import re
+import mimetypes
 from werkzeug.utils import secure_filename
-from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, current_app
+from flask import Blueprint, abort, make_response, render_template, redirect, send_file, url_for, request, flash, jsonify, current_app, send_from_directory
 from flask_login import login_required, current_user
 from functools import wraps
 from datetime import datetime, timedelta
 from app import db
-from models import Payment, QuizAnswer, QuizAttempt, User, Role, Classroom, ClassroomEnrollment, ClassroomContent, ContentType
+from models import ChatMessage, Payment, QuizAnswer, QuizAttempt, User, Role, Classroom, ClassroomEnrollment, ClassroomContent, ContentType
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizQuestionOption
 from models import Subscription, SubscriptionPlan, ChatSettings, ChatParticipant, SubscriptionPayment, SubscriptionPayment
 from models import SystemSettings
@@ -25,6 +27,12 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx', 'xls', 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def is_mobile():
+    """Check if current request is from a mobile device"""
+    user_agent = request.headers.get('User-Agent', '').lower()
+    return any(device in user_agent for device in ['android', 'iphone', 'ipad', 'mobile'])
 
 # Teacher required decorator
 def teacher_required(f):
@@ -87,51 +95,234 @@ def can_create_classroom():
 @login_required
 @teacher_required
 def dashboard():
-    # Get teacher's classrooms
+    # الحصول على الفصول 
     classrooms = Classroom.query.filter_by(teacher_id=current_user.id).all()
-
-    # Get total number of students across all classrooms
+    
+    # حساب عدد الطلاب الإجمالي
     total_students = db.session.query(db.func.count(ClassroomEnrollment.id))\
         .join(Classroom)\
         .filter(Classroom.teacher_id == current_user.id)\
         .scalar()
+    
+    # حساب عدد الواجبات النشطة
+    active_assignments = Assignment.query.join(Classroom)\
+        .filter(Classroom.teacher_id == current_user.id)\
+        .filter(Assignment.due_date > datetime.utcnow())\
+        .count()
+    
+    # حساب عدد الاختبارات النشطة
+    active_quizzes = Quiz.query.join(Classroom)\
+        .filter(Classroom.teacher_id == current_user.id)\
+        .count()
 
-    # Get current subscription
-    active_sub = Subscription.query.filter(
+    # Get all students across all classrooms and calculate their performance
+    top_students = []
+    all_enrollments = ClassroomEnrollment.query\
+        .join(Classroom)\
+        .filter(Classroom.teacher_id == current_user.id)\
+        .all()
+
+    for enrollment in all_enrollments:
+        # Calculate assignment completion and average grade
+        assignment_submissions = AssignmentSubmission.query\
+            .join(Assignment)\
+            .filter(
+                AssignmentSubmission.enrollment_id == enrollment.id,
+                Assignment.classroom_id == enrollment.classroom_id
+            ).all()
+        
+        total_assignments = Assignment.query\
+            .filter(Assignment.classroom_id == enrollment.classroom_id)\
+            .count()
+
+        completed_assignments = len(assignment_submissions)
+        total_grade = sum(sub.grade for sub in assignment_submissions if sub.grade is not None)
+        
+        average_grade = (total_grade / completed_assignments) if completed_assignments > 0 else 0
+        
+        # Calculate quiz performance
+        quiz_attempts = QuizAttempt.query\
+            .join(Quiz)\
+            .filter(
+                QuizAttempt.enrollment_id == enrollment.id,
+                Quiz.classroom_id == enrollment.classroom_id
+            ).all()
+        
+        total_quiz_score = 0
+        completed_quizzes = 0
+        for attempt in quiz_attempts:
+            if attempt.score is not None:  # Changed from grade to score
+                total_quiz_score += attempt.score
+                completed_quizzes += 1
+        
+        quiz_average = (total_quiz_score / completed_quizzes) if completed_quizzes > 0 else 0
+        
+        # Calculate overall performance score (50% assignments, 50% quizzes)
+        overall_score = (average_grade + quiz_average) / 2
+
+        student_data = {
+            'name': enrollment.user.name,
+            'classroom_name': enrollment.classroom.name,
+            'average_grade': overall_score,
+            'assignments_completed': completed_assignments,
+            'quizzes_score': quiz_average
+        }
+        top_students.append(student_data)
+    
+    # Sort students by overall score and get top 3
+    top_students.sort(key=lambda x: x['average_grade'], reverse=True)
+    top_students = top_students[:3]
+
+    # الحصول على الاشتراك النشط
+    active_subscription = Subscription.query.filter(
         Subscription.user_id == current_user.id,
         Subscription.end_date > datetime.utcnow(),
         Subscription.is_active == True
     ).first()
 
-    # Get all subscription plans
-    plans = SubscriptionPlan.query.all()
-
-    # تحديد عدد الأيام المتبقية في الاشتراك
+    has_active_sub = active_subscription is not None
     subscription_days_left = 0
-    has_active_sub = False
     
-    active_subscription = next((sub for sub in current_user.subscriptions if sub.is_active), None)
     if active_subscription and active_subscription.end_date:
-        subscription_days_left = (active_subscription.end_date - datetime.utcnow()).days
-        has_active_sub = subscription_days_left > 0
-    
-    return render_template('dashboard/teacher.html', 
-                           classrooms=classrooms, 
-                           subscription=active_sub,
-                           plans=plans,
-                           can_create_classroom=can_create_classroom(),
-                           subscription_days_left=subscription_days_left,
-                           has_active_subscription=has_active_sub,
-                           total_students=total_students,
-                           now=datetime.utcnow())
+        days_left = (active_subscription.end_date - datetime.utcnow()).days
+        subscription_days_left = max(0, days_left)
 
+    # إضافة التحليلات لكل فصل
+    for classroom in classrooms:
+        try:
+            classroom = get_classroom_analytics(classroom)
+        except Exception as e:
+            current_app.logger.error(f"Error calculating analytics for classroom {classroom.id}: {str(e)}")
+            # تعيين قيم افتراضية في حالة حدوث خطأ
+            classroom.top_students = []
+            classroom.submission_rate = 0
+            classroom.average_attendance = 0
+            classroom.quiz_completion = 0
+            classroom.recent_activities = []
+
+    template = 'dashboard/mobile-theme/teacher.html' if is_mobile() else 'dashboard/teacher.html'
+    return render_template(template,
+                         classrooms=classrooms,
+                         total_students=total_students,
+                         active_assignments=active_assignments,
+                         active_quizzes=active_quizzes,
+                         has_active_subscription=has_active_sub,
+                         subscription_days_left=subscription_days_left,
+                         can_create_classroom=can_create_classroom())
+
+def get_classroom_analytics(classroom):
+    """استخراج البيانات التحليلية للفصل"""
+    try:
+        # الحصول على أفضل الطلاب أداءً
+        top_students = []
+        enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom.id).all()
+        
+        for enrollment in enrollments:
+            try:
+                # حساب متوسط الدرجات
+                submissions = AssignmentSubmission.query.join(Assignment).filter(
+                    Assignment.classroom_id == classroom.id,
+                    AssignmentSubmission.enrollment_id == enrollment.id
+                ).all()
+                
+                total_grade = sum(sub.grade for sub in submissions if sub.grade is not None)
+                total_submissions = len([sub for sub in submissions if sub.grade is not None])
+                average_grade = total_grade / total_submissions if total_submissions > 0 else 0
+                
+                # حساب نسبة إكمال الواجبات
+                total_assignments = Assignment.query.filter_by(classroom_id=classroom.id).count()
+                completed_assignments = AssignmentSubmission.query.join(Assignment).filter(
+                    Assignment.classroom_id == classroom.id,
+                    AssignmentSubmission.enrollment_id == enrollment.id
+                ).count()
+                
+                # حساب معدل المشاركة
+                participation_rate = (completed_assignments / total_assignments * 100) if total_assignments > 0 else 0
+                
+                top_students.append({
+                    'name': enrollment.user.name,
+                    'average_grade': average_grade,
+                    'completed_assignments': completed_assignments,
+                    'total_assignments': total_assignments,
+                    'participation_rate': participation_rate
+                })
+            except Exception as e:
+                current_app.logger.error(f"Error calculating student analytics: {str(e)}")
+                continue
+        
+        # ترتيب الطلاب حسب متوسط الدرجات
+        top_students.sort(key=lambda x: x['average_grade'], reverse=True)
+        
+        # حساب إحصائيات الفصل
+        total_assignments = Assignment.query.filter_by(classroom_id=classroom.id).count()
+        total_submissions = AssignmentSubmission.query.join(Assignment).filter(
+            Assignment.classroom_id == classroom.id
+        ).count()
+        
+        submission_rate = (total_submissions / (total_assignments * len(enrollments) or 1)) * 100
+        
+        # حساب متوسط الحضور (يمكن تعديله حسب نظام تتبع الحضور لديك)
+        average_attendance = 85  # قيمة افتراضية
+        
+        # حساب نسبة إكمال الاختبارات
+        total_quizzes = Quiz.query.filter_by(classroom_id=classroom.id).count()
+        completed_attempts = QuizAttempt.query.join(Quiz).filter(
+            Quiz.classroom_id == classroom.id,
+            QuizAttempt.is_completed == True
+        ).count()
+        
+        quiz_completion = (completed_attempts / (total_quizzes * len(enrollments) or 1)) * 100
+        
+        # إضافة البيانات التحليلية للفصل
+        classroom.top_students = top_students[:3]  # أفضل 3 طلاب
+        classroom.submission_rate = submission_rate
+        classroom.average_attendance = average_attendance
+        classroom.quiz_completion = quiz_completion
+        
+        # إضافة النشاطات الأخيرة
+        recent_activities = []
+        
+        # إضافة آخر الواجبات المسلمة
+        latest_submissions = AssignmentSubmission.query.join(Assignment).join(ClassroomEnrollment).join(User).filter(
+            Assignment.classroom_id == classroom.id
+        ).order_by(AssignmentSubmission.submission_date.desc()).limit(3).all()
+        
+        for submission in latest_submissions:
+            recent_activities.append({
+                'icon': 'file-upload',
+                'description': f'قام {submission.enrollment.user.name} بتسليم {submission.assignment.title}',
+                'time': submission.submission_date
+            })
+        
+        # إضافة آخر الاختبارات المكتملة
+        latest_quiz_attempts = QuizAttempt.query.join(Quiz).join(ClassroomEnrollment).join(User).filter(
+            Quiz.classroom_id == classroom.id,
+            QuizAttempt.is_completed == True
+        ).order_by(QuizAttempt.end_time.desc()).limit(3).all()
+        
+        for attempt in latest_quiz_attempts:
+            recent_activities.append({
+                'icon': 'check-circle',
+                'description': f'أكمل {attempt.enrollment.user.name} اختبار {attempt.quiz.title}',
+                'time': attempt.end_time
+            })
+        
+        # ترتيب النشاطات حسب الوقت
+        recent_activities.sort(key=lambda x: x['time'], reverse=True)
+        classroom.recent_activities = recent_activities[:3]  # آخر 3 نشاطات
+        
+        return classroom
+    except Exception as e:
+        current_app.logger.error(f"Error in get_classroom_analytics: {str(e)}")
+        raise
+
+"""
+مسار لاشتراك المعلم في باقة محددة
+"""
 @teacher_bp.route('/subscribe/<int:plan_id>', methods=['POST'])
 @login_required
 @teacher_required
 def subscribe_to_plan(plan_id):
-    """
-    مسار لاشتراك المعلم في باقة محددة
-    """
     # التحقق من وجود الباقة
     plan = SubscriptionPlan.query.get_or_404(plan_id)
     
@@ -240,7 +431,10 @@ def subscriptions():
     if active_subscription and active_subscription.end_date:
         subscription_days_left = (active_subscription.end_date - datetime.utcnow()).days
 
-    return render_template('teacher/teacher_plans.html',
+    template = 'teacher/mobile-theme/teacher_plans.html' if is_mobile() else 'teacher/teacher_plans.html'
+
+
+    return render_template(template,
                          plans=plans,
                          active_subscription=active_subscription,
                          subscription_days_left=subscription_days_left)
@@ -341,11 +535,21 @@ def classroom(classroom_id):
 
     # Check if plan allows chat
     can_use_chat = False
+    can_use_assistant = False
     plan = get_current_plan()
-    if plan and plan.has_chat:
-        can_use_chat = True
+    if plan:
+        if plan.has_chat:
+            can_use_chat = True
+        if plan.allow_assistant:
+            can_use_assistant = True
 
-    return render_template('teacher/classroom.html',
+    # Check if assistant is active
+    assistant_active = classroom.assistant_id is not None
+
+    template = 'teacher/mobile-theme/classroom.html' if is_mobile() else 'teacher/classroom.html'
+
+
+    return render_template(template,
                        classroom=classroom,
                        contents=contents,
                        enrollments=enrollments,
@@ -353,6 +557,8 @@ def classroom(classroom_id):
                        quizzes=quizzes,
                        assistant=assistant,
                        can_use_chat=can_use_chat,
+                       can_use_assistant=can_use_assistant,
+                       assistant_active=assistant_active,
                        plan=plan)
 
 @teacher_bp.route('/classrooms')
@@ -384,7 +590,10 @@ def list_classrooms():
             ).count()
         }
 
-    return render_template('teacher/classrooms.html',
+    template = 'teacher/mobile-theme/classrooms.html' if is_mobile() else 'teacher/classrooms.html'
+
+
+    return render_template(template,
                          classrooms=classrooms,
                          classroom_stats=classroom_stats,
                          can_create_classroom=can_create_classroom())
@@ -459,32 +668,31 @@ def add_content(classroom_id):
                 print(f"محاولة تحميل ملف: {file.filename}, النوع: {file.content_type}")
                 # Create upload directory if it doesn't exist
                 upload_dir = os.path.join('static', 'uploads', 'classroom_content', str(classroom_id))
-                if not os.path.exists(upload_dir):
+                abs_upload_dir = os.path.join(current_app.root_path, upload_dir)
+                if not os.path.exists(abs_upload_dir):
                     try:
-                        os.makedirs(upload_dir, exist_ok=True)
-                        print(f"تم إنشاء مجلد التحميل بنجاح: {upload_dir}")
+                        os.makedirs(abs_upload_dir, exist_ok=True)
+                        print(f"تم إنشاء مجلد التحميل بنجاح: {abs_upload_dir}")
                     except Exception as e:
                         print(f"خطأ في إنشاء مجلد التحميل: {e}")
 
-                # Generate a secure filename with timestamp
-                original_name, file_extension = os.path.splitext(file.filename)
+                # Generate a secure filename with timestamp and original extension
                 timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-                saved_filename = f"{timestamp}_{file_extension}"  # إضافة underscore قبل الامتداد
-
-                # Save the file
-                file_path = os.path.join(upload_dir, saved_filename)
+                _, file_extension = os.path.splitext(secure_filename(file.filename))
+                saved_filename = f"{timestamp}{file_extension}"
+                
+                # Save file and create content URL
+                file_path = os.path.join(abs_upload_dir, saved_filename)
                 file.save(file_path)
                 
-                # التحقق من نجاح حفظ الملف
+                # Verify file was saved successfully
                 if os.path.exists(file_path):
                     print(f"تم حفظ الملف بنجاح في: {file_path}")
                     print(f"حجم الملف: {os.path.getsize(file_path)} بايت")
+                    # Store relative URL for database without 'static/' prefix since it's already in the template
+                    content_url = f"/static/uploads/classroom_content/{classroom_id}/{saved_filename}"
                 else:
-                    print(f"فشل في حفظ الملف، الملف غير موجود: {file_path}")
-                
-                # Store the relative path to the file
-                content_url = f"/{upload_dir}/{saved_filename}"
-                print(f"URL المحتوى: {content_url}")
+                    raise Exception("فشل في حفظ الملف")
             except Exception as e:
                 print(f"خطأ في تحميل الملف: {e}")
                 flash(f'حدث خطأ أثناء تحميل الملف: {e}', 'danger')
@@ -514,6 +722,9 @@ def add_content(classroom_id):
 
     return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
+
+
+
 @teacher_bp.route('/classroom/<int:classroom_id>/delete_content/<int:content_id>', methods=['POST'])
 @login_required
 @teacher_required
@@ -526,10 +737,24 @@ def delete_content(classroom_id, content_id):
         flash('غير مصرح لك بالوصول إلى هذا المحتوى', 'danger')
         return redirect(url_for('teacher.dashboard'))
 
-    db.session.delete(content)
-    db.session.commit()
+    try:
+        # Delete physical file if it exists
+        if content.content_url and content.content_type != ContentType.TEXT:
+            file_path = os.path.join(current_app.root_path, 'static', 'uploads', 'classroom_content', str(classroom_id), os.path.basename(content.content_url))
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"Deleted physical file: {file_path}")
 
-    flash('تم حذف المحتوى بنجاح', 'success')
+        # Delete database record
+        db.session.delete(content)
+        db.session.commit()
+
+        flash('تم حذف المحتوى بنجاح', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting content: {e}")
+        flash('حدث خطأ أثناء حذف المحتوى', 'danger')
+
     return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
 @teacher_bp.route('/classroom/<int:classroom_id>/assignments')
@@ -592,7 +817,7 @@ def create_assignment(classroom_id):
                         # Create classroom-specific directory if it doesn't exist
                         upload_dir = os.path.join(assignments_dir, str(classroom_id))
                         if not os.path.exists(upload_dir):
-                            os.makedirs(upload_dir, exist_ok=True)
+                            os.makedirs(upload_dir)
 
                         # Generate filename with timestamp while keeping the original extension
                         timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
@@ -755,7 +980,9 @@ def assignment_submissions(classroom_id, assignment_id):
         if enrollment.user_id not in submitted_student_ids
     ]
 
-    return render_template('teacher/assignment_submissions.html',
+    template = 'teacher/mobile-theme/assignment_submissions.html' if is_mobile() else 'teacher/assignment_submissions.html'
+
+    return render_template(template,
                            classroom=classroom,
                            assignment=assignment,
                            submissions=submissions,
@@ -812,7 +1039,10 @@ def quizzes(classroom_id):
     # Get quizzes
     quizzes = Quiz.query.filter_by(classroom_id=classroom.id).order_by(Quiz.created_at.desc()).all()
 
-    return render_template('teacher/quizzes.html',
+    template = 'teacher/mobile-theme/quizzes.html' if is_mobile() else 'teacher/quizzes.html'
+
+
+    return render_template(template,
                            classroom=classroom,
                            quizzes=quizzes)
 
@@ -868,8 +1098,11 @@ def create_quiz(classroom_id):
 
         flash('تم إنشاء الاختبار بنجاح. قم بإضافة الأسئلة الآن', 'success')
         return redirect(url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=new_quiz.id))
+    
+    template = 'teacher/mobile-theme/create_quiz.html' if is_mobile() else 'teacher/create_quiz.html'
 
-    return render_template('teacher/create_quiz.html', classroom=classroom)
+
+    return render_template(template, classroom=classroom)
 
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -923,7 +1156,10 @@ def edit_quiz(classroom_id, quiz_id):
     # Get existing questions for display
     questions = QuizQuestion.query.filter_by(quiz_id=quiz.id).order_by(QuizQuestion.position).all()
 
-    return render_template('teacher/edit_quiz.html',
+    template = 'teacher/mobile-theme/edit_quiz.html' if is_mobile() else 'teacher/edit_quiz.html'
+
+
+    return render_template(template,
                          classroom=classroom,
                          quiz=quiz,
                          questions=questions)
@@ -1033,8 +1269,11 @@ def grade_quiz(classroom_id, quiz_id):
         )\
         .distinct()\
         .all()
+    
+    template = 'teacher/mobile-theme/grade_quiz.html' if is_mobile() else 'teacher/grade_quiz.html'
 
-    return render_template('teacher/grade_quiz.html',
+
+    return render_template(template,
                            classroom=classroom,
                            quiz=quiz,
                            attempts=attempts)
@@ -1112,7 +1351,10 @@ def quiz_results(classroom_id, quiz_id):
     # Get all attempts for this quiz, including user information through enrollment
     attempts = QuizAttempt.query.filter_by(quiz_id=quiz.id).order_by(QuizAttempt.start_time.desc()).all()
 
-    return render_template('teacher/quiz_results.html',
+    template = 'teacher/mobile-theme/quiz_results.html' if is_mobile() else 'teacher/quiz_results.html'
+
+
+    return render_template(template,
                          classroom=classroom,
                          quiz=quiz,
                          attempts=attempts)
@@ -1136,8 +1378,11 @@ def view_student_attempt(classroom_id, quiz_id, attempt_id):
         .filter(QuizAnswer.attempt_id == attempt.id)\
         .order_by(QuizQuestion.position)\
         .all()
+    
+    template = 'teacher/mobile-theme/view_student_attempt.html' if is_mobile() else 'teacher/view_student_attempt.html'
 
-    return render_template('teacher/view_student_attempt.html',
+
+    return render_template(template,
                          classroom=classroom,
                          quiz=quiz,
                          attempt=attempt,
@@ -1157,7 +1402,10 @@ def students(classroom_id):
     # Get enrollments with students
     enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom.id).all()
 
-    return render_template('teacher/students.html',
+    template = 'teacher/mobile-theme/students' if is_mobile() else 'teacher/students'
+
+
+    return render_template(template,
                            classroom=classroom,
                            enrollments=enrollments)
 
@@ -1263,7 +1511,7 @@ def chat_settings(classroom_id):
             image = request.files['chat_image']
             if image and allowed_file(image.filename):
                 filename = secure_filename(image.filename)
-                filepath = os.path.join('static', 'uploads', 'chat_images', filename)
+                filepath = os.path.join('uploads', 'chat_images', filename)
                 if not os.path.exists(os.path.dirname(filepath)):
                     os.makedirs(os.path.dirname(filepath))
                 image.save(filepath)
@@ -1279,7 +1527,11 @@ def chat_settings(classroom_id):
     # Get chat participants
     chat_participants = ChatParticipant.query.filter_by(classroom_id=classroom.id).all()
 
-    return render_template('classroom/chat_settings.html',
+    template = 'classroom/mobile-theme/chat_settings.html' if is_mobile() else 'classroom/chat_settings.html'
+
+
+    return render_template(template
+                           ,
                          classroom=classroom,
                          settings=settings,
                          enrollments=enrollments,
@@ -1355,8 +1607,11 @@ def payments():
             Classroom.teacher_id == current_user.id,
             Payment.status.in_(['success', 'failed'])
         ).order_by(Payment.created_at.desc()).all()
+    
+    template = 'teacher/mobile-theme/payments.html' if is_mobile() else 'teacher/payments.html'
 
-    return render_template('teacher/payments.html',
+
+    return render_template(template,
                          classrooms=classrooms,
                          pending_payments=pending_payments,
                          completed_payments=completed_payments)
@@ -1590,7 +1845,194 @@ def payment(plan_id):
 
         flash('تم إرسال طلب الدفع بنجاح. سيتم تفعيل اشتراكك بعد مراجعة عملية الدفع', 'success')
         return redirect(url_for('teacher.subscriptions'))
+    
+    template = 'teacher/mobile-theme/payment.html' if is_mobile() else 'teacher/payment.html'
 
-    return render_template('teacher/payment.html', 
+
+    return render_template(template, 
                          plan=plan,
                          ewallet_number=ewallet_number)
+
+@teacher_bp.route('/uploads/<path:filename>')
+@login_required
+@teacher_required
+def serve_file(filename):
+    """
+    تقديم الملفات باستخدام X-Sendfile/X-Accel-Redirect مع دعم التدفق للفيديو
+    """
+    if not filename:
+        abort(404)
+
+    # تحديد المجلد المناسب بناءً على نوع الملف
+    folder = None
+    for folder_type, path in current_app.config['UPLOAD_FOLDERS'].items():
+        if folder_type in filename:
+            folder = path
+            break
+    
+    if not folder:
+        folder = current_app.config['UPLOAD_FOLDER']
+        
+    file_path = os.path.join(folder, filename)
+    
+    if not os.path.exists(file_path):
+        abort(404)
+        
+    # التحقق من الصلاحيات
+    if not check_file_access_permission(filename):
+        abort(403)
+    
+    # الحصول على نوع الملف
+    file_type = get_file_type(filename)
+    
+    # إعداد رأس الاستجابة
+    headers = {
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'public, max-age=43200'  # 12 ساعة
+    }
+    
+    # استخدام X-Accel-Redirect مع Nginx
+    if current_app.config.get('USE_X_ACCEL_REDIRECT', False):
+        response = make_response('')
+        internal_path = f'/protected/{filename}'  # يجب أن يتطابق مع إعدادات Nginx
+        response.headers['X-Accel-Redirect'] = internal_path
+        for key, value in headers.items():
+            response.headers[key] = value
+        return response
+        
+    # Fallback لخادم التطوير مع دعم التدفق
+    file_size = os.path.getsize(file_path)
+    
+    # التعامل مع طلبات النطاق للتدفق
+    range_header = request.headers.get('Range')
+    
+    if range_header:
+        byte1, byte2 = 0, None
+        match = re.search('bytes=(\d+)-(\d*)', range_header)
+        groups = match.groups()
+
+        if groups[0]:
+            byte1 = int(groups[0])
+        if groups[1]:
+            byte2 = int(groups[1])
+
+        if byte2 is None:
+            byte2 = file_size - 1
+            
+        length = byte2 - byte1 + 1
+        
+        response = send_file(
+            file_path,
+            mimetype=file_type,
+            as_attachment=False,
+            download_name=filename
+        )
+        
+        response.headers.add('Content-Range',
+                           f'bytes {byte1}-{byte2}/{file_size}')
+        response.headers.add('Accept-Ranges', 'bytes')
+        response.headers.add('Content-Length', str(length))
+        response.status_code = 206
+        
+        return response
+    
+    # إرسال الملف كاملاً
+    return send_file(file_path,
+                    mimetype=file_type,
+                    as_attachment=False,
+                    download_name=filename)
+
+def get_file_type(filename):
+    """تحديد نوع الملف"""
+    mime_type, _ = mimetypes.guess_type(filename)
+    return mime_type or 'application/octet-stream'
+
+def check_file_access_permission(filename):
+    """التحقق من صلاحيات الوصول للملف"""
+    # التحقق من أن المستخدم له صلاحية الوصول للملف
+    if 'classroom_content' in filename:
+        content_id = filename.split('/')[-1].split('.')[0]
+        content = ClassroomContent.query.filter_by(content_url=filename).first()
+        if content and content.classroom.teacher_id == current_user.id:
+            return True
+    return False
+
+@teacher_bp.route('/classroom/<int:classroom_id>/chat')
+@login_required
+@teacher_required
+def chat(classroom_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+
+    # Ensure the teacher owns this classroom
+    if classroom.teacher_id != current_user.id:
+        flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+
+    # Check if chat is enabled in settings
+    settings = ChatSettings.query.filter_by(classroom_id=classroom.id).first()
+    if not settings or not settings.is_enabled:
+        flash('المحادثة غير مفعلة لهذا الفصل', 'warning')
+        return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+
+    # Get chat participants
+    participants = ChatParticipant.query.filter_by(
+        classroom_id=classroom.id,
+        is_enabled=True
+    ).all()
+
+    # Get chat messages
+    messages = ChatMessage.query.filter_by(
+        classroom_id=classroom.id
+    ).order_by(ChatMessage.created_at.desc()).limit(100).all()
+    messages.reverse()  # Show oldest messages first
+
+    template = 'teacher/mobile-theme/chat.html' if is_mobile() else 'teacher/chat.html'
+
+    return render_template(template,
+                         classroom=classroom,
+                         settings=settings,
+                         participants=participants,
+                         messages=messages,
+                         current_user=current_user)
+
+@teacher_bp.route('/classroom/<int:classroom_id>/assistant/settings', methods=['GET', 'POST'])
+@login_required
+@teacher_required
+def assistant_settings(classroom_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+
+    # Ensure the teacher owns this classroom
+    if classroom.teacher_id != current_user.id:
+        flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+
+    # Check if plan allows assistant
+    plan = get_current_plan()
+    if not plan or not plan.allow_assistant:
+        flash('باقة اشتراكك الحالية لا تسمح بتعيين مساعد. الرجاء ترقية اشتراكك', 'warning')
+        return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+
+    if request.method == 'POST':
+        assistant_phone = request.form.get('assistant_phone')
+        if not assistant_phone:
+            flash('رقم الهاتف مطلوب', 'danger')
+            return redirect(url_for('teacher.assistant_settings', classroom_id=classroom.id))
+
+        # Find assistant by phone
+        assistant = User.query.filter_by(phone=assistant_phone, role=Role.ASSISTANT).first()
+        if not assistant:
+            flash('لم يتم العثور على مساعد بهذا الرقم. تأكد من أن المستخدم مسجل كمساعد', 'danger')
+            return redirect(url_for('teacher.assistant_settings', classroom_id=classroom.id))
+
+        # Update assistant
+        classroom.assistant_id = assistant.id
+        db.session.commit()
+
+        flash(f'تم تعيين {assistant.name} كمساعد للفصل بنجاح', 'success')
+        return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+
+    template = 'teacher/mobile-theme/assistant_settings.html' if is_mobile() else 'teacher/assistant_settings.html'
+
+    return render_template(template,
+                         classroom=classroom,
+                         current_assistant=User.query.get(classroom.assistant_id) if classroom.assistant_id else None)

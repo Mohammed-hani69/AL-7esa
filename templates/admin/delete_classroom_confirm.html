@@ -341,6 +341,14 @@
                         <span>الإعدادات</span>
                     </a>
                 </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل خروج</span>
+                    </a>
+                </li>
+
             </ul>
         </aside>
 
@@ -366,6 +374,7 @@
                     </div>
                     
                     <form action="{{ url_for('admin.delete_classroom') }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="classroom_id" value="{{ classroom.id }}">
                         <div class="actions-group">
                             <a href="{{ url_for('admin.classrooms') }}" class="btn-custom btn-secondary">

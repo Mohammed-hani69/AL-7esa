@@ -411,6 +411,7 @@
                                             </td>
                                             <td>
                                                 <form id="form-{{ enrollment.id }}" method="POST" action="{{ url_for('teacher.toggle_student_status', classroom_id=classroom.id, enrollment_id=enrollment.id) }}" style="display: inline;">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                     <button type="submit" class="btn btn-sm {{ 'btn-danger' if enrollment.is_active else 'btn-success' }}">
                                                         <i class="fas {{ 'fa-user-slash' if enrollment.is_active else 'fa-user-check' }}"></i>
                                                         {{ 'تعطيل' if enrollment.is_active else 'تفعيل' }}

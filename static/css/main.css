@@ -1,0 +1,58 @@
+/* Main Variables */
+:root {
+    --accent-color: #6C63FF;
+    --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+    --surface-color: #FFFFFF;
+    --background-color: #F4F7FE;
+    --text-primary: #2D3748;
+    --text-secondary: #718096;
+    --border-radius-lg: 20px;
+    --border-radius-md: 16px;
+    --border-radius-sm: 12px;
+    --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+    --bottom-nav-height: 64px;
+    --header-height: 60px;
+}
+
+/* Global Styles */
+body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--background-color);
+    color: var(--text-primary);
+}
+
+/* Card Styles */
+.card {
+    background: var(--surface-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow);
+    border: none;
+}
+
+/* Button Styles */
+.btn-primary {
+    background: var(--accent-gradient);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: var(--accent-color);
+}
+
+/* Form Controls */
+.form-control {
+    border-radius: var(--border-radius-sm);
+    border: 1px solid #E2E8F0;
+}
+
+.form-control:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.1);
+}
+
+/* Mobile Specific */
+@media (max-width: 768px) {
+    .content-section {
+        margin-bottom: 1rem;
+    }
+}

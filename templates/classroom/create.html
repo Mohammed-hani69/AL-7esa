@@ -333,6 +333,7 @@
             </div>
 
             <form method="POST" action="{{ url_for('teacher.create_classroom') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
@@ -416,7 +417,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-label">سعر الفصل (ريال)</label>
+                                <label class="form-label">سعر الفصل (جنيه)</label>
                                 <input type="number" class="form-control" id="price" name="price" min="1" value="99">
                             </div>
                         </div>

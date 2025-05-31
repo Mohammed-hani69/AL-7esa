@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>باقات الاشتراك - الحصة</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+            padding-top: var(--header-height);
+            min-height: 100vh;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            color: white;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 1rem;
+        }
+
+        /* Current Plan Card */
+        .current-plan {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .current-plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .current-plan-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .plan-status {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #DEF7EC;
+            color: #059669;
+        }
+
+        .status-expired {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .feature-card {
+            background: var(--background-color);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-sm);
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin: 0 auto 0.5rem;
+        }
+
+        .feature-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin: 0;
+        }
+
+        .feature-value {
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Plan Cards */
+        .plan-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+            margin-bottom: 1rem;
+            position: relative;
+            box-shadow: var(--box-shadow);
+        }
+
+        .plan-card.popular::before {
+            content: 'الأكثر شيوعاً';
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: var(--accent-gradient);
+            color: white;
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.8rem;
+            font-weight: 500;
+            z-index: 1;
+        }
+
+        .plan-header {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .plan-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .plan-price {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .plan-duration {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .plan-features {
+            padding: 1.25rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            font-size: 0.9rem;
+        }
+
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+
+        .feature-item i {
+            color: var(--accent-color);
+        }
+
+        .plan-action {
+            padding: 0 1.25rem 1.25rem;
+        }
+
+        .btn-subscribe {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-subscribe.current {
+            background: var(--background-color);
+            color: var(--text-primary);
+            border: 2px solid #E2E8F0;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: var(--surface-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+            z-index: 1000;
+            padding: 0.25rem;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.35rem;
+            font-size: 0.7rem;
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <div style="width: 40px"></div>
+        <h1 class="header-title">باقات الاشتراك</h1>
+        <div style="width: 40px"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Current Plan -->
+        <section class="current-plan">
+            <div class="current-plan-header">
+                <h2 class="current-plan-title">اشتراكك الحالي</h2>
+                {% if active_subscription %}
+                    <span class="plan-status status-active">نشط</span>
+                {% else %}
+                    <span class="plan-status status-expired">غير نشط</span>
+                {% endif %}
+            </div>
+
+            {% if active_subscription %}
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <p class="feature-label">الباقة</p>
+                    <p class="feature-value">{{ active_subscription.plan.name }}</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <p class="feature-label">المتبقي</p>
+                    <p class="feature-value">{{ subscription_days_left }} يوم</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-school"></i>
+                    </div>
+                    <p class="feature-label">الفصول</p>
+                    <p class="feature-value">{{ active_subscription.plan.max_classrooms }}</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <p class="feature-label">تاريخ الانتهاء</p>
+                    <p class="feature-value">{{ active_subscription.end_date.strftime('%Y-%m-%d') }}</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-3">
+                <i class="fas fa-exclamation-circle fa-2x text-warning mb-2"></i>
+                <h5 class="mb-1">لا يوجد اشتراك نشط</h5>
+                <p class="text-muted mb-0">اختر إحدى الباقات أدناه للاشتراك</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Available Plans -->
+        {% for plan in plans %}
+        <div class="plan-card {% if plan.is_popular %}popular{% endif %}">
+            <div class="plan-header">
+                <h3 class="plan-name">{{ plan.name }}</h3>
+                <div class="plan-price">{{ plan.price }} جنيه</div>
+                <div class="plan-duration">{{ plan.duration_days }} يوم</div>
+            </div>
+            <div class="plan-features">
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>{{ plan.max_classrooms }} فصل دراسي</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>محادثات {% if plan.has_chat %}مفعلة{% else %}غير مفعلة{% endif %}</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>مساعد معلم {% if plan.allow_assistant %}متاح{% else %}غير متاح{% endif %}</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>دعم فني على مدار الساعة</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="plan-action">
+                {% if active_subscription and active_subscription.plan_id == plan.id %}
+                    <button class="btn-subscribe current" disabled>الباقة الحالية</button>
+                {% else %}
+                    <a href="{{ url_for('teacher.payment', plan_id=plan.id) }}" class="btn-subscribe">
+                        اشترك الآن
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="/teacher/classrooms" class="nav-item">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصول</span>
+        </a>
+        <a href="{{ url_for('teacher.subscriptions') }}" class="nav-item active">
+            <i class="fas fa-crown"></i>
+            <span>اشتراكاتي</span>
+        </a>
+        <a href="{{ url_for('teacher.payments') }}" class="nav-item">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>المدفوعات</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+</body>
+</html>

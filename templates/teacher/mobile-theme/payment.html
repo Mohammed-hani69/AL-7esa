@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>الدفع - {{ plan.name }} - الحصة</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+            padding-top: var(--header-height);
+            min-height: 100vh;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            color: white;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 1rem;
+        }
+
+        /* Plan Card */
+        .plan-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .plan-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .plan-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-gradient);
+            border-radius: var(--border-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .plan-details {
+            flex: 1;
+        }
+
+        .plan-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .plan-price {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Payment Instructions */
+        .instructions-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .instructions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .instructions-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .instructions-list li:last-child {
+            border-bottom: none;
+        }
+
+        .instruction-number {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        /* Form Styles */
+        .form-control {
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: var(--border-radius-sm);
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: var(--surface-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+            z-index: 1000;
+            padding: 0.25rem;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.35rem;
+            font-size: 0.7rem;
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+
+        .submit-button {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            border-radius: var(--border-radius-md);
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <a href="{{ url_for('teacher.subscriptions') }}" class="back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <h1 class="header-title">تأكيد الدفع</h1>
+        <div style="width: 40px"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Plan Details -->
+        <div class="plan-card">
+            <div class="plan-header">
+                <div class="plan-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="plan-details">
+                    <h2 class="plan-name">{{ plan.name }}</h2>
+                    <p class="plan-price">{{ plan.price }} جنيه</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <p><i class="fas fa-calendar me-2"></i> {{ plan.duration_days }} يوم</p>
+                </div>
+                <div class="col-6">
+                    <p><i class="fas fa-chalkboard me-2"></i> {{ plan.max_classrooms }} فصل</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Instructions -->
+        <div class="instructions-card">
+            <h6 class="mb-3">تعليمات الدفع</h6>
+            <ul class="instructions-list">
+                <li>
+                    <div class="instruction-number">1</div>
+                    <div>
+                        قم بالتحويل إلى رقم المحفظة الإلكترونية:
+                        <div class="fw-bold mt-1">{{ ewallet_number }}</div>
+                    </div>
+                </li>
+                <li>
+                    <div class="instruction-number">2</div>
+                    <div>خذ لقطة شاشة للتحويل</div>
+                </li>
+                <li>
+                    <div class="instruction-number">3</div>
+                    <div>قم بتعبئة النموذج وإرفاق لقطة الشاشة</div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Payment Form -->
+        <form id="payment-form" action="{{ url_for('teacher.payment', plan_id=plan.id) }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class="upload-area">
+                <input type="file" 
+                       id="screenshot" 
+                       name="screenshot" 
+                       accept="image/png,image/jpeg,image/jpg"
+                       required 
+                       style="display: none;">
+                <label for="screenshot">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p>اضغط هنا لرفع لقطة الشاشة</p>
+                    <small class="text-muted">يجب أن تكون الصورة واضحة وتظهر تفاصيل التحويل</small>
+                </label>
+                <div id="preview" style="display: none;">
+                    <img src="" alt="معاينة إثبات الدفع" class="preview-image">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">ملاحظات التحويل (اختياري)</label>
+                <input type="text" class="form-control" name="transfer_note" placeholder="مثال: رقم الحوالة">
+            </div>
+
+            <button type="submit" class="submit-button" id="confirm-payment-btn">
+                <i class="fas fa-check me-2"></i>
+                تأكيد الدفع
+            </button>
+        </form>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="/teacher/classrooms" class="nav-item">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصول</span>
+        </a>
+        <a href="{{ url_for('teacher.payments') }}" class="nav-item">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>المدفوعات</span>
+        </a>
+        <a href="{{ url_for('teacher.subscriptions') }}" class="nav-item active">
+            <i class="fas fa-crown"></i>
+            <span>اشتراكاتي</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Preview image before upload
+        document.getElementById('screenshot').addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.querySelector('#preview img').src = e.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+
+                // Check file size
+                const maxSize = 5 * 1024 * 1024; // 5 MB
+                if (file.size > maxSize) {
+                    alert('حجم الملف كبير جداً. الحد الأقصى هو 5 ميجابايت');
+                    this.value = '';
+                    document.getElementById('preview').style.display = 'none';
+                }
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('payment-form').addEventListener('submit', function(e) {
+            if (!confirm('هل أنت متأكد من إتمام عملية الدفع؟')) {
+                e.preventDefault();
+                return;
+            }
+            
+            const submitBtn = document.getElementById('confirm-payment-btn');
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري التأكيد...';
+            submitBtn.disabled = true;
+        });
+
+        // Make upload area clickable
+        document.querySelector('.upload-area').addEventListener('click', function() {
+            document.getElementById('screenshot').click();
+        });
+    </script>
+</body>
+</html>

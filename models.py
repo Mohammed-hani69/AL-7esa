@@ -20,6 +20,8 @@ class Role:
 يمثل جميع المستخدمين في النظام (مدرسين، طلاب، مشرفين)
 """
 class User(UserMixin, db.Model):
+    __tablename__ = 'user'
+    
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), unique=True, nullable=False)
@@ -39,6 +41,7 @@ class User(UserMixin, db.Model):
     classrooms = db.relationship('ClassroomEnrollment', back_populates='user')
     teacher_classrooms = db.relationship('Classroom', back_populates='teacher', foreign_keys='Classroom.teacher_id')
     assistant_classrooms = db.relationship('Classroom', back_populates='assistant', foreign_keys='Classroom.assistant_id')
+    payments = db.relationship('Payment', back_populates='user')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -112,6 +115,7 @@ class Classroom(db.Model):
     assistant_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
 
     # Relationships
     teacher = db.relationship('User', back_populates='teacher_classrooms', foreign_keys=[teacher_id])
@@ -120,6 +124,10 @@ class Classroom(db.Model):
     contents = db.relationship('ClassroomContent', back_populates='classroom', cascade='all, delete-orphan')
     assignments = db.relationship('Assignment', back_populates='classroom', cascade='all, delete-orphan')
     quizzes = db.relationship('Quiz', back_populates='classroom', cascade='all, delete-orphan')
+    chat_messages = db.relationship('ChatMessage', back_populates='classroom', cascade='all, delete-orphan')
+    chat_participants = db.relationship('ChatParticipant', back_populates='classroom', cascade='all, delete-orphan')
+    payments = db.relationship('Payment', back_populates='classroom', cascade='all, delete-orphan')
+    chat_settings = db.relationship('ChatSettings', back_populates='classroom', uselist=False, cascade='all, delete-orphan')
 
     @property
     def interaction_rate(self):
@@ -267,8 +275,11 @@ class AssignmentSubmission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     enrollment_id = db.Column(db.Integer, db.ForeignKey('classroom_enrollment.id'), nullable=False)
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    attachment_url = db.Column(db.String(255), nullable=True)
+    content = db.Column(db.Text, nullable=True)  # النص اختياري الآن
+    file_path = db.Column(db.String(255), nullable=True)  # مسار الملف المرفوع
+    file_name = db.Column(db.String(255), nullable=True)  # اسم الملف الأصلي
+    file_type = db.Column(db.String(50), nullable=True)   # نوع الملف
+    submission_type = db.Column(db.String(20), nullable=False)  # 'text' أو 'file'
     submission_date = db.Column(db.DateTime, default=datetime.utcnow)
     grade = db.Column(db.Integer, nullable=True)
     feedback = db.Column(db.Text, nullable=True)
@@ -403,14 +414,14 @@ class Notification(db.Model):
 """
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
+    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_deleted = db.Column(db.Boolean, default=False)
 
     # Relationships
-    classroom = db.relationship('Classroom', backref=db.backref('chat_messages', lazy=True))
+    classroom = db.relationship('Classroom', back_populates='chat_messages')
     user = db.relationship('User', backref=db.backref('chat_messages', lazy=True))
 
     def __repr__(self):
@@ -419,7 +430,7 @@ class ChatMessage(db.Model):
 # Chat settings model
 class ChatSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
+    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id', ondelete='CASCADE'), nullable=False)
     background_color = db.Column(db.String(20), nullable=True)
     image_url = db.Column(db.String(255), nullable=True)
     is_enabled = db.Column(db.Boolean, default=True)
@@ -427,7 +438,7 @@ class ChatSettings(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    classroom = db.relationship('Classroom', backref=db.backref('chat_settings', uselist=False))
+    classroom = db.relationship('Classroom', back_populates='chat_settings', uselist=False)
 
     def __repr__(self):
         return f'<ChatSettings {self.classroom.name}>'
@@ -442,7 +453,7 @@ class ChatParticipant(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
-    classroom = db.relationship('Classroom', backref=db.backref('chat_participants', lazy=True))
+    classroom = db.relationship('Classroom', back_populates='chat_participants')
     enrollment = db.relationship('ClassroomEnrollment', backref=db.backref('chat_participant', uselist=False))
     added_by = db.relationship('User', backref=db.backref('chat_participants_added', lazy=True))
 
@@ -472,8 +483,8 @@ class Payment(db.Model):
     ewallet_number = db.Column(db.String(50), nullable=True)
 
     # Relationships
-    user = db.relationship('User', backref=db.backref('payments', lazy=True))
-    classroom = db.relationship('Classroom', backref=db.backref('payments', lazy=True))
+    user = db.relationship('User', back_populates='payments')
+    classroom = db.relationship('Classroom', back_populates='payments')
     subscription = db.relationship('Subscription', backref=db.backref('payment', lazy=True))
 
     def __repr__(self):

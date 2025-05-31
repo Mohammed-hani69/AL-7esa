@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نتائج الاختبار - {{ quiz.title }} - الحصة</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+            padding-top: var(--header-height);
+            min-height: 100vh;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            color: white;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            text-align: center;
+        }
+
+        .header-subtitle {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin: 0;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            text-decoration: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 1rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.25rem;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+
+        .stats-icon {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stats-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Attempt Cards */
+        .attempt-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .attempt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .student-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .attempt-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .meta-item i {
+            color: var(--accent-color);
+            width: 20px;
+            text-align: center;
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .badge-warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .btn-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            width: 100%;
+            text-decoration: none;
+            margin-top: 1rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        /* Grade Button */
+        .grade-button {
+            position: fixed;
+            bottom: calc(var(--bottom-nav-height) + 1rem);
+            right: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(120deg, #ffc107, #ff9800);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-md);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+            z-index: 900;
+            text-decoration: none;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: var(--surface-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+            z-index: 1000;
+            padding: 0.25rem;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.35rem;
+            font-size: 0.7rem;
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <div>
+            <h1 class="header-title">نتائج الاختبار</h1>
+            <p class="header-subtitle">{{ quiz.title }}</p>
+        </div>
+        <div style="width: 40px"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stats-card">
+                <i class="fas fa-users stats-icon"></i>
+                <div class="stats-value">{{ attempts|length }}</div>
+                <div class="stats-label">إجمالي المحاولات</div>
+            </div>
+
+            <div class="stats-card">
+                <i class="fas fa-chart-line stats-icon"></i>
+                <div class="stats-value">
+                    {% if attempts %}
+                        {{ "%.1f"|format(attempts|map(attribute='score')|sum / attempts|length) }}/{{ quiz.total_points }}
+                    {% else %}
+                        0/{{ quiz.total_points }}
+                    {% endif %}
+                </div>
+                <div class="stats-label">متوسط الدرجات</div>
+            </div>
+        </div>
+
+        <!-- Attempts List -->
+        {% if attempts %}
+            {% for attempt in attempts %}
+            <div class="attempt-card">
+                <div class="attempt-header">
+                    <h3 class="student-name">{{ attempt.enrollment.user.name }}</h3>
+                    {% if attempt.is_completed %}
+                        <span class="badge badge-success">{{ attempt.score }}/{{ quiz.total_points }}</span>
+                    {% else %}
+                        <span class="badge badge-warning">جاري الحل</span>
+                    {% endif %}
+                </div>
+
+                <div class="attempt-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ attempt.start_time.strftime('%H:%M') }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>{{ attempt.start_time.strftime('%Y-%m-%d') }}</span>
+                    </div>
+                </div>
+
+                {% if attempt.is_completed %}
+                <a href="{{ url_for('teacher.view_student_attempt', classroom_id=classroom.id, quiz_id=quiz.id, attempt_id=attempt.id) }}" 
+                   class="btn-view">
+                    <i class="fas fa-eye"></i>
+                    عرض الإجابات
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <h5>لا توجد محاولات بعد</h5>
+                <p>لم يقم أي طالب بحل الاختبار حتى الآن</p>
+            </div>
+        {% endif %}
+
+        <!-- Grade Button -->
+        <a href="{{ url_for('teacher.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" 
+           class="grade-button">
+            <i class="fas fa-check-circle"></i>
+            تصحيح الإجابات المقالية
+        </a>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="nav-item active">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصل</span>
+        </a>
+        <a href="{{ url_for('teacher.live_classroom', classroom_id=classroom.id) }}" class="nav-item">
+            <i class="fas fa-video"></i>
+            <span>البث المباشر</span>
+        </a>
+        <a href="{{ url_for('teacher.subscriptions') }}" class="nav-item">
+            <i class="fas fa-crown"></i>
+            <span>اشتراكاتي</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -25,6 +25,7 @@
             --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
         }
 
+        /* تنسيق عام */
         body {
             font-family: 'Tajawal', sans-serif;
             background: var(--background-color);
@@ -41,6 +42,45 @@
             padding: 2rem;
         }
 
+        /* تصميم الهيدر */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .mobile-header-logo {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+            object-fit: contain;
+        }
+
+        .mobile-header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
         .innovative-sidebar {
             background: var(--accent-gradient);
             padding: 2rem;
@@ -48,7 +88,7 @@
             box-shadow: var(--box-shadow);
             position: sticky;
             top: 2rem;
-            height: calc(100vh - 4rem);
+            height: fit-content;
             color: var(--surface-color);
         }
 
@@ -127,57 +167,17 @@
             margin: 0;
         }
 
-        /* Stream specific styles */
+        /* تصميم البث المباشر */
         .stream-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: calc(100vh - 4rem);
             background: var(--surface-color);
             border-radius: var(--border-radius-md);
             box-shadow: var(--box-shadow);
             margin-bottom: 2rem;
-            display: flex;
-            gap: 1rem;
-            height: calc(100vh - 12rem);
-            padding: 1rem;
-        }
-
-        .stream-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            max-width: 75%;
-        }
-
-        .stream-video {
-            flex: 1;
-            background-color: #1a1a1a;
-            border-radius: var(--border-radius-md);
-            position: relative;
             overflow: hidden;
-        }
-
-        .stream-controls {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            padding: 1rem;
-            background-color: rgba(0, 0, 0, 0.05);
-            border-radius: var(--border-radius-sm);
-        }
-
-        .stream-control-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: none;
-            background: none;
-        }
-
         .stream-control-btn i {
             font-size: 1.5rem;
             margin-bottom: 0.25rem;

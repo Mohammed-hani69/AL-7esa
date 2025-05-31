@@ -636,6 +636,7 @@
                 <form action="{{ url_for('teacher.create_assignment', classroom_id=classroom.id) }}" 
                       method="post"
                       enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="modal-body">
                         <!-- البيانات الأساسية -->
                         <div class="row g-4">
@@ -885,11 +886,19 @@
         });
 
         // دالة حذف الواجب
-        function deleteAssignment(assignmentId, assignmentTitle) {
-            if (confirm(`هل أنت متأكد من حذف الواجب "${assignmentTitle}"؟`)) {
+        function deleteAssignment(assignmentId, title) {
+            if (confirm(`هل أنت متأكد من حذف الواجب "${title}"؟`)) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = `/teacher/classroom/{{ classroom.id }}/assignment/${assignmentId}/delete`;
+                
+                // Add CSRF token
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = 'csrf_token';
+                csrf.value = '{{ csrf_token() }}';
+                form.appendChild(csrf);
+                
                 document.body.appendChild(form);
                 form.submit();
             }

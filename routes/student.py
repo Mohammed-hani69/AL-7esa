@@ -5,17 +5,23 @@ from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
 from app import db
-from models import User, Role, Classroom, ClassroomEnrollment, ClassroomContent
+from models import Subscription, SubscriptionPlan, User, Role, Classroom, ClassroomEnrollment, ClassroomContent
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizAttempt, QuizAnswer, QuizQuestionOption
 from models import Payment, ChatParticipant, SystemSettings
 
 student_bp = Blueprint('student', __name__)
 
-# Allowed file extensions for screenshots
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+# الملفات المسموح بها للمرفقات والتسليمات
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'}
 
 def allowed_file(filename):
+    """التحقق من أن امتداد الملف مسموح به"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def is_mobile():
+    """Check if current request is from a mobile device"""
+    user_agent = request.headers.get('User-Agent', '').lower()
+    return any(device in user_agent for device in ['android', 'iphone', 'ipad', 'mobile'])
 
 # Student required decorator
 def student_required(f):
@@ -74,7 +80,7 @@ def dashboard():
                 enrollment_id=enrollment.id
             ).first()
             upcoming_assignments.append(assignment)
-    
+
     # الحصول على الاختبارات المتاحة
     upcoming_quizzes = []
     for enrollment in enrollments:
@@ -119,7 +125,10 @@ def dashboard():
     classroom_names = [enrollment.classroom.name for enrollment in enrollments]
     classroom_points = [enrollment.points for enrollment in enrollments]
 
-    return render_template('dashboard/student.html',
+    # تحديد القالب بناءً على نوع الجهاز
+    template = 'dashboard/mobile-theme/student.html' if is_mobile() else 'dashboard/student.html'
+
+    return render_template(template,
         enrollments=enrollments,
         upcoming_assignments=upcoming_assignments,
         upcoming_quizzes=upcoming_quizzes,
@@ -143,8 +152,8 @@ def classrooms():
         is_active=True
     ).all()
 
-    return render_template('student/classrooms.html',
-                           enrollments=enrollments)
+    template = 'student/mobile-theme/classrooms.html' if is_mobile() else 'student/classrooms.html'
+    return render_template(template, enrollments=enrollments)
 
 @student_bp.route('/join', methods=['GET', 'POST'])
 @login_required
@@ -200,7 +209,8 @@ def join_classroom():
             # Paid classroom, redirect to payment
             return redirect(url_for('student.payment', classroom_id=classroom.id))
 
-    return render_template('student/join.html')
+    template = 'student/mobile-theme/join.html' if is_mobile() else 'student/join.html'
+    return render_template(template)
 
 @student_bp.route('/payment/<int:classroom_id>')
 @login_required
@@ -220,9 +230,10 @@ def payment(classroom_id):
         return redirect(url_for('student.classroom', classroom_id=classroom.id))
 
     # Get e-wallet number from system settings
-    ewallet_number = SystemSettings.get_setting('ewallet_number', '0000000000')
+    ewallet_number = SystemSettings.get_setting('ewallet_number', '01145425207')
 
-    return render_template('student/payment.html', 
+    template = 'student/mobile-theme/payment.html' if is_mobile() else 'student/payment.html'
+    return render_template(template,
                          classroom=classroom,
                          ewallet_number=ewallet_number)
 
@@ -254,7 +265,7 @@ def process_payment(classroom_id):
     file.save(file_path)
     
     # Get e-wallet number from system settings
-    ewallet_number = SystemSettings.get_setting('ewallet_number', '0000000000')
+    ewallet_number = SystemSettings.get_setting('ewallet_number', '01145425207')
 
     # Create payment record
     payment = Payment(
@@ -294,25 +305,29 @@ def classroom(classroom_id):
         user_id=current_user.id,
         classroom_id=classroom.id,
         is_active=True
+    ).filter(
+        ClassroomEnrollment.payment_status.in_(['paid', 'free'])
     ).first()
 
     if not enrollment:
-        flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
+        flash('يجب أن تكون مسجلاً في الفصل للوصول إليه', 'danger')
         return redirect(url_for('student.dashboard'))
-    
-    # Check payment status for paid classrooms
+
+    # Check if this is a paid classroom and verify enrollment status
     if not classroom.is_free:
-        payment = Payment.query.filter_by(
-            user_id=current_user.id,
-            classroom_id=classroom.id
-        ).order_by(Payment.created_at.desc()).first()
-        
-        if not payment or payment.status == 'pending':
-            flash('في انتظار تأكيد عملية الدفع. سيتم إخطارك عند اكتمال المراجعة', 'warning')
-            return redirect(url_for('student.dashboard'))
-        elif payment.status == 'failed':
-            flash('فشلت عملية الدفع. يرجى المحاولة مرة أخرى', 'danger')
-            return redirect(url_for('student.payment', classroom_id=classroom.id))
+        if not enrollment.is_active:
+            # Check if there's a pending payment
+            payment = Payment.query.filter_by(
+                enrollment_id=enrollment.id,
+                status='pending'
+            ).first()
+            
+            if payment:
+                flash('في انتظار تأكيد عملية الدفع. سيتم إخطارك عند اكتمال المراجعة', 'warning')
+                return redirect(url_for('student.dashboard'))
+            elif payment and payment.status == 'failed':
+                flash('فشلت عملية الدفع. يرجى المحاولة مرة أخرى', 'danger')
+                return redirect(url_for('student.payment', classroom_id=classroom.id))
 
     # Get classroom content
     contents = ClassroomContent.query.filter_by(classroom_id=classroom.id).order_by(ClassroomContent.created_at.desc()).all()
@@ -326,16 +341,24 @@ def classroom(classroom_id):
     # Get chat participants info
     chat_participants = ChatParticipant.query.filter_by(classroom_id=classroom.id).all()
 
-    # Check if chat is enabled for this classroom
+    # التحقق مما إذا كانت المحادثة مفعلة لهذا الفصل
     has_chat = False
     if classroom.teacher:
-        teacher_subs = classroom.teacher.subscriptions
-        for sub in teacher_subs:
-            if sub.is_active and sub.end_date > datetime.utcnow() and sub.plan.has_chat:
-                has_chat = True
-                break
+        active_subscription = Subscription.query.filter_by(
+            user_id=classroom.teacher.id,
+            is_active=True
+        ).join(SubscriptionPlan).filter(
+            Subscription.end_date > datetime.utcnow(),
+            SubscriptionPlan.has_chat == True
+        ).first()
+        
+        if active_subscription:
+            # التأكد من أن المحادثة مفعلة في إعدادات الفصل
+            chat_settings = classroom.chat_settings
+            has_chat = chat_settings and chat_settings.is_enabled
 
-    return render_template('classroom/student_view.html',
+    template = 'classroom/mobile-theme/student_view.html' if is_mobile() else 'classroom/student_view.html'
+    return render_template(template,
                          classroom=classroom,
                          enrollment=enrollment,
                          has_chat=has_chat,
@@ -371,7 +394,9 @@ def assignments(classroom_id):
     # Create a map of assignment ID to submission for easy lookup
     submission_map = {sub.assignment_id: sub for sub in submissions}
 
-    return render_template('student/student_assignments.html',
+    template = 'student/mobile-theme/student_assignments.html' if is_mobile() else 'student/student_assignments.html'
+
+    return render_template(template,
                            classroom=classroom,
                            enrollment=enrollment,
                            assignments=assignments,
@@ -417,28 +442,101 @@ def view_assignment(classroom_id, assignment_id):
             flash('انتهت مهلة تسليم الواجب', 'danger')
             return redirect(url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id))
 
-        content = request.form.get('content')
+        submission_type = request.form.get('submission_type', 'text')
+        content = None
+        file_path = None
+        file_name = None
+        file_type = None
+
+        if submission_type == 'text':
+            content = request.form.get('content')
+            if not content or content.strip() == '':
+                flash('يرجى كتابة الحل قبل التسليم', 'danger')
+                return redirect(url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id))
+
+        else:  # submission_type == 'file'
+            submitted_file = request.files.get('submission_file')
+            if not submitted_file or not submitted_file.filename:
+                flash('يرجى اختيار ملف للتسليم', 'danger')
+                return redirect(url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id))
+
+            # التحقق من امتداد الملف
+            if not allowed_file(submitted_file.filename):
+                flash('نوع الملف غير مسموح به. يجب أن يكون الملف PDF, Word, Excel أو صورة', 'danger')
+                return redirect(url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id))
+            
+            # التحقق من نوع الملف باستخدام الامتداد
+            file_type = submitted_file.filename.rsplit('.', 1)[1].lower()
+            
+            allowed_types = {
+                'pdf',
+                'doc', 'docx',
+                'xls', 'xlsx',
+                'jpg', 'jpeg', 'png'
+            }
+            
+            if file_type not in allowed_types:
+                flash('نوع الملف غير مسموح به. يجب أن يكون الملف PDF, Word, Excel أو صورة', 'danger')
+                return redirect(url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id))
+
+            # حفظ الملف
+            original_filename = submitted_file.filename
+            file_type = original_filename.rsplit('.', 1)[1].lower()
+            filename = secure_filename(f"submission_{assignment_id}_{enrollment.id}_{int(datetime.utcnow().timestamp())}.{file_type}")
+            
+            submissions_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'submissions')
+            os.makedirs(submissions_dir, exist_ok=True)
+            # تحويل مسار الملف إلى تنسيق Unix-style
+            file_path = 'uploads/submissions/' + filename
+            # استخدام os.path.join لإنشاء المسار الكامل للحفظ
+            full_path = os.path.join(current_app.root_path, 'static', file_path.replace('/', os.sep))
+            submitted_file.save(full_path)
+            file_name = original_filename
 
         if submission:
-            # Update existing submission
-            submission.content = content
+            # تحديث التسليم الحالي
+            if submission_type != submission.submission_type:
+                # إذا تغير نوع التسليم، نحذف البيانات القديمة
+                if submission.file_path:
+                    old_file = os.path.join(current_app.root_path, 'static', submission.file_path)
+                    if os.path.exists(old_file):
+                        os.remove(old_file)
+                submission.content = None
+                submission.file_path = None
+                submission.file_name = None
+                submission.file_type = None
+
+            submission.submission_type = submission_type
+            if submission_type == 'text':
+                submission.content = content
+            else:
+                submission.file_path = file_path
+                submission.file_name = file_name
+                submission.file_type = file_type
+
             submission.submission_date = datetime.utcnow()
             db.session.commit()
             flash('تم تحديث الحل بنجاح', 'success')
         else:
-            # Create new submission
+            # إنشاء تسليم جديد
             new_submission = AssignmentSubmission(
                 enrollment_id=enrollment.id,
                 assignment_id=assignment.id,
-                content=content
+                submission_type=submission_type,
+                content=content,
+                file_path=file_path,
+                file_name=file_name,
+                file_type=file_type
             )
             db.session.add(new_submission)
             db.session.commit()
             flash('تم تسليم الحل بنجاح', 'success')
 
         return redirect(url_for('student.assignments', classroom_id=classroom.id))
+    
+    template = 'student/mobile-theme/view_assignment.html' if is_mobile() else 'student/view_assignment.html'
 
-    return render_template('student/view_assignment.html',
+    return render_template(template,
                            classroom=classroom,
                            assignment=assignment,
                            submission=submission,
@@ -473,7 +571,8 @@ def quizzes(classroom_id):
     # Current time for quiz availability check
     now = datetime.utcnow()
 
-    return render_template('student/student_quizzes.html',
+    template = 'student/mobile-theme/student_quizzes.html' if is_mobile() else 'student/student_quizzes.html'
+    return render_template(template,
                            classroom=classroom,
                            enrollment=enrollment,
                            quizzes=quizzes,
@@ -487,7 +586,7 @@ def start_quiz(classroom_id, quiz_id):
     classroom = Classroom.query.get_or_404(classroom_id)
     quiz = Quiz.query.get_or_404(quiz_id)
     
-    # Check if student is enrolled
+    # التحقق من تسجيل الطالب
     enrollment = ClassroomEnrollment.query.filter_by(
         user_id=current_user.id,
         classroom_id=classroom.id,
@@ -498,12 +597,12 @@ def start_quiz(classroom_id, quiz_id):
         flash('يجب أن تكون مسجلاً في الفصل للوصول إليه', 'danger')
         return redirect(url_for('student.dashboard'))
 
-    # For paid classrooms, verify payment status
+    # للفصول المدفوعة، تحقق من حالة الدفع
     if not classroom.is_free:
         payment = Payment.query.filter_by(
             user_id=current_user.id,
             classroom_id=classroom.id,
-            status='success'  # Only allow access if payment is successful
+            status='success'
         ).order_by(Payment.created_at.desc()).first()
         
         if not payment:
@@ -516,7 +615,7 @@ def start_quiz(classroom_id, quiz_id):
         quiz_id=quiz.id
     ).first()
 
-    # إذا لم يكن هناك محاولة، قم بإنشاء واحدة جديدة
+    # إنشاء محاولة جديدة إذا لم تكن موجودة
     if not attempt:
         attempt = QuizAttempt(
             enrollment_id=enrollment.id,
@@ -531,13 +630,7 @@ def start_quiz(classroom_id, quiz_id):
         flash('تم تسليم هذا الاختبار مسبقاً', 'warning')
         return redirect(url_for('student.view_quiz_result', classroom_id=classroom.id, quiz_id=quiz.id))
     
-    # التحقق من انتهاء الوقت
-    if quiz.duration_minutes:
-        time_elapsed = datetime.utcnow() - attempt.start_time
-        if time_elapsed.total_seconds() > quiz.duration_minutes * 60:
-            flash('انتهى وقت الاختبار، يرجى تسليم إجاباتك', 'warning')
-    
-    # التحقق من وقت بدء وانتهاء الاختبار
+    # التحقق من وقت الاختبار
     now = datetime.utcnow()
     if quiz.start_time and now < quiz.start_time:
         flash('لم يبدأ وقت الاختبار بعد', 'warning')
@@ -548,69 +641,102 @@ def start_quiz(classroom_id, quiz_id):
         return redirect(url_for('student.quizzes', classroom_id=classroom.id))
     
     if request.method == 'POST':
-        # التحقق مرة أخرى من عدم اكتمال المحاولة
         if attempt.is_completed:
             flash('تم تسليم هذا الاختبار مسبقاً', 'warning')
             return redirect(url_for('student.view_quiz_result', classroom_id=classroom.id, quiz_id=quiz.id))
-            
-        # حساب النتيجة وحفظ الإجابات
-        score = 0
-        answered_questions = 0
-        
-        for question in quiz.questions:
-            answer_text = request.form.get(f'question_{question.id}')
-            if answer_text:
-                answered_questions += 1
-                answer = QuizAnswer(
-                    attempt_id=attempt.id,
-                    question_id=question.id,
-                    text_answer=answer_text
-                )
-                
-                if question.question_type in ['multiple_choice', 'true_false']:
-                    selected_option = QuizQuestionOption.query.get(int(answer_text))
-                    if selected_option and selected_option.is_correct:
-                        answer.points_earned = question.points
-                        score += question.points
-                
-                db.session.add(answer)
-        
-        if answered_questions == 0:
-            flash('يجب عليك الإجابة على سؤال واحد على الأقل قبل تسليم الاختبار', 'danger')
-            return redirect(url_for('student.start_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
-            
-        # تحديث المحاولة بالنتيجة
-        total_points = sum(q.points for q in quiz.questions)
-        attempt.score = (score / total_points * 100) if total_points > 0 else 0
-        attempt.end_time = datetime.utcnow()
-        attempt.is_completed = True
-        
-        # تحديث نقاط الطالب
-        enrollment = ClassroomEnrollment.query.filter_by(
-            user_id=current_user.id,
-            classroom_id=classroom.id
-        ).first()
-        if enrollment:
-            enrollment.points += score
+
+        total_points_possible = 0  # مجموع الدرجات الكلي للاختبار
+        total_points_earned = 0    # مجموع الدرجات المكتسبة
+        answered_questions = 0      # عدد الأسئلة المجاب عنها
         
         try:
-            db.session.commit()
-            flash('تم تسليم الاختبار بنجاح', 'success')
-        except:
-            db.session.rollback()
-            flash('حدث خطأ أثناء حفظ إجاباتك، يرجى المحاولة مرة أخرى', 'danger')
-            return redirect(url_for('student.start_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
+            # معالجة كل سؤال في الاختبار
+            for question in quiz.questions:
+                answer_value = request.form.get(f'question_{question.id}')
+                
+                # تخطي الأسئلة الفارغة للأسئلة متعددة الخيارات
+                if not answer_value and question.question_type in ['multiple_choice', 'true_false']:
+                    continue
+                    
+                answered_questions += 1
+                total_points_possible += question.points
+                
+                # العثور على أو إنشاء إجابة جديدة
+                answer = QuizAnswer.query.filter_by(
+                    attempt_id=attempt.id,
+                    question_id=question.id
+                ).first()
+                
+                if not answer:
+                    answer = QuizAnswer(
+                        attempt_id=attempt.id,
+                        question_id=question.id
+                    )
+                    db.session.add(answer)
+                
+                if question.question_type in ['multiple_choice', 'true_false']:
+                    # معالجة الأسئلة متعددة الخيارات
+                    try:
+                        selected_option_id = int(answer_value)
+                        selected_option = QuizQuestionOption.query.get(selected_option_id)
+                        
+                        if selected_option and selected_option.question_id == question.id:
+                            answer.selected_option_id = selected_option_id
+                            answer.is_correct = selected_option.is_correct
+                            if selected_option.is_correct:
+                                answer.points_earned = question.points
+                                total_points_earned += question.points
+                            else:
+                                answer.points_earned = 0
+                        else:
+                            answer.selected_option_id = None
+                            answer.is_correct = False
+                            answer.points_earned = 0
+                            
+                    except (ValueError, TypeError):
+                        answer.selected_option_id = None
+                        answer.is_correct = False
+                        answer.points_earned = 0
+                        
+                else:
+                    # معالجة الأسئلة المقالية
+                    answer.text_answer = answer_value
+                    answer.is_correct = None
+                    answer.points_earned = None
+
+            if answered_questions == 0:
+                flash('يجب الإجابة على سؤال واحد على الأقل', 'danger')
+                return redirect(url_for('student.start_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
             
-        return redirect(url_for('student.view_quiz_result', classroom_id=classroom.id, quiz_id=quiz.id))
+            # تحديث المحاولة
+            attempt.end_time = datetime.utcnow()
+            attempt.is_completed = True
+            
+            # حساب النتيجة النهائية بالنقاط الفعلية وليس كنسبة مئوية
+            attempt.score = total_points_earned  # حفظ النقاط المكتسبة مباشرة
+            attempt.total_possible = total_points_possible  # حفظ إجمالي النقاط الممكنة
+                
+            # تحديث نقاط الطالب
+            enrollment.points += total_points_earned  # إضافة النقاط الفعلية وليس النسبة المئوية
+            
+            # حفظ التغييرات
+            db.session.commit()
+            flash(f'تم تسليم الاختبار بنجاح. النتيجة: {total_points_earned}/{total_points_possible}', 'success')
+            return redirect(url_for('student.view_quiz_result', classroom_id=classroom.id, quiz_id=quiz.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('حدث خطأ أثناء حفظ إجاباتك. يرجى المحاولة مرة أخرى.', 'danger')
+            print(f"Error saving quiz answers: {str(e)}")
+            return redirect(url_for('student.start_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
     
-    # Get existing answers if any
+    # استرجاع الإجابات السابقة إن وجدت
     existing_answers = QuizAnswer.query.filter_by(attempt_id=attempt.id).all()
-    
-    # Create maps for answered text and selected options
     answered_texts = {ans.question_id: ans.text_answer for ans in existing_answers}
     answered_options = {ans.question_id: ans.selected_option_id for ans in existing_answers}
     
-    return render_template('student/take_quiz.html',
+    template = 'student/mobile-theme/take_quiz.html' if is_mobile() else 'student/take_quiz.html'
+    return render_template(template,
                        classroom=classroom,
                        quiz=quiz,
                        attempt=attempt,
@@ -655,12 +781,13 @@ def view_quiz_result(classroom_id, quiz_id):
     answers = QuizAnswer.query.filter_by(attempt_id=attempt.id).all()
     answer_map = {ans.question_id: ans for ans in answers}
 
-    return render_template('student/quiz_result.html',
-                           classroom=classroom,
-                           quiz=quiz,
-                           attempt=attempt,
-                           questions=questions,
-                           answer_map=answer_map)
+    template = 'student/mobile-theme/quiz_result.html' if is_mobile() else 'student/quiz_result.html'
+    return render_template(template,
+                       classroom=classroom,
+                       quiz=quiz,
+                       attempt=attempt,
+                       questions=questions,
+                       answer_map=answer_map)
 
 @student_bp.route('/classroom/<int:classroom_id>/live')
 @login_required
@@ -679,7 +806,8 @@ def live_classroom(classroom_id):
         flash('يجب أن تكون مسجلاً في الفصل للوصول إليه', 'danger')
         return redirect(url_for('student.dashboard'))
 
-    return render_template('student/live_class.html', 
+    template = 'student/mobile-theme/live_class.html' if is_mobile() else 'student/live_class.html'
+    return render_template(template,
                          classroom=classroom,
                          enrollment=enrollment,
                          user_type='student')

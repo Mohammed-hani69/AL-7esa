@@ -324,6 +324,7 @@
                 </div>
 
                 <form method="POST" action="{{ url_for('student.join_classroom') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-4">
                         <label for="classroom_code" class="form-label fw-bold mb-2">كود الفصل</label>
                         <input type="text" 

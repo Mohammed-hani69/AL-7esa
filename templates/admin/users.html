@@ -825,6 +825,14 @@
                     <span>اشتراكاتي</span>
                 </a>
             </li>
+            
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل خروج</span>
+                    </a>
+                </li>
+
         </ul>
     </nav>
 
@@ -1040,9 +1048,15 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <form action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" method="POST">
-                                            <button type="submit" class="btn btn-sm {% if user.is_active %}btn-warning{% else %}btn-success{% endif %}">
-                                                <i class="fas {% if user.is_active %}fa-toggle-off{% else %}fa-toggle-on{% endif %}"></i>
+                                        <form action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" method="POST" style="display: inline;" class="status-toggle-form">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="button" 
+                                                    class="btn btn-sm toggle-user-status {% if user.is_active %}btn-warning{% else %}btn-success{% endif %}"
+                                                    data-user-id="{{ user.id }}"
+                                                    data-user-name="{{ user.name }}"
+                                                    data-is-active="{{ user.is_active|tojson|safe }}">
+                                                <i class="fas {% if user.is_active %}fa-toggle-off{% else %}fa-toggle-on{% endif %} me-1"></i>
+                                                {{ 'تعطيل' if user.is_active else 'تفعيل' }}
                                             </button>
                                         </form>
                                     </td>
@@ -1322,6 +1336,29 @@
         </div>
     </div>
 
+    <!-- نافذة تأكيد تغيير حالة المستخدم -->
+    <div class="modal fade" id="confirmStatusModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تأكيد تغيير الحالة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmStatusMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>إلغاء
+                    </button>
+                    <button type="button" class="btn btn-primary" id="confirmStatusBtn">
+                        <i class="fas fa-check me-2"></i>تأكيد
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -1411,45 +1448,48 @@
             // تصدير البيانات إلى ملف Excel
             $('#exportUsers').on('click', function() {
                 const rows = [];
-                // إضافة عناوين الأعمدة
-                rows.push([
+                const headers = [
                     'الاسم',
                     'رقم الهاتف',
                     'البريد الإلكتروني',
                     'الصلاحية',
                     'تاريخ التسجيل',
                     'الحالة'
-                ]);
+                ];
+
+                // إضافة عناوين الأعمدة
+                rows.push(headers.join('\t'));
 
                 // إضافة بيانات المستخدمين
                 usersTable.rows().every(function() {
                     const data = this.data();
-                    const role = $(data[3]).text(); // استخراج النص من HTML
-                    const status = $(data[5]).text(); // استخراج النص من HTML
-                    rows.push([
-                        $(data[0]).text().trim(), // الاسم
-                        data[1], // رقم الهاتف
-                        data[2], // البريد الإلكتروني
-                        role, // الصلاحية
-                        data[4], // تاريخ التسجيل
-                        status // الحالة
-                    ]);
+                    const rowData = [
+                        $(data[0]).text().trim().replace(/[\r\n\t,]/g, ' '), // الاسم
+                        (data[1] || '').replace(/[\r\n\t,]/g, ' '), // رقم الهاتف
+                        (data[2] || '').replace(/[\r\n\t,]/g, ' '), // البريد الإلكتروني
+                        $(data[3]).text().trim().replace(/[\r\n\t,]/g, ' '), // الصلاحية
+                        (data[4] || '').replace(/[\r\n\t,]/g, ' '), // تاريخ التسجيل
+                        $(data[5]).text().trim().replace(/[\r\n\t,]/g, ' ') // الحالة
+                    ];
+                    rows.push(rowData.join('\t'));
                 });
 
-                // إنشاء CSV string
-                let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM for Excel Arabic support
-                rows.forEach(row => {
-                    csvContent += row.join(',') + '\n';
-                });
-
+                // إنشاء Blob مع BOM لدعم العربية في Excel
+                const BOM = "\uFEFF";
+                const csvContent = BOM + rows.join('\r\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+                
                 // إنشاء رابط التحميل
-                const encodedUri = encodeURI(csvContent);
+                const fileName = "قائمة_المستخدمين_" + new Date().toLocaleDateString('ar-SA').replace(/\//g, '-') + ".csv";
                 const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", "users_" + new Date().toISOString().slice(0,10) + ".csv");
+                link.href = window.URL.createObjectURL(blob);
+                link.download = fileName;
+                
+                // تنفيذ التحميل
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                window.URL.revokeObjectURL(link.href);
             });
 
             // تفعيل زر القائمة للموبايل
@@ -1584,21 +1624,36 @@
             });
 
             // تغيير حالة المستخدم (تفعيل/تعطيل)
+            let currentUserId;
+            let currentIsActive;
             $(document).on('click', '.toggle-user-status', function() {
-                const userId = $(this).data('user-id');
-                const isActive = $(this).data('is-active');
-                const action = isActive ? 'تعطيل' : 'تفعيل';
+                currentUserId = $(this).data('user-id');
+                currentIsActive = $(this).data('is-active');
+                const action = currentIsActive ? 'تعطيل' : 'تفعيل';
+                const message = `هل أنت متأكد من ${action} هذا المستخدم؟`;
 
-                if (confirm(`هل أنت متأكد من ${action} هذا المستخدم؟`)) {
-                    $.post(`/admin/users/${userId}/toggle-status`)
-                        .done(function() {
-                            // تحديث الجدول
-                            window.location.reload();
-                        })
-                        .fail(function() {
-                            alert(`حدث خطأ أثناء ${action} المستخدم`);
-                        });
-                }
+                // تحديث رسالة التأكيد
+                $('#confirmStatusMessage').text(message);
+
+                // إظهار نافذة التأكيد
+                $('#confirmStatusModal').modal('show');
+            });
+
+            // تأكيد تغيير الحالة
+            $('#confirmStatusBtn').on('click', function() {
+                const action = currentIsActive ? 'تعطيل' : 'تفعيل';
+
+                $.post(`/admin/users/${currentUserId}/toggle-status`)
+                    .done(function() {
+                        // تحديث الجدول
+                        window.location.reload();
+                    })
+                    .fail(function() {
+                        alert(`حدث خطأ أثناء ${action} المستخدم`);
+                    });
+
+                // إغلاق نافذة التأكيد
+                $('#confirmStatusModal').modal('hide');
             });
 
             // إعادة تعيين كلمة المرور
@@ -1616,6 +1671,55 @@
                         });
                 }
             });
+        });
+    </script>
+    <script>
+        let currentForm = null;
+
+        // عند النقر على زر تغيير الحالة
+        $('.toggle-user-status').on('click', function() {
+            const button = $(this);
+            const userId = button.data('user-id');
+            const userName = button.data('user-name');
+            const isActive = button.data('is-active');
+            currentForm = button.closest('form');
+
+            // تحديث رسالة التأكيد
+            const action = isActive ? 'تعطيل' : 'تفعيل';
+            $('#confirmStatusMessage').html(`
+                <div class="text-center">
+                    <i class="fas ${isActive ? 'fa-user-slash' : 'fa-user-check'} fa-2x mb-3 ${isActive ? 'text-warning' : 'text-success'}"></i>
+                    <p>هل أنت متأكد من ${action} حساب "${userName}"؟</p>
+                </div>
+            `);
+
+            // تحديث زر التأكيد
+            $('#confirmStatusBtn').removeClass('btn-success btn-warning')
+                .addClass(isActive ? 'btn-warning' : 'btn-success')
+                .html(`<i class="fas ${isActive ? 'fa-toggle-off' : 'fa-toggle-on'} me-2"></i>${action}`);
+
+            // إظهار نافذة التأكيد
+            $('#confirmStatusModal').modal('show');
+        });
+
+        // عند النقر على زر التأكيد في النافذة
+        $('#confirmStatusBtn').on('click', function() {
+            if (currentForm) {
+                // إظهار مؤشر التحميل على الزر
+                const btn = $(this);
+                const originalHtml = btn.html();
+                btn.prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin me-2"></i>جاري التنفيذ...');
+
+                // تقديم النموذج
+                currentForm.submit();
+            }
+            $('#confirmStatusModal').modal('hide');
+        });
+
+        // إعادة تعيين النموذج الحالي عند إغلاق النافذة
+        $('#confirmStatusModal').on('hidden.bs.modal', function() {
+            currentForm = null;
         });
     </script>
 </body>

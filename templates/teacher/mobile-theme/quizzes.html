@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>الاختبارات - {{ classroom.name }} - الحصة</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+            padding-top: var(--header-height);
+            min-height: 100vh;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            color: white;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            text-decoration: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 1rem;
+        }
+
+        /* Quiz Cards */
+        .quiz-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .quiz-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .quiz-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .meta-item i {
+            color: var(--accent-color);
+            width: 20px;
+            text-align: center;
+        }
+
+        .quiz-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-radius: var(--border-radius-sm);
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-edit {
+            background: var(--accent-gradient);
+        }
+
+        .btn-results {
+            background: linear-gradient(120deg, #4CAF50, #45B649);
+        }
+
+        .btn-delete {
+            background: linear-gradient(120deg, #FF5252, #FF1744);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        /* FAB Button */
+        .fab-button {
+            position: fixed;
+            bottom: calc(var(--bottom-nav-height) + 1rem);
+            right: 1rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+            z-index: 900;
+            text-decoration: none;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: var(--surface-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+            z-index: 1000;
+            padding: 0.25rem;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.35rem;
+            font-size: 0.7rem;
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+
+        /* Modal Styles */
+        .modal-content {
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <h1 class="header-title">الاختبارات - {{ classroom.name }}</h1>
+        <div style="width: 40px"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% if quizzes %}
+            {% for quiz in quizzes|sort(attribute='created_at', reverse=true) %}
+            <div class="quiz-card">
+                <div class="quiz-header">
+                    <h3 class="quiz-title">{{ quiz.title }}</h3>
+                </div>
+                
+                <div class="quiz-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ quiz.duration_minutes }} دقيقة</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-star"></i>
+                        <span>{{ quiz.total_points }} نقطة</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-users"></i>
+                        <span>{{ quiz.attempts|length }} محاولة</span>
+                    </div>
+                    {% if quiz.start_time and quiz.end_time %}
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>{{ quiz.start_time.strftime('%Y-%m-%d') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="quiz-actions">
+                    <a href="{{ url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" 
+                       class="btn-action btn-edit">
+                        <i class="fas fa-edit"></i>
+                        <span>تعديل</span>
+                    </a>
+                    <a href="{{ url_for('teacher.quiz_results', classroom_id=classroom.id, quiz_id=quiz.id) }}" 
+                       class="btn-action btn-results">
+                        <i class="fas fa-users"></i>
+                        <span>النتائج</span>
+                    </a>
+                    <button onclick="deleteQuiz({{ quiz.id }}, '{{ quiz.title }}')"
+                            class="btn-action btn-delete">
+                        <i class="fas fa-trash"></i>
+                        <span>حذف</span>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-question-circle"></i>
+                <h5>لا توجد اختبارات بعد</h5>
+                <p>يمكنك إنشاء اختبار جديد بالنقر على زر الإضافة</p>
+            </div>
+        {% endif %}
+
+        <!-- FAB Button for creating new quiz -->
+        <a href="{{ url_for('teacher.create_quiz', classroom_id=classroom.id) }}" class="fab-button">
+            <i class="fas fa-plus"></i>
+        </a>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="nav-item active">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصل</span>
+        </a>
+        <a href="{{ url_for('teacher.live_classroom', classroom_id=classroom.id) }}" class="nav-item">
+            <i class="fas fa-video"></i>
+            <span>البث المباشر</span>
+        </a>
+        <a href="{{ url_for('teacher.subscriptions') }}" class="nav-item">
+            <i class="fas fa-crown"></i>
+            <span>اشتراكاتي</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+
+    <!-- Delete Quiz Modal -->
+    <div class="modal fade" id="deleteQuizModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تأكيد حذف الاختبار</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    هل أنت متأكد من حذف الاختبار "<span id="quizTitleToDelete"></span>"؟
+                    <br>
+                    <small class="text-danger">هذا الإجراء لا يمكن التراجع عنه.</small>
+                </div>
+                <div class="modal-footer">
+                    <form id="deleteQuizForm" method="POST" action="">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-danger">حذف</button>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function deleteQuiz(quizId, quizTitle) {
+            document.getElementById('quizTitleToDelete').textContent = quizTitle;
+            document.getElementById('deleteQuizForm').action = "{{ url_for('teacher.delete_quiz', classroom_id=classroom.id, quiz_id=0) }}".replace('0', quizId);
+            new bootstrap.Modal(document.getElementById('deleteQuizModal')).show();
+        }
+    </script>
+</body>
+</html>

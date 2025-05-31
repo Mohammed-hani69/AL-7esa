@@ -1,5 +1,35 @@
 // وظائف مساعدة للتطبيق
 document.addEventListener('DOMContentLoaded', function() {
+    // Setup CSRF token for all AJAX requests
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (csrfToken) {
+        // Add CSRF token to all AJAX requests
+        const ajaxSetup = (xhr) => {
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        };
+        
+        // For jQuery AJAX
+        if (typeof $ !== 'undefined') {
+            $.ajaxSetup({
+                beforeSend: ajaxSetup
+            });
+        }
+        
+        // For fetch API
+        const originalFetch = window.fetch;
+        window.fetch = function() {
+            let [resource, config] = arguments;
+            if (config === undefined) {
+                config = {};
+            }
+            if (config.headers === undefined) {
+                config.headers = {};
+            }
+            config.headers['X-CSRFToken'] = csrfToken;
+            return originalFetch(resource, config);
+        };
+    }
+
     // التبديل بين الثيمات (داكن/فاتح)
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     if (themeToggleBtn) {

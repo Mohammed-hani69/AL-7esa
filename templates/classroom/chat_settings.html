@@ -280,6 +280,7 @@
                     <div class="content-section">
                         <h6 class="text-primary mb-4">الإعدادات العامة</h6>
                         <form method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             {% if user_type == 'teacher' %}
                             <div class="form-group mb-3">
                                 <div class="form-check">
@@ -334,6 +335,7 @@
                                     </div>
                                     <div>
                                         <form method="POST" action="{{ url_for((user_type + '.manage_chat_participants')|string, classroom_id=classroom.id) }}" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
                                             {% if participant and participant.is_enabled %}
                                                 <input type="hidden" name="action" value="remove">

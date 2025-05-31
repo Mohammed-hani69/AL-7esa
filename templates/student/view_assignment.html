@@ -268,6 +268,104 @@
             padding: 0.5rem 1rem;
         }
 
+        .submission-type-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .submission-type-option {
+            flex: 1;
+            padding: 1.5rem;
+            border: 2px solid var(--background-color);
+            border-radius: var(--border-radius-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--surface-color);
+        }
+
+        .submission-type-option i {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .submission-type-option span {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .submission-type-option.active {
+            border-color: var(--accent-color);
+            background: rgba(108, 99, 255, 0.05);
+        }
+
+        .submission-type-option.active i,
+        .submission-type-option.active span {
+            color: var(--accent-color);
+        }
+
+        .file-upload-wrapper {
+            width: 100%;
+        }
+
+        .file-upload-box {
+            border: 2px dashed var(--accent-color);
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            background: rgba(108, 99, 255, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload-box:hover {
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        .file-upload-box i {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .upload-text .primary-text {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .upload-text .secondary-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .current-file {
+            background: var(--background-color);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-primary);
+        }
+
         @media (max-width: 992px) {
             .app-container {
                 grid-template-columns: 1fr;
@@ -469,15 +567,56 @@
                     <div class="content-section">
                         <h3 class="section-title">الحل</h3>
                         <div class="submission-form">
-                            <form method="POST" action="{{ url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}">
-                                <div class="mb-3">
-                                    {% if submission %}
+                            <form method="POST" action="{{ url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                
+                                <!-- اختيار نوع التسليم -->
+                                <div class="submission-type-selector mb-4">
+                                    <div class="submission-type-option {% if not submission or submission.submission_type == 'text' %}active{% endif %}" data-type="text">
+                                        <i class="fas fa-pen"></i>
+                                        <span>كتابة نص</span>
+                                    </div>
+                                    <div class="submission-type-option {% if submission and submission.submission_type == 'file' %}active{% endif %}" data-type="file">
+                                        <i class="fas fa-file-upload"></i>
+                                        <span>رفع ملف</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="submission_type" id="submission_type" value="{{ submission.submission_type if submission else 'text' }}">
+
+                                <!-- حقل النص -->
+                                <div id="text-submission" class="submission-content {% if submission and submission.submission_type == 'file' %}d-none{% endif %}">
+                                    {% if submission and submission.submission_type == 'text' %}
                                         <label for="content" class="form-label">الحل المقدم</label>
-                                        <textarea class="form-control" id="content" name="content" rows="6" readonly>{{ submission.content }}</textarea>
+                                        <textarea class="form-control" id="content" name="content" rows="6" {% if submission.grade is not none %}readonly{% endif %}>{{ submission.content }}</textarea>
                                     {% else %}
                                         <label for="content" class="form-label">الحل</label>
-                                        <textarea class="form-control" id="content" name="content" rows="6" required></textarea>
+                                        <textarea class="form-control" id="content" name="content" rows="6"></textarea>
                                     {% endif %}
+                                </div>
+
+                                <!-- حقل الملف -->
+                                <div id="file-submission" class="submission-content {% if not submission or submission.submission_type == 'text' %}d-none{% endif %}">
+                                    <div class="file-upload-wrapper">
+                                        <div class="file-upload-box">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                            <div class="upload-text">
+                                                <span class="primary-text">اختر ملف أو اسحبه هنا</span>
+                                                <span class="secondary-text">PDF, Word, Excel, الصور</span>
+                                            </div>
+                                            <input type="file" name="submission_file" class="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                                        </div>
+                                        {% if submission and submission.submission_type == 'file' and submission.file_path %}
+                                        <div class="current-file mt-2">
+                                            <div class="file-info">
+                                                <i class="fas fa-file me-2"></i>
+                                                <span>{{ submission.file_name }}</span>
+                                            </div>
+                                            <a href="{{ url_for('static', filename=submission.file_path) }}" class="btn btn-sm btn-light" download>
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
                                 {% if (not assignment.due_date or assignment.due_date > now) and (not submission or submission.grade is none) %}
                                     <button type="submit" class="btn btn-submit">
@@ -519,6 +658,94 @@
                 !$(e.target).closest('.mobile-toggle').length) {
                 $('.innovative-sidebar').removeClass('show');
             }
+        });
+
+        // إدارة خيارات التسليم
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeOptions = document.querySelectorAll('.submission-type-option');
+            const typeInput = document.getElementById('submission_type');
+            const textSubmission = document.getElementById('text-submission');
+            const fileSubmission = document.getElementById('file-submission');
+            const fileInput = document.querySelector('.file-input');
+            const uploadText = document.querySelector('.upload-text .primary-text');
+            
+            // إضافة مستمع الأحداث لتغيير نوع التسليم
+            typeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    typeOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const type = this.dataset.type;
+                    typeInput.value = type;
+                    
+                    if (type === 'text') {
+                        textSubmission.classList.remove('d-none');
+                        fileSubmission.classList.add('d-none');
+                    } else {
+                        textSubmission.classList.add('d-none');
+                        fileSubmission.classList.remove('d-none');
+                    }
+                });
+            });
+
+            // إظهار اسم الملف المختار
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        uploadText.textContent = this.files[0].name;
+                    } else {
+                        uploadText.textContent = 'اختر ملف أو اسحبه هنا';
+                    }
+                });
+            }
+
+            // دعم سحب وإفلات الملفات
+            const dropZone = document.querySelector('.file-upload-box');
+            if (dropZone) {
+                dropZone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.style.background = 'rgba(108, 99, 255, 0.1)';
+                });
+
+                dropZone.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.style.background = 'rgba(108, 99, 255, 0.05)';
+                });
+
+                dropZone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.style.background = 'rgba(108, 99, 255, 0.05)';
+                    
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        fileInput.files = e.dataTransfer.files;
+                        uploadText.textContent = e.dataTransfer.files[0].name;
+                        
+                        // تشغيل حدث change لتحديث الواجهة
+                        const event = new Event('change', { bubbles: true });
+                        fileInput.dispatchEvent(event);
+                    }
+                });
+            }
+
+            // التحقق من الملف قبل التسليم
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                const submissionType = typeInput.value;
+                
+                if (submissionType === 'text') {
+                    const textarea = this.querySelector('textarea[name="content"]');
+                    if (!textarea.value.trim()) {
+                        e.preventDefault();
+                        alert('يرجى كتابة الحل قبل التسليم');
+                    }
+                } else {
+                    const fileInput = this.querySelector('input[type="file"]');
+                    if (!fileInput.files || !fileInput.files[0]) {
+                        e.preventDefault();
+                        alert('يرجى اختيار ملف للتسليم');
+                    }
+                }
+            });
         });
     </script>
 </body>

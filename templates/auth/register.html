@@ -195,33 +195,39 @@ a:hover {
                     <!-- تسجيل حساب برقم الهاتف -->
                     <div class="tab-pane fade show active" id="phone-auth">
                         <div id="phone-auth-step-1">
-                            <div class="form-group">
-                                <label class="form-label" for="phone">
-                                    <i class="fas fa-phone me-2"></i>رقم الهاتف
-                                </label>
-                                <input type="tel" id="phone" class="form-control" placeholder="05xxxxxxxx" dir="ltr">
-                                <small class="form-text">سيتم إرسال رمز التحقق إلى هذا الرقم</small>
-                            </div>
-                            
-                            <div id="recaptcha-container" class="mb-3"></div>
-                            
-                            <button id="auth-submit-btn" class="btn btn-primary">
-                                <i class="fas fa-paper-plane me-2"></i>إرسال رمز التحقق
-                            </button>
+                            <form id="phone-auth-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="form-group">
+                                    <label class="form-label" for="phone">
+                                        <i class="fas fa-phone me-2"></i>رقم الهاتف
+                                    </label>
+                                    <input type="tel" id="phone" class="form-control" placeholder="05xxxxxxxx" dir="ltr">
+                                    <small class="form-text">سيتم إرسال رمز التحقق إلى هذا الرقم</small>
+                                </div>
+                                
+                                <div id="recaptcha-container" class="mb-3"></div>
+                                
+                                <button id="auth-submit-btn" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i>إرسال رمز التحقق
+                                </button>
+                            </form>
                         </div>
                         
                         <div id="phone-auth-step-2" class="d-none">
-                            <div class="form-group">
-                                <label class="form-label" for="verification-code">
-                                    <i class="fas fa-shield-alt me-2"></i>رمز التحقق
-                                </label>
-                                <input type="text" id="verification-code" class="form-control" placeholder="أدخل الرمز">
-                                <small class="form-text">أدخل الرمز المرسل إلى هاتفك</small>
-                            </div>
-                            
-                            <button id="verify-code-btn" class="btn btn-primary mb-3">
-                                <i class="fas fa-check-circle me-2"></i>تحقق
-                            </button>
+                            <form id="verification-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="form-group">
+                                    <label class="form-label" for="verification-code">
+                                        <i class="fas fa-shield-alt me-2"></i>رمز التحقق
+                                    </label>
+                                    <input type="text" id="verification-code" class="form-control" placeholder="أدخل الرمز">
+                                    <small class="form-text">أدخل الرمز المرسل إلى هاتفك</small>
+                                </div>
+                                
+                                <button id="verify-code-btn" class="btn btn-primary mb-3">
+                                    <i class="fas fa-check-circle me-2"></i>تحقق
+                                </button>
+                            </form>
                             
                             <button class="btn btn-link w-100" onclick="showPhoneStep1()">
                                 <i class="fas fa-arrow-right me-2"></i>العودة
@@ -232,6 +238,7 @@ a:hover {
                     <!-- تسجيل حساب بكلمة المرور -->
                     <div class="tab-pane fade" id="password-auth">
                         <form method="POST" action="{{ url_for('auth.register') }}" class="needs-validation" novalidate>
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="form-group">
                                 <label class="form-label" for="name">
                                     <i class="fas fa-user me-2"></i>الاسم الكامل
@@ -305,9 +312,9 @@ a:hover {
                 let phone = this.value.trim();
                 if (phone && !phone.startsWith('+')) {
                     if (phone.startsWith('0')) {
-                        phone = '+966' + phone.substring(1);
+                        phone = '+20' + phone.substring(1);
                     } else {
-                        phone = '+966' + phone;
+                        phone = '+20' + phone;
                     }
                     this.value = phone;
                 }

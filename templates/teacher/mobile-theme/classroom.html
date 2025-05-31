@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{ classroom.name }} - الحصة</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+            padding-top: var(--header-height);
+            min-height: 100vh;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            color: white;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Logo Styles */
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-container {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .notification-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 1rem;
+        }
+
+        /* Classroom Info Card */
+        .classroom-info-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .classroom-code {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 1rem;
+            background: var(--background-color);
+            border-radius: var(--border-radius-sm);
+            margin: 0.5rem 0;
+        }
+
+        /* Quick Links */
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .quick-link {
+            background: var(--surface-color);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            text-align: center;
+            color: var(--text-primary);
+            text-decoration: none;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quick-link i {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        /* Content Section */
+        .content-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .content-section h6 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        /* Chat Section */
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            background: var(--background-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: var(--surface-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+            z-index: 1000;
+            padding: 0.25rem;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.35rem;
+            font-size: 0.7rem;
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+
+        /* Action Button */
+        .action-button {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            text-decoration: none;
+        }
+
+        .action-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Content Preview Styles */
+        .content-preview img {
+            max-height: 300px;
+            object-fit: contain;
+            width: 100%;
+        }
+
+        .content-preview video,
+        .content-preview audio {
+            width: 100%;
+            border-radius: var(--border-radius-sm);
+            background: var(--background-color);
+        }
+
+        .content-preview .file-preview {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: var(--background-color);
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+        }
+
+        .content-preview .file-preview i {
+            margin-right: 1rem;
+            color: var(--accent-color);
+        }
+
+        .accordion-body {
+            background: var(--surface-color);
+            padding: 1.5rem;
+        }
+
+        .accordion-body img,
+        .accordion-body video,
+        .accordion-body audio,
+        .accordion-body embed {
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1rem;
+            border-radius: var(--border-radius-sm);
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <div class="logo">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة">
+            </div>
+        </div>
+        <h1 class="header-title">{{ classroom.name }}</h1>
+        <button class="notification-btn">
+            <i class="fas fa-bell"></i>
+        </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Classroom Info -->
+        <div class="classroom-info-card">
+            <div class="row">
+                <div class="col-8">
+                    <h6 class="text-primary">معلومات الفصل</h6>
+                    <div class="d-flex gap-2 align-items-center mb-2">
+                        <i class="fas fa-book text-primary"></i>
+                        <span>{{ classroom.subject }}</span>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center mb-2">
+                        <i class="fas fa-graduation-cap text-primary"></i>
+                        <span>{{ classroom.grade }}</span>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <i class="fas fa-users text-primary"></i>
+                        <span>{{ classroom.enrollments|length }} طالب</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <h6 class="text-primary">كود الفصل</h6>
+                    <div class="classroom-code" id="classroom-code">{{ classroom.code }}</div>
+                    <button id="copy-code-btn" class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-copy me-1"></i>نسخ الكود
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="quick-links">
+            <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="quick-link">
+                <i class="fas fa-tasks"></i>
+                <span>الواجبات</span>
+            </a>
+            <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="quick-link">
+                <i class="fas fa-question-circle"></i>
+                <span>الاختبارات</span>
+            </a>
+            <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="quick-link">
+                <i class="fas fa-user-graduate"></i>
+                <span>الطلاب</span>
+            </a>            
+            {% if can_use_chat %}
+            <a href="{{ url_for('teacher.chat_settings', classroom_id=classroom.id) }}" class="quick-link">
+                <i class="fas fa-comments"></i>
+                <span>المحادثة</span>
+            </a>
+            {% else %}
+            <div class="quick-link" style="opacity: 0.5;">
+                <i class="fas fa-comments"></i>
+                <span>المحادثة</span>
+                <small class="text-muted">غير متوفر في باقتك</small>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Content Section -->
+        <div class="content-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">محتوى الفصل</h6>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addContentModal">
+                    <i class="fas fa-plus me-1"></i>إضافة
+                </button>
+            </div>
+            {% if contents %}
+            <div class="accordion" id="contentAccordion">
+                {% for content in contents|sort(attribute='created_at', reverse=true) %}
+                <div class="accordion-item mb-2">                    
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#content{{ content.id }}">
+                            <div>
+                                <div class="fw-bold">{{ content.title }}</div>
+                                <small class="text-muted">{{ content.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                        </button>
+                    </h2>                    
+                    <div id="content{{ content.id }}" class="accordion-collapse collapse">
+                        <div class="accordion-body">                            
+                            {% if content.content_type == 'text' %}
+                                <p>{{ content.content_text }}</p>
+                                <div class="d-flex justify-content-end">
+                                    <form action="{{ url_for('teacher.delete_content', classroom_id=classroom.id, content_id=content.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('هل أنت متأكد من حذف هذا المحتوى؟')">
+                                            <i class="fas fa-trash me-1"></i>حذف
+                                        </button>
+                                    </form>
+                                </div>
+                            {% elif content.content_type == 'image' %}                                
+                            <div class="mb-3">
+                                    <img src="{{ content.content_url }}" class="img-fluid rounded" alt="{{ content.title }}">
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ content.content_url }}" class="btn btn-primary" download>
+                                        <i class="fas fa-download me-1"></i>تحميل الصورة
+                                    </a>
+                                    <form action="{{ url_for('teacher.delete_content', classroom_id=classroom.id, content_id=content.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="btn btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذا المحتوى؟')">
+                                            <i class="fas fa-trash me-1"></i>حذف
+                                        </button>
+                                    </form>
+                                </div>                            
+                                {% elif content.content_type == 'video' %}
+                                <div class="mb-3">
+                                    <div class="video-container">
+                                        <video 
+                                            class="w-100 rounded" 
+                                            controls 
+                                            preload="metadata"
+                                            poster="{{ url_for('static', filename='img/video-poster.jpg') }}"
+                                            controlsList="nodownload">
+                                            <source 
+                                                src="{{ content.content_url }}" 
+                                                type="video/mp4">
+                                            <track 
+                                                kind="captions" 
+                                                label="Arabic" 
+                                                srclang="ar" 
+                                                src="{{ content.caption_url if content.caption_url else '' }}">
+                                            المتصفح الخاص بك لا يدعم تشغيل الفيديو.
+                                        </video>
+                                    </div>
+                                    <div class="video-controls mt-2">
+                                        <div class="d-flex justify-content-between">
+                                            <div class="btn-group">
+                                                <a href="{{ content.content_url }}" class="btn btn-primary btn-sm" download>
+                                                    <i class="fas fa-download me-1"></i>تحميل
+                                                </a>
+                                                <form action="{{ url_for('teacher.delete_content', classroom_id=classroom.id, content_id=content.id) }}" 
+                                                      method="POST" class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <button type="submit" 
+                                                            class="btn btn-danger btn-sm" 
+                                                            onclick="return confirm('هل أنت متأكد من حذف هذا المحتوى؟')">
+                                                        <i class="fas fa-trash me-1"></i>حذف
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>                            
+                                {% elif content.content_type == 'audio' %}
+                                <div class="mb-3">
+                                    <audio class="w-100" controls>
+                                        <source src="{{ content.content_url }}" type="audio/mpeg">
+                                        المتصفح الخاص بك لا يدعم تشغيل الملفات الصوتية.
+                                    </audio>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ content.content_url }}" class="btn btn-primary" download>
+                                        <i class="fas fa-download me-1"></i>تحميل الملف الصوتي
+                                    </a>
+                                    <form action="{{ url_for('teacher.delete_content', classroom_id=classroom.id, content_id=content.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="btn btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذا المحتوى؟')">
+                                            <i class="fas fa-trash me-1"></i>حذف
+                                        </button>
+                                    </form>
+                                </div>                            
+                                {% elif content.content_type == 'pdf' %}
+                                <div class="mb-3">
+                                    <embed src="{{ content.content_url }}" type="application/pdf" class="w-100" style="height: 500px;">
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ content.content_url }}" class="btn btn-primary" download>
+                                        <i class="fas fa-download me-1"></i>تحميل PDF
+                                    </a>
+                                    <form action="{{ url_for('teacher.delete_content', classroom_id=classroom.id, content_id=content.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="btn btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذا المحتوى؟')">
+                                            <i class="fas fa-trash me-1"></i>حذف
+                                        </button>
+                                    </form>
+                                </div>                            {% else %}
+                                <div class="mb-3">
+                                    <div class="p-3 bg-light rounded">
+                                        <i class="fas fa-file fa-2x text-primary me-2"></i>
+                                        <span>{{ content.title }}</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ content.content_url }}" class="btn btn-primary" download>
+                                        <i class="fas fa-download me-1"></i>تحميل الملف
+                                    </a>
+                                    <form action="{{ url_for('teacher.delete_content', classroom_id=classroom.id, content_id=content.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="btn btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذا المحتوى؟')">
+                                            <i class="fas fa-trash me-1"></i>حذف
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                <p>لا يوجد محتوى بعد</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Students Section -->
+        <div class="content-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">الطلاب المسجلين</h6>
+                <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-users me-1"></i>عرض الكل
+                </a>
+            </div>
+            {% if enrollments %}
+            <div class="list-group list-group-flush">
+                {% for enrollment in enrollments[:5] %}                <div class="list-group-item d-flex justify-content-between align-items-center">                    <div>
+                        <div class="fw-bold">{{ enrollment.user.name }}</div>
+                        <small class="text-muted">{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</small>
+                    </div>
+                    <span class="badge bg-{{ 'success' if enrollment.is_active else 'danger' }} rounded-pill">
+                        {{ 'نشط' if enrollment.is_active else 'غير نشط' }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% if enrollments|length > 5 %}
+            <div class="text-center mt-3">
+                <a href="{{ url_for('teacher.students', classroom_id=classroom.id) }}" class="btn btn-light btn-sm">
+                    عرض المزيد
+                </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
+                <p>لا يوجد طلاب مسجلين بعد</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Chat Section -->
+        {% if can_use_chat %}        <div class="content-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">المحادثة</h6>
+                <a href="{{ url_for('teacher.chat_settings', classroom_id=classroom.id) }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-external-link-alt me-1"></i>فتح المحادثة
+                </a>
+            </div>
+            <div class="chat-container">
+                <!-- Chat messages will be loaded here -->
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="nav-item active">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصل</span>
+        </a>
+        <a href="{{ url_for('teacher.live_classroom', classroom_id=classroom.id) }}" class="nav-item">
+            <i class="fas fa-video"></i>
+            <span>البث المباشر</span>
+        </a>
+        <a href="{{ url_for('teacher.subscriptions') }}" class="nav-item">
+            <i class="fas fa-crown"></i>
+            <span>اشتراكاتي</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+
+    <!-- Modal إضافة محتوى -->
+    <div class="modal fade" id="addContentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white">إضافة محتوى جديد</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('teacher.add_content', classroom_id=classroom.id) }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">عنوان المحتوى</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>                        <div class="mb-3">
+                            <label for="content_type" class="form-label">نوع المحتوى</label>
+                            <select class="form-select" id="content_type" name="content_type" required>
+                                <option value="text">نص</option>
+                                <option value="pdf">ملف PDF</option>
+                                <option value="image">صورة</option>
+                                <option value="video">فيديو</option>
+                                <option value="audio">ملف صوتي</option>
+                                <option value="document">مستند</option>
+                            </select>
+                        </div>                        <div id="text-content" class="content-input">
+                            <div class="mb-3">
+                                <label for="content_text" class="form-label">المحتوى</label>
+                                <textarea class="form-control" id="content_text" name="content_text" rows="5"></textarea>
+                            </div>
+                        </div>                        <div id="file-content" class="content-input d-none">
+                            <div class="mb-3">
+                                <label for="content_file" class="form-label">الملف</label>
+                                <input type="file" class="form-control" id="content_file" name="content_file">
+                                <small class="file-types-info text-muted d-none">
+                                    الصيغ المدعومة: 
+                                    <span class="pdf-types d-none">.pdf</span>
+                                    <span class="image-types d-none">.jpg, .jpeg, .png, .gif</span>
+                                    <span class="video-types d-none">.mp4, .webm</span>
+                                    <span class="audio-types d-none">.mp3, .wav</span>
+                                    <span class="document-types d-none">.doc, .docx, .ppt, .pptx, .xls, .xlsx</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">إضافة</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>        // نسخ كود الفصل
+        document.getElementById('copy-code-btn').addEventListener('click', async function() {
+            const code = document.getElementById('classroom-code').textContent.trim();
+            const button = this;
+            
+            try {
+                // محاولة النسخ باستخدام Clipboard API
+                await navigator.clipboard.writeText(code);
+                button.innerHTML = '<i class="fas fa-check me-1"></i>تم النسخ';
+            } catch (err) {
+                // إذا فشل النسخ باستخدام Clipboard API، نستخدم طريقة بديلة
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = code;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    button.innerHTML = '<i class="fas fa-check me-1"></i>تم النسخ';
+                } catch (fallbackErr) {
+                    console.error('فشل نسخ النص:', fallbackErr);
+                    button.innerHTML = '<i class="fas fa-times me-1"></i>فشل النسخ';
+                }
+            }
+
+            // إعادة تعيين نص الزر بعد ثانيتين
+            setTimeout(() => {
+                button.innerHTML = '<i class="fas fa-copy me-1"></i>نسخ الكود';
+            }, 2000);
+        });
+
+        // إضافة تأثير عند الضغط على الأزرار
+        document.querySelectorAll('.action-button, .quick-link').forEach(button => {
+            button.addEventListener('touchstart', () => {
+                button.style.transform = 'scale(0.98)';
+            });
+            button.addEventListener('touchend', () => {
+                button.style.transform = '';
+            });
+        });
+
+        // تغيير محتوى النموذج بناءً على نوع المحتوى المحدد
+        document.getElementById('content_type').addEventListener('change', function() {
+            const value = this.value;
+            document.querySelectorAll('.content-input').forEach(div => {
+                div.classList.add('d-none');
+            });
+            if (value === 'text') {
+                document.getElementById('text-content').classList.remove('d-none');
+            } else {
+                document.getElementById('file-content').classList.remove('d-none');
+                // إظهار أنواع الملفات المدعومة بناءً على النوع المحدد
+                document.querySelector('.' + value + '-types').classList.remove('d-none');
+            }
+        });
+
+        $(document).ready(function() {
+            // التحكم في عرض حقول المحتوى حسب النوع المختار
+            $('#content_type').change(function() {
+                const selectedType = $(this).val();
+                
+                // إخفاء جميع الحقول
+                $('.content-input').addClass('d-none');
+                $('.file-types-info span').addClass('d-none');
+                
+                if (selectedType === 'text') {
+                    $('#text-content').removeClass('d-none');
+                    $('#content_file').removeAttr('required');
+                } else {
+                    $('#file-content').removeClass('d-none');
+                    $('#content_file').attr('required', 'required');
+                    $(`.${selectedType}-types`).removeClass('d-none');
+                    $('.file-types-info').removeClass('d-none');
+                }
+            });
+
+            // عند فتح النافذة
+            $('#addContentModal').on('shown.bs.modal', function () {
+                $('#title').focus();
+            });
+
+            // عند إغلاق النافذة
+            $('#addContentModal').on('hidden.bs.modal', function () {
+                // إعادة تعيين النموذج
+                $(this).find('form')[0].reset();
+                $('.content-input').addClass('d-none');
+                $('#text-content').removeClass('d-none');
+                $('.file-types-info').addClass('d-none');
+                $('.file-types-info span').addClass('d-none');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -701,10 +701,6 @@
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
-        .mobile-nav-item:last-child {
-            border-bottom: none;
-        }
-
         .mobile-nav-link {
             display: flex;
             align-items: center;
@@ -809,6 +805,14 @@
                     <span>الإعدادات</span>
                 </a>
             </li>
+            
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل خروج</span>
+                    </a>
+                </li>
+
         </ul>
     </nav>
 
@@ -920,7 +924,7 @@
                                             </a>
                                         </div>
                                     </div>
-                                    <h6 class="card-subtitle mb-2 text-muted">{{ plan.price }} ريال / {{ plan.duration_days }} يوم</h6>
+                                    <h6 class="card-subtitle mb-2 text-muted">{{ plan.price }} جنيه / {{ plan.duration_days }} يوم</h6>
                                     <p class="card-text">{{ plan.description }}</p>
                                     <div class="row">
                                         <div class="col-6">
@@ -976,26 +980,19 @@
                                                 <span class="badge badge-danger">منتهي</span>
                                                 {% else %}
                                                 <span class="badge badge-success">نشط</span>
-                                                <div class="btn-group mt-2">
-                                                    <a href="{{ url_for('admin.cancel_subscription', subscription_id=sub.id) }}" 
-                                                       class="btn btn-sm btn-warning" 
-                                                       onclick="return confirm('هل أنت متأكد من إلغاء هذا الاشتراك؟')" 
-                                                       title="إلغاء الاشتراك">
-                                                        <i class="fas fa-ban"></i>
-                                                    </a>
-                                                    <form action="{{ url_for('admin.delete_subscription') }}" 
-                                                          method="POST" 
-                                                          style="display: inline;"
-                                                          onsubmit="return confirm('هل أنت متأكد من حذف هذا الاشتراك نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')">
-                                                        <input type="hidden" name="subscription_id" value="{{ sub.id }}">
-                                                        <button type="submit" 
-                                                                class="btn btn-sm btn-danger" 
-                                                                title="حذف الاشتراك نهائياً">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                </div>
                                                 {% endif %}
+                                                <div class="btn-group mt-2">
+                                                    <button type="button" class="btn btn-sm btn-primary" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#extendModal"
+                                                            data-subscription-id="{{ sub.id }}">
+                                                        <i class="fas fa-calendar-plus"></i> تمديد
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger" 
+                                                            onclick="if(confirm('هل أنت متأكد من إلغاء هذا الاشتراك؟')) document.getElementById('cancelSubscriptionForm').submit();">
+                                                        <i class="fas fa-ban"></i> إلغاء
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -1134,6 +1131,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="{{ url_for('admin.new_subscription_plan') }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="modal-body">
                         <div class="row g-4">
                             <div class="col-12">
@@ -1179,7 +1177,7 @@
                                                min="0" 
                                                placeholder="0.00"
                                                required>
-                                        <span class="input-group-text">ريال</span>
+                                        <span class="input-group-text">جنيه</span>
                                     </div>
                                 </div>
                             </div>
@@ -1301,6 +1299,46 @@
             </div>
         </div>
     </div>
+
+    <!-- نموذج تمديد الاشتراك -->
+    <div class="modal fade" id="extendModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تمديد الاشتراك</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="#" method="post" id="extendSubscriptionForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="days" class="form-label">عدد الأيام</label>
+                            <input type="number" class="form-control" id="days" name="days" value="30" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="note" class="form-label">ملاحظات (اختياري)</label>
+                            <textarea class="form-control" id="note" name="note" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">تمديد الاشتراك</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج حذف الاشتراك -->
+    <form id="deleteSubscriptionForm" action="{{ url_for('admin.delete_subscription') }}" method="post" style="display: none;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="subscription_id" id="deleteSubscriptionId">
+    </form>
+
+    <!-- نموذج إلغاء الاشتراك -->
+    <form id="cancelSubscriptionForm" action="{{ url_for('admin.cancel_subscription', subscription_id=0) }}" method="post" style="display: none;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    </form>
 
     <!-- إضافة أنماط خاصة بالنموذج -->
     <style>
@@ -1603,6 +1641,17 @@
                 e.stopPropagation();
             });
         });
+
+        // تحديث نموذج التمديد عند فتح النافذة
+        var extendModal = document.getElementById('extendModal');
+        if (extendModal) {
+            extendModal.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                var subscriptionId = button.getAttribute('data-subscription-id');
+                var form = document.getElementById('extendSubscriptionForm');
+                form.action = "{{ url_for('admin.extend_subscription', subscription_id=0) }}".replace('0', subscriptionId);
+            });
+        }
     </script>
 </body>
 </html>

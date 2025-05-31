@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء فصل جديد - الحصة</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- هيدر الموبايل -->
+    <header class="mobile-header">
+        <a href="{{ url_for('teacher.dashboard') }}" class="mobile-header-brand">
+            <i class="fas fa-arrow-right"></i>
+            <h1 class="mobile-header-title">إنشاء فصل جديد</h1>
+        </a>
+        <button class="mobile-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- قائمة الموبايل -->
+    <nav class="mobile-nav">
+        <ul class="mobile-nav-list">
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('teacher.dashboard') }}" class="mobile-nav-link">
+                    <i class="fas fa-th-large"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="/teacher/classrooms" class="mobile-nav-link active">
+                    <i class="fas fa-chalkboard"></i>
+                    <span>الفصول</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('teacher.payments') }}" class="mobile-nav-link">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>المدفوعات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('teacher.subscriptions') }}" class="mobile-nav-link">
+                    <i class="fas fa-crown"></i>
+                    <span>الاشتراكات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('auth.profile') }}" class="mobile-nav-link">
+                    <i class="fas fa-user-circle"></i>
+                    <span>الملف الشخصي</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <form method="POST" action="{{ url_for('teacher.create_classroom') }}" id="create-form" class="mobile-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <!-- بيانات الفصل الأساسية -->
+            <div class="mobile-form-group">
+                <label class="mobile-label">اسم الفصل</label>
+                <input type="text" class="mobile-input" id="name" name="name" required>
+            </div>
+
+            <div class="mobile-form-group">
+                <label class="mobile-label">المادة</label>
+                <input type="text" class="mobile-input" id="subject" name="subject" required>
+            </div>
+
+            <div class="mobile-form-group">
+                <label class="mobile-label">المرحلة الدراسية</label>
+                <select class="mobile-input" id="grade" name="grade" required>
+                    <option value="">-- اختر المرحلة --</option>
+                    <option value="أول ابتدائي">أول ابتدائي</option>
+                    <option value="ثاني ابتدائي">ثاني ابتدائي</option>
+                    <option value="ثالث ابتدائي">ثالث ابتدائي</option>
+                    <option value="رابع ابتدائي">رابع ابتدائي</option>
+                    <option value="خامس ابتدائي">خامس ابتدائي</option>
+                    <option value="سادس ابتدائي">سادس ابتدائي</option>
+                    <option value="أول متوسط">أول متوسط</option>
+                    <option value="ثاني متوسط">ثاني متوسط</option>
+                    <option value="ثالث متوسط">ثالث متوسط</option>
+                    <option value="أول ثانوي">أول ثانوي</option>
+                    <option value="ثاني ثانوي">ثاني ثانوي</option>
+                    <option value="ثالث ثانوي">ثالث ثانوي</option>
+                    <option value="جامعي">جامعي</option>
+                    <option value="أخرى">أخرى</option>
+                </select>
+            </div>
+
+            <div class="mobile-form-group">
+                <label class="mobile-label">العام الدراسي</label>
+                <select class="mobile-input" id="academic_year" name="academic_year" required>
+                    <option value="">-- اختر العام الدراسي --</option>
+                    <option value="2023-2024">2023-2024</option>
+                    <option value="2024-2025">2024-2025</option>
+                    <option value="2025-2026">2025-2026</option>
+                </select>
+            </div>
+
+            <div class="mobile-form-group">
+                <label class="mobile-label">وصف الفصل (اختياري)</label>
+                <textarea class="mobile-input mobile-textarea" id="description" name="description" rows="4"></textarea>
+            </div>
+
+            <!-- لون الفصل -->
+            <div class="mobile-form-group">
+                <label class="mobile-label">لون الفصل</label>
+                <div class="color-options">
+                    <div class="color-option selected" data-color="#3498db" style="background-color: #3498db"></div>
+                    <div class="color-option" data-color="#2ecc71" style="background-color: #2ecc71"></div>
+                    <div class="color-option" data-color="#e74c3c" style="background-color: #e74c3c"></div>
+                    <div class="color-option" data-color="#f39c12" style="background-color: #f39c12"></div>
+                    <div class="color-option" data-color="#9b59b6" style="background-color: #9b59b6"></div>
+                    <div class="color-option" data-color="#1abc9c" style="background-color: #1abc9c"></div>
+                    <div class="color-option" data-color="#34495e" style="background-color: #34495e"></div>
+                </div>
+                <input type="hidden" id="classroom-color" name="color" value="#3498db">
+            </div>
+
+            <!-- خيارات الفصل المجاني/المدفوع -->
+            <div class="mobile-form-group">
+                <div class="plan-toggle">
+                    <input type="checkbox" id="is_free" name="is_free" class="plan-toggle-input" checked>
+                    <label class="plan-toggle-label" for="is_free">
+                        <span class="plan-toggle-inner"></span>
+                        <span class="plan-toggle-switch"></span>
+                    </label>
+                    <span class="plan-type">فصل مجاني</span>
+                </div>
+            </div>
+
+            <!-- خيارات الفصل المدفوع -->
+            <div class="paid-options d-none">
+                <div class="mobile-form-group">
+                    <label class="mobile-label">سعر الفصل (جنيه)</label>
+                    <div class="number-input">
+                        <button type="button" class="minus" onclick="adjustPrice(-10)">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" class="mobile-input" id="price" name="price" min="1" value="99">
+                        <button type="button" class="plus" onclick="adjustPrice(10)">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mobile-form-group">
+                    <label class="mobile-label">مدة الاشتراك (بالأيام)</label>
+                    <div class="number-input">
+                        <button type="button" class="minus" onclick="adjustDuration(-1)">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" class="mobile-input" id="duration_days" name="duration_days" min="1" value="30">
+                        <button type="button" class="plus" onclick="adjustDuration(1)">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <!-- زر الإنشاء الثابت -->
+    <div class="floating-submit">
+        <button type="submit" form="create-form" class="submit-button">
+            <i class="fas fa-plus-circle"></i>
+            <span>إنشاء الفصل</span>
+        </button>
+    </div>
+
+    <style>
+    :root {
+        --accent-color: #6C63FF;
+        --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+        --surface-color: #FFFFFF;
+        --background-color: #F4F7FE;
+        --text-primary: #2D3748;
+        --text-secondary: #718096;
+        --border-radius-lg: 20px;
+        --border-radius-md: 16px;
+        --border-radius-sm: 8px;
+        --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.15);
+    }
+
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background: var(--background-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 90px;
+    }
+
+    /* هيدر الموبايل */
+    .mobile-header {
+        background: var(--accent-gradient);
+        padding: 15px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .mobile-header-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        text-decoration: none;
+    }
+
+    .mobile-header-title {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+
+    .mobile-toggle {
+        background: rgba(255,255,255,0.1);
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* القائمة الجانبية */
+    .mobile-nav {
+        position: fixed;
+        top: 60px;
+        right: 0;
+        left: 0;
+        background: white;
+        z-index: 999;
+        transform: translateY(-100%);
+        transition: transform 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .mobile-nav.show {
+        transform: translateY(0);
+    }
+
+    .mobile-nav-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .mobile-nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        color: var(--text-primary);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .mobile-nav-link i {
+        width: 24px;
+        margin-left: 15px;
+        color: var(--accent-color);
+    }
+
+    .mobile-nav-link.active {
+        background: var(--accent-gradient);
+        color: white;
+    }
+
+    .mobile-nav-link.active i {
+        color: white;
+    }
+
+    /* المحتوى الرئيسي */
+    .main-content {
+        margin-top: 70px;
+        padding: 20px;
+    }
+
+    /* نموذج الإدخال */
+    .mobile-form {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: 20px;
+        box-shadow: var(--box-shadow);
+    }
+
+    .mobile-form-group {
+        margin-bottom: 20px;
+    }
+
+    .mobile-label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .mobile-input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: var(--border-radius-sm);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .mobile-input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+    }
+
+    .mobile-textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* خيارات الألوان */
+    .color-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .color-option {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .color-option.selected {
+        border-color: var(--accent-color);
+        transform: scale(1.1);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+    }
+
+    /* مفتاح النوع المجاني/المدفوع */
+    .plan-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .plan-toggle-input {
+        display: none;
+    }
+
+    .plan-toggle-label {
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .plan-toggle-inner {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: var(--accent-gradient);
+        border-radius: 15px;
+        position: relative;
+        transition: background 0.3s ease;
+    }
+
+    .plan-toggle-switch {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        bottom: 2px;
+        width: 26px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+    }
+
+    .plan-toggle-input:checked + .plan-toggle-label .plan-toggle-switch {
+        transform: translateX(-30px);
+    }
+
+    .plan-type {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    /* مدخلات الأرقام */
+    .number-input {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .number-input .mobile-input {
+        text-align: center;
+        width: 120px;
+    }
+
+    .number-input button {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 50%;
+        background: var(--accent-gradient);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .number-input button:active {
+        transform: scale(0.95);
+    }
+
+    /* زر الإنشاء الثابت */
+    .floating-submit {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+
+    .submit-button {
+        width: 100%;
+        padding: 15px;
+        border: none;
+        border-radius: var(--border-radius-md);
+        background: var(--accent-gradient);
+        color: white;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        box-shadow: var(--box-shadow);
+        transition: transform 0.2s ease;
+    }
+
+    .submit-button:active {
+        transform: scale(0.98);
+    }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تفعيل زر القائمة
+            const menuToggle = document.querySelector('.mobile-toggle');
+            const mobileNav = document.querySelector('.mobile-nav');
+            
+            menuToggle.addEventListener('click', function() {
+                mobileNav.classList.toggle('show');
+                this.querySelector('i').classList.toggle('fa-times');
+            });
+
+            // إغلاق القائمة عند النقر خارجها
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.mobile-nav') && 
+                    !e.target.closest('.mobile-toggle') && 
+                    mobileNav.classList.contains('show')) {
+                    mobileNav.classList.remove('show');
+                    menuToggle.querySelector('i').classList.remove('fa-times');
+                }
+            });
+
+            // اختيار لون الفصل
+            const colorOptions = document.querySelectorAll('.color-option');
+            const colorInput = document.getElementById('classroom-color');
+
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    colorInput.value = this.dataset.color;
+                });
+            });
+
+            // تبديل خيارات الفصل المدفوع
+            const isFreeCheckbox = document.getElementById('is_free');
+            const paidOptions = document.querySelector('.paid-options');
+            const planType = document.querySelector('.plan-type');
+
+            isFreeCheckbox.addEventListener('change', function() {
+                paidOptions.classList.toggle('d-none', this.checked);
+                planType.textContent = this.checked ? 'فصل مجاني' : 'فصل مدفوع';
+            });
+        });
+
+        // دوال تعديل السعر والمدة
+        function adjustPrice(delta) {
+            const priceInput = document.getElementById('price');
+            let currentPrice = parseInt(priceInput.value) || 0;
+            currentPrice = Math.max(1, currentPrice + delta);
+            priceInput.value = currentPrice;
+        }
+
+        function adjustDuration(delta) {
+            const durationInput = document.getElementById('duration_days');
+            let currentDuration = parseInt(durationInput.value) || 0;
+            currentDuration = Math.max(1, currentDuration + delta);
+            durationInput.value = currentDuration;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>الطلاب - {{ classroom.name }} - الحصة</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+            padding-top: var(--header-height);
+            min-height: 100vh;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            color: white;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .header-subtitle {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin: 0;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            text-decoration: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 1rem;
+        }        /* Search and Filter Styles */
+        .search-filter-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        #searchInput {
+            padding: 0.75rem 2.5rem 0.75rem 1rem;
+            border: 1px solid #E2E8F0;
+            border-radius: var(--border-radius-sm);
+            width: 100%;
+            font-size: 0.95rem;
+            background: #F8FAFC;
+            transition: all 0.3s ease;
+        }
+
+        #searchInput:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        #searchInput::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding: 0.25rem 0.25rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .filter-options::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-btn {
+            padding: 0.6rem 1.2rem;
+            border: 1px solid #E2E8F0;
+            border-radius: 100px;
+            background: white;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .filter-btn.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.2);
+        }
+        
+        /* Hide students that don't match search/filter */
+        .student-card.hidden {
+            display: none;
+        }
+
+        /* Guide Card */
+        .guide-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            margin-bottom: 1rem;
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        .guide-header {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 1rem;
+        }
+
+        .guide-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .guide-content {
+            padding: 1rem;
+        }
+
+        .activity-indicators {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .activity-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        /* Student Cards */
+        .student-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .student-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .student-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .info-item i {
+            color: var(--accent-color);
+            width: 20px;
+            text-align: center;
+        }
+
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .badge-danger {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .badge-primary {
+            background: rgba(108, 99, 255, 0.1);
+            color: var(--accent-color);
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: var(--border-radius-sm);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .btn-success {
+            background: linear-gradient(120deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(120deg, #dc3545, #ff4b5a);
+            color: white;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: var(--surface-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+            z-index: 1000;
+            padding: 0.25rem;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.35rem;
+            font-size: 0.7rem;
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }        .nav-item.active {
+            color: var(--accent-color);
+        }
+
+        /* Modal Styles */
+        .modal-content {
+            border-radius: var(--border-radius-md);
+        }
+
+        .modal-header {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <div>
+            <h1 class="header-title">الطلاب</h1>
+            <p class="header-subtitle">{{ classroom.name }}</p>
+        </div>
+        <div style="width: 40px"></div>
+    </header>    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Search & Filter Section -->
+        <div class="search-filter-card">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="form-control" placeholder="ابحث باسم الطالب أو رقم الهاتف...">
+            </div>
+            <div class="filter-options">
+                <button class="filter-btn active" data-filter="all">الكل</button>
+                <button class="filter-btn" data-filter="active">نشط</button>
+                <button class="filter-btn" data-filter="inactive">معطل</button>
+            </div>
+        </div>
+
+        <!-- Guide Card -->
+        <div class="guide-card">
+            <div class="guide-header">
+                <h2 class="guide-title">دليل نشاط الطلاب</h2>
+            </div>
+            <div class="guide-content">
+                <ul class="activity-indicators">
+                    <li class="activity-indicator">
+                        <i class="fas fa-circle text-success"></i>
+                        <span>نشط حالياً</span>
+                    </li>
+                    <li class="activity-indicator">
+                        <i class="fas fa-circle text-warning"></i>
+                        <span>غير نشط</span>
+                    </li>
+                    <li class="activity-indicator">
+                        <i class="fas fa-circle text-danger"></i>
+                        <span>غائب لفترة طويلة</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Students List -->
+        {% if enrollments %}            {% for enrollment in enrollments %}
+            <div class="student-card" data-status="{{ 'active' if enrollment.is_active else 'inactive' }}" {% if not enrollment.is_active %}class="hidden"{% endif %}>
+                <div class="student-header">
+                    <h3 class="student-name">
+                        {{ enrollment.user.name }}
+                        <span class="student-status student-inactive" data-student-id="{{ enrollment.user.id }}"></span>
+                    </h3>
+                    {% if enrollment.is_active %}
+                        <span class="badge badge-success">مفعل</span>
+                    {% else %}
+                        <span class="badge badge-danger">معطل</span>
+                    {% endif %}
+                </div>
+
+                <div class="student-info">
+                    <div class="info-item">
+                        <i class="fas fa-phone"></i>
+                        <span class="phone-number">{{ enrollment.user.phone }}</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-star"></i>
+                        <span>{{ enrollment.points }} نقطة</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-clock"></i>
+                        <span class="last-activity" data-student-id="{{ enrollment.user.id }}">-</span>
+                    </div>
+                </div>
+
+                <form id="form-{{ enrollment.id }}" method="POST" action="{{ url_for('teacher.toggle_student_status', classroom_id=classroom.id, enrollment_id=enrollment.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn-action {{ 'btn-danger' if enrollment.is_active else 'btn-success' }}">
+                        <i class="fas {{ 'fa-user-slash' if enrollment.is_active else 'fa-user-check' }}"></i>
+                        {{ 'تعطيل' if enrollment.is_active else 'تفعيل' }}
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-user-graduate"></i>
+                <h5>لا يوجد طلاب في هذا الفصل بعد</h5>
+                <p>سيظهر الطلاب هنا عند انضمامهم للفصل</p>
+            </div>
+        {% endif %}
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="nav-item active">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصل</span>
+        </a>
+        <a href="{{ url_for('teacher.live_classroom', classroom_id=classroom.id) }}" class="nav-item">
+            <i class="fas fa-video"></i>
+            <span>البث المباشر</span>
+        </a>
+        <a href="{{ url_for('teacher.subscriptions') }}" class="nav-item">
+            <i class="fas fa-crown"></i>
+            <span>اشتراكاتي</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تأكيد العملية</h5>
+                    <button type="button" class="btn-close me-auto ms-0" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-circle fa-3x text-warning mb-3"></i>
+                        <p id="confirmMessage" class="mb-0"></p>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" id="confirmAction">تأكيد</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            
+            // Handle student status toggle
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const button = this.querySelector('button');
+                    const isActive = button.classList.contains('btn-danger');
+                    const action = isActive ? 'تعطيل' : 'تفعيل';
+                    const studentName = this.closest('.student-card').querySelector('.student-name').textContent.trim();
+                    
+                    document.getElementById('confirmMessage').textContent = 
+                        `هل أنت متأكد من ${action} الطالب "${studentName}"؟`;
+                    
+                    const confirmButton = document.getElementById('confirmAction');
+                    confirmButton.className = `btn ${isActive ? 'btn-danger' : 'btn-success'}`;
+                    confirmButton.innerHTML = `<i class="fas ${isActive ? 'fa-user-slash' : 'fa-user-check'} me-2"></i>${action}`;
+                    
+                    confirmButton.setAttribute('data-form-id', this.id);
+                    
+                    confirmModal.show();
+                });
+            });
+            
+            document.getElementById('confirmAction').addEventListener('click', function() {
+                const formId = this.getAttribute('data-form-id');
+                const form = document.getElementById(formId);
+                if (form) {
+                    confirmModal.hide();
+                    form.submit();
+                }
+            });
+        });        // Search and Filter Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const studentCards = document.querySelectorAll('.student-card');
+            const emptyState = document.querySelector('.empty-state');
+
+            let currentFilter = 'all';
+            let timeout = null;
+
+            // Handle search input with debounce
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    applyFilters();
+                }, 300);
+            });
+
+            // Handle filter buttons
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    applyFilters();
+                });
+            });
+
+            // Apply both search and status filters
+            function applyFilters() {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                let visibleCount = 0;
+
+                studentCards.forEach(card => {
+                    const name = card.querySelector('.student-name').textContent.trim().toLowerCase();
+                    const phone = card.querySelector('.phone-number').textContent.trim().toLowerCase();
+                    const status = card.getAttribute('data-status'); // Using getAttribute for better compatibility
+
+                    const matchesSearch = !searchTerm || name.includes(searchTerm) || phone.includes(searchTerm);
+                    const matchesFilter = currentFilter === 'all' || status === currentFilter;
+                    const shouldShow = matchesSearch && matchesFilter;
+
+                    card.classList.toggle('hidden', !shouldShow);
+                    if (shouldShow) visibleCount++;
+                });
+
+                // Show/hide empty state message
+                if (emptyState) {
+                    if (visibleCount === 0) {
+                        emptyState.style.display = 'block';
+                        emptyState.querySelector('h5').textContent = 'لا توجد نتائج';
+                        emptyState.querySelector('p').textContent = 'لا يوجد طلاب يطابقون معايير البحث';
+                    } else {
+                        emptyState.style.display = 'none';
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

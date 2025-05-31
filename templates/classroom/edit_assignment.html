@@ -292,6 +292,7 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('teacher.edit_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="form-group mb-4">
                             <label class="form-label" for="title">عنوان الواجب</label>
                             <input type="text" class="form-control" id="title" name="title" value="{{ assignment.title }}" required>

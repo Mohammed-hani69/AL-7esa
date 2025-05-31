@@ -389,6 +389,14 @@
                         <span>الإعدادات</span>
                     </a>
                 </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل خروج</span>
+                    </a>
+                </li>
+
             </ul>
         </aside>
 
@@ -402,6 +410,7 @@
                         </div>
                         <div class="card-body">
                             <form action="{{ url_for('admin.settings') }}" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <div class="mb-4">
                                     <label class="form-label" for="system_name">اسم النظام <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="system_name" name="system_name" value="{{ settings.system_name }}" required>

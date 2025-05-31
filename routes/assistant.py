@@ -1,12 +1,23 @@
+from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
 from functools import wraps
 from app import db
-from models import User, Role, Classroom, ClassroomEnrollment, Assignment, AssignmentSubmission
+from models import Subscription, User, Role, Classroom, ClassroomEnrollment, Assignment, AssignmentSubmission
 from models import ChatMessage, ChatSettings, ChatParticipant
 from models import Quiz, QuizQuestion, QuizAnswer, QuizAttempt
+
+
+# دالة للتحقق من نوع الجهاز (موبايل أو جهاز مكتبي)
+def is_mobile():
+    user_agent = request.headers.get('User-Agent', '').lower()
+    mobile_patterns = [
+        'android', 'iphone', 'ipod', 'windows phone', 'mobile', 'tablet',
+        'blackberry', 'opera mini', 'opera mobi', 'webos', 'fennec'
+    ]
+    return any(pattern in user_agent for pattern in mobile_patterns)
 
 # Allowed file extensions for uploads
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -27,14 +38,52 @@ def assistant_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+# Get teacher's current subscription plan
+def get_current_plan():
+    active_sub = Subscription.query.filter(
+        Subscription.user_id == current_user.id,
+        Subscription.end_date > datetime.utcnow(),
+        Subscription.is_active == True
+    ).first()
+
+    if active_sub:
+        return active_sub.plan
+    return None
+
 @assistant_bp.route('/dashboard')
 @login_required
 @assistant_required
 def dashboard():
-    # Get classrooms where the user is assigned as an assistant
-    assigned_classrooms = Classroom.query.filter_by(assistant_id=current_user.id).all()
-    
-    return render_template('dashboard/assistant.html', classrooms=assigned_classrooms)
+    # Get classrooms where the user is assigned as an assistant with teacher information
+    assigned_classrooms = Classroom.query\
+        .join(User, Classroom.teacher_id == User.id)\
+        .filter(Classroom.assistant_id == current_user.id)\
+        .all()
+    # إعداد قائمة فيها الفصل + صلاحية الشات لكل فصل
+    classrooms_with_chat = []
+    for classroom in assigned_classrooms:
+        teacher = User.query.get(classroom.teacher_id)
+        teacher_subscription = Subscription.query.filter(
+            Subscription.user_id == teacher.id,
+            Subscription.end_date > datetime.utcnow(),
+            Subscription.is_active == True
+        ).first()
+
+        can_use_chat = False
+        if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
+            can_use_chat = True
+
+        classrooms_with_chat.append({
+            'classroom': classroom,
+            'can_use_chat': can_use_chat
+        })
+
+    template = 'dashboard/mobile-theme/assistant.html' if is_mobile() else 'dashboard/assistant.html'
+    return render_template(template, 
+                            classrooms=assigned_classrooms,
+                            classrooms_with_chat=classrooms_with_chat,
+                            )
 
 @assistant_bp.route('/classroom/<int:classroom_id>')
 @login_required
@@ -55,12 +104,39 @@ def classroom(classroom_id):
     
     # Get teacher info
     teacher = User.query.get(classroom.teacher_id)
+
+    # إعداد قائمة فيها الفصل + صلاحية الشات لكل فصل
+
+    assigned_classrooms = Classroom.query\
+        .join(User, Classroom.teacher_id == User.id)\
+        .filter(Classroom.assistant_id == current_user.id)\
+        .all()
+
+    classrooms_with_chat = []
+    for classroom in assigned_classrooms:
+        teacher = User.query.get(classroom.teacher_id)
+        teacher_subscription = Subscription.query.filter(
+            Subscription.user_id == teacher.id,
+            Subscription.end_date > datetime.utcnow(),
+            Subscription.is_active == True
+        ).first()
+
+        can_use_chat = False
+        if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
+            can_use_chat = True
+
+        classrooms_with_chat.append({
+            'classroom': classroom,
+            'can_use_chat': can_use_chat
+        })
     
-    return render_template('classroom/assistant_view.html',
+    template = 'classroom/mobile-theme/assistant_view.html' if is_mobile() else 'classroom/assistant_view.html'
+    return render_template(template,
                            classroom=classroom,
                            enrollments=enrollments,
                            assignments=assignments,
-                           teacher=teacher)
+                           teacher=teacher,
+                           classrooms_with_chat=classrooms_with_chat)
 
 @assistant_bp.route('/classroom/<int:classroom_id>/chat')
 @login_required
@@ -78,12 +154,39 @@ def chat(classroom_id):
     
     # Get enrolled students for chat management
     enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom.id, is_active=True).all()
+
+    # إعداد قائمة فيها الفصل + صلاحية الشات لكل فصل
+
+    assigned_classrooms = Classroom.query\
+        .join(User, Classroom.teacher_id == User.id)\
+        .filter(Classroom.assistant_id == current_user.id)\
+        .all()
+
+    classrooms_with_chat = []
+    for classroom in assigned_classrooms:
+        teacher = User.query.get(classroom.teacher_id)
+        teacher_subscription = Subscription.query.filter(
+            Subscription.user_id == teacher.id,
+            Subscription.end_date > datetime.utcnow(),
+            Subscription.is_active == True
+        ).first()
+
+        can_use_chat = False
+        if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
+            can_use_chat = True
+
+        classrooms_with_chat.append({
+            'classroom': classroom,
+            'can_use_chat': can_use_chat
+        })
     
-    return render_template('classroom/chat.html',
+    template = 'classroom/mobile-theme/chat.html' if is_mobile() else 'classroom/chat.html'
+    return render_template(template,
                            classroom=classroom,
                            messages=messages,
                            enrollments=enrollments,
-                           user_type='assistant')
+                           user_type='assistant',
+                           classrooms_with_chat=classrooms_with_chat)
 
 @assistant_bp.route('/classroom/<int:classroom_id>/chat/delete_message/<int:message_id>', methods=['POST'])
 @login_required
@@ -154,10 +257,37 @@ def assignments(classroom_id):
     
     # Get assignments
     assignments = Assignment.query.filter_by(classroom_id=classroom.id).all()
+
+    # إعداد قائمة فيها الفصل + صلاحية الشات لكل فصل
+
+    assigned_classrooms = Classroom.query\
+        .join(User, Classroom.teacher_id == User.id)\
+        .filter(Classroom.assistant_id == current_user.id)\
+        .all()
+
+    classrooms_with_chat = []
+    for classroom in assigned_classrooms:
+        teacher = User.query.get(classroom.teacher_id)
+        teacher_subscription = Subscription.query.filter(
+            Subscription.user_id == teacher.id,
+            Subscription.end_date > datetime.utcnow(),
+            Subscription.is_active == True
+        ).first()
+
+        can_use_chat = False
+        if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
+            can_use_chat = True
+
+        classrooms_with_chat.append({
+            'classroom': classroom,
+            'can_use_chat': can_use_chat
+        })
     
-    return render_template('classroom/assistant_assignments.html',
+    template = 'classroom/mobile-theme/assistant_assignments.html' if is_mobile() else 'classroom/assistant_assignments.html'
+    return render_template(template,
                            classroom=classroom,
-                           assignments=assignments)
+                           assignments=assignments,
+                           classrooms_with_chat = classrooms_with_chat)
 
 @assistant_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/submissions')
 @login_required
@@ -185,7 +315,8 @@ def assignment_submissions(classroom_id, assignment_id):
         if enrollment.user_id not in submitted_student_ids
     ]
     
-    return render_template('classroom/assistant_submissions.html',
+    template = 'classroom/mobile-theme/assistant_submissions.html' if is_mobile() else 'classroom/assistant_submissions.html'
+    return render_template(template,
                            classroom=classroom,
                            assignment=assignment,
                            submissions=submissions,
@@ -237,10 +368,37 @@ def students(classroom_id):
     
     # Get enrollments with students
     enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom.id).all()
+
+    # إعداد قائمة فيها الفصل + صلاحية الشات لكل فصل
+
+    assigned_classrooms = Classroom.query\
+        .join(User, Classroom.teacher_id == User.id)\
+        .filter(Classroom.assistant_id == current_user.id)\
+        .all()
+
+    classrooms_with_chat = []
+    for classroom in assigned_classrooms:
+        teacher = User.query.get(classroom.teacher_id)
+        teacher_subscription = Subscription.query.filter(
+            Subscription.user_id == teacher.id,
+            Subscription.end_date > datetime.utcnow(),
+            Subscription.is_active == True
+        ).first()
+
+        can_use_chat = False
+        if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
+            can_use_chat = True
+
+        classrooms_with_chat.append({
+            'classroom': classroom,
+            'can_use_chat': can_use_chat
+        })
     
-    return render_template('classroom/assistant_students.html',
+    template = 'classroom/mobile-theme/assistant_students.html' if is_mobile() else 'classroom/assistant_students.html'
+    return render_template(template,
                            classroom=classroom,
-                           enrollments=enrollments)
+                           enrollments=enrollments,
+                           classrooms_with_chat=classrooms_with_chat)
 
 @assistant_bp.route('/classroom/<int:classroom_id>/chat/settings', methods=['GET', 'POST'])
 @login_required
@@ -283,7 +441,8 @@ def chat_settings(classroom_id):
     # Get chat participants
     chat_participants = ChatParticipant.query.filter_by(classroom_id=classroom.id).all()
     
-    return render_template('classroom/chat_settings.html',
+    template = 'classroom/mobile-theme/chat_settings.html' if is_mobile() else 'classroom/chat_settings.html'
+    return render_template(template,
                          classroom=classroom,
                          settings=settings,
                          enrollments=enrollments,
@@ -352,10 +511,37 @@ def quizzes(classroom_id):
     
     # Get quizzes
     quizzes = Quiz.query.filter_by(classroom_id=classroom.id).order_by(Quiz.created_at.desc()).all()
+
+    # إعداد قائمة فيها الفصل + صلاحية الشات لكل فصل
+
+    assigned_classrooms = Classroom.query\
+        .join(User, Classroom.teacher_id == User.id)\
+        .filter(Classroom.assistant_id == current_user.id)\
+        .all()
+
+    classrooms_with_chat = []
+    for classroom in assigned_classrooms:
+        teacher = User.query.get(classroom.teacher_id)
+        teacher_subscription = Subscription.query.filter(
+            Subscription.user_id == teacher.id,
+            Subscription.end_date > datetime.utcnow(),
+            Subscription.is_active == True
+        ).first()
+
+        can_use_chat = False
+        if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
+            can_use_chat = True
+
+        classrooms_with_chat.append({
+            'classroom': classroom,
+            'can_use_chat': can_use_chat
+        })
     
-    return render_template('classroom/assistant_quizzes.html',
+    template = 'classroom/mobile-theme/assistant_quizzes.html' if is_mobile() else 'classroom/assistant_quizzes.html'
+    return render_template(template,
                          classroom=classroom,
-                         quizzes=quizzes)
+                         quizzes=quizzes,
+                         classrooms_with_chat=classrooms_with_chat)
 
 @assistant_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/results')
 @login_required
@@ -372,7 +558,8 @@ def quiz_results(classroom_id, quiz_id):
     # Get all attempts for this quiz, including user information through enrollment
     attempts = QuizAttempt.query.filter_by(quiz_id=quiz.id).order_by(QuizAttempt.start_time.desc()).all()
     
-    return render_template('classroom/assistant_quiz_results.html',
+    template = 'classroom/mobile-theme/assistant_quiz_results.html' if is_mobile() else 'classroom/assistant_quiz_results.html'
+    return render_template(template,
                          classroom=classroom,
                          quiz=quiz,
                          attempts=attempts)
@@ -402,7 +589,8 @@ def grade_quiz(classroom_id, quiz_id):
         .distinct()\
         .all()
     
-    return render_template('classroom/assistant_grade_quiz.html',
+    template = 'classroom/mobile-theme/assistant_grade_quiz.html' if is_mobile() else 'classroom/assistant_grade_quiz.html'
+    return render_template(template,
                          classroom=classroom,
                          quiz=quiz,
                          attempts=attempts)
@@ -482,7 +670,8 @@ def view_student_attempt(classroom_id, quiz_id, attempt_id):
         .order_by(QuizQuestion.position)\
         .all()
     
-    return render_template('classroom/assistant_view_attempt.html',
+    template = 'classroom/mobile-theme/assistant_view_attempt.html' if is_mobile() else 'classroom/assistant_view_attempt.html'
+    return render_template(template,
                          classroom=classroom,
                          quiz=quiz,
                          attempt=attempt,

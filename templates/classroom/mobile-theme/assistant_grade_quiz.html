@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تصحيح الاختبار - {{ quiz.title }} - {{ classroom.name }} - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.15);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+
+        /* هيدر الموبايل */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .mobile-header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .mobile-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            margin-top: 70px;
+            padding: 15px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .attempt-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .attempt-header {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .student-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .attempt-time {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius-sm);
+        }
+
+        .attempt-content {
+            padding: 15px;
+        }
+
+        .question-block {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--background-color);
+        }
+
+        .question-block:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .question-text {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .answer-box {
+            background: var(--background-color);
+            padding: 15px;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 15px;
+        }
+
+        .grading-form {
+            display: grid;
+            gap: 15px;
+        }
+
+        .grading-field {
+            margin-bottom: 15px;
+        }
+
+        .grading-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .grading-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--background-color);
+            border-radius: var(--border-radius-sm);
+            transition: all 0.3s ease;
+        }
+
+        .grading-input:focus {
+            border-color: var(--accent-color);
+            outline: none;
+        }
+
+        .btn-grade {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-grade:active {
+            transform: scale(0.98);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h4 {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- هيدر الموبايل -->
+    <header class="mobile-header">
+        <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="mobile-header-brand">
+            <i class="fas fa-arrow-right"></i>
+            <h1 class="mobile-header-title">تصحيح الاختبار</h1>
+        </a>
+        <div class="header-subtitle">{{ classroom.name }}</div>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <h2 class="page-title">{{ quiz.title }}</h2>
+
+        {% if attempts %}
+            {% for attempt in attempts %}
+                {% if not attempt.is_graded %}
+                    <div class="attempt-card">
+                        <div class="attempt-header">
+                            <h3 class="student-name">{{ attempt.enrollment.user.name }}</h3>
+                            <div class="attempt-time">
+                                <i class="fas fa-clock"></i>
+                                <span>{{ attempt.start_time.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="attempt-content">
+                            <form method="POST" action="{{ url_for('assistant.grade_quiz_attempt', classroom_id=classroom.id, quiz_id=quiz.id, attempt_id=attempt.id) }}">
+                                {% for answer in attempt.answers %}
+                                    {% if answer.question.question_type in ['essay', 'short_answer'] and answer.points_earned is none %}
+                                        <div class="question-block">
+                                            <div class="question-text">
+                                                السؤال {{ loop.index }}: {{ answer.question.question_text }}
+                                            </div>
+                                            
+                                            <div class="answer-box">
+                                                {{ answer.text_answer|format_math|safe }}
+                                            </div>
+
+                                            <div class="grading-form">
+                                                <div class="grading-field">
+                                                    <label class="grading-label" for="points_{{ answer.id }}">
+                                                        النقاط (من {{ answer.question.points }})
+                                                    </label>
+                                                    <input type="number"
+                                                           class="grading-input"
+                                                           id="points_{{ answer.id }}"
+                                                           name="points_{{ answer.id }}"
+                                                           min="0"
+                                                           max="{{ answer.question.points }}"
+                                                           required>
+                                                </div>
+
+                                                <div class="grading-field">
+                                                    <label class="grading-label" for="feedback_{{ answer.id }}">
+                                                        التعليق (اختياري)
+                                                    </label>
+                                                    <textarea class="grading-input"
+                                                              id="feedback_{{ answer.id }}"
+                                                              name="feedback_{{ answer.id }}"
+                                                              rows="3"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+
+                                <button type="submit" class="btn-grade">
+                                    <i class="fas fa-save"></i>
+                                    <span>حفظ التصحيح</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h4>لا توجد اختبارات تحتاج للتصحيح</h4>
+                <p>جميع الإجابات المقالية تم تصحيحها</p>
+            </div>
+        {% endif %}
+    </main>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

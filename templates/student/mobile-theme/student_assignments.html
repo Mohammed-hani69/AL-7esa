@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الواجبات - {{ classroom.name }} - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0 0 var(--bottom-nav-height) 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 1rem;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            color: white;
+        }
+
+        .mobile-header .title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            flex: 1;
+            text-align: center;
+        }
+
+        .mobile-header .btn-link {
+            color: white;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--border-radius-sm);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0;
+            text-decoration: none;
+        }
+
+        .mobile-content {
+            margin-top: 76px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .assignments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .assignment-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: transform 0.3s ease;
+        }
+
+        .assignment-card:active {
+            transform: scale(0.98);
+        }
+
+        .assignment-header {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 1rem;
+        }
+
+        .assignment-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .assignment-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.75rem;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.9rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .assignment-content {
+            padding: 1rem;
+        }
+
+        .assignment-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .assignment-status {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status-submitted {
+            background: linear-gradient(120deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .status-pending {
+            background: linear-gradient(120deg, #FF9800, #F7971E);
+            color: white;
+        }
+
+        .status-expired {
+            background: linear-gradient(120deg, #FF5252, #FF1744);
+            color: white;
+        }
+
+        .status-available {
+            background: linear-gradient(120deg, #17a2b8, #0056b3);
+            color: white;
+        }
+
+        .empty-state {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-lg);
+            padding: 3rem 1rem;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h5 {
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface-color);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 0.75rem 0;
+            z-index: 1000;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 0.5rem;
+            min-width: 60px;
+        }
+
+        .bottom-nav-item i {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- رأس الصفحة -->
+    <header class="mobile-header">
+        <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn-link">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <h1 class="title">واجبات {{ classroom.name }}</h1>
+        <span style="width: 40px;"></span>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="mobile-content">
+        {% if assignments %}
+        <div class="assignments-list">
+            {% for assignment in assignments %}
+            <a href="{{ url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}" 
+               class="assignment-card">
+                <div class="assignment-header">
+                    <h3 class="assignment-title">{{ assignment.title }}</h3>
+                    <div class="assignment-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>
+                                {% if assignment.due_date %}
+                                    {{ assignment.due_date.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-star"></i>
+                            <span>{{ assignment.points }} نقطة</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="assignment-content">
+                    <p class="assignment-description">{{ assignment.description|truncate(100) }}</p>
+                    {% if assignment.id in submission_map %}
+                        {% if submission_map[assignment.id].grade is not none %}
+                            <span class="assignment-status status-submitted">
+                                <i class="fas fa-check-circle me-1"></i>
+                                تم التقييم: {{ submission_map[assignment.id].grade }}/{{ assignment.points }}
+                            </span>
+                        {% else %}
+                            <span class="assignment-status status-pending">
+                                <i class="fas fa-clock me-1"></i>
+                                تم التسليم، بانتظار التقييم
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        {% if assignment.due_date and assignment.due_date < now %}
+                            <span class="assignment-status status-expired">
+                                <i class="fas fa-times-circle me-1"></i>
+                                انتهت المهلة
+                            </span>
+                        {% else %}
+                            <span class="assignment-status status-available">
+                                <i class="fas fa-pencil-alt me-1"></i>
+                                متاح للتسليم
+                            </span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-tasks"></i>
+            <h5>لا توجد واجبات بعد</h5>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- شريط التنقل السفلي -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('student.dashboard') }}" class="bottom-nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="bottom-nav-item">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصل</span>
+        </a>
+        <a href="{{ url_for('student.assignments', classroom_id=classroom.id) }}" class="bottom-nav-item active">
+            <i class="fas fa-tasks"></i>
+            <span>الواجبات</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="bottom-nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+</body>
+</html>

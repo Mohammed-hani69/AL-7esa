@@ -388,7 +388,7 @@
                                             <td>{{ payment.classroom.name }}</td>
                                             <td>{{ payment.user.name }}</td>
                                             <td>{{ payment.user.phone }}</td>
-                                            <td>{{ payment.amount }} ريال</td>
+                                            <td>{{ payment.amount }} جنيه</td>
                                             <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                             <td>
                                                 <a href="{{ url_for('static', filename=payment.screenshot_path) }}" 
@@ -401,11 +401,13 @@
                                             <td>
                                                 <div class="btn-group" role="group">
                                                     <form action="{{ url_for('teacher.approve_payment', payment_id=payment.id) }}" method="POST" style="display:inline;">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('هل أنت متأكد من تفعيل اشتراك الطالب؟')">
                                                             <i class="fas fa-check"></i> قبول
                                                         </button>
                                                     </form>
                                                     <form action="{{ url_for('teacher.reject_payment', payment_id=payment.id) }}" method="POST" style="display:inline;">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('هل أنت متأكد من رفض عملية الدفع؟')">
                                                             <i class="fas fa-times"></i> رفض
                                                         </button>
@@ -452,7 +454,7 @@
                                             <td>{{ payment.classroom.name }}</td>
                                             <td>{{ payment.user.name }}</td>
                                             <td>{{ payment.user.phone }}</td>
-                                            <td>{{ payment.amount }} ريال</td>
+                                            <td>{{ payment.amount }} جنيه</td>
                                             <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                             <td>
                                                 {% if payment.status == 'success' %}

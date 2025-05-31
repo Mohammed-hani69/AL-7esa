@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مراجعة إجابات الطالب - {{ quiz.title }} - {{ classroom.name }}</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
+
+        /* تنسيق عام */
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* تخطيط الصفحة */
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        /* السايدبار */
+        .innovative-sidebar {
+            background: var(--surface-color);
+            box-shadow: var(--box-shadow);
+            padding: 2rem 1rem;
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: 300px;
+            z-index: 1000;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .innovative-sidebar .nav-link {
+            color: var(--text-secondary);
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.2s ease;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .innovative-sidebar .nav-link:hover,
+        .innovative-sidebar .nav-link.active {
+            color: var(--accent-color);
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        .innovative-sidebar .nav-link i {
+            width: 1.5rem;
+            text-align: center;
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            padding: 2rem;
+            margin-right: 300px;
+            transition: margin 0.3s ease;
+        }
+
+        /* الهيدر */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .page-header p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        /* بطاقة ملخص المحاولة */
+        .attempt-summary {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(108, 99, 255, 0.05);
+            border-radius: var(--border-radius-sm);
+        }
+
+        .summary-item i {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .summary-item-content span {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .summary-item-content strong {
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        /* بطاقة الأسئلة */
+        .question-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .question-text {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: rgba(108, 99, 255, 0.05);
+            border-radius: var(--border-radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .option-item.selected {
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        .option-item.correct {
+            background: rgba(40, 167, 69, 0.1);
+            border-right: 3px solid #28a745;
+        }
+
+        .option-item.incorrect {
+            background: rgba(220, 53, 69, 0.1);
+            border-right: 3px solid #dc3545;
+        }
+
+        .text-answer {
+            background: rgba(108, 99, 255, 0.05);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+
+        .answer-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .answer-result.correct {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .answer-result.incorrect {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .answer-result.pending {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        /* التجاوب مع الشاشات الصغيرة */
+        @media (max-width: 991.98px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .innovative-sidebar {
+                transform: translateX(100%);
+            }
+
+            .innovative-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-right: 0;
+                padding: 1rem;
+            }
+
+            .mobile-toggle {
+                display: block !important;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .question-card {
+                padding: 1rem;
+            }
+        }
+
+        /* زر القائمة للموبايل */
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        /* أزرار التنقل السفلية */
+        .bottom-navigation {
+            display: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .bottom-navigation {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--surface-color);
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+                padding: 0.75rem;
+                z-index: 1000;
+            }
+
+            .nav-pill {
+                flex: 1;
+                text-align: center;
+                padding: 0.5rem;
+                color: var(--text-secondary);
+                text-decoration: none;
+                font-size: 0.8rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.25rem;
+            }
+
+            .nav-pill.active {
+                color: var(--accent-color);
+            }
+
+            .nav-pill i {
+                font-size: 1.2rem;
+            }
+
+            .main-content {
+                padding-bottom: 5rem;
+            }
+        }
+
+        /* Custom Styles */
+        .options-list .option-item {
+            border: 1px solid #e3e6f0;
+            transition: all 0.2s ease;
+        }
+        
+        .options-list .option-item.selected {
+            background-color: #f8f9fc;
+        }
+        
+        .options-list .option-item.correct {
+            border-color: #1cc88a;
+        }
+        
+        .score-feedback {
+            border: 1px solid #e3e6f0;
+        }
+        
+        @media (max-width: 576px) {
+            .container-fluid {
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+            }
+            
+            .card-header {
+                padding: 0.75rem 1rem;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- القائمة الجانبية -->
+        <aside class="innovative-sidebar">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="الحصة" height="40">
+                <button class="mobile-toggle d-lg-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.dashboard') }}" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="nav-link">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>{{ classroom.name }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- الهيدر -->
+            <header class="page-header">
+                <div>
+                    <button class="mobile-toggle d-lg-none me-3">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>{{ quiz.title }}</h1>
+                    <p>{{ attempt.enrollment.user.name }} - {{ classroom.name }}</p>
+                </div>
+                <a href="{{ url_for('assistant.quiz_results', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-1"></i>العودة للنتائج
+                </a>
+            </header>
+
+            <!-- ملخص المحاولة -->
+            <div class="attempt-summary">
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <i class="fas fa-clock"></i>
+                        <div class="summary-item-content">
+                            <span>وقت البدء</span>
+                            <strong>{{ attempt.start_time.strftime('%Y-%m-%d %H:%M') }}</strong>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-flag-checkered"></i>
+                        <div class="summary-item-content">
+                            <span>وقت الانتهاء</span>
+                            <strong>{{ attempt.end_time.strftime('%Y-%m-%d %H:%M') }}</strong>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-hourglass-half"></i>
+                        <div class="summary-item-content">
+                            <span>المدة المستغرقة</span>
+                            <strong>{% set duration = attempt.end_time - attempt.start_time %}
+                                {{ duration.seconds // 60 }} دقيقة</strong>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-star"></i>
+                        <div class="summary-item-content">
+                            <span>الدرجة</span>
+                            <strong>{{ attempt.score }}/{{ quiz.total_points }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الإجابات -->
+            <div class="answers-section">
+                {% for answer in answers %}
+                    <div class="question-card">
+                        <div class="question-text">
+                            <span class="badge bg-primary me-2">السؤال {{ loop.index }}</span>
+                            {{ answer.question.question_text }}
+                        </div>
+                        
+                        {% if answer.question.question_type in ['multiple_choice', 'true_false'] %}
+                            <ul class="options-list">
+                                {% for option in answer.question.options %}
+                                    <li class="option-item {% if answer.selected_option_id == option.id %}selected{% endif %} {% if option.is_correct %}correct{% endif %}">
+                                        <i class="fas {% if answer.selected_option_id == option.id %}fa-dot-circle{% else %}fa-circle{% endif %} me-2"></i>
+                                        <span>{{ option.option_text }}</span>
+                                        {% if option.is_correct %}
+                                            <i class="fas fa-check-circle text-success ms-auto"></i>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <div class="answer-result {% if answer.is_correct %}correct{% else %}incorrect{% endif %}">
+                                {% if answer.is_correct %}
+                                    <i class="fas fa-check-circle me-2"></i>إجابة صحيحة (+{{ answer.points_earned }} نقطة)
+                                {% else %}
+                                    <i class="fas fa-times-circle me-2"></i>إجابة خاطئة
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="text-answer">
+                                {{ answer.text_answer|format_math|safe }}
+                            </div>
+                            
+                            {% if answer.points_earned is not none %}
+                                <div class="answer-result correct">
+                                    <div class="mb-2">
+                                        <i class="fas fa-star me-2"></i>النقاط: {{ answer.points_earned }}/{{ answer.question.points }}
+                                    </div>
+                                    {% if answer.feedback %}
+                                        <div class="mt-2">
+                                            <strong>التعليق:</strong><br>
+                                            {{ answer.feedback }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="answer-result pending">
+                                    <i class="fas fa-clock me-2"></i>في انتظار التصحيح
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </main>
+
+        <!-- شريط التنقل السفلي للموبايل -->
+        <nav class="bottom-navigation">
+            <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="nav-pill">
+                <i class="fas fa-tasks"></i>
+                <span>الواجبات</span>
+            </a>
+            <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="nav-pill active">
+                <i class="fas fa-question-circle"></i>
+                <span>الاختبارات</span>
+            </a>
+            <a href="{{ url_for('assistant.students', classroom_id=classroom.id) }}" class="nav-pill">
+                <i class="fas fa-users"></i>
+                <span>الطلاب</span>
+            </a>
+            <a href="{{ url_for('assistant.chat', classroom_id=classroom.id) }}" class="nav-pill">
+                <i class="fas fa-comments"></i>
+                <span>المحادثة</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+    </script>
+</body>
+</html>

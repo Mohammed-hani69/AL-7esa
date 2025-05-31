@@ -398,6 +398,7 @@
                 </div>
                 <div class="quiz-content">
                     <form method="POST" action="{{ url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group">
                             <label class="form-label" for="title">عنوان الاختبار</label>
                             <input type="text" class="form-control" id="title" name="title" value="{{ quiz.title }}" required>
@@ -483,6 +484,7 @@
                                     <form id="delete-question-{{ question.id }}" 
                                           action="{{ url_for('teacher.delete_question', classroom_id=classroom.id, quiz_id=quiz.id, question_id=question.id) }}" 
                                           method="POST" class="d-inline">
+                                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                         <button type="button" class="btn btn-danger" 
                                                 onclick="deleteQuestion({{ question.id }}, '{{ question.question_text }}')">
                                             <i class="fas fa-trash"></i>
@@ -512,6 +514,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="add-question-form" action="{{ url_for('teacher.add_question', classroom_id=classroom.id, quiz_id=quiz.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="modal-body">
                         <div class="form-group">
                             <label class="form-label" for="question-text">نص السؤال</label>

@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ quiz.title }} - {{ classroom.name }}</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --success-color: #10B981;
+            --error-color: #EF4444;
+            --warning-color: #F59E0B;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .mobile-header-logo {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+            object-fit: contain;
+        }
+
+        .mobile-header-content {
+            flex: 1;
+            text-align: center;
+        }
+
+        .mobile-header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .mobile-header-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .quiz-timer {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 6rem;
+            padding: 1rem;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .progress-count {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar-container {
+            background: var(--background-color);
+            border-radius: 10px;
+            height: 12px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent-gradient);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Question Cards */
+        .quiz-question {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .question-header {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .question-number-title {
+            flex: 1;
+        }
+
+        .question-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .question-points {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            margin-right: 1rem;
+        }
+
+        .question-body {
+            padding: 1.5rem;
+        }
+
+        /* Quiz Options */
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .quiz-option {
+            background: var(--background-color);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--accent-color);
+            background: white;
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.1);
+        }
+
+        .quiz-option.selected {
+            border-color: var(--accent-color);
+            background: white;
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.15);
+        }
+
+        .quiz-option.selected::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quiz-option.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+            color: white;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .form-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .form-check-input {
+            margin: 0;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--text-secondary);
+            background: transparent;
+        }
+
+        .form-check-input:checked {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .form-check-label {
+            flex: 1;
+            color: var(--text-primary);
+            font-weight: 500;
+            line-height: 1.5;
+            cursor: pointer;
+        }
+
+        /* Text Areas */
+        .form-control {
+            border: 2px solid var(--background-color);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1rem;
+            background: var(--background-color);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(108, 99, 255, 0.1);
+            background: white;
+        }
+
+        /* Result Alerts */
+        .result-alert {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+        }
+
+        .result-alert.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .result-alert.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .result-alert.info {
+            background: rgba(108, 99, 255, 0.1);
+            color: var(--accent-color);
+            border: 1px solid rgba(108, 99, 255, 0.2);
+        }
+
+        .result-alert.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .correct-answer {
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        /* Submit Button */
+        .submit-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1rem;
+        }
+
+        .submit-btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Disabled States */
+        .form-control:disabled,
+        .form-check-input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .quiz-option.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .quiz-option.disabled:hover {
+            border-color: transparent;
+            background: var(--background-color);
+            box-shadow: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 360px) {
+            .main-content {
+                padding: 0.75rem;
+            }
+            
+            .progress-section,
+            .question-body {
+                padding: 1rem;
+            }
+            
+            .question-header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+            
+            .question-points {
+                margin-right: 0;
+            }
+            
+            .submit-btn {
+                padding: 0.875rem 2rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <a href="{{ url_for('student.dashboard') }}" class="mobile-header-brand">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+        </a>
+        <div class="mobile-header-content">
+            <h1 class="mobile-header-title">{{ quiz.title }}</h1>
+            <p class="mobile-header-subtitle">{{ classroom.name }}</p>
+        </div>
+        {% if not attempt.end_time %}
+            <div id="quiz-timer" class="quiz-timer" 
+                 data-duration="{{ quiz.duration_minutes }}"
+                 data-start-time="{{ attempt.start_time.timestamp() * 1000 }}">
+            </div>
+        {% endif %}
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Quiz Progress -->
+        {% if not attempt.end_time %}
+            <div class="progress-section">
+                <div class="progress-header">
+                    <h3 class="progress-title">تقدم الاختبار</h3>
+                    <div id="quiz-progress-count" class="progress-count">0 من {{ questions|length }}</div>
+                </div>
+                <div class="progress-bar-container">
+                    <div id="quiz-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+                </div>
+                <p id="quiz-progress-text" class="progress-text">الأسئلة المجاب عليها: 0 من {{ questions|length }}</p>
+            </div>
+        {% endif %}
+        
+        <!-- Quiz Form -->
+        <form id="quiz-form" method="POST" action="{{ url_for('student.start_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            {% for question in questions %}
+                <div id="question-{{ question.id }}" class="quiz-question" 
+                     data-type="{{ question.question_type }}" 
+                     data-required="true">
+                    <div class="question-header">
+                        <div class="question-number-title">
+                            <h6 class="question-title">
+                                {{ loop.index }}. {{ question.question_text }}
+                            </h6>
+                        </div>
+                        <div class="question-points">{{ question.points }} نقطة</div>
+                    </div>
+                    <div class="question-body">
+                        {% if question.question_type in ['multiple_choice', 'true_false'] %}
+                            <div class="quiz-options">
+                                {% for option in question.options %}
+                                    <div class="quiz-option {% if attempt.end_time %}disabled{% endif %}" 
+                                         onclick="{% if not attempt.end_time %}selectOption(this, {{ question.id }}, {{ option.id }}){% endif %}">
+                                        <div class="form-check">
+                                            <input type="radio" 
+                                                   class="form-check-input" 
+                                                   name="question_{{ question.id }}" 
+                                                   id="option_{{ question.id }}_{{ option.id }}" 
+                                                   value="{{ option.id }}"
+                                                   {% if attempt.end_time %}disabled{% endif %}
+                                                   {% if attempt.end_time and option.id in answered_options %}checked{% endif %}>
+                                            <label class="form-check-label" for="option_{{ question.id }}_{{ option.id }}">
+                                                {{ option.option_text }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                
+                                {% if attempt.end_time %}
+                                    <div class="mt-3">
+                                        {% set answer = attempt.answers|selectattr('question_id', 'equalto', question.id)|first %}
+                                        {% if answer and answer.is_correct %}
+                                            <div class="result-alert success">
+                                                <i class="fas fa-check-circle"></i>
+                                                <span>إجابة صحيحة (+{{ answer.points_earned }} نقطة)</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="result-alert error">
+                                                <i class="fas fa-times-circle"></i>
+                                                <div>
+                                                    <div>إجابة خاطئة</div>
+                                                    {% for option in question.options %}
+                                                        {% if option.is_correct %}
+                                                            <div class="correct-answer">الإجابة الصحيحة: {{ option.option_text }}</div>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="form-group">
+                                <textarea class="form-control" 
+                                          name="question_{{ question.id }}" 
+                                          rows="4"
+                                          placeholder="اكتب إجابتك هنا..."
+                                          {% if attempt.end_time %}readonly{% endif %}
+                                          >{{ answered_texts.get(question.id, '') }}</textarea>
+                                
+                                {% if attempt.end_time %}
+                                    <div class="mt-3">
+                                        {% set answer = attempt.answers|selectattr('question_id', 'equalto', question.id)|first %}
+                                        {% if answer %}
+                                            {% if answer.points_earned is not none %}
+                                                <div class="result-alert info">
+                                                    <i class="fas fa-star"></i>
+                                                    <span>النقاط المكتسبة: {{ answer.points_earned }} من {{ question.points }}</span>
+                                                </div>
+                                            {% else %}
+                                                <div class="result-alert warning">
+                                                    <i class="fas fa-clock"></i>
+                                                    <span>في انتظار التصحيح</span>
+                                                </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+            
+            {% if not attempt.end_time %}
+                <div class="submit-section">
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-paper-plane me-2"></i>تسليم الاختبار
+                    </button>
+                </div>
+            {% endif %}
+        </form>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function selectOption(optionElement, questionId, optionId) {
+            // Remove selected class from all options in this question
+            const questionElement = document.getElementById('question-' + questionId);
+            const allOptions = questionElement.querySelectorAll('.quiz-option');
+            allOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selected class to clicked option
+            optionElement.classList.add('selected');
+            
+            // Check the radio button
+            const radioButton = optionElement.querySelector('input[type="radio"]');
+            radioButton.checked = true;
+            
+            // Update progress
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const totalQuestions = {{ questions|length }};
+            const answeredQuestions = document.querySelectorAll('input[type="radio"]:checked, textarea:not(:empty)').length;
+            const progressPercentage = Math.round((answeredQuestions / totalQuestions) * 100);
+            
+            // Update progress bar
+            document.getElementById('quiz-progress-bar').style.width = progressPercentage + '%';
+            
+            // Update progress text
+            document.getElementById('quiz-progress-text').textContent = 
+                `الأسئلة المجاب عليها: ${answeredQuestions} من ${totalQuestions}`;
+            
+            // Update progress count
+            document.getElementById('quiz-progress-count').textContent = 
+                `${answeredQuestions} من ${totalQuestions}`;
+        }
+
+        // Timer functionality        function startTimer() {
+            const timerElement = document.getElementById('quiz-timer');
+            if (!timerElement) return;
+            
+            // Get duration in minutes and start time in milliseconds
+            const duration = parseInt(timerElement.dataset.duration || '0', 10);
+            const startTime = parseInt(timerElement.dataset.startTime || Date.now(), 10);
+            
+            console.log('Duration (minutes):', duration);
+            console.log('Start time:', new Date(startTime).toISOString());
+            
+            if (duration > 0 && startTime > 0) {
+                // Calculate end time (duration in minutes * 60 seconds * 1000 milliseconds)
+                const endTime = startTime + (duration * 60 * 1000);
+                console.log('End time:', new Date(endTime).toISOString());
+                
+                // Update timer every second                const timerInterval = setInterval(() => {
+                    const now = Date.now();
+                    const timeLeft = Math.max(0, endTime - now);
+                    
+                    console.log('Current time:', new Date(now).toISOString());
+                    console.log('Time left (ms):', timeLeft);
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        timerElement.textContent = 'انتهى الوقت';
+                        timerElement.style.background = 'rgba(239, 68, 68, 0.8)';
+                        console.log('Timer expired, submitting form...');
+                        // Auto-submit form
+                        document.getElementById('quiz-form').submit();
+                        return;
+                    }
+                    
+                    // Format remaining time
+                    const minutes = Math.floor(timeLeft / (60 * 1000));
+                    const seconds = Math.floor((timeLeft % (60 * 1000)) / 1000);
+                    timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    // Change color when time is running low
+                    if (timeLeft <= 300 * 1000) { // 5 minutes
+                        timerElement.style.background = 'rgba(245, 158, 11, 0.8)';
+                    }
+                    if (timeLeft <= 60 * 1000) { // 1 minute
+                        timerElement.style.background = 'rgba(239, 68, 68, 0.8)';
+                    }
+                }, 1000);
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Start timer if quiz is active
+            startTimer();
+            
+            // Initialize progress
+            updateProgress();
+            
+            // Add event listeners for text areas
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', updateProgress);
+            });
+            
+            // Highlight answered questions function (if needed)
+            if (typeof highlightAnsweredQuestions === 'function') {
+                highlightAnsweredQuestions();
+            }
+        });
+    </script>
+
+</body>
+</html>

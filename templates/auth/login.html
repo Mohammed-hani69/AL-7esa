@@ -194,19 +194,22 @@
                     <!-- تسجيل الدخول برقم الهاتف -->
                     <div class="tab-pane fade show active" id="phone-auth">
                         <div id="phone-auth-step-1">
-                            <div class="form-group">
-                                <label class="form-label" for="phone">
-                                    <i class="fas fa-phone me-2"></i>رقم الهاتف
-                                </label>
-                                <input type="tel" id="phone" class="form-control" placeholder="05xxxxxxxx" dir="ltr">
-                                <small class="form-text">سيتم إرسال رمز التحقق إلى هذا الرقم</small>
-                            </div>
-                            
-                            <div id="recaptcha-container" class="mb-3"></div>
-                            
-                            <button id="auth-submit-btn" class="btn btn-primary">
-                                <i class="fas fa-paper-plane me-2"></i>إرسال رمز التحقق
-                            </button>
+                            <form id="phone-form" method="POST" action="{{ url_for('auth.login', auth_type='phone') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="form-group">
+                                    <label class="form-label" for="phone">
+                                        <i class="fas fa-phone me-2"></i>رقم الهاتف
+                                    </label>
+                                    <input type="tel" id="phone" class="form-control" placeholder="+20xxxxxxxx" dir="ltr">
+                                    <small class="form-text">سيتم إرسال رمز التحقق إلى هذا الرقم</small>
+                                </div>
+                                
+                                <div id="recaptcha-container" class="mb-3"></div>
+                                
+                                <button id="auth-submit-btn" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i>إرسال رمز التحقق
+                                </button>
+                            </form>
                         </div>
                         
                         <div id="phone-auth-step-2" class="d-none">
@@ -230,7 +233,8 @@
                     
                     <!-- تسجيل الدخول بكلمة المرور -->
                     <div class="tab-pane fade" id="password-auth">
-                        <form method="POST" action="{{ url_for('auth.login') }}">
+                        <form method="POST" action="{{ url_for('auth.login', auth_type='password') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="form-group">
                                 <label class="form-label" for="login-phone">
                                     <i class="fas fa-phone me-2"></i>رقم الهاتف

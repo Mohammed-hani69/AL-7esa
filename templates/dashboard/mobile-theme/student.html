@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الطالب - الحصة</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
+        }        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }        .mobile-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            background: var(--accent-gradient);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .mobile-header-logo {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+            object-fit: contain;
+        }
+
+        .mobile-header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .notification-button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.25rem;
+            padding: 0.5rem;
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #FF6B6B;
+            color: white;
+            border-radius: 50%;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.75rem;
+            min-width: 20px;
+            text-align: center;
+        }        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--accent-color);
+        }
+
+        .bottom-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 6rem;
+            padding: 1rem;
+        }        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.25rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: var(--box-shadow);
+            min-height: 140px;
+            justify-content: center;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        /* Task Cards */
+        .task-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--background-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .task-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--background-color);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .task-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .task-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        .progress-container {
+            margin-top: 0.5rem;
+        }
+
+        .progress {
+            height: 6px;
+            background: var(--background-color);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-gradient);
+        }
+
+        .progress-label {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Charts Section */
+        .chart-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .chart-container {
+            height: 200px;
+            margin-top: 1rem;
+        }
+
+        /* Swipe Navigation */
+        .swipe-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .swipe-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            opacity: 0.3;
+        }
+
+        .swipe-dot.active {
+            opacity: 1;
+            background: var(--accent-color);
+        }
+
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        /* Responsive Charts */
+        @media (max-width: 360px) {
+            .chart-container {
+                height: 180px;
+            }
+            
+            .stats-grid {
+                gap: 0.75rem;
+            }
+            
+            .stat-card {
+                min-height: 120px;
+                padding: 1rem;
+            }
+            
+            .stat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .stat-value {
+                font-size: 1.25rem;
+                margin-bottom: 0.25rem;
+            }
+        }
+    </style>
+</head>
+<body>    <!-- هيدر الموبايل -->
+    <header class="mobile-header">
+        <a href="{{ url_for('student.dashboard') }}" class="mobile-header-brand">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+            <h1 class="mobile-header-title">لوحة التحكم</h1>
+        </a>
+        <div>
+            <button class="notification-button" id="notificationButton">
+                <i class="fas fa-bell"></i>
+                {% if unread_notifications %}
+                <span class="notification-badge">{{ unread_notifications|length }}</span>
+                {% endif %}
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Message -->
+        <div class="mb-3">
+            <h2 class="h5 mb-1">مرحباً {{ current_user.name }}</h2>
+            <p class="text-secondary small mb-3">مرحباً بك في لوحة تحكمك</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chalkboard"></i>
+                </div>
+                <div class="stat-value">{{ enrollments|length }}</div>
+                <div class="stat-label">الفصول المسجلة</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="stat-value">{{ upcoming_assignments|length }}</div>
+                <div class="stat-label">الواجبات القادمة</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <div class="stat-value">{{ upcoming_quizzes|length }}</div>
+                <div class="stat-label">الاختبارات المتاحة</div>
+            </div>
+        </div>
+
+        <!-- Upcoming Assignments -->
+        <section class="task-section">
+            <div class="section-header">
+                <h3 class="section-title">الواجبات القادمة</h3>
+            </div>
+            {% if upcoming_assignments %}
+            <div class="task-list">
+                {% for assignment in upcoming_assignments %}
+                <a href="{{ url_for('student.view_assignment', classroom_id=assignment.classroom.id, assignment_id=assignment.id) }}" 
+                   class="task-item">
+                    <div class="task-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="task-content">
+                        <div class="task-title">{{ assignment.title }}</div>
+                        <div class="task-subtitle">{{ assignment.classroom.name }}</div>
+                        <div class="task-meta">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>يستحق {{ assignment.due_date|timeago }}</span>
+                        </div>
+                        <div class="progress-container">
+                            {% if assignment.submission %}
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 100%"></div>
+                            </div>
+                            <div class="progress-label text-success">تم التسليم</div>
+                            {% else %}
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-label text-warning">لم يتم التسليم</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <p>لا توجد واجبات قادمة حالياً</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Available Quizzes -->
+        <section class="task-section">
+            <div class="section-header">
+                <h3 class="section-title">الاختبارات المتاحة</h3>
+            </div>
+            {% if upcoming_quizzes %}
+            <div class="task-list">
+                {% for quiz in upcoming_quizzes %}
+                <a href="{{ url_for('student.quizzes', classroom_id=quiz.classroom.id, quiz_id=quiz.id) }}"
+                   class="task-item">
+                    <div class="task-icon">
+                        <i class="fas fa-question"></i>
+                    </div>
+                    <div class="task-content">
+                        <div class="task-title">{{ quiz.title }}</div>
+                        <div class="task-subtitle">{{ quiz.classroom.name }}</div>
+                        <div class="task-meta">
+                            <i class="fas fa-clock"></i>
+                            <span>{{ quiz.duration_minutes }} دقيقة</span>
+                            {% if quiz.start_time and quiz.end_time %}
+                                {% if now >= quiz.start_time and now <= quiz.end_time %}
+                                    <span class="badge bg-success">متاح الآن</span>
+                                {% else %}
+                                    <span class="badge bg-warning">يبدأ {{ quiz.start_time|timeago }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-success">متاح دائماً</span>
+                            {% endif %}
+                        </div>
+                        <div class="progress-container">
+                            {% if quiz.attempt %}
+                            <div class="progress">
+                                <div class="progress-bar" style="width: {{ quiz.attempt.score }}%"></div>
+                            </div>
+                            <div class="progress-label text-success">
+                                تم الإكمال بنسبة {{ quiz.attempt.score }}%
+                            </div>
+                            {% else %}
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-label text-warning">لم يتم البدء</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-clipboard-check"></i>
+                <p>لا توجد اختبارات متاحة حالياً</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Performance Charts -->
+        <section class="chart-section">
+            <div class="section-header">
+                <h3 class="section-title">تحليل الأداء</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+            <div class="swipe-indicator">
+                <span class="swipe-dot active"></span>
+                <span class="swipe-dot"></span>
+                <span class="swipe-dot"></span>
+            </div>
+        </section>
+    </main>    <!-- القائمة السفلية -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('student.dashboard') }}" class="bottom-nav-item active">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('student.classrooms') }}" class="bottom-nav-item">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصول</span>
+        </a>
+        {% if enrollments %}
+        <a href="{{ url_for('student.assignments', classroom_id=enrollments[0].classroom.id) }}" class="bottom-nav-item">
+            <i class="fas fa-tasks"></i>
+            <span>الواجبات</span>
+        </a>
+        {% else %}
+        <a href="#" onclick="alert('يرجى الانضمام إلى فصل أولاً');" class="bottom-nav-item">
+            <i class="fas fa-tasks"></i>
+            <span>الواجبات</span>
+        </a>
+        {% endif %}
+        <a href="{{ url_for('auth.profile') }}" class="bottom-nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تهيئة الرسوم البيانية
+        Chart.register(ChartDataLabels);
+        
+        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(performanceCtx, {
+            type: 'line',
+            data: {
+                labels: {{ assignment_dates|tojson }},
+                datasets: [{
+                    label: 'درجات الواجبات',
+                    data: {{ assignment_scores|tojson }},
+                    borderColor: '#6C63FF',
+                    backgroundColor: 'rgba(108, 99, 255, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'nearest',
+                    intersect: false,
+                    axis: 'x'
+                },
+                plugins: {
+                    datalabels: {
+                        display: false
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 0,
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // تفعيل قائمة الإشعارات
+        const notificationButton = document.getElementById('notificationButton');
+        notificationButton.addEventListener('click', function() {
+            // يمكنك إضافة منطق عرض الإشعارات هنا
+        });
+
+        // تفعيل القائمة الجانبية
+        const menuButton = document.getElementById('menuButton');
+        menuButton.addEventListener('click', function() {
+            // يمكنك إضافة منطق فتح القائمة الجانبية هنا
+        });
+
+        // دعم اللمس للتنقل بين الرسوم البيانية
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const chartSection = document.querySelector('.chart-section');
+        
+        chartSection.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        chartSection.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const SWIPE_THRESHOLD = 50;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) > SWIPE_THRESHOLD) {
+                if (diff > 0) {
+                    // تم السحب لليسار
+                    showNextChart();
+                } else {
+                    // تم السحب لليمين
+                    showPreviousChart();
+                }
+            }
+        }
+
+        let currentChartIndex = 0;
+        const totalCharts = 3;
+
+        function showNextChart() {
+            currentChartIndex = (currentChartIndex + 1) % totalCharts;
+            updateChartIndicators();
+        }
+
+        function showPreviousChart() {
+            currentChartIndex = (currentChartIndex - 1 + totalCharts) % totalCharts;
+            updateChartIndicators();
+        }
+
+        function updateChartIndicators() {
+            const dots = document.querySelectorAll('.swipe-dot');
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentChartIndex);
+            });
+        }
+    </script>
+</body>
+</html>

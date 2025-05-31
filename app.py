@@ -27,10 +27,11 @@ class Base(DeclarativeBase):
 # Initialize SQLAlchemy
 db = SQLAlchemy(model_class=Base)
 
-# Create Flask app
+# Create Flask app and initialize extensions
 app = Flask(__name__)
-csrf = CSRFProtect(app)
 app.config.from_object(Config)
+socketio = SocketIO(app, cors_allowed_origins="*")
+csrf = CSRFProtect(app)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Initialize database
@@ -135,9 +136,6 @@ create_upload_directories()
 @app.route('/favicon.ico')
 def favicon():
     return app.send_static_file('img/favicon.ico')
-
-# Initialize SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Import and register blueprints
 from routes import main_bp

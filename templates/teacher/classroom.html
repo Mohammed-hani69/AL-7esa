@@ -830,6 +830,7 @@
 
                                             <div class="content-actions mt-3 text-end">
                                                 <form method="POST" action="{{ url_for('teacher.delete_content', classroom_id=classroom.id, content_id=content.id) }}" class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذا المحتوى؟');">
                                                         <i class="fas fa-trash me-1"></i>حذف
                                                     </button>
@@ -930,9 +931,12 @@
                 <div class="modal-header">
                     <h5 class="modal-title">إضافة مساعد للفصل</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>                <form method="POST" action="{{ url_for('teacher.set_assistant', classroom_id=classroom.id) }}">
+                </div>                
+                <form method="POST" action="{{ url_for('teacher.set_assistant', classroom_id=classroom.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="modal-body">
-                        <div class="mb-3">                            <label class="form-label">رقم هاتف المساعد</label>
+                        <div class="mb-3">                            
+                            <label class="form-label">رقم هاتف المساعد</label>
                             <input type="tel" class="form-control" name="assistant_phone" required 
                                    placeholder="أدخل رقم الهاتف">
                             <div class="form-text">يجب إدخال رقم الهاتف بصيغة صحيحة</div>
@@ -959,8 +963,9 @@
                     <p>هل أنت متأكد من أنك تريد إزالة المساعد من هذا الفصل؟</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>                    <form method="POST" action="{{ url_for('teacher.set_assistant', classroom_id=classroom.id) }}" class="d-inline">
-                        <input type="hidden" name="remove" value="1">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>                    
+                    <form method="POST" action="{{ url_for('teacher.set_assistant', classroom_id=classroom.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-danger">إزالة</button>
                     </form>
                 </div>
@@ -977,6 +982,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form method="POST" action="{{ url_for('teacher.add_content', classroom_id=classroom.id) }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">عنوان المحتوى</label>

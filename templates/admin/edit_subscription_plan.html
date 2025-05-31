@@ -315,6 +315,14 @@
                         <span>الإعدادات</span>
                     </a>
                 </li>
+                
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل خروج</span>
+                    </a>
+                </li>
+
             </ul>
         </aside>
 
@@ -326,6 +334,7 @@
                 </div>
                 <div class="form-body">
                     <form action="{% if plan %}{{ url_for('admin.edit_subscription_plan', plan_id=plan.id) }}{% else %}{{ url_for('admin.new_subscription_plan') }}{% endif %}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-4">
                             <label class="form-label" for="name">اسم الباقة <span class="required-mark">*</span></label>
                             <input type="text" class="form-control" id="name" name="name" value="{{ plan.name if plan else '' }}" required>
@@ -338,7 +347,7 @@
                         
                         <div class="row mb-4">
                             <div class="col-md-6 mb-3 mb-md-0">
-                                <label class="form-label" for="price">السعر (ريال) <span class="required-mark">*</span></label>
+                                <label class="form-label" for="price">السعر (جنيه) <span class="required-mark">*</span></label>
                                 <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" value="{{ plan.price if plan else '0' }}" required>
                             </div>
                             <div class="col-md-6">

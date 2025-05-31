@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>الفصول الدراسية - الحصة</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+            padding-top: var(--header-height);
+            min-height: 100vh;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            color: white;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .header-button {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 1rem;
+        }
+
+        /* Classroom Cards */
+        .classroom-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .classroom-header {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .classroom-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .classroom-body {
+            padding: 1rem;
+        }
+
+        .subject-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .classroom-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem;
+            background: var(--background-color);
+            border-radius: var(--border-radius-sm);
+        }
+
+        .stat-item i {
+            color: var(--accent-color);
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-item span {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .classroom-code {
+            text-align: center;
+            background: var(--background-color);
+            padding: 0.75rem;
+            border-radius: var(--border-radius-sm);
+            margin: 0.75rem 0;
+        }
+
+        .code {
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .classroom-footer {
+            padding: 0 1rem 1rem;
+        }
+
+        .btn-classroom {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: var(--surface-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+            z-index: 1000;
+            padding: 0.25rem;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.35rem;
+            font-size: 0.7rem;
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+
+        /* Create Classroom FAB */
+        .fab {
+            position: fixed;
+            bottom: calc(var(--bottom-nav-height) + 1rem);
+            right: 1rem;
+            background: var(--accent-gradient);
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: var(--box-shadow);
+            border: none;
+            z-index: 990;
+        }
+
+        /* Notifications Panel */
+        .notifications-panel {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            right: 0;
+            bottom: var(--bottom-nav-height);
+            background: var(--surface-color);
+            z-index: 1000;
+            display: none;
+            overflow-y: auto;
+        }
+
+        .notifications-panel.show {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--background-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--surface-color);
+            z-index: 1;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--background-color);
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+        }
+
+        .notification-item.unread {
+            background: rgba(108, 99, 255, 0.05);
+        }
+
+        .notification-icon {
+            background: var(--accent-gradient);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex-grow: 1;
+        }
+
+        .notification-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .notification-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-time {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .notifications-badge {
+            background: #FF6B6B;
+            color: white;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h5 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-create {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <h1 class="header-title">الفصول الدراسية</h1>
+        <div class="header-actions">
+            <button class="header-button" id="notificationsToggle">
+                <i class="fas fa-bell"></i>
+                {% if unread_notifications %}
+                <span class="notifications-badge">{{ unread_notifications|length }}</span>
+                {% endif %}
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% if classrooms %}
+            {% for classroom in classrooms %}
+            <div class="classroom-card">
+                <div class="classroom-header" style="background: linear-gradient(120deg, {{ classroom.color }}, {{ classroom.color }}88);">
+                    <h3 class="classroom-title">{{ classroom.name }}</h3>
+                </div>
+                <div class="classroom-body">
+                    <div class="subject-badges">
+                        <span class="badge bg-primary">{{ classroom.subject }}</span>
+                        <span class="badge bg-secondary">{{ classroom.grade }}</span>
+                        <span class="badge {{ 'bg-success' if classroom.is_free else 'bg-warning' }}">
+                            {{ 'مجاني' if classroom.is_free else 'مدفوع' }}
+                        </span>
+                    </div>
+                    
+                    <div class="classroom-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-user-graduate"></i>
+                            <span>{{ classroom_stats[classroom.id].total_students }} طالب</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-tasks"></i>
+                            <span>{{ classroom_stats[classroom.id].active_assignments }} واجب</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-question-circle"></i>
+                            <span>{{ classroom_stats[classroom.id].active_quizzes }} اختبار</span>
+                        </div>
+                    </div>
+
+                    <div class="classroom-code">
+                        <div class="text-muted mb-1">كود الفصل</div>
+                        <div class="code">{{ classroom.code }}</div>
+                    </div>
+
+                    <div class="text-center">
+                        <small class="text-muted">تاريخ الإنشاء: {{ classroom.created_at.strftime('%Y-%m-%d') }}</small>
+                    </div>
+                </div>
+                <div class="classroom-footer">
+                    <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn-classroom">
+                        دخول الفصل
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-school"></i>
+                <h5>لا توجد فصول دراسية بعد</h5>
+                {% if can_create_classroom %}
+                <p>ابدأ بإنشاء فصلك الأول!</p>
+                <a href="{{ url_for('teacher.create_classroom') }}" class="btn-create">
+                    <i class="fas fa-plus-circle"></i>
+                    إنشاء فصل جديد
+                </a>
+                {% else %}
+                <p>يرجى الاشتراك في باقة لتتمكن من إنشاء الفصول الدراسية</p>
+                <a href="{{ url_for('teacher.subscriptions') }}" class="btn-create">
+                    <i class="fas fa-shopping-cart"></i>
+                    عرض الباقات
+                </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </main>
+
+    <!-- Create Classroom FAB -->
+    {% if can_create_classroom and classrooms %}
+    <a href="{{ url_for('teacher.create_classroom') }}" class="fab">
+        <i class="fas fa-plus"></i>
+    </a>
+    {% endif %}
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="/teacher/classrooms" class="nav-item active">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصول</span>
+        </a>
+        <a href="{{ url_for('teacher.subscriptions') }}" class="nav-item">
+            <i class="fas fa-crown"></i>
+            <span>اشتراكاتي</span>
+        </a>
+        <a href="{{ url_for('teacher.payments') }}" class="nav-item">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>المدفوعات</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+
+    <!-- Notifications Panel -->
+    <div class="notifications-panel" id="notificationsPanel">
+        <div class="notification-header">
+            <h6 class="m-0">الإشعارات</h6>
+            {% if notifications %}
+            <button class="btn btn-sm text-primary" id="markAllRead">
+                <i class="fas fa-check-double"></i>
+                تعيين الكل كمقروء
+            </button>
+            {% endif %}
+        </div>
+        {% if notifications %}
+            {% for notification in notifications %}
+            <div class="notification-item {{ 'unread' if not notification.is_read }}"
+                 data-id="{{ notification.id }}"
+                 data-link="{{ notification.link }}">
+                <div class="notification-icon">
+                    <i class="fas fa-{{ notification.icon|default('bell') }}"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">{{ notification.title }}</div>
+                    <div class="notification-text">{{ notification.text }}</div>
+                    <div class="notification-time">{{ notification.created_at|timeago }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-bell-slash"></i>
+                <p>لا توجد إشعارات جديدة</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تفعيل قائمة الإشعارات
+        const notificationsToggle = document.getElementById('notificationsToggle');
+        const notificationsPanel = document.getElementById('notificationsPanel');
+        const markAllReadBtn = document.getElementById('markAllRead');
+
+        notificationsToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationsPanel.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!notificationsPanel.contains(e.target) && e.target !== notificationsToggle) {
+                notificationsPanel.classList.remove('show');
+            }
+        });
+
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', async () => {
+                try {
+                    await fetch('/api/notifications/mark-all-read', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    document.querySelectorAll('.notification-item.unread').forEach(item => {
+                        item.classList.remove('unread');
+                    });
+                    
+                    const badge = document.querySelector('.notifications-badge');
+                    if (badge) {
+                        badge.remove();
+                    }
+                } catch (error) {
+                    console.error('Error marking notifications as read:', error);
+                }
+            });
+        }
+
+        // التعامل مع النقر على الإشعارات
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', async () => {
+                if (item.classList.contains('unread')) {
+                    try {
+                        const notificationId = item.dataset.id;
+                        await fetch(`/api/notifications/${notificationId}/mark-read`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        item.classList.remove('unread');
+                        
+                        const badge = document.querySelector('.notifications-badge');
+                        if (badge) {
+                            const currentCount = parseInt(badge.textContent) - 1;
+                            if (currentCount > 0) {
+                                badge.textContent = currentCount;
+                            } else {
+                                badge.remove();
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error marking notification as read:', error);
+                    }
+                }
+                
+                const link = item.dataset.link;
+                if (link) {
+                    window.location.href = link;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -4,10 +4,15 @@ from flask_login import login_required, current_user
 from functools import wraps
 from app import db
 from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings, SubscriptionPayment
-import re
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 
 admin_bp = Blueprint('admin', __name__)
+
+# CSRF error handler
+@admin_bp.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    flash('انتهت صلاحية النموذج. يرجى المحاولة مرة أخرى.', 'danger')
+    return redirect(url_for('admin.subscriptions'))
 
 
 # Admin required decorator
@@ -114,9 +119,9 @@ def users():
                 email=email,
                 phone=phone,
                 role=role,
-                password=generate_password_hash(password),
                 is_active=True
             )
+            new_user.set_password(password)
 
             db.session.add(new_user)
             db.session.commit()
@@ -165,18 +170,46 @@ def users():
 @admin_required
 def toggle_user_status(user_id):
     user = User.query.get_or_404(user_id)
+    response = {'success': False}
+
+    # التحقق مما إذا كان الطلب AJAX
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     # Don't allow deactivating the current admin
     if user.id == current_user.id:
-        flash('لا يمكنك تعطيل حسابك الخاص', 'danger')
-        return redirect(url_for('admin.users'))
+        message = 'لا يمكنك تعطيل حسابك الخاص'
+        flash(message, 'danger')
+        response['message'] = message
+        return jsonify(response) if is_ajax else redirect(url_for('admin.users'))
 
-    user.is_active = not user.is_active
-    db.session.commit()
+    # Don't allow non-admin users to modify admin accounts
+    if user.role == Role.ADMIN and current_user.role != Role.ADMIN:
+        message = 'لا يمكنك تعديل حسابات المشرفين'
+        flash(message, 'danger')
+        response['message'] = message
+        return jsonify(response) if is_ajax else redirect(url_for('admin.users'))
 
-    status = "تفعيل" if user.is_active else "تعطيل"
-    flash(f'تم {status} المستخدم بنجاح', 'success')
-    return redirect(url_for('admin.users'))
+    try:
+        # تبديل حالة المستخدم
+        user.is_active = not user.is_active
+        db.session.commit()
+
+        # إرسال رسالة نجاح مناسبة
+        status = "تفعيل" if user.is_active else "تعطيل"
+        message = f'تم {status} حساب {user.name} بنجاح'
+        flash(message, 'success')
+        
+        response['success'] = True
+        response['message'] = message
+        response['is_active'] = user.is_active
+
+    except Exception as e:
+        db.session.rollback()
+        message = 'حدث خطأ أثناء تحديث حالة المستخدم'
+        flash(message, 'danger')
+        response['message'] = message
+        
+    return jsonify(response) if is_ajax else redirect(url_for('admin.users'))
 
 @admin_bp.route('/user/<int:user_id>/reset_password', methods=['POST'])
 @login_required
@@ -184,14 +217,10 @@ def toggle_user_status(user_id):
 def reset_user_password(user_id):
     user = User.query.get_or_404(user_id)
 
-    # إعادة تعيين كلمة المرور (مثال: كلمة مرور عشوائية أو كلمة مرور افتراضية)
-    # يمكنك تغيير كلمة المرور حسب احتياجاتك
+    # إعادة تعيين كلمة المرور لكلمة المرور الافتراضية
     default_password = "Password123"
-
-    # في حالة استخدام bcrypt
-    from werkzeug.security import generate_password_hash
-    user.password = generate_password_hash(default_password)
-
+    user.set_password(default_password)
+    
     db.session.commit()
 
     flash(f'تم إعادة تعيين كلمة المرور للمستخدم {user.name} بنجاح', 'success')
@@ -243,11 +272,17 @@ def subscriptions():
     # قم بحساب عدد المدفوعات قيد الانتظار
     pending_payments = SubscriptionPayment.query.filter_by(status='pending').count()
 
+    # جلب طلبات الاشتراك المعلقة
+    pending_subscription_payments = SubscriptionPayment.query.filter_by(status='pending')\
+        .order_by(SubscriptionPayment.created_at.desc())\
+        .all()
+
     template = 'admin/admin-mobile/subscriptions.html' if is_mobile() else 'admin/subscriptions.html'
 
     return render_template(template, 
                          plans=plans, 
-                         active_subs=active_subs, 
+                         active_subs=active_subs,
+                         pending_subscription_payments=pending_subscription_payments, 
                          subscriptions=subscriptions, 
                          all_subscriptions=Subscription.query.order_by(Subscription.start_date.desc()).all(),
                          payments=payments,
@@ -261,11 +296,63 @@ def subscriptions():
                          plan_id=plan_id,
                          search=search)
 
+@admin_bp.route('/subscription_payment/<int:payment_id>/approve', methods=['POST'])
+@login_required
+@admin_required
+def approve_subscription_payment(payment_id):
+    payment = SubscriptionPayment.query.get_or_404(payment_id)
+    
+    if payment.status != 'pending':
+        flash('لا يمكن قبول هذا الطلب لأنه تم معالجته مسبقاً', 'warning')
+        return redirect(url_for('admin.subscriptions'))
+
+    # إنشاء اشتراك جديد
+    subscription = Subscription(
+        user_id=payment.user_id,
+        plan_id=payment.plan_id,
+        start_date=datetime.utcnow(),
+        end_date=datetime.utcnow() + timedelta(days=payment.plan.duration_days),
+        is_active=True
+    )
+
+    # تحديث حالة الدفع
+    payment.status = 'approved'
+    payment.processed_at = datetime.utcnow()
+
+    db.session.add(subscription)
+    db.session.commit()
+
+    flash('تم قبول طلب الاشتراك بنجاح', 'success')
+    return redirect(url_for('admin.subscriptions'))
+
+@admin_bp.route('/subscription_payment/<int:payment_id>/reject', methods=['POST'])
+@login_required
+@admin_required
+def reject_subscription_payment(payment_id):
+    payment = SubscriptionPayment.query.get_or_404(payment_id)
+    
+    if payment.status != 'pending':
+        flash('لا يمكن رفض هذا الطلب لأنه تم معالجته مسبقاً', 'warning')
+        return redirect(url_for('admin.subscriptions'))
+
+    # تحديث حالة الدفع
+    payment.status = 'rejected'
+    payment.processed_at = datetime.utcnow()
+    db.session.commit()
+
+    flash('تم رفض طلب الاشتراك', 'success')
+    return redirect(url_for('admin.subscriptions'))
+
 @admin_bp.route('/subscription_plan/new', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def new_subscription_plan():
     if request.method == 'POST':
+        # Validate CSRF token
+        if not request.form.get('csrf_token'):
+            flash('خطأ: رمز الحماية CSRF غير موجود', 'danger')
+            return redirect(url_for('admin.subscriptions'))
+
         name = request.form.get('name')
         description = request.form.get('description')
         price = float(request.form.get('price', 0))
@@ -301,6 +388,11 @@ def edit_subscription_plan(plan_id):
     plan = SubscriptionPlan.query.get_or_404(plan_id)
 
     if request.method == 'POST':
+        # Validate CSRF token
+        if not request.form.get('csrf_token'):
+            flash('خطأ: رمز الحماية CSRF غير موجود', 'danger')
+            return redirect(url_for('admin.subscriptions'))
+
         plan.name = request.form.get('name')
         plan.description = request.form.get('description')
         plan.price = float(request.form.get('price', 0))
@@ -623,38 +715,70 @@ def delete_classroom():
 def view_classroom(classroom_id):
     classroom = Classroom.query.get_or_404(classroom_id)
     
-    # Get students of this classroom
-    students = classroom.students
+    # Get enrollments with students
+    enrollments = classroom.enrollments
     
-    # Get assignments for this classroom
-    assignments = classroom.assignments
-    
-    # Get quizzes for this classroom
-    quizzes = classroom.quizzes if hasattr(classroom, 'quizzes') else []
+    # Get assignments with submission counts and additional info
+    assignments = []
+    for assignment in classroom.assignments:
+        submissions = assignment.submissions if hasattr(assignment, 'submissions') else []
+        assignment_dict = {
+            'title': assignment.title,
+            'due_date': assignment.due_date,
+            'created_at': assignment.created_at,
+            'submission_count': len(submissions),
+            'total_marks': assignment.total_marks if hasattr(assignment, 'total_marks') else 0,
+            'is_active': assignment.is_active if hasattr(assignment, 'is_active') else True
+        }
+        assignments.append(assignment_dict)
+
+    # Get quizzes with additional info
+    quiz_list = []
+    if hasattr(classroom, 'quizzes'):
+        for quiz in classroom.quizzes:
+            quiz_dict = {
+                'title': quiz.title,
+                'end_time': quiz.end_time,
+                'created_at': quiz.created_at,
+                'is_active': quiz.is_active if hasattr(quiz, 'is_active') else True,
+                'total_marks': quiz.total_marks if hasattr(quiz, 'total_marks') else 0
+            }
+            quiz_list.append(quiz_dict)
+
+    # Get number of lessons
+    lesson_count = len(classroom.lessons) if hasattr(classroom, 'lessons') else 0
     
     # Get teacher information
     teacher = classroom.teacher
     
-    template = 'admin/view_classroom.html'
+    template = 'admin/admin-mobile/view_classroom.html' if is_mobile() else 'admin/view_classroom.html'
     
     return render_template(template, 
                            classroom=classroom,
-                           students=students,
+                           enrollments=enrollments,
                            assignments=assignments,
-                           quizzes=quizzes,
-                           teacher=teacher)
+                           quizzes=quiz_list,
+                           teacher=teacher,
+                           lesson_count=lesson_count,
+                           students=enrollments,
+                           now=datetime.utcnow())
 
-@admin_bp.route('/classroom/<int:classroom_id>/toggle_status')
+@admin_bp.route('/classroom/<int:classroom_id>/toggle_status', methods=['POST'])
 @login_required
 @admin_required
 def toggle_classroom_status(classroom_id):
     classroom = Classroom.query.get_or_404(classroom_id)
 
     classroom.is_active = not classroom.is_active
-    db.session.commit()
-
     status = "تفعيل" if classroom.is_active else "تعطيل"
-    flash(f'تم {status} الفصل بنجاح', 'success')
+    
+    try:
+        db.session.commit()
+        flash(f'تم {status} الفصل "{classroom.name}" بنجاح', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ أثناء تحديث حالة الفصل', 'error')
+    
     return redirect(url_for('admin.classrooms'))
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])

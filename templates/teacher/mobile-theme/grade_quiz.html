@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تصحيح الاختبار - {{ quiz.title }} - {{ classroom.name }} - الحصة</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+        :root {
+            --accent-color: #6C63FF;
+            --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+            padding-top: var(--header-height);
+            min-height: 100vh;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            color: white;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            text-decoration: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 1rem;
+        }
+
+        /* Attempt Card */
+        .attempt-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .attempt-header {
+            background: var(--accent-gradient);
+            color: var(--surface-color);
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .attempt-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .attempt-content {
+            padding: 1.5rem;
+        }
+
+        /* Question Item */
+        .question-item {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--background-color);
+        }
+
+        .question-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .question-text {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .answer-box {
+            background: var(--background-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-control {
+            border: 2px solid var(--background-color);
+            border-radius: var(--border-radius-sm);
+            padding: 0.75rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: none;
+            outline: none;
+        }
+
+        /* Button Styles */
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius-sm);
+            color: white;
+            font-weight: 500;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        /* Badge Styles */
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+        }
+
+        .badge-info {
+            background: rgba(108, 99, 255, 0.1);
+            color: var(--accent-color);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: var(--surface-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+            z-index: 1000;
+            padding: 0.25rem;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.35rem;
+            font-size: 0.7rem;
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1.5rem;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h5 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <h1 class="header-title">تصحيح الاختبار</h1>
+        <div style="width: 40px"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% if attempts %}
+            {% for attempt in attempts %}
+                {% if not attempt.is_graded %}
+                    <div class="attempt-card">
+                        <div class="attempt-header">
+                            <h2 class="attempt-title">{{ attempt.enrollment.user.name }}</h2>
+                            <span class="badge badge-info">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ attempt.start_time.strftime('%Y-%m-%d %H:%M') }}
+                            </span>
+                        </div>
+                        <div class="attempt-content">
+                            <form method="POST" action="{{ url_for('teacher.grade_quiz_attempt', classroom_id=classroom.id, quiz_id=quiz.id, attempt_id=attempt.id) }}">
+                                {% for answer in attempt.answers %}
+                                    {% if answer.question.question_type in ['essay', 'short_answer'] and answer.points_earned is none %}
+                                        <div class="question-item">
+                                            <div class="question-text">السؤال {{ loop.index }}: {{ answer.question.question_text }}</div>
+                                            <div class="answer-box">
+                                                {{ answer.text_answer|format_math|safe }}
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label class="form-label" for="points_{{ answer.id }}">
+                                                    النقاط (من {{ answer.question.points }})
+                                                </label>
+                                                <input type="number" 
+                                                       class="form-control" 
+                                                       id="points_{{ answer.id }}" 
+                                                       name="points_{{ answer.id }}" 
+                                                       min="0" 
+                                                       max="{{ answer.question.points }}" 
+                                                       required>
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label class="form-label" for="feedback_{{ answer.id }}">
+                                                    التعليق (اختياري)
+                                                </label>
+                                                <textarea class="form-control" 
+                                                          id="feedback_{{ answer.id }}" 
+                                                          name="feedback_{{ answer.id }}" 
+                                                          rows="2"></textarea>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    <span>حفظ التصحيح</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h5>لا توجد اختبارات تحتاج للتصحيح</h5>
+                <p>جميع الإجابات المقالية تم تصحيحها</p>
+            </div>
+        {% endif %}
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="nav-item">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصل</span>
+        </a>
+        <a href="{{ url_for('teacher.quizzes', classroom_id=classroom.id) }}" class="nav-item active">
+            <i class="fas fa-question-circle"></i>
+            <span>الاختبارات</span>
+        </a>
+        <a href="{{ url_for('teacher.subscriptions') }}" class="nav-item">
+            <i class="fas fa-crown"></i>
+            <span>اشتراكاتي</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </nav>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

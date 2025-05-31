@@ -32,6 +32,39 @@
             padding-bottom: 70px; /* مساحة للقائمة السفلية */
         }
 
+        /* تصميم زر القائمة */
+        .mobile-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .mobile-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .mobile-toggle i {
+            font-size: 1.4rem;
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-toggle i.fa-times {
+            transform: rotate(180deg);
+        }
+
         /* تصميم هيدر الصفحة */
         .mobile-header {
             position: fixed;
@@ -550,6 +583,15 @@
                     <span>الإعدادات</span>
                 </a>
             </li>
+            
+                <li class="mobile-nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="mobile-nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل خروج</span>
+                    </a>
+                </li>
+
+
         </ul>
     </nav>
 
@@ -564,7 +606,7 @@
                     <i class="fas fa-money-bill-wave fa-lg"></i>
                 </div>
                 <div class="stat-title">إجمالي الإيرادات</div>
-                <div class="stat-value">{{ "%.2f"|format(total_revenue|default(0)) }} ر.س</div>
+                <div class="stat-value">{{ "%.2f"|format(total_revenue|default(0)) }} ج.م</div>
             </div>
 
             <div class="stat-card">
@@ -572,7 +614,7 @@
                     <i class="fas fa-calendar-day fa-lg"></i>
                 </div>
                 <div class="stat-title">إيرادات الشهر</div>
-                <div class="stat-value">{{ "%.2f"|format(month_revenue) }} ر.س</div>
+                <div class="stat-value">{{ "%.2f"|format(month_revenue) }} ج.م</div>
             </div>
 
             <div class="stat-card">
@@ -592,55 +634,130 @@
             </div>
         </div>
 
+        <!-- طلبات الاشتراك المعلقة -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-clock me-2"></i>
+                    طلبات الاشتراك المعلقة
+                    {% if pending_subscription_payments|length > 0 %}
+                    <span class="badge bg-warning ms-2">{{ pending_subscription_payments|length }}</span>
+                    {% endif %}
+                </h2>
+            </div>
+            <div class="card-body">
+                {% if pending_subscription_payments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>المستخدم</th>
+                                    <th>الباقة</th>
+                                    <th>المبلغ</th>
+                                    <th>تاريخ الطلب</th>
+                                    <th>صورة التحويل</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in pending_subscription_payments %}
+                                <tr>
+                                    <td>
+                                        <div>{{ payment.user.name }}</div>
+                                        <small class="text-muted">{{ payment.user.phone }}</small>
+                                    </td>
+                                    <td>{{ payment.plan.name }}</td>
+                                    <td>{{ payment.amount }} جنيه</td>
+                                    <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('static', filename=payment.payment_proof) }}" 
+                                           target="_blank"
+                                           class="btn btn-sm btn-info">
+                                            <i class="fas fa-image"></i> عرض
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('admin.approve_subscription_payment', payment_id=payment.id) }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('هل أنت متأكد من قبول طلب الاشتراك؟')">
+                                                <i class="fas fa-check"></i> قبول
+                                            </button>
+                                        </form>
+                                        <form action="{{ url_for('admin.reject_subscription_payment', payment_id=payment.id) }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من رفض طلب الاشتراك؟')">
+                                                <i class="fas fa-times"></i> رفض
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="text-muted">لا توجد طلبات اشتراك معلقة</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
         <!-- فلاتر البحث -->
         <div class="card mb-4">
             <div class="card-header">
                 <h2 class="card-title">تصفية الاشتراكات</h2>
             </div>
             <div class="card-body">
-                <form action="{{ url_for('admin.subscriptions') }}" method="get">
-                    <div class="row">
-                        <div class="col-12 mb-3">
-                            <label class="form-label">الحالة</label>
-                            <select class="form-select" name="status">
-                                <option value="">الكل</option>
-                                <option value="active" {% if status == 'active' %}selected{% endif %}>نشط</option>
-                                <option value="expired" {% if status == 'expired' %}selected{% endif %}>منتهي</option>
-                            </select>
-                        </div>
+                <!-- نموذج البحث -->
+                <div class="search-form mb-4">
+                    <form action="{{ url_for('admin.subscriptions') }}" method="get">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-                        <div class="col-12 mb-3">
-                            <label class="form-label">خطة الاشتراك</label>
-                            <select class="form-select" name="plan_id">
-                                <option value="">الكل</option>
-                                {% for plan in subscription_plans %}
-                                <option value="{{ plan.id }}" {% if plan_id|int == plan.id %}selected{% endif %}>
-                                    {{ plan.name }} ({{ plan.price }} ر.س)
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                        <div class="row g-3">
+                            <div class="col-12 mb-3">
+                                <label class="form-label">الحالة</label>
+                                <select class="form-select" name="status">
+                                    <option value="">الكل</option>
+                                    <option value="active" {% if status == 'active' %}selected{% endif %}>نشط</option>
+                                    <option value="expired" {% if status == 'expired' %}selected{% endif %}>منتهي</option>
+                                </select>
+                            </div>
 
-                        <div class="col-12 mb-3">
-                            <label class="form-label">بحث</label>
-                            <input type="text" class="form-control" name="search" 
-                                   placeholder="بحث باسم المستخدم، البريد الإلكتروني أو رقم الهاتف..."
-                                   value="{{ search }}">
-                        </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">خطة الاشتراك</label>
+                                <select class="form-select" name="plan_id">
+                                    <option value="">الكل</option>
+                                    {% for plan in subscription_plans %}
+                                    <option value="{{ plan.id }}" {% if plan_id|int == plan.id %}selected{% endif %}>
+                                        {{ plan.name }} ({{ plan.price }} ج.م)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
 
-                        <div class="col-6">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-search me-2"></i>بحث
-                            </button>
-                        </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">بحث</label>
+                                <input type="text" class="form-control" name="search" 
+                                       placeholder="بحث باسم المستخدم، البريد الإلكتروني أو رقم الهاتف..."
+                                       value="{{ search }}">
+                            </div>
 
-                        <div class="col-6">
-                            <a href="{{ url_for('admin.subscriptions') }}" class="btn btn-light w-100">
-                                <i class="fas fa-redo me-2"></i>إعادة تعيين
-                            </a>
+                            <div class="col-6">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search me-2"></i>بحث
+                                </button>
+                            </div>
+
+                            <div class="col-6">
+                                <a href="{{ url_for('admin.subscriptions') }}" class="btn btn-light w-100">
+                                    <i class="fas fa-redo me-2"></i>إعادة تعيين
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -653,7 +770,7 @@
                 <div class="plan-card">
                     <div class="plan-header">
                         <h3 class="plan-title">{{ plan.name }}</h3>
-                        <div class="plan-price">{{ plan.price }} ر.س</div>
+                        <div class="plan-price">{{ plan.price }} ج.م</div>
                         <div class="plan-duration">لمدة {{ plan.duration_days }} يوم</div>
                     </div>
                     <div class="plan-body">
@@ -702,6 +819,41 @@
             {% endfor %}
         </div>
 
+        <!-- نماذج إدارة الاشتراكات -->
+        <form id="deleteSubscriptionForm" action="{{ url_for('admin.delete_subscription') }}" method="post" style="display: none;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="subscription_id" id="deleteSubscriptionId">
+        </form>
+
+        <form id="cancelSubscriptionForm" action="{{ url_for('admin.cancel_subscription', subscription_id=0) }}" method="post" style="display: none;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        </form>
+
+        <!-- نموذج تمديد الاشتراك -->
+        <div class="modal fade" id="extendModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">تمديد الاشتراك</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ url_for('admin.extend_subscription', subscription_id=0) }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="days" class="form-label">عدد الأيام الإضافية</label>
+                                <input type="number" class="form-control" id="days" name="days" min="1" value="30" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="note" class="form-label">ملاحظة (اختياري)</label>
+                                <textarea class="form-control" id="note" name="note" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- قائمة الاشتراكات -->
         <h2 class="section-title mb-3">الاشتراكات</h2>
 
@@ -724,7 +876,7 @@
                         </div>
                         <div class="subscription-detail">
                             <i class="fas fa-money-bill-wave"></i>
-                            <span>المبلغ: {{ subscription.amount }} ر.س</span>
+                            <span>المبلغ: {{ subscription.plan.price }} ج.م</span>
                         </div>
                         <div class="subscription-detail">
                             <i class="fas fa-calendar-alt"></i>
@@ -745,8 +897,9 @@
                     </div>
 
                     <div class="subscription-actions">
-                        <form action="{{ url_for('admin.cancel_subscription', subscription_id=subscription.id) }}" method="POST" style="flex: 1;">
+                        <form action="{{ url_for('admin.delete_subscription') }}" method="POST" style="flex: 1;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
                             <button type="submit" class="btn btn-sm btn-danger w-100" onclick="return confirm('هل أنت متأكد من إلغاء هذا الاشتراك؟')">
                                 <i class="fas fa-ban me-1"></i> إلغاء الاشتراك
                             </button>
