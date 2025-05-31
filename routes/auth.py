@@ -13,7 +13,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 from app import db
-from models import User, Role, Subscription, SubscriptionPlan
+from models import SystemSettings, User, Role, Subscription, SubscriptionPlan
 from firebase_utils import verify_firebase_token
 
 # دالة للتحقق من نوع الجهاز (موبايل أو جهاز مكتبي)
@@ -60,9 +60,16 @@ def login():
     firebase_app_id = os.environ.get("FIREBASE_APP_ID", "")
 
     template = 'auth/auth-mobile/login.html' if is_mobile() else 'auth/login.html'
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
     
     return render_template(template,
                           form=form,
+                          primary_color=primary_color,
+                          secondary_color=secondary_color,
                           firebase_api_key=firebase_api_key,
                           firebase_project_id=firebase_project_id,
                           firebase_app_id=firebase_app_id)
@@ -148,8 +155,15 @@ def register():
     firebase_app_id = os.environ.get("FIREBASE_APP_ID", "")
 
     template = 'auth/auth-mobile/register.html' if is_mobile() else 'auth/register.html'
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
     
     return render_template(template,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,
                           firebase_api_key=firebase_api_key,
                           firebase_project_id=firebase_project_id,
                           firebase_app_id=firebase_app_id)
@@ -293,8 +307,15 @@ def complete_registration():
 
         flash('تم إنشاء الحساب بنجاح', 'success')
         return redirect(url_for('main.index'))
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
-    return render_template('auth/complete_registration.html', 
+
+    return render_template('auth/complete_registration.html',
+                          primary_color=primary_color,
+                          secondary_color=secondary_color, 
                           name=session.get('name', ''),
                           phone=session.get('phone_number', ''))
 
@@ -357,5 +378,12 @@ def profile():
         db.session.commit()
         flash('تم تحديث الملف الشخصي بنجاح', 'success')
         return redirect(url_for('auth.profile'))
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
-    return render_template(template, now=datetime.utcnow())
+
+    return render_template(template, now=datetime.utcnow(),
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)

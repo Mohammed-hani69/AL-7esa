@@ -95,6 +95,10 @@ def can_create_classroom():
 @login_required
 @teacher_required
 def dashboard():
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
     # الحصول على الفصول 
     classrooms = Classroom.query.filter_by(teacher_id=current_user.id).all()
     
@@ -208,7 +212,9 @@ def dashboard():
                          active_quizzes=active_quizzes,
                          has_active_subscription=has_active_sub,
                          subscription_days_left=subscription_days_left,
-                         can_create_classroom=can_create_classroom())
+                         can_create_classroom=can_create_classroom(),
+                         primary_color=primary_color,
+                         secondary_color=secondary_color)
 
 def get_classroom_analytics(classroom):
     """استخراج البيانات التحليلية للفصل"""
@@ -433,9 +439,16 @@ def subscriptions():
 
     template = 'teacher/mobile-theme/teacher_plans.html' if is_mobile() else 'teacher/teacher_plans.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
 
     return render_template(template,
                          plans=plans,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,
                          active_subscription=active_subscription,
                          subscription_days_left=subscription_days_left)
 
@@ -496,13 +509,24 @@ def create_classroom():
 
         flash(f'تم إنشاء الفصل الدراسي بنجاح. كود الفصل: {code}', 'success')
         return redirect(url_for('teacher.classroom', classroom_id=new_classroom.id))
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
-    return render_template('classroom/create.html')
+
+    return render_template('classroom/create.html',
+                           primary_color=primary_color,
+                           secondary_color=secondary_color)
 
 @teacher_bp.route('/classroom/<int:classroom_id>')
 @login_required
 @teacher_required
 def classroom(classroom_id):
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')
+    
     # التحقق من وجود اشتراك نشط للمعلم
     has_subscription = has_active_subscription()
     if not has_subscription:
@@ -559,7 +583,9 @@ def classroom(classroom_id):
                        can_use_chat=can_use_chat,
                        can_use_assistant=can_use_assistant,
                        assistant_active=assistant_active,
-                       plan=plan)
+                       plan=plan,
+                       primary_color=primary_color,
+                       secondary_color=secondary_color)
 
 @teacher_bp.route('/classrooms')
 @login_required
@@ -592,9 +618,16 @@ def list_classrooms():
 
     template = 'teacher/mobile-theme/classrooms.html' if is_mobile() else 'teacher/classrooms.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
 
     return render_template(template,
                          classrooms=classrooms,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,
                          classroom_stats=classroom_stats,
                          can_create_classroom=can_create_classroom())
 
@@ -612,10 +645,17 @@ def live_classroom(classroom_id):
     if classroom.teacher_id != current_user.id:
         flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
         return redirect(url_for('teacher.dashboard'))
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
 
     return render_template('classroom/live_class.html', 
                          classroom=classroom,
-                         user_type='teacher')
+                         user_type='teacher',
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,)
 
 @teacher_bp.route('/classroom/<int:classroom_id>/add_content', methods=['POST'])
 @login_required
@@ -757,6 +797,8 @@ def delete_content(classroom_id, content_id):
 
     return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
+
+
 @teacher_bp.route('/classroom/<int:classroom_id>/assignments')
 @login_required
 @teacher_required
@@ -771,9 +813,17 @@ def assignments(classroom_id):
     # Get assignments
     assignments = Assignment.query.filter_by(classroom_id=classroom.id).order_by(Assignment.created_at.desc()).all()
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
     return render_template('classroom/assignments.html',
                            classroom=classroom,
-                           assignments=assignments)
+                           assignments=assignments,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/create_assignment', methods=['GET', 'POST'])
 @login_required
@@ -859,8 +909,17 @@ def create_assignment(classroom_id):
 
         flash('تم إنشاء الواجب بنجاح', 'success')
         return redirect(url_for('teacher.assignments', classroom_id=classroom.id))
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
-    return render_template('classroom/assignments.html', classroom=classroom)
+
+    return render_template('classroom/assignments.html', classroom=classroom,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -927,10 +986,18 @@ def edit_assignment(classroom_id, assignment_id):
         db.session.commit()
         flash('تم تحديث الواجب بنجاح', 'success')
         return redirect(url_for('teacher.assignments', classroom_id=classroom.id))
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
 
     return render_template('classroom/edit_assignment.html',
                          classroom=classroom,
-                         assignment=assignment)
+                         assignment=assignment,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color)
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/delete', methods=['POST'])
 @login_required
@@ -953,6 +1020,7 @@ def delete_assignment(classroom_id, assignment_id):
 
     flash('تم حذف الواجب بنجاح', 'success')
     return redirect(url_for('teacher.assignments', classroom_id=classroom.id))
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/submissions')
 @login_required
@@ -982,11 +1050,20 @@ def assignment_submissions(classroom_id, assignment_id):
 
     template = 'teacher/mobile-theme/assignment_submissions.html' if is_mobile() else 'teacher/assignment_submissions.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
     return render_template(template,
                            classroom=classroom,
                            assignment=assignment,
                            submissions=submissions,
-                           missing_submissions=missing_submissions)
+                           missing_submissions=missing_submissions,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/grade/<int:submission_id>', methods=['POST'])
 @login_required
@@ -1041,10 +1118,19 @@ def quizzes(classroom_id):
 
     template = 'teacher/mobile-theme/quizzes.html' if is_mobile() else 'teacher/quizzes.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
 
     return render_template(template,
                            classroom=classroom,
-                           quizzes=quizzes)
+                           quizzes=quizzes,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/create_quiz', methods=['GET', 'POST'])
 @login_required
@@ -1101,8 +1187,17 @@ def create_quiz(classroom_id):
     
     template = 'teacher/mobile-theme/create_quiz.html' if is_mobile() else 'teacher/create_quiz.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
-    return render_template(template, classroom=classroom)
+
+
+    return render_template(template, classroom=classroom,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -1156,13 +1251,22 @@ def edit_quiz(classroom_id, quiz_id):
     # Get existing questions for display
     questions = QuizQuestion.query.filter_by(quiz_id=quiz.id).order_by(QuizQuestion.position).all()
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
     template = 'teacher/mobile-theme/edit_quiz.html' if is_mobile() else 'teacher/edit_quiz.html'
 
 
     return render_template(template,
                          classroom=classroom,
                          quiz=quiz,
-                         questions=questions)
+                         questions=questions,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/add_question', methods=['POST'])
 @login_required
@@ -1220,6 +1324,8 @@ def add_question(classroom_id, quiz_id):
     flash('تم إضافة السؤال بنجاح', 'success')
     return redirect(url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
 
+
+
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/delete_question/<int:question_id>', methods=['POST'])
 @login_required
 @teacher_required
@@ -1244,6 +1350,8 @@ def delete_question(classroom_id, quiz_id, question_id):
 
     flash('تم حذف السؤال بنجاح', 'success')
     return redirect(url_for('teacher.edit_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/grade')
 @login_required
@@ -1272,11 +1380,19 @@ def grade_quiz(classroom_id, quiz_id):
     
     template = 'teacher/mobile-theme/grade_quiz.html' if is_mobile() else 'teacher/grade_quiz.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
 
     return render_template(template,
                            classroom=classroom,
                            quiz=quiz,
-                           attempts=attempts)
+                           attempts=attempts,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/attempt/<int:attempt_id>/grade', methods=['POST'])
 @login_required
@@ -1336,6 +1452,8 @@ def grade_quiz_attempt(classroom_id, quiz_id, attempt_id):
 
     return redirect(url_for('teacher.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id))
 
+
+
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/results')
 @login_required
 @teacher_required
@@ -1353,11 +1471,19 @@ def quiz_results(classroom_id, quiz_id):
 
     template = 'teacher/mobile-theme/quiz_results.html' if is_mobile() else 'teacher/quiz_results.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
 
     return render_template(template,
                          classroom=classroom,
                          quiz=quiz,
-                         attempts=attempts)
+                         attempts=attempts,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/attempt/<int:attempt_id>/view')
 @login_required
@@ -1381,12 +1507,20 @@ def view_student_attempt(classroom_id, quiz_id, attempt_id):
     
     template = 'teacher/mobile-theme/view_student_attempt.html' if is_mobile() else 'teacher/view_student_attempt.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
 
     return render_template(template,
                          classroom=classroom,
                          quiz=quiz,
                          attempt=attempt,
-                         answers=answers)
+                         answers=answers,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/students')
 @login_required
@@ -1402,12 +1536,21 @@ def students(classroom_id):
     # Get enrollments with students
     enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom.id).all()
 
-    template = 'teacher/mobile-theme/students' if is_mobile() else 'teacher/students'
+    template = 'teacher/mobile-theme/students.html' if is_mobile() else 'teacher/students.html'
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
 
 
     return render_template(template,
                            classroom=classroom,
-                           enrollments=enrollments)
+                           enrollments=enrollments,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/student/<int:enrollment_id>/toggle_status', methods=['POST'])
 @login_required
@@ -1427,6 +1570,7 @@ def toggle_student_status(classroom_id, enrollment_id):
     status = "تفعيل" if enrollment.is_active else "تعطيل"
     flash(f'تم {status} الطالب في الفصل بنجاح', 'success')
     return redirect(url_for('teacher.students', classroom_id=classroom.id))
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/set_assistant', methods=['POST'])
 @login_required
@@ -1461,6 +1605,8 @@ def set_assistant(classroom_id):
     flash(f'تم تعيين {assistant.name} كمساعد للفصل بنجاح', 'success')
     return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
+
+
 @teacher_bp.route('/classroom/<int:classroom_id>/remove_assistant', methods=['POST'])
 @login_required
 @teacher_required
@@ -1477,6 +1623,7 @@ def remove_assistant(classroom_id):
 
     flash('تم إزالة المساعد من الفصل بنجاح', 'success')
     return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/chat/settings', methods=['GET', 'POST'])
 @login_required
@@ -1529,6 +1676,11 @@ def chat_settings(classroom_id):
 
     template = 'classroom/mobile-theme/chat_settings.html' if is_mobile() else 'classroom/chat_settings.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
 
     return render_template(template
                            ,
@@ -1536,7 +1688,11 @@ def chat_settings(classroom_id):
                          settings=settings,
                          enrollments=enrollments,
                          chat_participants=chat_participants,
-                         user_type='teacher')
+                         user_type='teacher',
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/chat/manage_participants', methods=['POST'])
 @login_required
@@ -1587,6 +1743,8 @@ def manage_chat_participants(classroom_id):
     db.session.commit()
     return redirect(url_for('teacher.chat_settings', classroom_id=classroom.id))
 
+
+
 @teacher_bp.route('/payments')
 @login_required
 @teacher_required
@@ -1610,11 +1768,18 @@ def payments():
     
     template = 'teacher/mobile-theme/payments.html' if is_mobile() else 'teacher/payments.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
 
     return render_template(template,
                          classrooms=classrooms,
                          pending_payments=pending_payments,
-                         completed_payments=completed_payments)
+                         completed_payments=completed_payments,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,)
+
 
 @teacher_bp.route('/payment/<int:payment_id>/approve', methods=['POST'])
 @login_required
@@ -1645,6 +1810,7 @@ def approve_payment(payment_id):
     flash('تم تفعيل اشتراك الطالب بنجاح', 'success')
     return redirect(url_for('teacher.payments'))
 
+
 @teacher_bp.route('/payment/<int:payment_id>/reject', methods=['POST'])
 @login_required
 @teacher_required
@@ -1672,6 +1838,8 @@ def reject_payment(payment_id):
     db.session.commit()
     flash('تم رفض عملية الدفع', 'danger')
     return redirect(url_for('teacher.payments'))
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/analytics')
 @login_required
@@ -1770,6 +1938,7 @@ def classroom_analytics(classroom_id):
         } for row in quiz_attempts_by_month]
     })
 
+
 @teacher_bp.route('/classroom/<int:classroom_id>/quiz/<int:quiz_id>/delete', methods=['POST'])
 @login_required
 @teacher_required
@@ -1791,6 +1960,8 @@ def delete_quiz(classroom_id, quiz_id):
     
     flash('تم حذف الاختبار بنجاح', 'success')
     return redirect(url_for('teacher.quizzes', classroom_id=classroom.id))
+
+
 
 @teacher_bp.route('/payment/<int:plan_id>', methods=['GET', 'POST'])
 @login_required
@@ -1848,10 +2019,19 @@ def payment(plan_id):
     
     template = 'teacher/mobile-theme/payment.html' if is_mobile() else 'teacher/payment.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
 
     return render_template(template, 
                          plan=plan,
-                         ewallet_number=ewallet_number)
+                         ewallet_number=ewallet_number,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/uploads/<path:filename>')
 @login_required
@@ -1957,6 +2137,8 @@ def check_file_access_permission(filename):
             return True
     return False
 
+
+
 @teacher_bp.route('/classroom/<int:classroom_id>/chat')
 @login_required
 @teacher_required
@@ -1988,12 +2170,21 @@ def chat(classroom_id):
 
     template = 'teacher/mobile-theme/chat.html' if is_mobile() else 'teacher/chat.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
     return render_template(template,
                          classroom=classroom,
                          settings=settings,
                          participants=participants,
                          messages=messages,
-                         current_user=current_user)
+                         current_user=current_user,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,)
+
+
 
 @teacher_bp.route('/classroom/<int:classroom_id>/assistant/settings', methods=['GET', 'POST'])
 @login_required
@@ -2033,6 +2224,13 @@ def assistant_settings(classroom_id):
 
     template = 'teacher/mobile-theme/assistant_settings.html' if is_mobile() else 'teacher/assistant_settings.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
     return render_template(template,
                          classroom=classroom,
-                         current_assistant=User.query.get(classroom.assistant_id) if classroom.assistant_id else None)
+                         current_assistant=User.query.get(classroom.assistant_id) if classroom.assistant_id else None,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,)

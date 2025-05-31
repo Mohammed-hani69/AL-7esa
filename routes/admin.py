@@ -5,6 +5,14 @@ from functools import wraps
 from app import db
 from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings, SubscriptionPayment
 from flask_wtf.csrf import CSRFProtect, CSRFError
+# Add current time for template filters
+from datetime import datetime
+
+
+
+
+
+
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -65,8 +73,15 @@ def dashboard():
 
     template = 'admin/admin-mobile/dashboard.html' if is_mobile() else 'admin/dashboard.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
     return render_template(template,
                         user_count=users_count,
+                        primary_color=primary_color,
+                        secondary_color=secondary_color,
                         teacher_count=teachers_count,
                         student_count=students_count,
                         classroom_count=classrooms_count,
@@ -159,11 +174,23 @@ def users():
     users = query.order_by(User.created_at.desc()).paginate(page=page, per_page=20)
 
     template = 'admin/admin-mobile/users.html' if is_mobile() else 'admin/users.html'
-    
-    # Add current time for template filters
-    from datetime import datetime
 
-    return render_template(template, users=users, role=role_filter, status=status_filter, search=search, current_time=datetime.now())
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+    
+
+
+    return render_template(template, 
+                           users=users, 
+                           role=role_filter, 
+                           status=status_filter, 
+                           search=search, 
+                           current_time=datetime.now(),
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
+
 
 @admin_bp.route('/user/<int:user_id>/toggle_status', methods=['POST'])
 @login_required
@@ -211,6 +238,7 @@ def toggle_user_status(user_id):
         
     return jsonify(response) if is_ajax else redirect(url_for('admin.users'))
 
+
 @admin_bp.route('/user/<int:user_id>/reset_password', methods=['POST'])
 @login_required
 @admin_required
@@ -225,6 +253,7 @@ def reset_user_password(user_id):
 
     flash(f'تم إعادة تعيين كلمة المرور للمستخدم {user.name} بنجاح', 'success')
     return redirect(url_for('admin.users'))
+
 
 @admin_bp.route('/subscriptions')
 @login_required
@@ -279,8 +308,15 @@ def subscriptions():
 
     template = 'admin/admin-mobile/subscriptions.html' if is_mobile() else 'admin/subscriptions.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
     return render_template(template, 
-                         plans=plans, 
+                         plans=plans,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color, 
                          active_subs=active_subs,
                          pending_subscription_payments=pending_subscription_payments, 
                          subscriptions=subscriptions, 
@@ -295,6 +331,7 @@ def subscriptions():
                          status=status,
                          plan_id=plan_id,
                          search=search)
+
 
 @admin_bp.route('/subscription_payment/<int:payment_id>/approve', methods=['POST'])
 @login_required
@@ -324,6 +361,8 @@ def approve_subscription_payment(payment_id):
 
     flash('تم قبول طلب الاشتراك بنجاح', 'success')
     return redirect(url_for('admin.subscriptions'))
+
+
 
 @admin_bp.route('/subscription_payment/<int:payment_id>/reject', methods=['POST'])
 @login_required
@@ -378,8 +417,15 @@ def new_subscription_plan():
 
         flash('تم إنشاء باقة الاشتراك بنجاح', 'success')
         return redirect(url_for('admin.subscriptions'))
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
-    return render_template('admin/edit_subscription_plan.html')
+
+    return render_template('admin/edit_subscription_plan.html',
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
 
 @admin_bp.route('/subscription_plan/<int:plan_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -406,8 +452,15 @@ def edit_subscription_plan(plan_id):
 
         flash('تم تحديث باقة الاشتراك بنجاح', 'success')
         return redirect(url_for('admin.subscriptions'))
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
-    return render_template('admin/edit_subscription_plan.html', plan=plan)
+
+    return render_template('admin/edit_subscription_plan.html', plan=plan,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
 
 @admin_bp.route('/subscription_plan/<int:plan_id>/delete', methods=['POST'])
 @login_required
@@ -555,7 +608,16 @@ def notifications():
 
     template = 'admin/admin-mobile/notifications.html' if is_mobile() else 'admin/notifications.html'
 
-    return render_template(template, notifications=recent_notifications, users=users, now=now)
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
+    return render_template(template, 
+                           notifications=recent_notifications, 
+                           users=users, now=now,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
 
 @admin_bp.route('/send_notification', methods=['POST'])
 @login_required
@@ -670,10 +732,19 @@ def classrooms():
 
     template = 'admin/admin-mobile/classrooms.html' if is_mobile() else 'admin/classrooms.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+    currency = SystemSettings.get_setting('default_currency' , 'جنية')
+
+
     return render_template(template, 
                          classrooms=classrooms,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,
                          teachers=teachers, 
-                         currency="ريال",
+                         currency=currency,
                          pagination=pagination,
                          teacher_id=teacher_id or 0,  # توفير قيمة افتراضية
                          is_free=is_free,
@@ -752,9 +823,16 @@ def view_classroom(classroom_id):
     teacher = classroom.teacher
     
     template = 'admin/admin-mobile/view_classroom.html' if is_mobile() else 'admin/view_classroom.html'
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
     
     return render_template(template, 
                            classroom=classroom,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,
                            enrollments=enrollments,
                            assignments=assignments,
                            quizzes=quiz_list,
@@ -837,4 +915,13 @@ def settings():
 
     template = 'admin/admin-mobile/settings.html' if is_mobile() else 'admin/settings.html'
 
-    return render_template(template, settings=settings, now=now)
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
+    return render_template(template, 
+                           settings=settings, 
+                           now=now,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)

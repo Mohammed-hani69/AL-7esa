@@ -128,8 +128,15 @@ def dashboard():
     # تحديد القالب بناءً على نوع الجهاز
     template = 'dashboard/mobile-theme/student.html' if is_mobile() else 'dashboard/student.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
     return render_template(template,
         enrollments=enrollments,
+        primary_color=primary_color,
+        secondary_color=secondary_color,
         upcoming_assignments=upcoming_assignments,
         upcoming_quizzes=upcoming_quizzes,
         now=datetime.utcnow(),
@@ -153,7 +160,14 @@ def classrooms():
     ).all()
 
     template = 'student/mobile-theme/classrooms.html' if is_mobile() else 'student/classrooms.html'
-    return render_template(template, enrollments=enrollments)
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+    return render_template(template, enrollments=enrollments,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
 
 @student_bp.route('/join', methods=['GET', 'POST'])
 @login_required
@@ -210,7 +224,14 @@ def join_classroom():
             return redirect(url_for('student.payment', classroom_id=classroom.id))
 
     template = 'student/mobile-theme/join.html' if is_mobile() else 'student/join.html'
-    return render_template(template)
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+    return render_template(template,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,)
 
 @student_bp.route('/payment/<int:classroom_id>')
 @login_required
@@ -233,9 +254,16 @@ def payment(classroom_id):
     ewallet_number = SystemSettings.get_setting('ewallet_number', '01145425207')
 
     template = 'student/mobile-theme/payment.html' if is_mobile() else 'student/payment.html'
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
     return render_template(template,
                          classroom=classroom,
-                         ewallet_number=ewallet_number)
+                         ewallet_number=ewallet_number,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,)
 
 @student_bp.route('/process_payment/<int:classroom_id>', methods=['POST'])
 @login_required
@@ -358,8 +386,15 @@ def classroom(classroom_id):
             has_chat = chat_settings and chat_settings.is_enabled
 
     template = 'classroom/mobile-theme/student_view.html' if is_mobile() else 'classroom/student_view.html'
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
     return render_template(template,
                          classroom=classroom,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,
                          enrollment=enrollment,
                          has_chat=has_chat,
                          chat_participants=chat_participants,
@@ -396,7 +431,14 @@ def assignments(classroom_id):
 
     template = 'student/mobile-theme/student_assignments.html' if is_mobile() else 'student/student_assignments.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
     return render_template(template,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,
                            classroom=classroom,
                            enrollment=enrollment,
                            assignments=assignments,
@@ -536,7 +578,14 @@ def view_assignment(classroom_id, assignment_id):
     
     template = 'student/mobile-theme/view_assignment.html' if is_mobile() else 'student/view_assignment.html'
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
     return render_template(template,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,
                            classroom=classroom,
                            assignment=assignment,
                            submission=submission,
@@ -572,7 +621,14 @@ def quizzes(classroom_id):
     now = datetime.utcnow()
 
     template = 'student/mobile-theme/student_quizzes.html' if is_mobile() else 'student/student_quizzes.html'
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
     return render_template(template,
+                           primary_color=primary_color,
+                           secondary_color=secondary_color,
                            classroom=classroom,
                            enrollment=enrollment,
                            quizzes=quizzes,
@@ -736,7 +792,14 @@ def start_quiz(classroom_id, quiz_id):
     answered_options = {ans.question_id: ans.selected_option_id for ans in existing_answers}
     
     template = 'student/mobile-theme/take_quiz.html' if is_mobile() else 'student/take_quiz.html'
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
     return render_template(template,
+                       primary_color=primary_color,
+                       secondary_color=secondary_color,
                        classroom=classroom,
                        quiz=quiz,
                        attempt=attempt,
@@ -782,8 +845,15 @@ def view_quiz_result(classroom_id, quiz_id):
     answer_map = {ans.question_id: ans for ans in answers}
 
     template = 'student/mobile-theme/quiz_result.html' if is_mobile() else 'student/quiz_result.html'
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
     return render_template(template,
                        classroom=classroom,
+                       primary_color=primary_color,
+                       secondary_color=secondary_color,
                        quiz=quiz,
                        attempt=attempt,
                        questions=questions,
@@ -807,8 +877,15 @@ def live_classroom(classroom_id):
         return redirect(url_for('student.dashboard'))
 
     template = 'student/mobile-theme/live_class.html' if is_mobile() else 'student/live_class.html'
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
     return render_template(template,
                          classroom=classroom,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,
                          enrollment=enrollment,
                          user_type='student')
 
@@ -829,7 +906,14 @@ def chat(classroom_id):
         enrollment_id=enrollment.id
     ).first()
 
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+
+
     return render_template('classroom/chat.html',
                          classroom=classroom,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color,
                          enrollment=enrollment,
                          is_chat_participant=chat_participant is not None and chat_participant.is_enabled)

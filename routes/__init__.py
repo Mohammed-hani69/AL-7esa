@@ -54,7 +54,6 @@ def about():
 
 
 
-
 @main_bp.route('/contact', methods=['GET', 'POST'])
 def contact():
     """صفحة اتصل بنا"""
@@ -88,7 +87,6 @@ def contact():
             return redirect(url_for('main.contact'))
 
     return render_template('contact.html', primary_color=primary_color, secondary_color=secondary_color)
-
 
 
 @main_bp.route('/privacy')
