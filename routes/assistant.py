@@ -113,30 +113,21 @@ def classroom(classroom_id):
     # Get teacher info
     teacher = User.query.get(classroom.teacher_id)
 
-    # إعداد قائمة فيها الفصل + صلاحية الشات لكل فصل
+    # التحقق من صلاحية الدردشة للفصل الحالي
+    teacher_subscription = Subscription.query.filter(
+        Subscription.user_id == teacher.id,
+        Subscription.end_date > datetime.utcnow(),
+        Subscription.is_active == True
+    ).first()
 
-    assigned_classrooms = Classroom.query\
-        .join(User, Classroom.teacher_id == User.id)\
-        .filter(Classroom.assistant_id == current_user.id)\
-        .all()
+    can_use_chat = False
+    if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
+        can_use_chat = True
 
-    classrooms_with_chat = []
-    for classroom in assigned_classrooms:
-        teacher = User.query.get(classroom.teacher_id)
-        teacher_subscription = Subscription.query.filter(
-            Subscription.user_id == teacher.id,
-            Subscription.end_date > datetime.utcnow(),
-            Subscription.is_active == True
-        ).first()
-
-        can_use_chat = False
-        if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
-            can_use_chat = True
-
-        classrooms_with_chat.append({
-            'classroom': classroom,
-            'can_use_chat': can_use_chat
-        })
+    classrooms_with_chat = [{
+        'classroom': classroom,
+        'can_use_chat': can_use_chat
+    }]
     
     template = 'classroom/mobile-theme/assistant_view.html' if is_mobile() else 'classroom/assistant_view.html'
 
@@ -171,30 +162,22 @@ def chat(classroom_id):
     # Get enrolled students for chat management
     enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom.id, is_active=True).all()
 
-    # إعداد قائمة فيها الفصل + صلاحية الشات لكل فصل
+    # Setup chat info for the current classroom only
+    teacher = User.query.get(classroom.teacher_id)
+    teacher_subscription = Subscription.query.filter(
+        Subscription.user_id == teacher.id,
+        Subscription.end_date > datetime.utcnow(),
+        Subscription.is_active == True
+    ).first()
 
-    assigned_classrooms = Classroom.query\
-        .join(User, Classroom.teacher_id == User.id)\
-        .filter(Classroom.assistant_id == current_user.id)\
-        .all()
+    can_use_chat = False
+    if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
+        can_use_chat = True
 
-    classrooms_with_chat = []
-    for classroom in assigned_classrooms:
-        teacher = User.query.get(classroom.teacher_id)
-        teacher_subscription = Subscription.query.filter(
-            Subscription.user_id == teacher.id,
-            Subscription.end_date > datetime.utcnow(),
-            Subscription.is_active == True
-        ).first()
-
-        can_use_chat = False
-        if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
-            can_use_chat = True
-
-        classrooms_with_chat.append({
-            'classroom': classroom,
-            'can_use_chat': can_use_chat
-        })
+    classrooms_with_chat = [{
+        'classroom': classroom,
+        'can_use_chat': can_use_chat
+    }]
     
     template = 'classroom/mobile-theme/chat.html' if is_mobile() else 'classroom/chat.html'
 
@@ -281,33 +264,25 @@ def assignments(classroom_id):
         flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
         return redirect(url_for('assistant.dashboard'))
     
-    # Get assignments
+    # Get assignments for the current classroom only
     assignments = Assignment.query.filter_by(classroom_id=classroom.id).all()
 
-    # إعداد قائمة فيها الفصل + صلاحية الشات لكل فصل
+    # Setup chat info for the current classroom only
+    teacher = User.query.get(classroom.teacher_id)
+    teacher_subscription = Subscription.query.filter(
+        Subscription.user_id == teacher.id,
+        Subscription.end_date > datetime.utcnow(),
+        Subscription.is_active == True
+    ).first()
 
-    assigned_classrooms = Classroom.query\
-        .join(User, Classroom.teacher_id == User.id)\
-        .filter(Classroom.assistant_id == current_user.id)\
-        .all()
+    can_use_chat = False
+    if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
+        can_use_chat = True
 
-    classrooms_with_chat = []
-    for classroom in assigned_classrooms:
-        teacher = User.query.get(classroom.teacher_id)
-        teacher_subscription = Subscription.query.filter(
-            Subscription.user_id == teacher.id,
-            Subscription.end_date > datetime.utcnow(),
-            Subscription.is_active == True
-        ).first()
-
-        can_use_chat = False
-        if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
-            can_use_chat = True
-
-        classrooms_with_chat.append({
-            'classroom': classroom,
-            'can_use_chat': can_use_chat
-        })
+    classrooms_with_chat = [{
+        'classroom': classroom,
+        'can_use_chat': can_use_chat
+    }]
     
     template = 'classroom/mobile-theme/assistant_assignments.html' if is_mobile() else 'classroom/assistant_assignments.html'
 
@@ -320,7 +295,7 @@ def assignments(classroom_id):
                            primary_color=primary_color,
                            secondary_color=secondary_color,
                            assignments=assignments,
-                           classrooms_with_chat = classrooms_with_chat)
+                           classrooms_with_chat=classrooms_with_chat)
 
 
 @assistant_bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/submissions')
@@ -412,30 +387,22 @@ def students(classroom_id):
     # Get enrollments with students
     enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom.id).all()
 
-    # إعداد قائمة فيها الفصل + صلاحية الشات لكل فصل
+    # Setup chat info for the current classroom only
+    teacher = User.query.get(classroom.teacher_id)
+    teacher_subscription = Subscription.query.filter(
+        Subscription.user_id == teacher.id,
+        Subscription.end_date > datetime.utcnow(),
+        Subscription.is_active == True
+    ).first()
 
-    assigned_classrooms = Classroom.query\
-        .join(User, Classroom.teacher_id == User.id)\
-        .filter(Classroom.assistant_id == current_user.id)\
-        .all()
+    can_use_chat = False
+    if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
+        can_use_chat = True
 
-    classrooms_with_chat = []
-    for classroom in assigned_classrooms:
-        teacher = User.query.get(classroom.teacher_id)
-        teacher_subscription = Subscription.query.filter(
-            Subscription.user_id == teacher.id,
-            Subscription.end_date > datetime.utcnow(),
-            Subscription.is_active == True
-        ).first()
-
-        can_use_chat = False
-        if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
-            can_use_chat = True
-
-        classrooms_with_chat.append({
-            'classroom': classroom,
-            'can_use_chat': can_use_chat
-        })
+    classrooms_with_chat = [{
+        'classroom': classroom,
+        'can_use_chat': can_use_chat
+    }]
     
     template = 'classroom/mobile-theme/assistant_students.html' if is_mobile() else 'classroom/assistant_students.html'
 
@@ -568,33 +535,25 @@ def quizzes(classroom_id):
         flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
         return redirect(url_for('assistant.dashboard'))
     
-    # Get quizzes
+    # Get quizzes for the current classroom only
     quizzes = Quiz.query.filter_by(classroom_id=classroom.id).order_by(Quiz.created_at.desc()).all()
 
-    # إعداد قائمة فيها الفصل + صلاحية الشات لكل فصل
+    # Setup chat info for the current classroom only
+    teacher = User.query.get(classroom.teacher_id)
+    teacher_subscription = Subscription.query.filter(
+        Subscription.user_id == teacher.id,
+        Subscription.end_date > datetime.utcnow(),
+        Subscription.is_active == True
+    ).first()
 
-    assigned_classrooms = Classroom.query\
-        .join(User, Classroom.teacher_id == User.id)\
-        .filter(Classroom.assistant_id == current_user.id)\
-        .all()
+    can_use_chat = False
+    if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
+        can_use_chat = True
 
-    classrooms_with_chat = []
-    for classroom in assigned_classrooms:
-        teacher = User.query.get(classroom.teacher_id)
-        teacher_subscription = Subscription.query.filter(
-            Subscription.user_id == teacher.id,
-            Subscription.end_date > datetime.utcnow(),
-            Subscription.is_active == True
-        ).first()
-
-        can_use_chat = False
-        if teacher_subscription and teacher_subscription.plan and teacher_subscription.plan.has_chat:
-            can_use_chat = True
-
-        classrooms_with_chat.append({
-            'classroom': classroom,
-            'can_use_chat': can_use_chat
-        })
+    classrooms_with_chat = [{
+        'classroom': classroom,
+        'can_use_chat': can_use_chat
+    }]
     
     template = 'classroom/mobile-theme/assistant_quizzes.html' if is_mobile() else 'classroom/assistant_quizzes.html'
 

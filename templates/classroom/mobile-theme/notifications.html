@@ -1,0 +1,124 @@
+<div id="notifications-container" class="notifications-container">
+    <div class="notification-list">
+        <!-- Notifications will be added here dynamically -->
+    </div>
+</div>
+
+<style>
+.notifications-container {
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    max-width: 350px;
+    z-index: 1000;
+}
+
+.notification {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+    padding: 15px;
+    animation: slideIn 0.3s ease-out;
+    border-right: 4px solid;
+}
+
+.notification.info { border-color: #2196F3; }
+.notification.success { border-color: #4CAF50; }
+.notification.warning { border-color: #FFC107; }
+.notification.error { border-color: #F44336; }
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.notification-title {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.notification-close {
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+.notification-message {
+    font-size: 13px;
+    color: #666;
+}
+
+.notification-meta {
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+</style>
+
+<script>
+// تهيئة نظام الإشعارات
+function initializeNotifications() {
+    const container = document.getElementById('notifications-container');
+    
+    socket.on('classroom_notification', (data) => {
+        showNotification(data);
+    });
+    
+    function showNotification(data) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${data.type}`;
+        
+        notification.innerHTML = `
+            <div class="notification-header">
+                <span class="notification-title">${getNotificationTitle(data.type)}</span>
+                <span class="notification-close">&times;</span>
+            </div>
+            <div class="notification-message">${data.data.message}</div>
+            <div class="notification-meta">
+                ${new Date().toLocaleTimeString()}
+            </div>
+        `;
+        
+        container.appendChild(notification);
+        
+        // إزالة الإشعار بعد 5 ثواني
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
+        
+        // إضافة زر الإغلاق
+        notification.querySelector('.notification-close').addEventListener('click', () => {
+            notification.remove();
+        });
+    }
+    
+    function getNotificationTitle(type) {
+        const titles = {
+            'stream_started': 'بدء البث المباشر',
+            'user_joined': 'انضمام مشارك جديد',
+            'user_left': 'مغادرة مشارك',
+            'chat_message': 'رسالة جديدة',
+            'hand_raised': 'طلب مشاركة',
+            'connection_issue': 'تنبيه الاتصال'
+        };
+        return titles[type] || 'إشعار';
+    }
+}
+
+// تشغيل نظام الإشعارات عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', initializeNotifications);
+</script>

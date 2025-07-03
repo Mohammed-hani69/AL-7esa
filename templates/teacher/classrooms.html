@@ -575,7 +575,7 @@
                             </div>
                         </div>
                         <div class="classroom-footer">
-                            <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn-classroom">
+                            <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn-classroom enter-classroom">
                                 <i class="fas fa-arrow-left me-1"></i>دخول الفصل
                             </a>
                         </div>
@@ -601,6 +601,98 @@
             </div>
         </main>
     </div>
+
+    <!-- تضمين Loading Indicators -->
+    {% include 'components/loading_indicators.html' %}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تطبيق loading على إنشاء فصل جديد
+            const createClassForm = document.getElementById('createClassForm');
+            if (createClassForm) {
+                createClassForm.addEventListener('submit', function(e) {
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showPageLoading({
+                            text: 'جاري إنشاء الفصل الدراسي...',
+                            type: 'dots'
+                        });
+                    }
+                });
+            }
+            
+            // تطبيق loading على كروت الفصول
+            document.querySelectorAll('.classroom-card').forEach(card => {
+                const enterBtn = card.querySelector('.enter-classroom');
+                if (enterBtn) {
+                    enterBtn.addEventListener('click', function(e) {
+                        if (window.enhancedLoading) {
+                            window.enhancedLoading.showSectionLoading(card, {
+                                text: 'جاري دخول الفصل...',
+                                type: 'spinner'
+                            });
+                        }
+                    });
+                }
+                
+                // Loading للإعدادات
+                const settingsBtn = card.querySelector('.settings-btn');
+                if (settingsBtn) {
+                    settingsBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (window.enhancedLoading) {
+                            window.enhancedLoading.showSectionLoading(card, {
+                                text: 'جاري تحميل الإعدادات...',
+                                type: 'pulse'
+                            });
+                        }
+                    });
+                }
+            });
+            
+            // تطبيق loading على روابط التنقل
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.setAttribute('data-loading', 'true');
+                link.setAttribute('data-loading-text', 'جاري تحميل الصفحة...');
+            });
+            
+            // تطبيق skeleton loading للإحصائيات
+            document.querySelectorAll('.stats-card').forEach((card, index) => {
+                if (window.enhancedLoading) {
+                    window.enhancedLoading.showSkeleton(card, {
+                        lines: 2,
+                        animated: true
+                    });
+                    
+                    setTimeout(() => {
+                        window.enhancedLoading.hideSkeleton(card);
+                    }, 1000 + (index * 200));
+                }
+            });
+            
+            // تطبيق loading على البحث
+            const searchInput = document.querySelector('.search-input');
+            if (searchInput) {
+                let searchTimeout;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        const container = document.querySelector('.classrooms-container');
+                        if (window.enhancedLoading && container) {
+                            window.enhancedLoading.showSectionLoading(container, {
+                                text: 'جاري البحث...',
+                                type: 'wave',
+                                timeout: 2000
+                            });
+                            
+                            setTimeout(() => {
+                                window.enhancedLoading.hideSectionLoading(container);
+                            }, 800);
+                        }
+                    }, 500);
+                });
+            }
+        });
+    </script>
 
     <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

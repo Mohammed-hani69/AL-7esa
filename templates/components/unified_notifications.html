@@ -1,0 +1,433 @@
+<!-- ==============================================
+     قالب مكونات الإشعارات الموحد
+     Unified Notifications Components Template
+     ============================================== -->
+
+<!-- تضمين ملفات CSS و JS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/unified-notifications.css') }}">
+<script src="{{ url_for('static', filename='js/unified-notifications.js') }}" defer></script>
+
+<!-- حاوي الإشعارات المنبثقة -->
+<div id="notification-container" class="notification-container"></div>
+
+<!-- حاوي رسائل Flash -->
+<div id="flash-messages" class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }} show animate-in">
+                    <div class="flash-message-icon">
+                        <i class="{% if category == 'success' %}fas fa-check-circle{% elif category == 'warning' %}fas fa-exclamation-triangle{% elif category == 'error' or category == 'danger' %}fas fa-times-circle{% else %}fas fa-info-circle{% endif %}"></i>
+                    </div>
+                    <div class="flash-message-content">{{ message }}</div>
+                    <button class="flash-message-close" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+<!-- قائمة الإشعارات المنسدلة - للاستخدام العام -->
+<div class="notifications-dropdown">
+    <button class="notifications-toggle" data-panel="notificationsPanel" aria-label="الإشعارات">
+        <i class="fas fa-bell"></i>
+        <span class="notifications-badge" data-count="{{ unread_notifications|length if unread_notifications else 0 }}">
+            {% if unread_notifications and unread_notifications|length > 0 %}
+                {{ unread_notifications|length if unread_notifications|length < 100 else '99+' }}
+            {% endif %}
+        </span>
+    </button>
+    
+    <div class="notifications-panel" id="notificationsPanel">
+        <div class="notifications-header">
+            <h6 class="notifications-title">الإشعارات</h6>
+            <div class="notifications-actions">
+                {% if notifications and notifications|length > 0 %}
+                    <button class="notification-action-btn mark-all-read-btn" data-panel="notificationsPanel">
+                        <i class="fas fa-check-double"></i>
+                        تعليم الكل كمقروء
+                    </button>
+                {% endif %}
+                <button class="notification-action-btn" onclick="window.NotificationSystem.hideNotificationPanel(document.getElementById('notificationsPanel'))">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="notifications-list">
+            {% if notifications and notifications|length > 0 %}
+                {% for notification in notifications %}
+                    <div class="notification-item {{ 'unread' if not notification.is_read }}" 
+                         data-id="{{ notification.id }}" 
+                         data-link="{{ notification.link if notification.link else '#' }}"
+                         onclick="window.NotificationSystem.markAsRead('{{ notification.id }}', this)">
+                        <div class="notification-item-icon">
+                            <i class="fas fa-{{ notification.icon|default('bell') }}"></i>
+                        </div>
+                        <div class="notification-item-content">
+                            <div class="notification-item-title">{{ notification.title }}</div>
+                            <div class="notification-item-text">{{ notification.text }}</div>
+                            <div class="notification-item-time">{{ notification.created_at|timeago if notification.created_at else 'الآن' }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="notifications-empty">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>لا توجد إشعارات جديدة</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if notifications and notifications|length > 5 %}
+            <div class="notifications-footer">
+                <a href="{{ url_for('main.notifications') if url_for('main.notifications') else '#' }}">
+                    عرض جميع الإشعارات
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- مكونات الإشعارات للموبايل -->
+<div class="mobile-notifications d-md-none">
+    <button class="mobile-notifications-toggle" data-panel="mobileNotificationsPanel">
+        <i class="fas fa-bell"></i>
+        <span class="mobile-notifications-badge">
+            {% if unread_notifications and unread_notifications|length > 0 %}
+                {{ unread_notifications|length if unread_notifications|length < 100 else '99+' }}
+            {% endif %}
+        </span>
+    </button>
+    
+    <div class="mobile-notifications-panel" id="mobileNotificationsPanel">
+        <div class="mobile-notifications-header">
+            <h6>الإشعارات</h6>
+            <button class="mobile-notifications-close" onclick="document.getElementById('mobileNotificationsPanel').classList.remove('show')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="mobile-notifications-list">
+            {% if notifications and notifications|length > 0 %}
+                {% for notification in notifications %}
+                    <div class="mobile-notification-item {{ 'unread' if not notification.is_read }}" 
+                         data-id="{{ notification.id }}">
+                        <div class="mobile-notification-icon">
+                            <i class="fas fa-{{ notification.icon|default('bell') }}"></i>
+                        </div>
+                        <div class="mobile-notification-content">
+                            <div class="mobile-notification-title">{{ notification.title }}</div>
+                            <div class="mobile-notification-text">{{ notification.text }}</div>
+                            <div class="mobile-notification-time">{{ notification.created_at|timeago if notification.created_at else 'الآن' }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="mobile-notifications-empty">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>لا توجد إشعارات</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if notifications and notifications|length > 0 %}
+            <div class="mobile-notifications-actions">
+                <button class="mobile-mark-all-read" data-panel="mobileNotificationsPanel">
+                    <i class="fas fa-check-double"></i>
+                    تعليم الكل كمقروء
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- أنماط CSS إضافية للموبايل -->
+<style>
+/* تصميم الإشعارات للموبايل */
+.mobile-notifications {
+    position: relative;
+}
+
+.mobile-notifications-toggle {
+    background: none;
+    border: none;
+    position: relative;
+    padding: 8px;
+    border-radius: 50%;
+    color: inherit;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mobile-notifications-toggle:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.mobile-notifications-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: var(--notification-error);
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-notifications-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.mobile-notifications-panel.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-notifications-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 85%;
+    max-width: 400px;
+    height: 100%;
+    background: var(--notification-surface);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+.mobile-notifications-panel.show::before {
+    transform: translateX(0);
+}
+
+.mobile-notifications-header,
+.mobile-notifications-list,
+.mobile-notifications-actions {
+    position: relative;
+    z-index: 1;
+    right: 0;
+    width: 85%;
+    max-width: 400px;
+    margin-left: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s ease 0.1s;
+}
+
+.mobile-notifications-panel.show .mobile-notifications-header,
+.mobile-notifications-panel.show .mobile-notifications-list,
+.mobile-notifications-panel.show .mobile-notifications-actions {
+    transform: translateX(0);
+}
+
+.mobile-notifications-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--notification-background);
+}
+
+.mobile-notifications-header h6 {
+    margin: 0;
+    font-weight: 600;
+    color: var(--notification-text-primary);
+}
+
+.mobile-notifications-close {
+    background: none;
+    border: none;
+    color: var(--notification-text-secondary);
+    font-size: 18px;
+    padding: 4px;
+    cursor: pointer;
+}
+
+.mobile-notifications-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    background: var(--notification-surface);
+}
+
+.mobile-notification-item {
+    display: flex;
+    padding: 16px 20px;
+    gap: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.mobile-notification-item:hover {
+    background: var(--notification-background);
+}
+
+.mobile-notification-item.unread {
+    background: rgba(108, 99, 255, 0.05);
+}
+
+.mobile-notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--notification-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+    font-size: 16px;
+}
+
+.mobile-notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.mobile-notification-title {
+    font-weight: 600;
+    color: var(--notification-text-primary);
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.mobile-notification-text {
+    color: var(--notification-text-secondary);
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.mobile-notification-time {
+    color: var(--notification-text-secondary);
+    font-size: 11px;
+}
+
+.mobile-notifications-empty {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--notification-text-secondary);
+}
+
+.mobile-notifications-empty i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.mobile-notifications-actions {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    background: var(--notification-background);
+}
+
+.mobile-mark-all-read {
+    width: 100%;
+    background: var(--notification-accent);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mobile-mark-all-read:hover {
+    background: var(--notification-accent);
+    filter: brightness(1.1);
+}
+
+/* إخفاء على الشاشات الكبيرة */
+@media (min-width: 768px) {
+    .mobile-notifications {
+        display: none !important;
+    }
+}
+</style>
+
+<!-- سكريبت تفعيل الإشعارات للموبايل -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تفعيل قائمة الإشعارات للموبايل
+    const mobileToggle = document.querySelector('.mobile-notifications-toggle');
+    const mobilePanel = document.getElementById('mobileNotificationsPanel');
+    
+    if (mobileToggle && mobilePanel) {
+        mobileToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            mobilePanel.classList.toggle('show');
+        });
+        
+        // إغلاق عند النقر على الخلفية
+        mobilePanel.addEventListener('click', function(e) {
+            if (e.target === mobilePanel) {
+                mobilePanel.classList.remove('show');
+            }
+        });
+        
+        // تفعيل عناصر الإشعارات
+        mobilePanel.querySelectorAll('.mobile-notification-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const id = this.dataset.id;
+                if (this.classList.contains('unread')) {
+                    window.NotificationSystem.markAsRead(id, this);
+                }
+            });
+        });
+        
+        // تفعيل زر "تعليم الكل كمقروء"
+        const markAllBtn = mobilePanel.querySelector('.mobile-mark-all-read');
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', function() {
+                window.NotificationSystem.markAllAsRead('mobileNotificationsPanel');
+            });
+        }
+    }
+});
+</script>
+
+<!-- دعم إضافي للمتغيرات في حالة عدم وجودها -->
+<script>
+// تأكد من وجود المتغيرات
+if (typeof notifications === 'undefined') {
+    window.notifications = [];
+}
+if (typeof unread_notifications === 'undefined') {
+    window.unread_notifications = [];
+}
+
+// تحديث العدادات عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديث شارات الإشعارات
+    const badges = document.querySelectorAll('.notifications-badge, .mobile-notifications-badge');
+    badges.forEach(badge => {
+        const count = badge.dataset.count || badge.textContent.trim();
+        if (count && count !== '0' && count !== '') {
+            badge.classList.add('show');
+            if (parseInt(count) > 0) {
+                badge.classList.add('pulse');
+            }
+        }
+    });
+});
+</script>

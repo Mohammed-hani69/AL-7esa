@@ -8,6 +8,7 @@ from app import db
 from models import Subscription, SubscriptionPlan, User, Role, Classroom, ClassroomEnrollment, ClassroomContent
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizAttempt, QuizAnswer, QuizQuestionOption
 from models import Payment, ChatParticipant, SystemSettings
+from rate_limiting import RATE_LIMITS, get_limiter
 
 student_bp = Blueprint('student', __name__)
 
@@ -173,7 +174,12 @@ def classrooms():
 @login_required
 @student_required
 def join_classroom():
+    # تطبيق Rate Limiting على الانضمام للفصول
     if request.method == 'POST':
+        limiter = get_limiter()
+        if limiter:
+            limiter.limit(RATE_LIMITS['student']['join_classroom'])(lambda: None)()
+        
         classroom_code = request.form.get('classroom_code')
 
         if not classroom_code:
@@ -269,6 +275,11 @@ def payment(classroom_id):
 @login_required
 @student_required
 def process_payment(classroom_id):
+    # تطبيق Rate Limiting على معالجة المدفوعات
+    limiter = get_limiter()
+    if limiter:
+        limiter.limit(RATE_LIMITS['payment_submit'])(lambda: None)()
+    
     classroom = Classroom.query.get_or_404(classroom_id)
 
     # Verify file was uploaded
@@ -479,6 +490,15 @@ def view_assignment(classroom_id, assignment_id):
     ).first()
 
     if request.method == 'POST':
+        # تطبيق Rate Limiting على تسليم الواجبات
+        limiter = get_limiter()
+        if limiter:
+            try:
+                limiter.limit(RATE_LIMITS['student']['submit_assignment'])(lambda: None)()
+            except Exception:
+                flash('لقد تجاوزت الحد المسموح لتسليم الواجبات. حاول مرة أخرى لاحقاً.', 'warning')
+                return redirect(url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id))
+        
         # Check if past due date
         if assignment.due_date and assignment.due_date < datetime.utcnow():
             flash('انتهت مهلة تسليم الواجب', 'danger')
@@ -876,9 +896,14 @@ def live_classroom(classroom_id):
         flash('يجب أن تكون مسجلاً في الفصل للوصول إليه', 'danger')
         return redirect(url_for('student.dashboard'))
 
+    # Get active stream info if exists
+    from streaming import active_streams
+    stream_info = active_streams.get(classroom_id, None)
+    meet_link = stream_info.url if stream_info else None
+
     template = 'student/mobile-theme/live_class.html' if is_mobile() else 'student/live_class.html'
 
-    # الحصول على قيم الألوان من إعدادات النظام
+    # Get system colors
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
@@ -887,7 +912,8 @@ def live_classroom(classroom_id):
                          primary_color=primary_color,
                          secondary_color=secondary_color,
                          enrollment=enrollment,
-                         user_type='student')
+                         user_type='student',
+                         meet_link=meet_link)
 
 @student_bp.route('/classroom/<int:classroom_id>/chat')
 @login_required

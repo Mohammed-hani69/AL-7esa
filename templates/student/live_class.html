@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/unified-notifications.css') }}">
     
     <style>
         :root {
@@ -170,14 +171,53 @@
         /* تصميم البث المباشر */
         .stream-container {
             display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            height: calc(100vh - 4rem);
+            gap: 1.5rem;
+            height: calc(100vh - 7rem);
             background: var(--surface-color);
             border-radius: var(--border-radius-md);
             box-shadow: var(--box-shadow);
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
             overflow: hidden;
+        }
+
+        .stream-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 75%;
+            min-width: 0;
+        }
+
+        .stream-video {
+            flex: 1;
+            background-color: var(--dark-color);
+            border-radius: var(--border-radius-md);
+            position: relative;
+            overflow: hidden;
+            min-height: 400px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .stream-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 1rem;
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+        }
+
+        .stream-side {
+            width: 25%;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
         .stream-control-btn i {
             font-size: 1.5rem;
             margin-bottom: 0.25rem;
@@ -212,13 +252,6 @@
             100% {
                 transform: scale(1) translateY(0);
             }
-        }
-
-        .stream-side {
-            width: 300px;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
         }
 
         .participants-box {
@@ -363,6 +396,24 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .meet-info {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: var(--border-radius-md);
+            margin: 2rem;
+        }
+
+        .meet-info p {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .meet-info .btn {
+            font-size: 1.1rem;
+            padding: 0.75rem 1.5rem;
         }
 
         @keyframes pulse {
@@ -519,24 +570,19 @@
                         <div id="no-stream" class="no-stream-message">
                             <i class="fas fa-video-slash"></i>
                             <h4>لا يوجد بث مباشر الآن</h4>
-                            <p>انتظر حتى يبدأ المعلم البث المباشر</p>
+                            <p>انتظر حتى يبدأ المعلم البث المباشر.</p>
                         </div>
                         
-                        <div id="active-stream" class="d-none">
+                        <div id="active-stream" class="d-none" style="width: 100%; height: 100%;">
                             <div class="stream-status">مباشر</div>
-                            <video id="remote-video" class="remote-video" autoplay playsinline></video>
+                            <div id="meet-info" class="meet-info">
+                                <p>البث المباشر نشط الآن. اضغط على الزر أدناه للانضمام:</p>
+                                <a id="meet-link" href="#" target="_blank" class="btn btn-primary mt-2">
+                                    <i class="fas fa-video me-1"></i>
+                                    الانضمام للبث المباشر
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="stream-controls">
-                        <button id="mic-btn" class="stream-control-btn mic off d-none">
-                            <i class="fas fa-microphone-slash"></i>
-                            <span>الميكروفون</span>
-                        </button>
-                        <button id="hand-btn" class="stream-control-btn hand">
-                            <i class="fas fa-hand-paper"></i>
-                            <span>رفع اليد</span>
-                        </button>
                     </div>
                 </div>
                 
@@ -572,10 +618,14 @@
         </main>
     </div>
 
+    <!-- تضمين مكونات نظام الإشعارات الموحد -->
+    {% include 'components/unified_notifications.html' %}
+
     <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/unified-notifications.js') }}" defer></script>
     <script>
         // Classroom data
         const classroomId = {{ classroom.id }};
@@ -593,6 +643,19 @@
         // Participants
         let participants = [];
         let handsRaised = [];
+        
+        // DOM elements
+        const noStreamEl = document.getElementById('no-stream');
+        const activeStreamEl = document.getElementById('active-stream');
+        const streamPlaceholderEl = document.getElementById('stream-controls');
+        const micBtn = document.getElementById('mic-btn');
+        const handBtn = document.getElementById('hand-btn');
+        const remoteVideoEl = document.getElementById('remote-video');
+        const participantsListEl = document.getElementById('participants-list');
+        const participantsCountEl = document.getElementById('participants-count');
+        const chatMessagesEl = document.getElementById('chat-messages');
+        const chatInputEl = document.getElementById('chat-input');
+        const sendChatBtn = document.getElementById('send-chat-btn');
         
         // Initialize when document is ready
         document.addEventListener('DOMContentLoaded', initialize);
@@ -625,131 +688,107 @@
             });
         }
         
-        // Rest of the JavaScript remains the same as in the original file
-        // Classroom data
-    const classroomId = {{ classroom.id }};
-    const userId = {{ current_user.id }};
-    const userName = "{{ current_user.name }}";
-    const userRole = "{{ current_user.role }}";
-    
-    // WebRTC variables
-    let socket;
-    let localStream;
-    let peerConnection;
-    let isStreaming = false;
-    let isHandRaised = false;
-    
-    // Participants
-    let participants = [];
-    let handsRaised = [];
-    
-    // DOM elements
-    const noStreamEl = document.getElementById('no-stream');
-    const activeStreamEl = document.getElementById('active-stream');
-    const streamPlaceholderEl = document.getElementById('stream-placeholder');
-    const streamControlsEl = document.getElementById('stream-controls');
-    const micBtn = document.getElementById('mic-btn');
-    const handBtn = document.getElementById('hand-btn');
-    const remoteVideoEl = document.getElementById('remote-video');
-    const participantsListEl = document.getElementById('participants-list');
-    const participantsCountEl = document.getElementById('participants-count');
-    const chatMessagesEl = document.getElementById('chat-messages');
-    const chatInputEl = document.getElementById('chat-input');
-    const sendChatBtn = document.getElementById('send-chat-btn');
-    
-    // Initialize when document is ready
-    document.addEventListener('DOMContentLoaded', initialize);
-    
-    // Initialize the streaming page
-    function initialize() {
         // Connect to Socket.IO server
-        connectToSocketServer();
-        
-        // Add event listeners
-        handBtn.addEventListener('click', toggleHandRaise);
-        micBtn.addEventListener('click', toggleMic);
-        sendChatBtn.addEventListener('click', sendChatMessage);
-        chatInputEl.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                sendChatMessage();
-            }
-        });
-    }
-    
-    // Connect to Socket.IO server
-    function connectToSocketServer() {
-        socket = io();
-        
-        socket.on('connect', () => {
-            console.log('Connected to Socket.IO server');
-            joinClassroom();
-        });
-        
-        socket.on('connection_response', (data) => {
-            console.log('Connection response:', data);
-        });
-        
-        socket.on('join_response', handleJoinResponse);
-        socket.on('user_joined', handleUserJoined);
-        socket.on('user_left', handleUserLeft);
-        socket.on('stream_started', handleStreamStarted);
-        socket.on('stream_ended', handleStreamEnded);
-        socket.on('stream_signal', handleStreamSignal);
-        socket.on('new_chat_message', handleNewChatMessage);
-        socket.on('hand_raised', handleHandRaised);
-        socket.on('hand_lowered', handleHandLowered);
-        
-        socket.on('disconnect', () => {
-            console.log('Disconnected from Socket.IO server');
-            cleanupStream();
-        });
-    }
-    
-    // Join the classroom room
-    function joinClassroom() {
-        socket.emit('join_classroom', {
-            classroom_id: classroomId
-        });
-    }
-    
-    // Handle join classroom response
-    function handleJoinResponse(data) {
-        console.log('Join response:', data);
-        
-        if (data.status === 'success') {
-            // Store participants
-            participants = data.participants;
-            updateParticipantsList();
-            
-            // Check if there's already a stream
-            if (data.classroom.is_streaming) {
-                handleStreamStarted({
-                    classroom_id: data.classroom.id,
-                    teacher_id: data.classroom.teacher_id
-                });
-            }
-        } else {
-            showAlert('error', data.message);
-        }
-    }
-    
-    // Handle user joined event
-    function handleUserJoined(data) {
-        console.log('User joined:', data);
-        
-        // Add to participants list if not already there
-        if (!participants.find(p => p.id === data.user_id)) {
-            participants.push({
-                id: data.user_id,
-                name: data.user_name,
-                role: data.user_role
+        function connectToSocketServer() {
+            socket = io({
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                reconnectionAttempts: 5
             });
-            updateParticipantsList();
+            
+            socket.on('connect', () => {
+                console.log('Connected to Socket.IO server');
+                joinClassroom();
+                // Clear any disconnect UI state
+                clearDisconnectState();
+            });
+            
+            socket.on('connect_error', (error) => {
+                console.log('Connection error:', error);
+                showConnectionError();
+            });
+
+            socket.on('reconnect', (attemptNumber) => {
+                console.log('Reconnected after ' + attemptNumber + ' attempts');
+                joinClassroom();
+                // Clear any disconnect UI state
+                clearDisconnectState();
+            });
+
+            socket.on('reconnect_failed', () => {
+                console.log('Failed to reconnect');
+                showFatalError('فشل الاتصال بالخادم. يرجى تحديث الصفحة.');
+            });
+            
+            socket.on('connection_response', (data) => {
+                console.log('Connection response:', data);
+            });
+            
+            socket.on('join_response', handleJoinResponse);
+            socket.on('user_joined', handleUserJoined);
+            socket.on('user_left', handleUserLeft);
+            socket.on('stream_started', handleStreamStarted);
+            socket.on('stream_ended', handleStreamEnded);
+            socket.on('stream_signal', handleStreamSignal);
+            socket.on('new_chat_message', handleNewChatMessage);
+            socket.on('hand_raised', handleHandRaised);
+            socket.on('hand_lowered', handleHandLowered);
+            
+            socket.on('disconnect', () => {
+                console.log('Disconnected from Socket.IO server');
+                cleanupStream();
+            });
         }
-    }
-    
-    // Handle user left event
-    function handleUserLeft(data) {
+        
+        // Join the classroom room
+        function joinClassroom() {
+            socket.emit('join_classroom', {
+                classroom_id: classroomId
+            });
+        }
+        
+        // Handle join classroom response
+        function handleJoinResponse(data) {
+            console.log('Join response:', data);
+            
+            if (data.status === 'success') {
+                // Store participants
+                participants = data.participants;
+                updateParticipantsList();
+                
+                // Check if there's already a stream
+                if (data.classroom.is_streaming && data.stream) {
+                    handleStreamStarted({
+                        classroom_id: data.classroom.id,
+                        teacher_id: data.classroom.teacher_id,
+                        room_name: data.stream.room_name,
+                        token: data.stream.token,
+                        url: data.stream.url
+                    });
+                }
+            } else {
+                showAlert('error', data.message);
+            }
+        }
+        
+        // Handle user joined event
+        function handleUserJoined(data) {
+            console.log('User joined:', data);
+            
+            // Add to participants list if not already there
+            if (!participants.find(p => p.id === data.user_id)) {
+                participants.push({
+                    id: data.user_id,
+                    name: data.user_name,
+                    role: data.user_role
+                });
+                updateParticipantsList();
+            }
+        }
+        
+        // Handle user left event
+        function handleUserLeft(data) {
         console.log('User left:', data);
         
         // Remove from participants list
@@ -809,6 +848,8 @@
         });
     }
     
+    let jitsiApi = null;
+
     // Handle stream started event
     function handleStreamStarted(data) {
         console.log('Stream started:', data);
@@ -818,8 +859,8 @@
         noStreamEl.classList.add('d-none');
         activeStreamEl.classList.remove('d-none');
         
-        // Create RTCPeerConnection to receive stream
-        createPeerConnection();
+        // Initialize Jitsi Meet
+        initializeJitsiMeet();
     }
     
     // Handle stream ended event
@@ -838,10 +879,9 @@
     function cleanupStream() {
         isStreaming = false;
         
-        // Close peer connection
-        if (peerConnection) {
-            peerConnection.close();
-            peerConnection = null;
+        if (jitsiApi) {
+            jitsiApi.dispose();
+            jitsiApi = null;
         }
         
         // Stop local stream if exists
@@ -849,9 +889,6 @@
             localStream.getTracks().forEach(track => track.stop());
             localStream = null;
         }
-        
-        // Clear video element
-        remoteVideoEl.srcObject = null;
         
         // Reset hand raise
         if (isHandRaised) {
@@ -1075,6 +1112,34 @@
         }, 5000);
     }
     
+    // UI functions for connection state
+        function showConnectionError() {
+            const alertEl = document.createElement('div');
+            alertEl.id = 'connection-alert';
+            alertEl.className = 'alert alert-warning alert-dismissible fade show reconnecting';
+            alertEl.innerHTML = `
+                <i class="fas fa-sync fa-spin me-2"></i>
+                جاري إعادة الاتصال...
+            `;
+            document.querySelector('.stream-container').prepend(alertEl);
+        }
+        
+        function clearDisconnectState() {
+            const alertEl = document.getElementById('connection-alert');
+            if (alertEl) alertEl.remove();
+        }
+        
+        function showFatalError(message) {
+            const alertEl = document.createElement('div');
+            alertEl.className = 'alert alert-danger alert-dismissible fade show';
+            alertEl.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.querySelector('.stream-container').prepend(alertEl);
+        }
+    
     // Clean up when leaving page
     window.addEventListener('beforeunload', () => {
         // If hand is raised, lower it
@@ -1091,6 +1156,140 @@
         
         // Clean up resources
         cleanupStream();
+    });
+
+    function initializeJitsiMeet() {
+        if (jitsiApi) {
+            jitsiApi.dispose();
+        }
+
+        const domain = 'meet.jit.si';
+        const options = {
+            roomName: `al7esa_classroom_${classroomId}`,
+            width: '100%',
+            height: '100%',
+            userInfo: {
+                displayName: userName,
+                email: ''
+            },
+            configOverwrite: {
+                startWithAudioMuted: true,
+                startWithVideoMuted: true,
+                prejoinPageEnabled: false,
+                disableDeepLinking: true
+            },
+            interfaceConfigOverwrite: {
+                TOOLBAR_BUTTONS: [
+                    'microphone', 'camera', 'chat',
+                    'raisehand', 'tileview'
+                ],
+                SHOW_JITSI_WATERMARK: false,
+                SHOW_WATERMARK_FOR_GUESTS: false,
+                DEFAULT_REMOTE_DISPLAY_NAME: 'مشارك',
+                DISPLAY_WELCOME_PAGE_CONTENT: false,
+                DISPLAY_WELCOME_PAGE_TOOLBAR_ADDITIONAL_CONTENT: false
+            },
+            lang: 'ar'
+        };
+
+        // Create new Jitsi Meet instance
+        jitsiApi = new JitsiMeetExternalAPI(domain, options);
+        
+        // Add event listeners
+        jitsiApi.addEventListeners({
+            videoConferenceJoined: () => {
+                // Show controls after joining
+                document.getElementById('stream-controls').classList.remove('d-none');
+            },
+            audioMuteStatusChanged: (muted) => {
+                const micBtn = document.getElementById('mic-btn');
+                if (micBtn) {
+                    micBtn.classList.toggle('off', muted.muted);
+                    micBtn.querySelector('i').className = muted.muted ? 'fas fa-microphone-slash' : 'fas fa-microphone';
+                }
+            },
+            readyToClose: () => {
+                cleanupStream();
+            },
+            participantLeft: (participant) => {
+                // If teacher left, end stream for student
+                const teacher = participants.find(p => p.role === 'teacher');
+                if (teacher && participant.id === teacher.id) {
+                    handleStreamEnded();
+                }
+            }
+        });
+
+        // Set the participant role
+        jitsiApi.executeCommand('setRole', 'participant');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const socket = io();
+        let isStreaming = false;
+        
+        // DOM Elements
+        const noStreamEl = document.getElementById('no-stream');
+        const activeStreamEl = document.getElementById('active-stream');
+        const meetLinkEl = document.getElementById('meet-link');
+        
+        // Socket event handlers
+        socket.on('stream_started', function(data) {
+            if (data.classroom_id === {{ classroom.id }}) {
+                isStreaming = true;
+                noStreamEl.classList.add('d-none');
+                activeStreamEl.classList.remove('d-none');
+                
+                // Update Meet link
+                if (meetLinkEl) {
+                    meetLinkEl.href = data.meet_link;
+                }
+            }
+        });
+        
+        socket.on('stream_ended', function(data) {
+            if (data.classroom_id === {{ classroom.id }}) {
+                isStreaming = false;
+                noStreamEl.classList.remove('d-none');
+                activeStreamEl.classList.add('d-none');
+                
+                // Show ended message
+                showMessage('تم إنهاء البث المباشر', 'info');
+            }
+        });
+        
+        socket.on('stream_error', function(data) {
+            showError(data.message);
+        });
+        
+        // Initialize current state
+        socket.emit('join_classroom', {
+            classroom_id: {{ classroom.id }}
+        });
+        
+        function showError(message) {
+            window.showError('خطأ', message);
+        }
+        
+        function showMessage(message, type = 'info') {
+            const typeMap = {
+                'info': 'info',
+                'success': 'success',
+                'warning': 'warning', 
+                'danger': 'error'
+            };
+            const notificationType = typeMap[type] || 'info';
+            
+            if (notificationType === 'success') {
+                window.showSuccess('نجح', message);
+            } else if (notificationType === 'warning') {
+                window.showWarning('تنبيه', message);
+            } else if (notificationType === 'error') {
+                window.showError('خطأ', message);
+            } else {
+                window.showInfo('معلومة', message);
+            }
+        }
     });
     </script>
 </body>

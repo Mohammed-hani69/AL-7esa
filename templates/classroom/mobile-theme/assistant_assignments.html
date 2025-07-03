@@ -196,6 +196,20 @@
             margin-bottom: 4px;
         }
 
+        .classroom-badge {
+            position: fixed;
+            top: 80px;
+            right: 15px;
+            background: var(--accent-color);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
+        }
+
         .classroom-card {
             background: var(--surface-color);
             border-radius: var(--border-radius-lg);
@@ -339,7 +353,14 @@
         <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="btn btn-link text-white">
             <i class="fas fa-arrow-right"></i>
         </a>
-    </header>    <!-- المحتوى الرئيسي -->
+    </header>
+
+    <!-- شارة الفصل -->
+    <div class="classroom-badge">
+        <i class="fas fa-tasks me-1"></i>واجبات {{ classroom.name }}
+    </div>
+
+    <!-- المحتوى الرئيسي -->
     <main class="main-content">
         <div class="assignments-card">
             <div class="assignments-list">
@@ -422,26 +443,13 @@
             <i class="fas fa-home"></i>
             <span>الرئيسية</span>
         </a>
-        <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="bottom-nav-item active">
-            <i class="fas fa-tasks"></i>
-            <span>الواجبات</span>
+        <a href="#" class="bottom-nav-item" onclick="showNotifications()">
+            <i class="fas fa-bell"></i>
+            <span>الإشعارات</span>
         </a>
-        <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="bottom-nav-item">
-            <i class="fas fa-question-circle"></i>
-            <span>الاختبارات</span>
-        </a>
-        {% for item in classrooms_with_chat %}
-            {% set classroom = item.classroom %}
-            {% if item.can_use_chat %}
-                <a href="{{ url_for('assistant.chat', classroom_id=classroom.id) }}" class="bottom-nav-item">
-                    <i class="fas fa-comments"></i>
-                    <span>المحادثة</span>
-                </a>
-            {% endif %}
-        {% endfor %}
-        <a href="{{ url_for('assistant.students', classroom_id=classroom.id) }}" class="bottom-nav-item">
-            <i class="fas fa-users"></i>
-            <span>الطلاب</span>
+        <a href="{{ url_for('auth.profile') }}" class="bottom-nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
         </a>
     </nav>
 
@@ -462,6 +470,12 @@
                 $('.innovative-sidebar').removeClass('show');
             }
         });
+
+        // عرض الإشعارات
+        function showNotifications() {
+            alert('ميزة الإشعارات قيد التطوير');
+            // يمكن إضافة منطق الإشعارات هنا لاحقاً
+        }
     </script>
 </body>
 </html>

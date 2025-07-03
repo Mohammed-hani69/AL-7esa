@@ -1,0 +1,445 @@
+{% extends 'teacher/layout.html' %}
+
+{% block title %}البث المباشر - {{ classroom.name }} - الحصة{% endblock %}
+
+{% block head %}
+    <!-- إضافة سكريبت Jitsi -->
+    <script src='https://meet.jit.si/external_api.js'></script>
+    
+    <style>
+        .live-stream-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .stream-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stream-header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .stream-status {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #jitsi-meet {
+            width: 100%;
+            height: 100%;
+        }
+
+        .stream-placeholder {
+            color: white;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .stream-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .stream-controls {
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-stream {
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn-stop:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-join {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+        }
+
+        .btn-join:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+        }
+
+        .stream-info {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .info-value {
+            color: #718096;
+        }
+
+        .participants-count {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .control-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-stream {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .video-container {
+                height: 300px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- حاوي البث المباشر -->
+            <div class="live-stream-container">
+                <div class="stream-header">
+                    <h1><i class="fas fa-video me-2"></i>{{ classroom.name }}</h1>
+                    <div class="stream-status">
+                        <span id="stream-status-text">جاهز للبدء</span>
+                        <span id="participants-badge" class="participants-count ms-2">
+                            <i class="fas fa-users me-1"></i>
+                            <span id="participants-count">0</span> مشارك
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="video-container">
+                    <div id="jitsi-meet"></div>
+                    <div id="stream-placeholder" class="stream-placeholder">
+                        <i class="fas fa-play-circle"></i>
+                        انقر على "بدء البث" لتفعيل الحصة المباشرة
+                    </div>
+                </div>
+                
+                <div class="stream-controls">
+                    <div class="control-buttons">
+                        <button id="start-stream" class="btn-stream btn-start">
+                            <i class="fas fa-play"></i>
+                            بدء البث
+                        </button>
+                        <button id="stop-stream" class="btn-stream btn-stop" style="display: none;">
+                            <i class="fas fa-stop"></i>
+                            إيقاف البث
+                        </button>
+                        <button id="join-stream" class="btn-stream btn-join" style="display: none;">
+                            <i class="fas fa-sign-in-alt"></i>
+                            الانضمام
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- معلومات البث -->
+            <div class="stream-info">
+                <h3 class="mb-3"><i class="fas fa-info-circle me-2"></i>تفاصيل البث</h3>
+                
+                <div class="info-item">
+                    <span class="info-label">اسم الفصل:</span>
+                    <span class="info-value">{{ classroom.name }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">المعلم:</span>
+                    <span class="info-value">{{ current_user.name }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">عدد الطلاب:</span>
+                    <span class="info-value">{{ classroom.students|length }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">حالة البث:</span>
+                    <span id="stream-info-status" class="info-value">متوقف</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">وقت البدء:</span>
+                    <span id="stream-start-time" class="info-value">-</span>
+                </div>
+            </div>
+            
+            <!-- إرشادات سريعة -->
+            <div class="stream-info mt-3">
+                <h4 class="mb-3"><i class="fas fa-lightbulb me-2"></i>إرشادات سريعة</h4>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>تأكد من جودة الإنترنت</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>اختبر الصوت والكاميرا</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>أعلم الطلاب بموعد البث</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>استخدم سماعة رأس لجودة أفضل</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <!-- تضمين Loading Indicators -->
+    {% include 'components/loading_indicators.html' %}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تطبيق loading على container البث
+            const streamContainer = document.querySelector('.video-container');
+            if (streamContainer && window.enhancedLoading) {
+                // إظهار stream loading
+                streamContainer.classList.add('stream-container', 'loading');
+                streamContainer.innerHTML = `
+                    <div class="stream-loading">
+                        <div class="loading-spinner xl white"></div>
+                        <div class="loading-text">جاري تحضير البث المباشر...</div>
+                    </div>
+                `;
+                
+                // محاكاة تحميل البث
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += Math.random() * 10;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(progressInterval);
+                        
+                        // إخفاء loading وإظهار البث
+                        setTimeout(() => {
+                            streamContainer.classList.remove('loading');
+                            streamContainer.innerHTML = '<div id="jitsi-meet"></div>';
+                            initializeJitsi();
+                        }, 500);
+                    }
+                    
+                    const loadingText = streamContainer.querySelector('.loading-text');
+                    if (loadingText) {
+                        loadingText.textContent = `جاري تحضير البث المباشر... ${Math.round(progress)}%`;
+                    }
+                }, 200);
+            }
+            
+            // تطبيق loading على أزرار التحكم
+            document.querySelectorAll('.stream-control-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showButtonLoading(this, {
+                            text: '',
+                            keepText: true,
+                            type: 'spinner'
+                        });
+                        
+                        setTimeout(() => {
+                            window.enhancedLoading.hideButtonLoading(this);
+                        }, 1000);
+                    }
+                });
+            });
+            
+            // تطبيق loading على قائمة المشاركين
+            const participantsList = document.querySelector('.participants-list');
+            if (participantsList && window.enhancedLoading) {
+                window.enhancedLoading.showSkeleton(participantsList, {
+                    lines: 5,
+                    avatar: true,
+                    animated: true
+                });
+                
+                setTimeout(() => {
+                    window.enhancedLoading.hideSkeleton(participantsList);
+                }, 1500);
+            }
+            
+            // تطبيق loading على الدردشة
+            const chatContainer = document.querySelector('.chat-container');
+            if (chatContainer && window.enhancedLoading) {
+                window.enhancedLoading.showSkeleton(chatContainer, {
+                    lines: 3,
+                    animated: true
+                });
+                
+                setTimeout(() => {
+                    window.enhancedLoading.hideSkeleton(chatContainer);
+                }, 1000);
+            }
+            
+            // تطبيق loading على إرسال الرسائل
+            const chatForm = document.querySelector('.chat-form');
+            if (chatForm) {
+                chatForm.addEventListener('submit', function(e) {
+                    const sendBtn = chatForm.querySelector('.send-btn');
+                    if (sendBtn && window.enhancedLoading) {
+                        window.enhancedLoading.showButtonLoading(sendBtn, {
+                            text: '',
+                            type: 'dots'
+                        });
+                        
+                        setTimeout(() => {
+                            window.enhancedLoading.hideButtonLoading(sendBtn);
+                        }, 500);
+                    }
+                });
+            }
+            
+            // تطبيق loading على بدء/إيقاف البث
+            const streamToggleBtn = document.querySelector('.stream-toggle-btn');
+            if (streamToggleBtn) {
+                streamToggleBtn.addEventListener('click', function(e) {
+                    if (window.enhancedLoading) {
+                        const isStarting = this.textContent.includes('بدء');
+                        const loadingText = isStarting ? 'جاري بدء البث...' : 'جاري إيقاف البث...';
+                        
+                        window.enhancedLoading.showButtonLoading(this, {
+                            text: loadingText,
+                            type: 'pulse'
+                        });
+                    }
+                });
+            }
+            
+            // تطبيق loading على تحديث حالة المشاركين
+            function updateParticipantsWithLoading() {
+                const participantsContainer = document.querySelector('.participants-container');
+                if (participantsContainer && window.enhancedLoading) {
+                    window.enhancedLoading.showSectionLoading(participantsContainer, {
+                        text: 'جاري تحديث قائمة المشاركين...',
+                        type: 'wave',
+                        timeout: 2000
+                    });
+                    
+                    setTimeout(() => {
+                        window.enhancedLoading.hideSectionLoading(participantsContainer);
+                    }, 800);
+                }
+            }
+            
+            // تطبيق loading على تبديل الشاشة
+            const screenShareBtn = document.querySelector('.screen-share-btn');
+            if (screenShareBtn) {
+                screenShareBtn.addEventListener('click', function(e) {
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showPageLoading({
+                            text: 'جاري تحضير مشاركة الشاشة...',
+                            type: 'bars'
+                        });
+                        
+                        setTimeout(() => {
+                            window.enhancedLoading.hidePageLoading();
+                        }, 2000);
+                    }
+                });
+            }
+            
+            // معالجة أخطاء البث
+            window.addEventListener('error', function(e) {
+                if (e.message && e.message.includes('jitsi')) {
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.hidePageLoading();
+                        const streamContainer = document.querySelector('.video-container');
+                        if (streamContainer) {
+                            streamContainer.classList.remove('loading');
+                            streamContainer.innerHTML = `
+                                <div class="stream-error">
+                                    <i class="fas fa-exclamation-triangle fa-3x mb-3 text-warning"></i>
+                                    <h4>خطأ في البث المباشر</h4>
+                                    <p>حدث خطأ أثناء تحضير البث. يرجى إعادة المحاولة.</p>
+                                    <button class="btn btn-primary" onclick="location.reload()">
+                                        <i class="fas fa-refresh me-2"></i>
+                                        إعادة المحاولة
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+            });
+        });
+        
+        function initializeJitsi() {
+            // كود تهيئة Jitsi هنا
+            console.log('Jitsi initialized successfully');
+        }
+    </script>
+{% endblock %}

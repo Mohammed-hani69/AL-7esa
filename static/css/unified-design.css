@@ -1,0 +1,1244 @@
+/* ==============================================
+   نظام التصميم الموحد - Loading Indicators محسن
+   ============================================== */
+
+/* متغيرات الألوان والقيم */
+:root {
+    --accent-color: #6C63FF;
+    --accent-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+    --surface-color: #FFFFFF;
+    --background-color: #F4F7FE;
+    --text-primary: #2D3748;
+    --text-secondary: #718096;
+    --border-radius-lg: 24px;
+    --border-radius-md: 16px;
+    --border-radius-sm: 8px;
+    --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+    --transition-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
+    --transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* متغيرات خاصة بـ Loading */
+    --loading-bg-light: rgba(255, 255, 255, 0.95);
+    --loading-bg-dark: rgba(0, 0, 0, 0.8);
+    --loading-spinner-size: 24px;
+    --loading-animation-duration: 1s;
+}
+
+/* ==============================================
+   Loading Indicators - النظام المحسن
+   ============================================== */
+
+/* Loading Spinner الأساسي */
+.loading-spinner {
+    width: var(--loading-spinner-size);
+    height: var(--loading-spinner-size);
+    border: 2px solid rgba(108, 99, 255, 0.2);
+    border-top: 2px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin var(--loading-animation-duration) linear infinite;
+    display: inline-block;
+}
+
+/* أحجام مختلفة للـ spinner */
+.loading-spinner.xs {
+    width: 12px;
+    height: 12px;
+    border-width: 1px;
+}
+
+.loading-spinner.sm {
+    width: 16px;
+    height: 16px;
+    border-width: 1.5px;
+}
+
+.loading-spinner.lg {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+}
+
+.loading-spinner.xl {
+    width: 48px;
+    height: 48px;
+    border-width: 4px;
+}
+
+.loading-spinner.xxl {
+    width: 64px;
+    height: 64px;
+    border-width: 5px;
+}
+
+/* Loading Spinner بألوان مختلفة */
+.loading-spinner.white {
+    border-color: rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+}
+
+.loading-spinner.dark {
+    border-color: rgba(0, 0, 0, 0.2);
+    border-top-color: #2D3748;
+}
+
+.loading-spinner.success {
+    border-color: rgba(40, 167, 69, 0.2);
+    border-top-color: #28a745;
+}
+
+.loading-spinner.warning {
+    border-color: rgba(255, 193, 7, 0.2);
+    border-top-color: #ffc107;
+}
+
+.loading-spinner.danger {
+    border-color: rgba(220, 53, 69, 0.2);
+    border-top-color: #dc3545;
+}
+
+/* Loading Dots - نقاط متحركة */
+.loading-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.loading-dots .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    animation: dotPulse 1.4s ease-in-out infinite both;
+}
+
+.loading-dots .dot:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots .dot:nth-child(2) { animation-delay: -0.16s; }
+.loading-dots .dot:nth-child(3) { animation-delay: 0s; }
+
+/* أحجام مختلفة للنقاط */
+.loading-dots.sm .dot { width: 4px; height: 4px; }
+.loading-dots.lg .dot { width: 8px; height: 8px; }
+
+/* Loading Pulse */
+.loading-pulse {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Loading Bars - أعمدة متحركة */
+.loading-bars {
+    display: inline-flex;
+    align-items: end;
+    gap: 2px;
+    height: 24px;
+}
+
+.loading-bars .bar {
+    width: 3px;
+    background: var(--accent-color);
+    border-radius: 2px;
+    animation: barPulse 1.2s ease-in-out infinite;
+}
+
+.loading-bars .bar:nth-child(1) { height: 12px; animation-delay: 0s; }
+.loading-bars .bar:nth-child(2) { height: 18px; animation-delay: 0.1s; }
+.loading-bars .bar:nth-child(3) { height: 24px; animation-delay: 0.2s; }
+.loading-bars .bar:nth-child(4) { height: 18px; animation-delay: 0.3s; }
+.loading-bars .bar:nth-child(5) { height: 12px; animation-delay: 0.4s; }
+
+/* Loading Wave - موجة */
+.loading-wave {
+    display: inline-flex;
+    gap: 2px;
+    align-items: center;
+}
+
+.loading-wave .wave-bar {
+    width: 3px;
+    height: 20px;
+    background: var(--accent-color);
+    border-radius: 2px;
+    animation: waveAnimation 1.5s ease-in-out infinite;
+}
+
+.loading-wave .wave-bar:nth-child(1) { animation-delay: 0s; }
+.loading-wave .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.loading-wave .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.loading-wave .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+.loading-wave .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+
+/* Loading Skeleton محسن */
+.loading-skeleton {
+    background: linear-gradient(
+        90deg,
+        #f0f0f0 25%,
+        #e0e0e0 50%,
+        #f0f0f0 75%
+    );
+    background-size: 200% 100%;
+    animation: skeletonLoading 1.5s ease-in-out infinite;
+    border-radius: var(--border-radius-sm);
+}
+
+.loading-skeleton.text {
+    height: 16px;
+    margin-bottom: 8px;
+}
+
+.loading-skeleton.text.sm { height: 12px; }
+.loading-skeleton.text.lg { height: 24px; }
+.loading-skeleton.text.xl { height: 32px; }
+
+.loading-skeleton.circle {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+}
+
+.loading-skeleton.avatar {
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+}
+
+.loading-skeleton.button {
+    height: 40px;
+    width: 120px;
+    border-radius: var(--border-radius-sm);
+}
+
+.loading-skeleton.card {
+    height: 200px;
+    width: 100%;
+    border-radius: var(--border-radius-md);
+}
+
+/* ==============================================
+   Loading Overlays - طبقات التحميل المحسنة
+   ============================================== */
+
+/* Page Loading Overlay محسن */
+.page-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--loading-bg-light);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s var(--transition-smooth);
+}
+
+.page-loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.page-loading-overlay.dark {
+    background: var(--loading-bg-dark);
+    color: white;
+}
+
+.page-loading-overlay .loading-content {
+    text-align: center;
+    animation: fadeInUp 0.6s var(--transition-bounce);
+    max-width: 300px;
+    padding: 2rem;
+}
+
+.page-loading-overlay .loading-text {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+.page-loading-overlay.dark .loading-text {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Section Loading Overlay محسن */
+.section-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: inherit;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s var(--transition-smooth);
+}
+
+.section-loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.section-loading-overlay.dark {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+}
+
+/* ==============================================
+   Button Loading States محسن
+   ============================================== */
+
+.btn.loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+    cursor: not-allowed;
+    overflow: hidden;
+}
+
+.btn.loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: inherit;
+    opacity: 0.8;
+    z-index: 1;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    color: inherit;
+    z-index: 2;
+}
+
+.btn.loading.btn-sm::after {
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border-width: 1.5px;
+}
+
+.btn.loading.btn-lg::after {
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border-width: 2.5px;
+}
+
+/* Button با نص loading */
+.btn.loading-text {
+    position: relative;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.btn.loading-text .btn-text {
+    opacity: 0.6;
+}
+
+.btn.loading-text .loading-spinner {
+    margin-left: 8px;
+}
+
+/* ==============================================
+   Form Loading States محسن
+   ============================================== */
+
+.form-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.form-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 10;
+    border-radius: inherit;
+}
+
+.form-loading .loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 11;
+}
+
+/* Input Loading */
+.form-control.loading {
+    background-image: url("data:image/svg+xml,%3csvg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M8 2a6 6 0 0 1 6 6' stroke='%236C63FF' stroke-width='2' stroke-linecap='round'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    animation: spin 1s linear infinite;
+    background-size: 16px;
+    pointer-events: none;
+}
+
+/* ==============================================
+   Progress Bars محسن
+   ============================================== */
+
+.loading-progress {
+    width: 100%;
+    height: 6px;
+    background: rgba(108, 99, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.loading-progress.thin { height: 3px; }
+.loading-progress.thick { height: 8px; }
+
+.loading-progress.indeterminate::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background: var(--accent-gradient);
+    width: 30%;
+    border-radius: inherit;
+    animation: progressIndeterminate 2s ease-in-out infinite;
+}
+
+.loading-progress .progress-bar {
+    height: 100%;
+    background: var(--accent-gradient);
+    border-radius: inherit;
+    transition: width 0.3s var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.loading-progress .progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 75%,
+        transparent 75%,
+        transparent
+    );
+    background-size: 20px 20px;
+    animation: progressStripes 1s linear infinite;
+}
+
+/* Circular Progress محسن */
+.loading-progress-circle {
+    width: 48px;
+    height: 48px;
+    position: relative;
+    display: inline-block;
+}
+
+.loading-progress-circle svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+}
+
+.loading-progress-circle .progress-circle-bg {
+    fill: transparent;
+    stroke: rgba(108, 99, 255, 0.1);
+    stroke-width: 3;
+}
+
+.loading-progress-circle .progress-circle {
+    fill: transparent;
+    stroke: var(--accent-color);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 126;
+    stroke-dashoffset: 126;
+    transition: stroke-dashoffset 0.3s var(--transition-smooth);
+}
+
+.loading-progress-circle.animated .progress-circle {
+    animation: circleProgress 2s ease-in-out infinite;
+}
+
+/* أحجام مختلفة للـ circle progress */
+.loading-progress-circle.sm { width: 32px; height: 32px; }
+.loading-progress-circle.lg { width: 64px; height: 64px; }
+.loading-progress-circle.xl { width: 80px; height: 80px; }
+
+/* ==============================================
+   Specialized Loading Types
+   ============================================== */
+
+/* Chat Typing Indicator محسن */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(108, 99, 255, 0.05);
+    border-radius: var(--border-radius-md);
+    color: var(--text-secondary);
+    margin: 0.5rem 0;
+}
+
+.typing-indicator .typing-dots {
+    display: flex;
+    gap: 2px;
+}
+
+.typing-indicator .typing-dots .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    animation: typingPulse 1.4s ease-in-out infinite;
+}
+
+.typing-indicator .typing-dots .dot:nth-child(1) { animation-delay: 0s; }
+.typing-indicator .typing-dots .dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator .typing-dots .dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* File Upload Progress */
+.upload-progress {
+    position: relative;
+    background: var(--background-color);
+    border-radius: var(--border-radius-sm);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(108, 99, 255, 0.1);
+}
+
+.upload-progress .progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.upload-progress .file-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.upload-progress .progress-percentage {
+    color: var(--accent-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+    min-width: 50px;
+    text-align: right;
+}
+
+.upload-progress .file-size {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+/* Stream Loading */
+.stream-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    z-index: 100;
+}
+
+.stream-loading .loading-spinner {
+    border-color: rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    margin-bottom: 1rem;
+}
+
+.stream-loading .loading-text {
+    font-size: 1rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Table Loading محسن */
+.table-loading {
+    position: relative;
+}
+
+.table-loading tbody {
+    opacity: 0.5;
+}
+
+.table-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 10;
+    border-radius: inherit;
+}
+
+.table-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin: -16px 0 0 -16px;
+    border: 3px solid rgba(108, 99, 255, 0.2);
+    border-top: 3px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 11;
+}
+
+/* Image Loading */
+.image-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.image-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--background-color);
+    z-index: 1;
+}
+
+.image-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 2px solid rgba(108, 99, 255, 0.2);
+    border-top: 2px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 2;
+}
+
+/* ==============================================
+   Loading Animations محسنة
+   ============================================== */
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes dotPulse {
+    0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+}
+
+@keyframes barPulse {
+    0%, 40%, 100% {
+        transform: scaleY(0.4);
+    }
+    20% {
+        transform: scaleY(1);
+    }
+}
+
+@keyframes waveAnimation {
+    0%, 100% {
+        transform: scaleY(0.4);
+    }
+    50% {
+        transform: scaleY(1);
+    }
+}
+
+@keyframes skeletonLoading {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes progressIndeterminate {
+    0% {
+        left: -30%;
+    }
+    50% {
+        left: 100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+@keyframes progressStripes {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 20px 0;
+    }
+}
+
+@keyframes circleProgress {
+    0% {
+        stroke-dashoffset: 126;
+    }
+    50% {
+        stroke-dashoffset: 31.5;
+    }
+    100% {
+        stroke-dashoffset: 126;
+    }
+}
+
+@keyframes typingPulse {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    30% {
+        transform: translateY(-8px);
+        opacity: 1;
+    }
+}
+
+/* ==============================================
+   Mobile Optimizations محسن
+   ============================================== */
+
+@media (max-width: 768px) {
+    .page-loading-overlay .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border-width: 3px;
+    }
+    
+    .page-loading-overlay .loading-text {
+        font-size: 0.9rem;
+    }
+    
+    .loading-progress {
+        height: 4px;
+    }
+    
+    .typing-indicator {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .upload-progress {
+        padding: 0.75rem;
+    }
+    
+    .section-loading-overlay .loading-spinner {
+        width: 28px;
+        height: 28px;
+        border-width: 2.5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-loading-overlay .loading-content {
+        padding: 1rem;
+    }
+    
+    .loading-bars {
+        height: 20px;
+    }
+    
+    .loading-wave .wave-bar {
+        height: 16px;
+    }
+}
+
+/* ==============================================
+   Utility Classes
+   ============================================== */
+
+.loading-hidden {
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s var(--transition-smooth);
+}
+
+.loading-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-blur {
+    filter: blur(2px);
+    transition: filter 0.3s var(--transition-smooth);
+}
+
+.loading-disabled {
+    pointer-events: none;
+    opacity: 0.6;
+    user-select: none;
+}
+
+.loading-overlay-dark {
+    background: var(--loading-bg-dark) !important;
+    color: white;
+}
+
+.loading-overlay-light {
+    background: var(--loading-bg-light) !important;
+    color: var(--text-primary);
+}
+
+/* حالات خاصة للألوان */
+.loading-success .loading-spinner {
+    border-color: rgba(40, 167, 69, 0.2);
+    border-top-color: #28a745;
+}
+
+.loading-warning .loading-spinner {
+    border-color: rgba(255, 193, 7, 0.2);
+    border-top-color: #ffc107;
+}
+
+.loading-danger .loading-spinner {
+    border-color: rgba(220, 53, 69, 0.2);
+    border-top-color: #dc3545;
+}
+
+.loading-info .loading-spinner {
+    border-color: rgba(23, 162, 184, 0.2);
+    border-top-color: #17a2b8;
+}
+
+/* Loading للكروت */
+.card.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.card.loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 10;
+    border-radius: inherit;
+}
+
+.card.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin: -16px 0 0 -16px;
+    border: 3px solid rgba(108, 99, 255, 0.2);
+    border-top: 3px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 11;
+}
+
+/* Loading للمودال */
+.modal.loading .modal-content {
+    position: relative;
+    pointer-events: none;
+}
+
+.modal.loading .modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 1050;
+    border-radius: inherit;
+}
+
+.modal.loading .modal-content::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin: -16px 0 0 -16px;
+    border: 3px solid rgba(108, 99, 255, 0.2);
+    border-top: 3px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 1051;
+}
+
+/* ==============================================
+   Content Loading States
+   ============================================== */
+
+.content-loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.content-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 10;
+    border-radius: inherit;
+}
+
+.content-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 2px solid rgba(108, 99, 255, 0.2);
+    border-top: 2px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 11;
+}
+
+/* Loading للقوائم */
+.list-loading {
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.list-loading .loading-spinner {
+    margin-bottom: 1rem;
+}
+
+.list-loading .loading-message {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Loading للتبويبات */
+.tab-content.loading {
+    min-height: 200px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Loading للخريطة */
+.map-loading {
+    background: var(--background-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    border-radius: var(--border-radius-md);
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Loading للرسوم البيانية */
+.chart-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 250px;
+    background: var(--surface-color);
+    border-radius: var(--border-radius-md);
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.chart-loading .loading-content {
+    text-align: center;
+}
+
+.chart-loading .loading-text {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* ==============================================
+   Loading States for Navigation
+   ============================================== */
+
+.nav-loading .nav-link {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.breadcrumb-loading .breadcrumb-item {
+    opacity: 0.6;
+}
+
+/* ==============================================
+   إعدادات خاصة للبث المباشر
+   ============================================== */
+
+.stream-container.loading {
+    background: #1a1a1a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    border-radius: var(--border-radius-md);
+}
+
+.stream-container.loading .stream-loading {
+    position: static;
+    transform: none;
+}
+
+.video-loading {
+    position: relative;
+    background: #000;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+}
+
+.video-loading .loading-spinner {
+    border-color: rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+}
+
+/* ==============================================
+   Loading للدفع والاشتراكات
+   ============================================== */
+
+.payment-loading {
+    text-align: center;
+    padding: 2rem;
+    background: var(--surface-color);
+    border-radius: var(--border-radius-md);
+    border: 1px solid rgba(108, 99, 255, 0.1);
+}
+
+.payment-loading .loading-icon {
+    font-size: 3rem;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+.payment-loading .loading-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.payment-loading .loading-message {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+/* ==============================================
+   Skeleton Loading للكروت والقوائم
+   ============================================== */
+
+.skeleton-card {
+    background: var(--surface-color);
+    border-radius: var(--border-radius-md);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(108, 99, 255, 0.1);
+}
+
+.skeleton-list-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(108, 99, 255, 0.1);
+}
+
+.skeleton-list-item:last-child {
+    border-bottom: none;
+}
+
+/* ==============================================
+   تأثيرات انتقالية محسنة
+   ============================================== */
+
+.fade-loading-enter {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.fade-loading-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.3s var(--transition-smooth);
+}
+
+.fade-loading-exit {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.fade-loading-exit-active {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s var(--transition-smooth);
+}
+
+/* ==============================================
+   High Contrast Mode Support
+   ============================================== */
+
+@media (prefers-contrast: high) {
+    .loading-spinner {
+        border-top-color: currentColor;
+        border-color: transparent;
+    }
+    
+    .loading-skeleton {
+        background: #ccc;
+    }
+    
+    .page-loading-overlay {
+        background: rgba(255, 255, 255, 0.98);
+    }
+}
+
+/* ==============================================
+   Dark Mode Support
+   ============================================== */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --loading-bg-light: rgba(0, 0, 0, 0.95);
+        --loading-bg-dark: rgba(0, 0, 0, 0.8);
+    }
+    
+    .loading-skeleton {
+        background: linear-gradient(
+            90deg,
+            #2a2a2a 25%,
+            #3a3a3a 50%,
+            #2a2a2a 75%
+        );
+        background-size: 200% 100%;
+    }
+    
+    .section-loading-overlay {
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+    }
+    
+    .upload-progress {
+        background: #2a2a2a;
+        border-color: rgba(108, 99, 255, 0.3);
+    }
+}
+
+/* ==============================================
+   Print Styles
+   ============================================== */
+
+@media print {
+    .page-loading-overlay,
+    .section-loading-overlay,
+    .loading-spinner,
+    .loading-dots,
+    .loading-bars,
+    .loading-wave {
+        display: none !important;
+    }
+}
+
+/* ==============================================
+   End of Enhanced Loading System
+   ============================================== */

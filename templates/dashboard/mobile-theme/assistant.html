@@ -211,6 +211,50 @@
             font-size: 1.2rem;
             margin-bottom: 4px;
         }
+
+        .classroom-selector {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .classroom-selector .form-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .classroom-selector .form-select {
+            border: 2px solid var(--background-color);
+            border-radius: var(--border-radius-sm);
+            padding: 12px;
+            font-size: 1rem;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+
+        .classroom-selector .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(108, 99, 255, 0.25);
+        }
+
+        .classroom-indicator {
+            background: var(--accent-color);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .classroom-indicator.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -227,7 +271,40 @@
 
     <!-- المحتوى الرئيسي -->
     <main class="main-content">
-        <h1 class="page-title">الفصول الدراسية</h1>
+        {% if classrooms|length > 1 %}
+        <!-- تنبيه للمساعد -->
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>تنبيه:</strong> أنت مساعد في {{ classrooms|length }} فصول. استخدم القائمة أدناه للتنقل السريع بين الفصول.
+        </div>
+        {% endif %}
+
+        <h1 class="page-title">
+            الفصول الدراسية
+            {% if classrooms %}
+            <small class="text-muted">({{ classrooms|length }} فصل)</small>
+            {% endif %}
+        </h1>
+
+        {% if classrooms|length > 1 %}
+        <!-- قائمة اختيار الفصل -->
+        <div class="classroom-selector">
+            <label for="classroomSelect" class="form-label">
+                <i class="fas fa-chalkboard me-2"></i>اختر الفصل للتصفح السريع:
+            </label>
+            <select id="classroomSelect" class="form-select" onchange="switchClassroom()">
+                <option value="">-- اختر فصل --</option>
+                {% for classroom in classrooms %}
+                <option value="{{ classroom.id }}">{{ classroom.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- مؤشر الفصل النشط -->
+        <div id="classroomIndicator" class="classroom-indicator">
+            <i class="fas fa-check-circle me-2"></i>الفصل النشط: <span id="activeClassroomName">-</span>
+        </div>
+        {% endif %}
 
         <!-- قائمة الفصول -->
         <div class="classrooms-list">
@@ -255,41 +332,99 @@
                 </div>
             {% endif %}
         </div>
-    </main>    <!-- القائمة السفلية -->
+    </main>
+
+    <!-- القائمة السفلية -->
     <nav class="bottom-nav">
         <a href="{{ url_for('assistant.dashboard') }}" class="bottom-nav-item active">
             <i class="fas fa-home"></i>
             <span>الرئيسية</span>
         </a>
-        <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id if classroom else 1) }}" class="bottom-nav-item">
-            <i class="fas fa-tasks"></i>
-            <span>الواجبات</span>
+        <a href="#" class="bottom-nav-item" onclick="showNotifications()">
+            <i class="fas fa-bell"></i>
+            <span>الإشعارات</span>
         </a>
-
-        <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id if classroom else 1) }}" class="bottom-nav-item">
-            <i class="fas fa-question-circle"></i>
-            <span>الاختبارات</span>
+        <a href="{{ url_for('auth.profile') }}" class="bottom-nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
         </a>
-
-        <a href="{{ url_for('assistant.students', classroom_id=classroom.id if classroom else 1) }}" class="bottom-nav-item">
-            <i class="fas fa-users"></i>
-            <span>الطلاب</span>
-        </a>
-        
-        {% for item in classrooms_with_chat %}
-            {% set classroom = item.classroom %}
-            {% if item.can_use_chat %}
-                <a href="{{ url_for('assistant.chat', classroom_id=classroom.id) }}" class="bottom-nav-item">
-                    <i class="fas fa-comments"></i>
-                    <span>المحادثة</span>
-                </a>
-            {% endif %}
-        {% endfor %}
-
     </nav>
 
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // وظيفة تبديل الفصل
+        function switchClassroom() {
+            const select = document.getElementById('classroomSelect');
+            const classroomId = select.value;
+            const classroomName = select.options[select.selectedIndex].text;
+            
+            if (classroomId) {
+                // حفظ اختيار الفصل في localStorage
+                localStorage.setItem('selectedClassroom', classroomId);
+                localStorage.setItem('selectedClassroomName', classroomName);
+                
+                // تحديث المؤشر
+                updateClassroomIndicator(classroomName);
+            } else {
+                // إزالة الاختيار المحفوظ وإخفاء المؤشر
+                localStorage.removeItem('selectedClassroom');
+                localStorage.removeItem('selectedClassroomName');
+                hideClassroomIndicator();
+            }
+        }
+        
+        // تحديث مؤشر الفصل النشط
+        function updateClassroomIndicator(classroomName) {
+            const indicator = document.getElementById('classroomIndicator');
+            const nameSpan = document.getElementById('activeClassroomName');
+            
+            if (indicator && nameSpan) {
+                nameSpan.textContent = classroomName;
+                indicator.classList.add('active');
+            }
+        }
+        
+        // إخفاء مؤشر الفصل
+        function hideClassroomIndicator() {
+            const indicator = document.getElementById('classroomIndicator');
+            if (indicator) {
+                indicator.classList.remove('active');
+            }
+        }
+        
+        // عرض الإشعارات
+        function showNotifications() {
+            alert('ميزة الإشعارات قيد التطوير');
+            // يمكن إضافة منطق الإشعارات هنا لاحقاً
+        }
+        
+        // تعيين الفصل المحفوظ أو الأول كافتراضي عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            const select = document.getElementById('classroomSelect');
+            if (select && select.options.length > 1) {
+                // محاولة استرداد الفصل المحفوظ
+                const savedClassroom = localStorage.getItem('selectedClassroom');
+                const savedClassroomName = localStorage.getItem('selectedClassroomName');
+                
+                if (savedClassroom) {
+                    // البحث عن الفصل المحفوظ في القائمة
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === savedClassroom) {
+                            select.selectedIndex = i;
+                            switchClassroom();
+                            return;
+                        }
+                    }
+                }
+                
+                // إذا لم يوجد فصل محفوظ، اختيار الفصل الأول
+                select.selectedIndex = 1;
+                switchClassroom();
+            }
+        });
+    </script>
 </body>
 </html>

@@ -5,11 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>البث المباشر - {{ classroom.name }} - الحصة</title>
     
+    <!-- إضافة سكريبت Jitsi -->
+    <script src='https://meet.jit.si/external_api.js'></script>
+    
     <!-- الخطوط وملفات CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/unified-notifications.css') }}">
     
     <style>
         :root {
@@ -362,6 +366,24 @@
             margin-top: 0.5rem;
         }
 
+        .meet-info {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: var(--border-radius-md);
+            margin: 2rem;
+        }
+
+        .meet-info p {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .meet-info .btn {
+            font-size: 1.1rem;
+            padding: 0.75rem 1.5rem;
+        }
+
         @media (max-width: 1200px) {
             .stream-container {
                 flex-direction: column;
@@ -528,47 +550,22 @@
                         
                         <div id="active-stream" class="d-none" style="width: 100%; height: 100%;">
                             <div class="stream-status">مباشر</div>
-                            <video id="remote-video" class="remote-video" autoplay playsinline></video>
-                            {% if current_user.role == 'teacher' %}
-                            <div class="local-video">
-                                <video id="local-video" autoplay muted playsinline style="width: 100%; height: 100%;"></video>
+                            <div id="meet-info" class="meet-info">
+                                <p>تم بدء البث المباشر. استخدم الرابط أدناه للانضمام:</p>
+                                <a id="meet-link" href="#" target="_blank" class="btn btn-primary mt-2">
+                                    <i class="fas fa-video me-1"></i>
+                                    الانضمام للبث المباشر
+                                </a>
                             </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div id="stream-placeholder" class="stream-placeholder d-none">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <h4>جاري التحميل...</h4>
                         </div>
                     </div>
                     
-                    <div id="stream-controls" class="stream-controls {% if current_user.role == 'teacher' %}d-none{% endif %}">
+                    <div class="stream-controls">
                         {% if current_user.role == 'teacher' %}
-                        <div id="mic-btn" class="stream-control-btn mic">
-                            <i class="fas fa-microphone"></i>
-                            <span>الميكروفون</span>
-                        </div>
-                        <div id="camera-btn" class="stream-control-btn camera">
-                            <i class="fas fa-video"></i>
-                            <span>الكاميرا</span>
-                        </div>
-                        <div id="screen-btn" class="stream-control-btn screen">
-                            <i class="fas fa-desktop"></i>
-                            <span>مشاركة الشاشة</span>
-                        </div>
-                        <div id="end-stream-btn" class="stream-control-btn end-stream">
-                            <i class="fas fa-phone-slash"></i>
+                        <button id="end-stream-btn" class="stream-control-btn end-stream d-none">
+                            <i class="fas fa-stop-circle"></i>
                             <span>إنهاء البث</span>
-                        </div>
-                        {% else %}
-                        <div id="mic-btn" class="stream-control-btn mic off d-none">
-                            <i class="fas fa-microphone-slash"></i>
-                            <span>الميكروفون</span>
-                        </div>
-                        <div id="hand-btn" class="stream-control-btn hand">
-                            <i class="fas fa-hand-paper"></i>
-                            <span>رفع اليد</span>
-                        </div>
+                        </button>
                         {% endif %}
                     </div>
                 </div>
@@ -605,10 +602,14 @@
         </main>
     </div>
 
+    <!-- تضمين مكونات نظام الإشعارات الموحد -->
+    {% include 'components/unified_notifications.html' %}
+
     <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/unified-notifications.js') }}" defer></script>
     <script>
         // تفعيل زر القائمة للموبايل
         $('.mobile-toggle').on('click', function() {
@@ -631,7 +632,145 @@
         const userRole = "{{ current_user.role }}";
         
         // الكود الخاص بالبث المباشر
-        // ... (الكود الخاص بالبث المباشر سيتم إضافته لاحقاً)
+        document.addEventListener('DOMContentLoaded', function() {
+            const socket = io({
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                reconnectionAttempts: 5
+            });
+            let isStreaming = false;
+            
+            socket.on('connect', () => {
+                console.log('Connected to Socket.IO server');
+                socket.emit('join_classroom', {
+                    classroom_id: {{ classroom.id }}
+                });
+                clearConnectionAlert();
+            });
+            
+            socket.on('connect_error', (error) => {
+                console.log('Connection error:', error);
+                showConnectionAlert('جاري إعادة الاتصال...', 'warning');
+            });
+            
+            socket.on('reconnect', (attemptNumber) => {
+                console.log('Reconnected after ' + attemptNumber + ' attempts');
+                socket.emit('join_classroom', {
+                    classroom_id: {{ classroom.id }}
+                });
+                clearConnectionAlert();
+            });
+            
+            socket.on('reconnect_failed', () => {
+                console.log('Failed to reconnect');
+                showConnectionAlert('فشل الاتصال بالخادم. يرجى تحديث الصفحة.', 'danger');
+            });
+            
+            // DOM Elements
+            const startStreamBtn = document.getElementById('start-stream-btn');
+            const endStreamBtn = document.getElementById('end-stream-btn');
+            const noStreamEl = document.getElementById('no-stream');
+            const activeStreamEl = document.getElementById('active-stream');
+            const meetLinkEl = document.getElementById('meet-link');
+            
+            if (startStreamBtn) {
+                startStreamBtn.addEventListener('click', function() {
+                    socket.emit('start_stream', {
+                        classroom_id: {{ classroom.id }}
+                    });
+                    // Show loading state
+                    startStreamBtn.disabled = true;
+                    startStreamBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري إنشاء البث...';
+                });
+            }
+            
+            if (endStreamBtn) {
+                endStreamBtn.addEventListener('click', function() {
+                    if (confirm('هل أنت متأكد من إنهاء البث؟')) {
+                        socket.emit('end_stream', {
+                            classroom_id: {{ classroom.id }}
+                        });
+                    }
+                });
+            }
+            
+            // Socket event handlers
+            socket.on('stream_started', function(data) {
+                if (data.classroom_id === {{ classroom.id }}) {
+                    if (!data.url) {
+                        window.showError('خطأ في البث', 'حدث خطأ في إنشاء رابط البث');
+                        return;
+                    }
+                    
+                    isStreaming = true;
+                    noStreamEl.classList.add('d-none');
+                    activeStreamEl.classList.remove('d-none');
+                    if (endStreamBtn) endStreamBtn.classList.remove('d-none');
+                    if (startStreamBtn) startStreamBtn.disabled = false;
+                    
+                    // إشعار نجاح بدء البث
+                    window.showSuccess('تم بدء البث', 'تم بدء البث المباشر بنجاح');
+                    
+                    // Update Meet link and open it
+                    if (meetLinkEl) {
+                        meetLinkEl.href = data.url;
+                        // Auto open Meet in new tab for teacher
+                        if ("{{ current_user.role }}" === 'teacher') {
+                            window.open(data.url, '_blank');
+                        }
+                        // Add click handler for students
+                        meetLinkEl.onclick = function(e) {
+                            e.preventDefault();
+                            window.open(data.url, '_blank');
+                        }
+                    }
+                }
+            });
+            
+            socket.on('stream_ended', function(data) {
+                if (data.classroom_id === {{ classroom.id }}) {
+                    isStreaming = false;
+                    noStreamEl.classList.remove('d-none');
+                    activeStreamEl.classList.add('d-none');
+                    if (endStreamBtn) endStreamBtn.classList.add('d-none');
+                    if (startStreamBtn) {
+                        startStreamBtn.disabled = false;
+                        startStreamBtn.innerHTML = '<i class="fas fa-play-circle me-1"></i> بدء البث';
+                    }
+                }
+            });
+            
+            socket.on('stream_error', function(data) {
+                window.showError('خطأ في البث', data.message);
+                // Reset UI state
+                if (startStreamBtn) {
+                    startStreamBtn.disabled = false;
+                    startStreamBtn.innerHTML = '<i class="fas fa-play-circle me-1"></i> بدء البث';
+                }
+            });
+            
+            function showError(message) {
+                window.showError('خطأ', message);
+            }
+            
+            function showConnectionAlert(message, type) {
+                clearConnectionAlert();  // Remove any existing alert
+                
+                if (type === 'warning') {
+                    window.showWarning('حالة الاتصال', message, { persistent: true });
+                } else if (type === 'danger') {
+                    window.showError('خطأ في الاتصال', message, { 
+                        persistent: true,
+                        showProgress: false 
+                    });
+                }
+            }
+            
+            function clearConnectionAlert() {
+                // سيتم إزالة التنبيهات تلقائياً بواسطة النظام الموحد
+            }
+        });
     </script>
 </body>
 </html>

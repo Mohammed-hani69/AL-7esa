@@ -233,7 +233,7 @@
                     
                     <!-- تسجيل الدخول بكلمة المرور -->
                     <div class="tab-pane fade" id="password-auth">
-                        <form method="POST" action="{{ url_for('auth.login', auth_type='password') }}">
+                        <form method="POST" action="{{ url_for('auth.login', auth_type='password') }}" id="loginForm">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="form-group">
                                 <label class="form-label" for="login-phone">
@@ -250,7 +250,7 @@
                             </div>
                             
                             <div class="mb-4">
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary" id="loginSubmit">
                                     <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
                                 </button>
                             </div>
@@ -265,6 +265,9 @@
         </div>
     </div>
 
+    <!-- تضمين Loading Indicators -->
+    {% include 'components/loading_indicators.html' %}
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -278,6 +281,33 @@
             if (window.initPhoneAuth) {
                 window.initPhoneAuth('phone', 'recaptcha-container', 'auth-submit-btn');
             }
+            
+            const loginForm = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('loginSubmit');
+            
+            // تطبيق loading على النموذج
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showButtonLoading(submitBtn, {
+                            text: 'جاري تسجيل الدخول...',
+                            type: 'spinner'
+                        });
+                    }
+                });
+            }
+            
+            // تطبيق loading على روابط التسجيل
+            document.querySelectorAll('a[href*="register"]').forEach(link => {
+                link.setAttribute('data-loading', 'true');
+                link.setAttribute('data-loading-text', 'جاري تحميل صفحة التسجيل...');
+            });
+            
+            // تطبيق loading على رابط نسيان كلمة المرور
+            document.querySelectorAll('a[href*="reset"]').forEach(link => {
+                link.setAttribute('data-loading', 'true');
+                link.setAttribute('data-loading-text', 'جاري تحميل صفحة استعادة كلمة المرور...');
+            });
         });
     </script>
 </body>

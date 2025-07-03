@@ -1,0 +1,83 @@
+<!-- حالة الاتصال -->
+<div id="connection-status" class="connection-status">
+    <div class="status-indicator">
+        <i class="fas fa-signal"></i>
+        <span id="connection-quality">جودة الاتصال: جيدة</span>
+    </div>
+    <div class="participants-status">
+        <i class="fas fa-users"></i>
+        <span id="online-participants">0 متصل</span>
+    </div>
+    <div class="network-info">
+        <span id="latency">التأخير: 0ms</span>
+        <span id="connection-type">نوع الاتصال: -</span>
+    </div>
+</div>
+
+<style>
+.connection-status {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 10px;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.status-indicator i {
+    font-size: 16px;
+}
+
+.connection-quality-good { color: #4CAF50; }
+.connection-quality-medium { color: #FFC107; }
+.connection-quality-poor { color: #F44336; }
+
+.network-info {
+    display: flex;
+    gap: 15px;
+    font-size: 14px;
+}
+</style>
+
+<script>
+function updateConnectionStatus(data) {
+    const qualityIndicator = document.getElementById('connection-quality');
+    const latencyEl = document.getElementById('latency');
+    const connectionTypeEl = document.getElementById('connection-type');
+    
+    // تحديث جودة الاتصال
+    if (data.latency < 100) {
+        qualityIndicator.textContent = 'جودة الاتصال: ممتازة';
+        qualityIndicator.className = 'connection-quality-good';
+    } else if (data.latency < 300) {
+        qualityIndicator.textContent = 'جودة الاتصال: متوسطة';
+        qualityIndicator.className = 'connection-quality-medium';
+    } else {
+        qualityIndicator.textContent = 'جودة الاتصال: ضعيفة';
+        qualityIndicator.className = 'connection-quality-poor';
+    }
+    
+    // تحديث معلومات الشبكة
+    latencyEl.textContent = `التأخير: ${data.latency}ms`;
+    connectionTypeEl.textContent = `نوع الاتصال: ${data.connectionType || 'غير معروف'}`;
+}
+
+// تحديث عدد المتصلين
+socket.on('participants_update', (data) => {
+    document.getElementById('online-participants').textContent = `${data.count} متصل`;
+});
+
+// استقبال تحديثات حالة الاتصال
+socket.on('connection_status', updateConnectionStatus);
+</script>

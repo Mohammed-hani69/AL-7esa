@@ -18,11 +18,16 @@ from models import ChatMessage, Payment, QuizAnswer, QuizAttempt, User, Role, Cl
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizQuestionOption
 from models import Subscription, SubscriptionPlan, ChatSettings, ChatParticipant, SubscriptionPayment, SubscriptionPayment
 from models import SystemSettings
+from rate_limiting import RATE_LIMITS, get_limiter
 
 teacher_bp = Blueprint('teacher', __name__)
 
 # Allowed file extensions for uploads
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'mp4', 'mp3', 'wav'}
+
+def allowed_file(filename):
+    # Get extension and convert to lowercase
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -471,6 +476,15 @@ def create_classroom():
         return redirect(url_for('teacher.dashboard'))
 
     if request.method == 'POST':
+        # تطبيق Rate Limiting فقط على إنشاء الفصل الفعلي (POST)
+        limiter = get_limiter()
+        if limiter:
+            try:
+                limiter.limit(RATE_LIMITS['teacher']['create_classroom'])(lambda: None)()
+            except Exception:
+                flash('تم تجاوز الحد المسموح من إنشاء الفصول. يرجى المحاولة لاحقاً.', 'warning')
+                return redirect(url_for('teacher.create_classroom'))
+        
         name = request.form.get('name')
         subject = request.form.get('subject')
         grade = request.form.get('grade')
@@ -514,8 +528,10 @@ def create_classroom():
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
+    template = 'teacher/mobile-theme/create.html' if is_mobile() else 'teacher/create.html'
 
-    return render_template('classroom/create.html',
+
+    return render_template(template,
                            primary_color=primary_color,
                            secondary_color=secondary_color)
 
@@ -646,21 +662,36 @@ def live_classroom(classroom_id):
         flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
         return redirect(url_for('teacher.dashboard'))
     
-    # الحصول على قيم الألوان من إعدادات النظام
-    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
-    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+    # Get active stream info if exists
+    from streaming import active_streams
+    stream_info = active_streams.get(classroom_id, None)
+    meet_link = stream_info.url if stream_info else None
+    
+    # Get system colors
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')
 
-
-    return render_template('classroom/live_class.html', 
+    template = 'classroom/mobile-theme/live_class.html' if is_mobile() else 'classroom/live_class.html'
+    return render_template(template, 
                          classroom=classroom,
                          user_type='teacher',
+                         meet_link=meet_link,
                          primary_color=primary_color,
-                         secondary_color=secondary_color,)
+                         secondary_color=secondary_color)
 
 @teacher_bp.route('/classroom/<int:classroom_id>/add_content', methods=['POST'])
 @login_required
 @teacher_required
 def add_content(classroom_id):
+    # تطبيق Rate Limiting لرفع المحتوى
+    limiter = get_limiter()
+    if limiter:
+        try:
+            limiter.limit(RATE_LIMITS['teacher']['upload_content'])(lambda: None)()
+        except Exception:
+            flash('تم تجاوز الحد المسموح من رفع المحتوى. يرجى المحاولة لاحقاً.', 'warning')
+            return redirect(url_for('teacher.classroom', classroom_id=classroom_id))
+        
     classroom = Classroom.query.get_or_404(classroom_id)
 
     # Ensure the teacher owns this classroom
@@ -769,6 +800,15 @@ def add_content(classroom_id):
 @login_required
 @teacher_required
 def delete_content(classroom_id, content_id):
+    # تطبيق Rate Limiting على حذف المحتوى
+    limiter = get_limiter()
+    if limiter:
+        try:
+            limiter.limit("10 per hour")(lambda: None)()
+        except Exception:
+            flash('لقد تجاوزت الحد المسموح لحذف المحتوى. حاول مرة أخرى لاحقاً.', 'warning')
+            return redirect(url_for('teacher.classroom', classroom_id=classroom_id))
+    
     classroom = Classroom.query.get_or_404(classroom_id)
     content = ClassroomContent.query.get_or_404(content_id)
 
@@ -817,8 +857,10 @@ def assignments(classroom_id):
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
+    template = 'classroom/mobile-theme/assignments.html' if is_mobile() else 'classroom/assignments.html'
 
-    return render_template('classroom/assignments.html',
+
+    return render_template(template,
                            classroom=classroom,
                            assignments=assignments,
                            primary_color=primary_color,
@@ -837,6 +879,15 @@ def create_assignment(classroom_id):
         return redirect(url_for('teacher.dashboard'))
 
     if request.method == 'POST':
+        # تطبيق Rate Limiting فقط على إنشاء الواجب الفعلي (POST)
+        limiter = get_limiter()
+        if limiter:
+            try:
+                limiter.limit(RATE_LIMITS['teacher']['create_assignment'])(lambda: None)()
+            except Exception:
+                flash('تم تجاوز الحد المسموح من إنشاء الواجبات. يرجى المحاولة لاحقاً.', 'warning')
+                return redirect(url_for('teacher.create_assignment', classroom_id=classroom.id))
+        
         title = request.form.get('title')
         description = request.form.get('description')
         due_date_str = request.form.get('due_date')
@@ -914,8 +965,10 @@ def create_assignment(classroom_id):
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
+    template = 'classroom/mobile-theme/assignments.html' if is_mobile() else 'classroom/assignments.html'
 
-    return render_template('classroom/assignments.html', classroom=classroom,
+
+    return render_template(template, classroom=classroom,
                            primary_color=primary_color,
                            secondary_color=secondary_color,)
 
@@ -991,8 +1044,11 @@ def edit_assignment(classroom_id, assignment_id):
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
+    template = 'classroom/mobile-theme/edit_assignment.html' if is_mobile() else 'classroom/edit_assignment.html'
 
-    return render_template('classroom/edit_assignment.html',
+
+
+    return render_template(template,
                          classroom=classroom,
                          assignment=assignment,
                          primary_color=primary_color,
@@ -1069,6 +1125,15 @@ def assignment_submissions(classroom_id, assignment_id):
 @login_required
 @teacher_required
 def grade_submission(classroom_id, assignment_id, submission_id):
+    # تطبيق Rate Limiting على تقييم الواجبات
+    limiter = get_limiter()
+    if limiter:
+        try:
+            limiter.limit("20 per hour")(lambda: None)()
+        except Exception:
+            flash('لقد تجاوزت الحد المسموح لتقييم الواجبات. حاول مرة أخرى لاحقاً.', 'warning')
+            return redirect(url_for('teacher.dashboard'))
+    
     classroom = Classroom.query.get_or_404(classroom_id)
     assignment = Assignment.query.get_or_404(assignment_id)
     submission = AssignmentSubmission.query.get_or_404(submission_id)
@@ -1144,6 +1209,15 @@ def create_quiz(classroom_id):
         return redirect(url_for('teacher.dashboard'))
 
     if request.method == 'POST':
+        # تطبيق Rate Limiting فقط على إنشاء الاختبار الفعلي (POST)
+        limiter = get_limiter()
+        if limiter:
+            try:
+                limiter.limit(RATE_LIMITS['teacher']['create_quiz'])(lambda: None)()
+            except Exception:
+                flash('تم تجاوز الحد المسموح من إنشاء الاختبارات. يرجى المحاولة لاحقاً.', 'warning')
+                return redirect(url_for('teacher.create_quiz', classroom_id=classroom.id))
+        
         title = request.form.get('title')
         description = request.form.get('description', '')
         duration_minutes = int(request.form.get('duration_minutes', 0))
@@ -2038,12 +2112,12 @@ def payment(plan_id):
 @teacher_required
 def serve_file(filename):
     """
-    تقديم الملفات باستخدام X-Sendfile/X-Accel-Redirect مع دعم التدفق للفيديو
+    Serve files using X-Sendfile/X-Accel-Redirect with streaming support
     """
     if not filename:
         abort(404)
 
-    # تحديد المجلد المناسب بناءً على نوع الملف
+    # Determine appropriate folder based on file type
     folder = None
     for folder_type, path in current_app.config['UPLOAD_FOLDERS'].items():
         if folder_type in filename:
@@ -2058,9 +2132,32 @@ def serve_file(filename):
     if not os.path.exists(file_path):
         abort(404)
         
-    # التحقق من الصلاحيات
+    # Security check
     if not check_file_access_permission(filename):
         abort(403)
+
+    # Get file type and extension
+    file_extension = os.path.splitext(filename)[1].lower()
+    mime_type = None
+
+    # Map file extensions to MIME types
+    mime_types = {
+        '.pdf': 'application/pdf',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.doc': 'application/msword',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.xls': 'application/vnd.ms-excel',
+        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        '.txt': 'text/plain',
+        '.mp4': 'video/mp4',
+        '.mp3': 'audio/mpeg',
+        '.wav': 'audio/wav'
+    }
+
+    mime_type = mime_types.get(file_extension, 'application/octet-stream')
     
     # الحصول على نوع الملف
     file_type = get_file_type(filename)
@@ -2182,7 +2279,8 @@ def chat(classroom_id):
                          messages=messages,
                          current_user=current_user,
                          primary_color=primary_color,
-                         secondary_color=secondary_color,)
+                         secondary_color=secondary_color,
+                         user_type='teacher')
 
 
 

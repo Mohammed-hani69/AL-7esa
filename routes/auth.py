@@ -15,6 +15,7 @@ from wtforms.validators import DataRequired
 from app import db
 from models import SystemSettings, User, Role, Subscription, SubscriptionPlan
 from firebase_utils import verify_firebase_token
+from rate_limiting import RATE_LIMITS, get_limiter, apply_rate_limit
 
 # دالة للتحقق من نوع الجهاز (موبايل أو جهاز مكتبي)
 def is_mobile():
@@ -42,11 +43,24 @@ def allowed_file(filename):
 """
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+    # السماح بعرض صفحة تسجيل الدخول حتى لو كان المستخدم مسجل دخوله
+    # فقط نعيد توجيهه بعد تسجيل الدخول بنجاح
+    
+    # لا نطبق Rate Limiting على طلبات GET لتجنب منع الوصول للصفحة
 
     form = LoginForm()
-    if form.validate_on_submit():
+    if request.method == 'POST' and form.validate_on_submit():
+        # تطبيق Rate Limiting فقط على محاولات تسجيل الدخول (POST)
+        if not apply_rate_limit('auth_login'):
+            flash('تم تجاوز الحد المسموح من محاولات تسجيل الدخول. يرجى المحاولة لاحقاً.', 'warning')
+            return render_template('auth/login.html' if not is_mobile() else 'auth/auth-mobile/login.html',
+                                 form=form,
+                                 primary_color=SystemSettings.get_setting('primary_color', '#3498db'),
+                                 secondary_color=SystemSettings.get_setting('secondary_color', '#2ecc71'),
+                                 firebase_api_key=os.environ.get("FIREBASE_API_KEY", ""),
+                                 firebase_project_id=os.environ.get("FIREBASE_PROJECT_ID", ""),
+                                 firebase_app_id=os.environ.get("FIREBASE_APP_ID", ""))
+        
         user = User.query.filter_by(phone=form.phone.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
@@ -55,6 +69,9 @@ def login():
         else:
             flash('فشل تسجيل الدخول. الرجاء التحقق من رقم الهاتف وكلمة المرور', 'danger')
 
+    # GET request أو فشل التحقق من صحة النموذج أو المستخدم مسجل دخوله بالفعل
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
     firebase_api_key = os.environ.get("FIREBASE_API_KEY", "")
     firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "")
     firebase_app_id = os.environ.get("FIREBASE_APP_ID", "")
@@ -80,10 +97,21 @@ def login():
 """
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+    # السماح بعرض صفحة التسجيل حتى لو كان المستخدم مسجل دخوله
+    
+    # لا نطبق Rate Limiting على طلبات GET لتجنب منع الوصول للصفحة
 
     if request.method == 'POST':
+        # تطبيق Rate Limiting فقط على محاولات التسجيل (POST)
+        if not apply_rate_limit('auth_register'):
+            flash('تم تجاوز الحد المسموح من محاولات التسجيل. يرجى المحاولة لاحقاً.', 'warning')
+            return render_template('auth/register.html' if not is_mobile() else 'auth/auth-mobile/register.html',
+                                 primary_color=SystemSettings.get_setting('primary_color', '#3498db'),
+                                 secondary_color=SystemSettings.get_setting('secondary_color', '#2ecc71'),
+                                 firebase_api_key=os.environ.get("FIREBASE_API_KEY", ""),
+                                 firebase_project_id=os.environ.get("FIREBASE_PROJECT_ID", ""),
+                                 firebase_app_id=os.environ.get("FIREBASE_APP_ID", ""))
+        
         name = request.form.get('name')
         phone = request.form.get('phone')
         password = request.form.get('password')
@@ -150,6 +178,10 @@ def register():
         flash('تم إنشاء الحساب بنجاح. يمكنك الآن تسجيل الدخول', 'success')
         return redirect(url_for('auth.login'))
 
+    # GET request أو فشل في إنشاء الحساب أو المستخدم مسجل دخوله بالفعل
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
     firebase_api_key = os.environ.get("FIREBASE_API_KEY", "")
     firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "")
     firebase_app_id = os.environ.get("FIREBASE_APP_ID", "")
@@ -170,6 +202,13 @@ def register():
 
 @auth_bp.route('/verify-token', methods=['POST'])
 def verify_token():
+    # تطبيق Rate Limiting على التحقق من الرمز المميز
+    if not apply_rate_limit('auth_verify_token'):
+        return jsonify({
+            'error': 'تم تجاوز الحد المسموح من محاولات التحقق',
+            'message': 'يرجى المحاولة لاحقاً'
+        }), 429
+    
     data = request.json
     id_token = data.get('idToken')
 
@@ -270,11 +309,11 @@ def complete_registration():
             # If no plan exists yet, create one
             if not premium_plan:
                 premium_plan = SubscriptionPlan(
-                    name="الباقة الكاملة",
+                    name="الباقة التجريبية",
                     description="جميع المميزات متاحة",
-                    price=299,
-                    duration_days=30,
-                    max_classrooms=99,
+                    price=0,
+                    duration_days=trial_days,
+                    max_classrooms=1,
                     has_chat=True,
                     allow_assistant=True,
                     advanced_analytics=True
@@ -283,7 +322,7 @@ def complete_registration():
                 db.session.flush()  # Get ID without committing
 
             # Create trial subscription with explicit user_id
-            trial_days = 14  # 2 weeks trial
+            trial_days = SystemSettings.get_setting('trial_days', 7)  # 1 weeks trial
             trial_subscription = Subscription(
                 user_id=new_user.id,  # Set user_id explicitly
                 plan_id=premium_plan.id,

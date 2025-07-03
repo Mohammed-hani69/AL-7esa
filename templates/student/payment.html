@@ -297,6 +297,7 @@
                     <div class="mt-4">
                         <h6 class="fw-bold text-primary mb-3">تأكيد الدفع</h6>
                         <form id="payment-form" action="{{ url_for('student.process_payment', classroom_id=classroom.id) }}" method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <!-- بيانات المستخدم -->
                             <div class="row mb-3">
                                 <div class="col-md-6">
@@ -355,41 +356,213 @@
     <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- تضمين Loading Indicators -->
+    {% include 'components/loading_indicators.html' %}
+    
     <script>
-        // تفعيل زر القائمة للموبايل
-        $('.mobile-toggle').on('click', function() {
-            $('.innovative-sidebar').toggleClass('show');
-        });
-
-        // إغلاق السايدبار عند النقر خارجه
-        $(document).on('click', function(e) {
-            if ($(window).width() < 992 && 
-                !$(e.target).closest('.innovative-sidebar').length && 
-                !$(e.target).closest('.mobile-toggle').length) {
-                $('.innovative-sidebar').removeClass('show');
-            }
-        });
-
-        // التحقق من النموذج قبل الإرسال
-        $('#payment-form').on('submit', function(e) {
-            if (!confirm('هل أنت متأكد من إتمام عملية الدفع؟')) {
-                e.preventDefault();
-                return;
+        document.addEventListener('DOMContentLoaded', function() {
+            // تطبيق loading على نموذج الدفع
+            const paymentForm = document.getElementById('paymentForm');
+            if (paymentForm) {
+                paymentForm.addEventListener('submit', function(e) {
+                    if (window.enhancedLoading) {
+                        // إظهار loading للصفحة كاملة
+                        window.enhancedLoading.showPageLoading({
+                            text: 'جاري معالجة عملية الدفع...',
+                            type: 'bars',
+                            theme: 'light'
+                        });
+                        
+                        // محاكاة مراحل الدفع
+                        setTimeout(() => {
+                            window.enhancedLoading.updateProgress(25, 'جاري التحقق من البيانات...');
+                        }, 1000);
+                        
+                        setTimeout(() => {
+                            window.enhancedLoading.updateProgress(50, 'جاري رفع صورة التحويل...');
+                        }, 2000);
+                        
+                        setTimeout(() => {
+                            window.enhancedLoading.updateProgress(75, 'جاري إرسال البيانات...');
+                        }, 3000);
+                        
+                        setTimeout(() => {
+                            window.enhancedLoading.updateProgress(100, 'تمت العملية بنجاح!');
+                        }, 4000);
+                    }
+                });
             }
             
-            const submitBtn = $('#confirm-payment-btn');
-            submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري التأكيد...');
-            submitBtn.prop('disabled', true);
-        });
-
-        // التحقق من حجم الصورة
-        $('input[type="file"]').on('change', function() {
-            const file = this.files[0];
-            const maxSize = 5 * 1024 * 1024; // 5 MB
-
-            if (file && file.size > maxSize) {
-                alert('حجم الملف كبير جداً. يجب أن لا يتجاوز 5 ميجابايت');
-                this.value = '';
+            // تطبيق loading على رفع الملفات
+            const fileInput = document.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const uploadContainer = document.querySelector('.file-upload-container');
+                        if (window.enhancedLoading && uploadContainer) {
+                            // إظهار progress للرفع
+                            const progressContainer = document.createElement('div');
+                            progressContainer.className = 'upload-progress';
+                            progressContainer.innerHTML = `
+                                <div class="progress-info">
+                                    <span class="file-name">${file.name}</span>
+                                    <span class="progress-percentage">0%</span>
+                                </div>
+                                <div class="loading-progress">
+                                    <div class="progress-bar"></div>
+                                </div>
+                                <div class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                            `;
+                            
+                            uploadContainer.appendChild(progressContainer);
+                            
+                            // محاكاة رفع الملف
+                            let progress = 0;
+                            const uploadInterval = setInterval(() => {
+                                progress += Math.random() * 15;
+                                if (progress >= 100) {
+                                    progress = 100;
+                                    clearInterval(uploadInterval);
+                                    
+                                    setTimeout(() => {
+                                        progressContainer.style.backgroundColor = '#d4edda';
+                                        progressContainer.querySelector('.progress-percentage').textContent = 'تم الرفع بنجاح!';
+                                    }, 500);
+                                }
+                                
+                                const progressBar = progressContainer.querySelector('.progress-bar');
+                                const progressText = progressContainer.querySelector('.progress-percentage');
+                                
+                                if (progressBar) progressBar.style.width = `${progress}%`;
+                                if (progressText) progressText.textContent = `${Math.round(progress)}%`;
+                            }, 100);
+                        }
+                    }
+                });
+            }
+            
+            // تطبيق loading على طرق الدفع
+            document.querySelectorAll('.payment-method').forEach(method => {
+                method.addEventListener('click', function(e) {
+                    if (window.enhancedLoading) {
+                        const paymentContainer = document.querySelector('.payment-methods-container');
+                        if (paymentContainer) {
+                            window.enhancedLoading.showSectionLoading(paymentContainer, {
+                                text: 'جاري تحديث تفاصيل الدفع...',
+                                type: 'pulse'
+                            });
+                            
+                            setTimeout(() => {
+                                window.enhancedLoading.hideSectionLoading(paymentContainer);
+                            }, 800);
+                        }
+                    }
+                });
+            });
+            
+            // تطبيق skeleton loading لتفاصيل الفصل
+            const classroomDetails = document.querySelector('.classroom-details');
+            if (classroomDetails && window.enhancedLoading) {
+                window.enhancedLoading.showSkeleton(classroomDetails, {
+                    lines: 4,
+                    avatar: true,
+                    animated: true
+                });
+                
+                setTimeout(() => {
+                    window.enhancedLoading.hideSkeleton(classroomDetails);
+                }, 1000);
+            }
+            
+            // تطبيق loading على أزرار العمليات
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const action = this.getAttribute('data-action');
+                    let loadingText = 'جاري المعالجة...';
+                    
+                    switch(action) {
+                        case 'cancel':
+                            loadingText = 'جاري إلغاء العملية...';
+                            break;
+                        case 'confirm':
+                            loadingText = 'جاري تأكيد الدفع...';
+                            break;
+                        case 'retry':
+                            loadingText = 'جاري إعادة المحاولة...';
+                            break;
+                    }
+                    
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showButtonLoading(this, {
+                            text: loadingText,
+                            type: 'spinner'
+                        });
+                    }
+                });
+            });
+            
+            // تطبيق loading على التحقق من حالة الدفع
+            const checkStatusBtn = document.querySelector('.check-status-btn');
+            if (checkStatusBtn) {
+                checkStatusBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    if (window.enhancedLoading) {
+                        const statusContainer = document.querySelector('.payment-status-container');
+                        if (statusContainer) {
+                            window.enhancedLoading.showSectionLoading(statusContainer, {
+                                text: 'جاري التحقق من حالة الدفع...',
+                                type: 'wave'
+                            });
+                            
+                            // محاكاة فحص الحالة
+                            setTimeout(() => {
+                                window.enhancedLoading.hideSectionLoading(statusContainer);
+                                // يمكن إضافة تحديث للحالة هنا
+                            }, 2000);
+                        }
+                    }
+                });
+            }
+            
+            // تطبيق loading على روابط التنقل
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.setAttribute('data-loading', 'true');
+                link.setAttribute('data-loading-text', 'جاري تحميل الصفحة...');
+            });
+            
+            // إضافة payment loading خاص
+            function showPaymentSuccess() {
+                if (window.enhancedLoading) {
+                    window.enhancedLoading.hidePageLoading();
+                    
+                    const paymentContainer = document.querySelector('.payment-container');
+                    if (paymentContainer) {
+                        paymentContainer.innerHTML = `
+                            <div class="payment-loading">
+                                <div class="loading-icon">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                </div>
+                                <div class="loading-title">تم الدفع بنجاح!</div>
+                                <div class="loading-message">
+                                    تم استلام طلب الدفع وسيتم مراجعته قريباً. 
+                                    ستصلك رسالة تأكيد عند قبول الدفع.
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{{ url_for('student.classrooms') }}" class="btn btn-primary">
+                                        العودة للفصول
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+            
+            // معالجة نجاح الدفع
+            if (window.location.search.includes('success=true')) {
+                setTimeout(showPaymentSuccess, 2000);
             }
         });
     </script>

@@ -1,100 +1,516 @@
-{% extends "layout.html" %}
-
-{% block title %}الطلاب - {{ classroom.name }} - الحصة{% endblock %}
-
-{% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">الطلاب - {{ classroom.name }}</h1>
-        <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-right me-1"></i>العودة للفصل
-        </a>
-    </div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الطلاب - {{ classroom.name }} - الحصة</title>
     
-    <!-- Students List -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">قائمة الطلاب المسجلين</h6>
-        </div>
-        <div class="card-body">
-            {% if enrollments %}
-                <div class="table-responsive">
-                    <table class="table table-bordered" id="studentsTable">
-                        <thead>
-                            <tr>
-                                <th>الاسم</th>
-                                <th>رقم الهاتف</th>
-                                <th>تاريخ الانضمام</th>
-                                <th>النقاط</th>
-                                <th>الحالة</th>
-                                <th>آخر نشاط</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for enrollment in enrollments %}
-                                <tr>
-                                    <td>
-                                        {{ enrollment.user.name }}
-                                        <span class="student-status student-inactive ms-2" 
-                                              data-student-id="{{ enrollment.user.id }}"></span>
-                                    </td>
-                                    <td>{{ enrollment.user.phone }}</td>
-                                    <td>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</td>
-                                    <td>
-                                        <span class="badge badge-primary">{{ enrollment.points }}</span>
-                                    </td>
-                                    <td>
-                                        {% if enrollment.is_active %}
-                                            <span class="badge badge-success">مفعل</span>
-                                        {% else %}
-                                            <span class="badge badge-danger">معطل</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <span class="last-activity" data-student-id="{{ enrollment.user.id }}">-</span>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-user-graduate fa-3x text-gray-300 mb-3"></i>
-                    <h5>لا يوجد طلاب في هذا الفصل بعد</h5>
-                    <p>سيظهر الطلاب هنا عند انضمامهم للفصل</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Activity Guide -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">دليل متابعة الطلاب</h6>
-        </div>
-        <div class="card-body">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                <span>يمكنك متابعة نشاط الطلاب في الفصل من خلال هذه الصفحة ومساعدة المعلم في تقييم أدائهم</span>
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+    /* متغيرات التصميم المخصص */
+    :root {
+        --accent-color: {{ primary_color|default('#4e73df', true) }};
+        --accent-gradient: linear-gradient(120deg, {{ primary_color|default('#4e73df', true) }}, {{ secondary_color|default('#224abe', true) }});
+        --surface-color: #FFFFFF;
+        --background-color: #F4F7FE;
+        --text-primary: #2D3748;
+        --text-secondary: #718096;
+        --border-radius-lg: 24px;
+        --border-radius-md: 16px;
+        --border-radius-sm: 8px;
+        --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+    }
+
+    /* تنسيق عام */
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background: var(--background-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    /* تخطيط الصفحة */
+    .app-container {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    /* تصميم السايدبار */
+    .innovative-sidebar {
+        background: var(--accent-gradient);
+        padding: 2rem;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        position: sticky;
+        top: 2rem;
+        height: calc(100vh - 4rem);
+        color: var(--surface-color);
+    }
+
+    .sidebar-brand {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .brand-logo {
+        width: 60px;
+        height: 60px;
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .brand-text {
+        color: var(--surface-color);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .nav-item {
+        margin-bottom: 1rem;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        color: rgba(255,255,255,0.8);
+        padding: 1rem;
+        border-radius: var(--border-radius-md);
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        background: rgba(255,255,255,0.1);
+        color: var(--surface-color);
+        transform: translateX(-10px);
+    }
+
+    .nav-link i {
+        margin-left: 1rem;
+        font-size: 1.2rem;
+        width: 24px;
+        text-align: center;
+    }
+
+    /* تصميم المحتوى الرئيسي */
+    .main-content {
+        flex: 1;
+    }
+
+    /* تصميم الهيدر */
+    .page-header {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--box-shadow);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 200px;
+        height: 200px;
+        background: var(--accent-gradient);
+        opacity: 0.1;
+        border-radius: 50%;
+        transform: translate(50%, -50%);
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        color: var(--text-primary);
+        margin: 0;
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .page-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        right: 0;
+        width: 50px;
+        height: 4px;
+        background: var(--accent-gradient);
+        border-radius: 2px;
+    }
+
+    .page-title i {
+        font-size: 1.5rem;
+        color: var(--accent-color);
+        opacity: 0.8;
+    }
+
+    /* تصميم الجدول */
+    .table-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding: 0.5rem 1rem;
+        border-bottom: 2px solid var(--background-color);
+    }
+
+    .table-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .table {
+        width: 100%;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
+    }
+
+    .table th {
+        background: var(--background-color);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 1.2rem 1rem;
+        border: none;
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
+
+    .table td {
+        padding: 1.2rem 1rem;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--background-color);
+        vertical-align: middle;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+    .table tr {
+        transition: all 0.3s ease;
+    }
+
+    .table tr:hover {
+        background-color: rgba(108, 99, 255, 0.05);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .table tr:hover td {
+        color: var(--text-primary);
+    }
+
+    .badge {
+        padding: 0.6em 1.2em;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+    }
+
+    .badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .badge-primary {
+        background: var(--accent-gradient);
+        color: var(--surface-color);
+    }
+
+    .badge-success {
+        background: linear-gradient(120deg, #34D399, #10B981);
+        color: var(--surface-color);
+    }
+
+    .badge-danger {
+        background: linear-gradient(120deg, #F87171, #EF4444);
+        color: var(--surface-color);
+    }
+
+    .badge i {
+        margin-left: 0.5rem;
+        font-size: 0.9em;
+    }
+
+    /* دليل النشاط */
+    .guide-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        margin-bottom: 2rem;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .guide-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--accent-gradient);
+    }
+
+    .alert-info {
+        background: rgba(108, 99, 255, 0.05);
+        border: none;
+        border-radius: var(--border-radius-md);
+        color: var(--accent-color);
+        padding: 1.2rem;
+        margin: 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .alert-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(108, 99, 255, 0.1);
+    }
+
+    .alert-info i {
+        font-size: 1.2rem;
+        color: var(--accent-color);
+    }
+
+    /* تحسينات التجاوب */
+    @media (max-width: 1200px) {
+        .app-container {
+            grid-template-columns: 250px 1fr;
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .app-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .innovative-sidebar {
+            position: fixed;
+            right: -300px;
+            z-index: 1000;
+            transition: 0.3s ease;
+            height: 100vh;
+            border-radius: 0;
+        }
+        
+        .innovative-sidebar.show {
+            right: 0;
+        }
+        
+        .mobile-toggle {
+            display: block;
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            z-index: 1001;
+            background: var(--surface-color);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: var(--box-shadow);
+        }
+    }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
             </div>
             
-            <h5>مؤشرات النشاط:</h5>
-            <ul>
-                <li class="mb-2"><i class="fas fa-circle text-success me-2"></i>نشط حالياً</li>
-                <li class="mb-2"><i class="fas fa-circle text-warning me-2"></i>غير نشط</li>
-                <li class="mb-2"><i class="fas fa-circle text-danger me-2"></i>غائب لفترة طويلة</li>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.dashboard') }}" class="nav-link">
+                        <i class="fas fa-fw fa-tachometer-alt"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="nav-link">
+                        <i class="fas fa-fw fa-chalkboard"></i>
+                        <span>{{ classroom.name }}</span>
+                    </a>
+                </li>
             </ul>
-        </div>
-    </div>
-</div>
-{% endblock %}
+        </aside>
 
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Track active students
-        trackActiveStudents();
-    });
-</script>
-{% endblock %}
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- هيدر الصفحة -->
+            <header class="page-header">
+                <h1 class="page-title">الطلاب - {{ classroom.name }}</h1>
+                <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="btn-custom btn-primary">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>العودة للفصل</span>
+                </a>
+            </header>
+
+            <!-- قائمة الطلاب -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h6 class="table-title">
+                        <i class="fas fa-users me-2"></i>
+                        قائمة الطلاب المسجلين
+                    </h6>
+                </div>
+                <div class="table-responsive">
+                    {% if enrollments %}
+                        <table class="table" id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>تاريخ الانضمام</th>
+                                    <th>النقاط</th>
+                                    <th>الحالة</th>
+                                    <th>آخر نشاط</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for enrollment in enrollments %}
+                                    <tr>
+                                        <td>
+                                            {{ enrollment.user.name }}
+                                            <span class="student-status student-inactive ms-2" 
+                                                  data-student-id="{{ enrollment.user.id }}"></span>
+                                        </td>
+                                        <td>{{ enrollment.user.phone }}</td>
+                                        <td>{{ enrollment.joined_at.strftime('%Y-%m-%d') }}</td>
+                                        <td>
+                                            <span class="badge badge-primary">{{ enrollment.points }}</span>
+                                        </td>
+                                        <td>
+                                            {% if enrollment.is_active %}
+                                                <span class="badge badge-success">مفعل</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">معطل</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="last-activity" data-student-id="{{ enrollment.user.id }}">-</span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-graduate fa-3x text-gray-300 mb-3"></i>
+                            <h5>لا يوجد طلاب في هذا الفصل بعد</h5>
+                            <p>سيظهر الطلاب هنا عند انضمامهم للفصل</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- دليل النشاط -->
+            <div class="guide-card">
+                <div class="table-header">
+                    <h6 class="table-title">
+                        <i class="fas fa-info-circle me-2"></i>
+                        دليل متابعة الطلاب
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span>يمكنك متابعة نشاط الطلاب في الفصل من خلال هذه الصفحة ومساعدة المعلم في تقييم أدائهم</span>
+                    </div>
+                    
+                    <h5 class="mt-4">مؤشرات النشاط:</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <i class="fas fa-circle text-success me-2"></i>
+                            <span>نشط حالياً</span>
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-circle text-warning me-2"></i>
+                            <span>غير نشط</span>
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-circle text-danger me-2"></i>
+                            <span>غائب لفترة طويلة</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تتبع نشاط الطلاب
+            trackActiveStudents();
+
+            // زر القائمة للموبايل
+            const mobileToggle = document.querySelector('.mobile-toggle');
+            const sidebar = document.querySelector('.innovative-sidebar');
+
+            mobileToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+
+            // إغلاق السايدبار عند النقر خارجه
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth < 992 && 
+                    !sidebar.contains(e.target) && 
+                    !mobileToggle.contains(e.target) && 
+                    sidebar.classList.contains('show')) {
+                    sidebar.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -6,6 +6,8 @@
 import os
 import logging
 from datetime import datetime
+import re
+from urllib.parse import urlparse
 
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
@@ -14,8 +16,12 @@ from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager
 from flask_socketio import SocketIO
+from flask_cors import CORS
 from config import Config
 from flask_wtf.csrf import CSRFProtect
+
+# إعداد Rate Limiting
+from rate_limiting import init_limiter
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -27,10 +33,33 @@ class Base(DeclarativeBase):
 # Initialize SQLAlchemy
 db = SQLAlchemy(model_class=Base)
 
-# Create Flask app and initialize extensions
+# Create Flask app
 app = Flask(__name__)
-app.config.from_object(Config)
-socketio = SocketIO(app, cors_allowed_origins="*")
+
+# تحديد بيئة التطبيق
+env = os.environ.get('FLASK_ENV', 'development')
+if env == 'production':
+    from config import ProductionConfig
+    app.config.from_object(ProductionConfig)
+elif env == 'testing':
+    from config import TestingConfig
+    app.config.from_object(TestingConfig)
+else:
+    from config import DevelopmentConfig
+    app.config.from_object(DevelopmentConfig)
+
+# إعداد CORS بناءً على البيئة
+cors = CORS(app, 
+    origins=app.config['CORS_ORIGINS'],
+    supports_credentials=app.config.get('CORS_SUPPORTS_CREDENTIALS', True),
+    allow_headers=app.config.get('CORS_ALLOW_HEADERS', ['Content-Type', 'Authorization', 'X-CSRFToken']),
+    methods=app.config.get('CORS_METHODS', ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']),
+    max_age=app.config.get('CORS_MAX_AGE', 3600)
+)
+
+# إعداد SocketIO مع CORS آمن
+socketio = SocketIO(app, cors_allowed_origins=app.config.get('SOCKETIO_CORS_ALLOWED_ORIGINS', ["*"]))
+
 csrf = CSRFProtect(app)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
@@ -40,10 +69,45 @@ db.init_app(app)
 # Initialize Flask-Migrate
 migrate = Migrate(app, db)
 
+# تفعيل Rate Limiting
+limiter = init_limiter(app)
+
 # Add global context processor for datetime
 @app.context_processor
 def inject_now():
     return {'now': datetime.utcnow()}
+
+# إضافة security headers middleware
+@app.after_request
+def after_request(response):
+    """إضافة security headers للاستجابات"""
+    
+    # التحقق من البيئة لتطبيق headers مناسبة
+    if not app.config.get('DEBUG', True):  # في الإنتاج فقط
+        # HTTPS enforcement
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        
+        # Content security policy
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://meet.jit.si https://8x8.vc https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: https:; "
+            "media-src 'self' https:; "
+            "connect-src 'self' wss: https: https://meet.jit.si https://8x8.vc; "
+            "frame-src 'self' https://meet.jit.si https://8x8.vc;"
+        )
+        
+        # Other security headers
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # CORS headers تُعامل بواسطة Flask-CORS
+    
+    return response
 
 # Add custom Jinja filters
 @app.template_filter('slice')
@@ -136,6 +200,22 @@ create_upload_directories()
 @app.route('/favicon.ico')
 def favicon():
     return app.send_static_file('img/favicon.ico')
+
+# Route for testing Firestore connection
+@app.route('/test-firestore')
+def test_firestore():
+    return render_template('test_firestore.html')
+
+# Google Meet URL validator
+
+
+
+
+
+
+
+
+# SocketIO مُعدّ بالفعل أعلاه مع CORS آمن
 
 # Import and register blueprints
 from routes import main_bp

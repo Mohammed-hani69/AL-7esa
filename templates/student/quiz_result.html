@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/unified-design.css') }}">
     
     <style>
         :root {
@@ -377,25 +378,41 @@
 
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="{{ url_for('student.dashboard') }}" class="nav-link">
+                    <a href="{{ url_for('student.dashboard') }}" 
+                       class="nav-link"
+                       data-loading="true"
+                       data-loading-text="جاري تحميل لوحة التحكم..."
+                       data-loading-type="spinner">
                         <i class="fas fa-th-large"></i>
                         <span>لوحة التحكم</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ url_for('student.classrooms') }}" class="nav-link active">
+                    <a href="{{ url_for('student.classrooms') }}" 
+                       class="nav-link active"
+                       data-loading="true"
+                       data-loading-text="جاري تحميل الفصول..."
+                       data-loading-type="spinner">
                         <i class="fas fa-chalkboard"></i>
                         <span>الفصول</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                    <a href="{{ url_for('auth.profile') }}" 
+                       class="nav-link"
+                       data-loading="true"
+                       data-loading-text="جاري تحميل الملف الشخصي..."
+                       data-loading-type="spinner">
                         <i class="fas fa-user-circle"></i>
                         <span>الملف الشخصي</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                    <a href="{{ url_for('auth.logout') }}" 
+                       class="nav-link"
+                       data-loading="true"
+                       data-loading-text="جاري تسجيل الخروج..."
+                       data-loading-type="spinner">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>تسجيل الخروج</span>
                     </a>
@@ -410,7 +427,11 @@
                     <h1 class="page-title">نتيجة الاختبار - {{ quiz.title }}</h1>
                     <p class="page-subtitle">{{ classroom.name }}</p>
                 </div>
-                <a href="{{ url_for('student.quizzes', classroom_id=classroom.id) }}" class="btn-back">
+                <a href="{{ url_for('student.quizzes', classroom_id=classroom.id) }}" 
+                   class="btn-back"
+                   data-loading="true"
+                   data-loading-text="جاري العودة للاختبارات..."
+                   data-loading-type="spinner">
                     <i class="fas fa-arrow-right me-1"></i>
                     العودة للاختبارات
                 </a>
@@ -501,6 +522,10 @@
     <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- تضمين نظام Loading Indicators المحسن -->
+    {% include 'components/loading_indicators.html' %}
+    
     <script>
         // تفعيل زر القائمة للموبايل
         $('.mobile-toggle').on('click', function() {
@@ -514,6 +539,53 @@
                 !$(e.target).closest('.mobile-toggle').length) {
                 $('.innovative-sidebar').removeClass('show');
             }
+        });
+        
+        // تطبيق loading indicators
+        document.addEventListener('DOMContentLoaded', function() {
+            // Loading للروابط في السايدبار
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showPageLoading({
+                            text: 'جاري التحميل...',
+                            type: 'spinner'
+                        });
+                    }
+                });
+            });
+            
+            // Loading لزر العودة
+            const backBtn = document.querySelector('.btn-back');
+            if (backBtn) {
+                backBtn.addEventListener('click', function() {
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showPageLoading({
+                            text: 'جاري العودة للاختبارات...',
+                            type: 'spinner'
+                        });
+                    }
+                });
+            }
+            
+            // إظهار skeleton للنتائج عند تحميل الصفحة (تأثير بصري)
+            setTimeout(() => {
+                const resultCards = document.querySelectorAll('.question-card');
+                resultCards.forEach((card, index) => {
+                    if (window.enhancedLoading) {
+                        setTimeout(() => {
+                            window.enhancedLoading.showSkeleton(card, {
+                                lines: 2,
+                                avatar: false
+                            });
+                            
+                            setTimeout(() => {
+                                window.enhancedLoading.hideSkeleton(card);
+                            }, 400);
+                        }, index * 100);
+                    }
+                });
+            }, 100);
         });
     </script>
 </body>

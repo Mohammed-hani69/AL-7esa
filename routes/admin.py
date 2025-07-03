@@ -5,6 +5,7 @@ from functools import wraps
 from app import db
 from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings, SubscriptionPayment
 from flask_wtf.csrf import CSRFProtect, CSRFError
+from rate_limiting import RATE_LIMITS, get_limiter
 # Add current time for template filters
 from datetime import datetime
 
@@ -95,6 +96,12 @@ def dashboard():
 @login_required
 @admin_required
 def users():
+    # تطبيق Rate Limiting على إدارة المستخدمين
+    if request.method == 'POST':
+        limiter = get_limiter()
+        if limiter:
+            limiter.limit(RATE_LIMITS['admin_user_management'])(lambda: None)()
+    
     # إذا كان طلب POST، فقم بمعالجة تحديث أو إضافة المستخدم
     if request.method == 'POST':
         action = request.form.get('action')

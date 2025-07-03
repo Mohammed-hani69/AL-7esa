@@ -52,13 +52,15 @@ pip install -r requirements.txt
 ```
 
 3. Set up Firebase configuration | إعداد تكوين Firebase
-- Configure `firebase_utils.py` with your Firebase credentials
-- قم بتكوين `firebase_utils.py` مع بيانات اعتماد Firebase الخاصة بك
+- Create a `.env` file with your Firebase credentials (see `.env` example)
+- قم بإنشاء ملف `.env` مع بيانات اعتماد Firebase الخاصة بك (انظر مثال `.env`)
+- Optionally, add Firebase Admin SDK service account for server-side operations
+- اختيارياً، أضف ملف خدمة Firebase Admin SDK للعمليات من جانب الخادم
 
 4. For future changes:
 ```bash
 git add .
-git commit -m "update to v 1.0.8 color theme"
+git commit -m "update to v 1.0.9 push on vps"
 git push origin main
 ```
 
@@ -72,11 +74,61 @@ python app.py
 Create a `.env` file with the following variables | قم بإنشاء ملف `.env` بالمتغيرات التالية:
 
 ```
+# Flask Configuration
 FLASK_APP=app.py
 FLASK_ENV=development
-DATABASE_URL=your_database_url
-FIREBASE_CONFIG=your_firebase_config
+SESSION_SECRET=your-secret-key
+
+# Database Configuration
+DATABASE_URL=sqlite:///al-7esa.db
+
+# Firebase Configuration
+FIREBASE_API_KEY=your_api_key
+FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+FIREBASE_APP_ID=your_app_id
+FIREBASE_MEASUREMENT_ID=your_measurement_id
+FIREBASE_DATABASE_URL=https://your_project-default-rtdb.firebaseio.com
+
+# Firebase Admin SDK (Optional)
+FIREBASE_SERVICE_ACCOUNT_PATH=path/to/service-account-key.json
+FIREBASE_SERVER_KEY=your_server_key
 ```
+
+## Firebase Setup | إعداد Firebase
+
+### 1. Create Firebase Project | إنشاء مشروع Firebase
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project | إنشاء مشروع جديد
+3. Enable Authentication, Firestore, and Realtime Database | تفعيل المصادقة و Firestore وقاعدة البيانات المباشرة
+
+### 2. Get Configuration | الحصول على التكوين
+1. Go to Project Settings > General | اذهب إلى إعدادات المشروع > عام
+2. Add a web app | أضف تطبيق ويب
+3. Copy the configuration values to your `.env` file | انسخ قيم التكوين إلى ملف `.env`
+
+### 3. Set up Firestore Rules | إعداد قواعد Firestore
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write access to classroom messages for authenticated users
+    match /classrooms/{classroomId}/messages/{messageId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Allow read/write access to presence for authenticated users
+    match /classrooms/{classroomId}/presence/{userId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+### 4. Test Firebase Connection | اختبار اتصال Firebase
+Visit `/test-firestore` route to test the Firebase connection | زر مسار `/test-firestore` لاختبار اتصال Firebase
 
 ## User Roles | أدوار المستخدمين
 

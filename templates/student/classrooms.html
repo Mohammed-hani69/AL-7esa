@@ -481,7 +481,7 @@
                             </div>
 
                             <div class="text-center mt-4">
-                                <a href="{{ url_for('student.classroom', classroom_id=enrollment.classroom.id) }}" class="btn-join w-100">
+                                <a href="{{ url_for('student.classroom', classroom_id=enrollment.classroom.id) }}" class="btn-join w-100 enter-classroom">
                                     <i class="fas fa-arrow-left me-1"></i>دخول الفصل
                                 </a>
                             </div>
@@ -499,6 +499,9 @@
                     </div>
                 {% endif %}
             </div>
+
+            <!-- تضمين Loading Indicators -->
+            {% include 'components/loading_indicators.html' %}
         </main>
     </div>
 
@@ -596,6 +599,91 @@
                 if (link) {
                     window.location.href = link;
                 }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // تطبيق loading على الانضمام للفصول
+            document.querySelectorAll('.join-classroom-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showButtonLoading(this, {
+                            text: 'جاري الانضمام...',
+                            type: 'spinner'
+                        });
+                    }
+                });
+            });
+            
+            // تطبيق loading على كروت الفصول
+            document.querySelectorAll('.classroom-card').forEach(card => {
+                const enterBtn = card.querySelector('.enter-classroom');
+                if (enterBtn) {
+                    enterBtn.addEventListener('click', function(e) {
+                        if (window.enhancedLoading) {
+                            window.enhancedLoading.showSectionLoading(card, {
+                                text: 'جاري دخول الفصل...',
+                                type: 'dots'
+                            });
+                        }
+                    });
+                }
+            });
+            
+            // تطبيق loading على نموذج الانضمام بالكود
+            const joinForm = document.getElementById('joinClassForm');
+            if (joinForm) {
+                joinForm.addEventListener('submit', function(e) {
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showPageLoading({
+                            text: 'جاري التحقق من كود الفصل...',
+                            type: 'wave'
+                        });
+                    }
+                });
+            }
+            
+            // تطبيق skeleton loading للفصول
+            document.querySelectorAll('.classroom-card').forEach((card, index) => {
+                if (window.enhancedLoading) {
+                    window.enhancedLoading.showSkeleton(card, {
+                        lines: 3,
+                        avatar: true,
+                        animated: true
+                    });
+                    
+                    setTimeout(() => {
+                        window.enhancedLoading.hideSkeleton(card);
+                    }, 800 + (index * 100));
+                }
+            });
+            
+            // تطبيق loading على البحث
+            const searchInput = document.querySelector('.search-input');
+            if (searchInput) {
+                let searchTimeout;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        const container = document.querySelector('.classrooms-grid');
+                        if (window.enhancedLoading && container) {
+                            window.enhancedLoading.showSectionLoading(container, {
+                                text: 'جاري البحث في الفصول...',
+                                type: 'bars'
+                            });
+                            
+                            setTimeout(() => {
+                                window.enhancedLoading.hideSectionLoading(container);
+                            }, 600);
+                        }
+                    }, 300);
+                });
+            }
+            
+            // تطبيق loading على روابط التنقل
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.setAttribute('data-loading', 'true');
+                link.setAttribute('data-loading-text', 'جاري تحميل الصفحة...');
             });
         });
     </script>

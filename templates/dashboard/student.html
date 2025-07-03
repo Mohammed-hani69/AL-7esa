@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/unified-notifications.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/unified-design.css') }}">
     
     <!-- إضافة Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -261,13 +263,8 @@
             margin-top: 0.5rem;
         }
 
-        /* تصميم الإشعارات */
-        .notifications-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .notifications-toggle {
+        /* تخصيص إضافي للإشعارات في dashboard الطلاب */
+        .student-notifications-toggle {
             background: none;
             border: none;
             color: var(--surface-color);
@@ -282,102 +279,14 @@
             transition: all 0.3s ease;
         }
 
-        .notifications-toggle:hover {
+        .student-notifications-toggle:hover {
             background: rgba(255,255,255,0.1);
         }
 
-        .notifications-badge {
-            background: #FF6B6B;
-            color: white;
-            border-radius: 50%;
-            padding: 0.2rem 0.5rem;
-            font-size: 0.8rem;
-            position: absolute;
-            top: 0;
-            left: 0.5rem;
-        }
-
-        .notifications-panel {
-            position: absolute;
-            left: 0;
-            top: 100%;
-            width: 320px;
-            background: var(--surface-color);
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--box-shadow);
-            z-index: 1000;
-            display: none;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .notifications-panel.show {
-            display: block;
-        }
-
-        .notification-header {
-            padding: 1rem;
-            border-bottom: 1px solid var(--background-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .notification-item {
-            padding: 1rem;
-            border-bottom: 1px solid var(--background-color);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: start;
-            gap: 1rem;
-            cursor: pointer;
-        }
-
-        .notification-item:hover {
-            background: var(--background-color);
-        }
-
-        .notification-item.unread {
-            background: rgba(108, 99, 255, 0.05);
-        }
-
-        .notification-icon {
-            background: var(--accent-gradient);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .notification-content {
-            flex-grow: 1;
-        }
-
-        .notification-title {
-            font-weight: 500;
-            margin-bottom: 0.25rem;
-            color: var(--text-primary);
-        }
-
-        .notification-text {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .notification-time {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-        }
-
-        .notifications-empty {
-            padding: 2rem;
-            text-align: center;
-            color: var(--text-secondary);
+        .student-notifications-panel {
+            left: 0 !important;
+            width: 320px !important;
+            max-width: 90vw !important;
         }
 
         @media (max-width: 992px) {
@@ -532,44 +441,50 @@
                 <h1 class="brand-text">الحصة</h1>
             </div>
             
-            <!-- إضافة زر الإشعارات -->
+            <!-- قائمة الإشعارات الموحدة -->
             <div class="notifications-dropdown">
-                <button class="notifications-toggle" id="notificationsToggle">
+                <button class="student-notifications-toggle" data-panel="studentNotificationsPanel" aria-label="الإشعارات">
                     <i class="fas fa-bell me-2"></i>
                     <span>الإشعارات</span>
                     {% if unread_notifications %}
-                    <span class="notifications-badge">{{ unread_notifications|length }}</span>
+                    <span class="notifications-badge show">{{ unread_notifications|length }}</span>
                     {% endif %}
                 </button>
-                <div class="notifications-panel" id="notificationsPanel">
-                    <div class="notification-header">
-                        <h6 class="m-0">الإشعارات</h6>
+                <div class="notifications-panel student-notifications-panel" id="studentNotificationsPanel">
+                    <div class="notifications-header">
+                        <h6 class="notifications-title">الإشعارات</h6>
+                        <div class="notifications-actions">
+                            {% if notifications %}
+                            <button class="notification-action-btn mark-all-read-btn" data-panel="studentNotificationsPanel">
+                                <i class="fas fa-check-double"></i>
+                                تعيين الكل كمقروء
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="notifications-list">
                         {% if notifications %}
-                        <button class="btn btn-sm text-primary" id="markAllRead">
-                            <i class="fas fa-check-double"></i>
-                            تعيين الكل كمقروء
-                        </button>
+                            {% for notification in notifications %}
+                            <div class="notification-item {{ 'unread' if not notification.is_read }}" 
+                                 data-id="{{ notification.id }}" 
+                                 data-link="{{ notification.link if notification.link else '#' }}">
+                                <div class="notification-item-icon">
+                                    <i class="fas fa-{{ notification.icon|default('bell') }}"></i>
+                                </div>
+                                <div class="notification-item-content">
+                                    <div class="notification-item-title">{{ notification.title }}</div>
+                                    <div class="notification-item-text">{{ notification.text }}</div>
+                                    <div class="notification-item-time">{{ notification.created_at|timeago if notification.created_at else 'الآن' }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="notifications-empty">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>لا توجد إشعارات جديدة</p>
+                            </div>
                         {% endif %}
                     </div>
-                    {% if notifications %}
-                        {% for notification in notifications %}
-                        <div class="notification-item {{ 'unread' if not notification.is_read }}" data-id="{{ notification.id }}" data-link="{{ notification.link }}">
-                            <div class="notification-icon">
-                                <i class="fas fa-{{ notification.icon|default('bell') }}"></i>
-                            </div>
-                            <div class="notification-content">
-                                <div class="notification-title">{{ notification.title }}</div>
-                                <div class="notification-text">{{ notification.text }}</div>
-                                <div class="notification-time">{{ notification.created_at|timeago }}</div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="notifications-empty">
-                            <i class="fas fa-bell-slash fa-2x mb-2"></i>
-                            <p>لا توجد إشعارات جديدة</p>
-                        </div>
-                    {% endif %}
                 </div>
             </div>
 
@@ -1010,6 +925,46 @@
                 }
             }
         });
+    </script>
+
+    <!-- تضمين نظام الإشعارات الموحد -->
+    <script src="{{ url_for('static', filename='js/unified-notifications.js') }}" defer></script>
+    
+    <!-- تفعيل الإشعارات المحددة للطالب -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تحديث تطبيق الإشعارات للطالب
+        const studentToggle = document.querySelector('.student-notifications-toggle');
+        const studentPanel = document.getElementById('studentNotificationsPanel');
+        
+        if (studentToggle && studentPanel) {
+            studentToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.NotificationSystem.toggleNotificationPanel('studentNotificationsPanel');
+            });
+        }
+        
+        // تفعيل عناصر الإشعارات للنقر
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const id = item.dataset.id;
+                const link = item.dataset.link;
+                
+                if (item.classList.contains('unread')) {
+                    window.NotificationSystem.markAsRead(id, item);
+                }
+                
+                if (link && link !== '#') {
+                    window.location.href = link;
+                }
+            });
+        });
+        
+        // عرض إشعار ترحيب للطالب
+        setTimeout(() => {
+            window.showInfo('مرحباً {{ current_user.name }}', 'أهلاً بك في لوحة تحكم الطالب');
+        }, 1000);
+    });
     </script>
 </body>
 </html>

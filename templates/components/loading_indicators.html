@@ -1,0 +1,858 @@
+<!-- Enhanced Loading Indicators System -->
+<!-- نظام مؤشرات التحميل المحسن والموحد -->
+
+<!-- تضمين التصميم المحسن -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/unified-design.css') }}">
+
+<!-- Enhanced Page Loading Overlay -->
+<div id="enhanced-page-loading-overlay" class="page-loading-overlay">
+    <div class="loading-content">
+        <div class="loading-spinner xl"></div>
+        <div class="loading-text">جاري التحميل...</div>
+        <div class="loading-progress-container" style="display: none;">
+            <div class="loading-progress">
+                <div class="progress-bar"></div>
+            </div>
+            <div class="progress-text">0%</div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Styles محسن -->
+<style>
+/* تحسينات إضافية للتطبيق */
+.app-loading {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    background: var(--surface-color);
+    border-radius: var(--border-radius-md);
+    border: 1px solid rgba(108, 99, 255, 0.1);
+}
+
+.content-loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.content-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 10;
+    border-radius: inherit;
+}
+
+.content-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 2px solid rgba(108, 99, 255, 0.2);
+    border-top: 2px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 11;
+}
+
+/* Loading للمحتوى الديناميكي */
+.dynamic-content.loading {
+    min-height: 100px;
+    position: relative;
+}
+
+.dynamic-content.loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--surface-color);
+    z-index: 5;
+}
+
+.dynamic-content.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin: -16px 0 0 -16px;
+    border: 3px solid rgba(108, 99, 255, 0.2);
+    border-top: 3px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 6;
+}
+
+/* Loading states للكروت */
+.card.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.card.loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 10;
+}
+
+.card.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+    border: 2.5px solid rgba(108, 99, 255, 0.2);
+    border-top: 2.5px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 11;
+}
+
+/* Loading للقوائم */
+.list-loading {
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.list-loading .loading-spinner {
+    margin-bottom: 1rem;
+}
+
+.list-loading .loading-message {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Loading للتبويبات */
+.tab-content.loading {
+    min-height: 200px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Loading للـ modal */
+.modal.loading .modal-content {
+    position: relative;
+    pointer-events: none;
+}
+
+.modal.loading .modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 1050;
+    border-radius: inherit;
+}
+
+.modal.loading .modal-content::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin: -16px 0 0 -16px;
+    border: 3px solid rgba(108, 99, 255, 0.2);
+    border-top: 3px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 1051;
+}
+
+/* تحسينات للموبايل */
+@media (max-width: 768px) {
+    .page-loading-overlay .loading-spinner.xl {
+        width: 48px;
+        height: 48px;
+        border-width: 4px;
+    }
+    
+    .page-loading-overlay .loading-text {
+        font-size: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .app-loading {
+        min-height: 150px;
+        padding: 1rem;
+    }
+    
+    .content-loading::after {
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border-width: 2px;
+    }
+}
+
+/* حالات خاصة للبث المباشر */
+.stream-container.loading {
+    background: #1a1a1a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+.stream-container.loading .stream-loading {
+    position: static;
+    transform: none;
+}
+
+.stream-loading .loading-spinner {
+    border-color: rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+}
+
+/* Loading للخريطة */
+.map-loading {
+    background: var(--background-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    border-radius: var(--border-radius-md);
+}
+
+/* Loading للرسوم البيانية */
+.chart-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 250px;
+    background: var(--surface-color);
+    border-radius: var(--border-radius-md);
+}
+
+.chart-loading .loading-content {
+    text-align: center;
+}
+
+.chart-loading .loading-text {
+    margin-top: 1rem;
+    color: var(--text-secondary);
+}
+
+/* Loading للدفع */
+.payment-loading {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: var(--surface-color);
+    border-radius: var(--border-radius-md);
+    border: 1px solid rgba(108, 99, 255, 0.1);
+    margin: 2rem 0;
+}
+
+.payment-loading .loading-icon {
+    font-size: 4rem;
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+}
+
+.payment-loading .loading-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.payment-loading .loading-message {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    font-size: 1rem;
+}
+
+/* Loading للجداول محسن */
+.table-loading {
+    position: relative;
+}
+
+.table-loading tbody {
+    opacity: 0.4;
+}
+
+.table-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 10;
+    border-radius: inherit;
+}
+
+.table-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin: -16px 0 0 -16px;
+    border: 3px solid rgba(108, 99, 255, 0.2);
+    border-top: 3px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 11;
+}
+
+/* Skeleton loading محسن */
+.skeleton-container {
+    padding: 1rem;
+}
+
+.skeleton-card {
+    background: var(--surface-color);
+    border-radius: var(--border-radius-md);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(108, 99, 255, 0.1);
+}
+
+.skeleton-list-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(108, 99, 255, 0.1);
+}
+
+.skeleton-list-item:last-child {
+    border-bottom: none;
+}
+
+/* حالات خاصة للألوان */
+.loading-success {
+    --accent-color: #28a745;
+}
+
+.loading-warning {
+    --accent-color: #ffc107;
+}
+
+.loading-danger {
+    --accent-color: #dc3545;
+}
+
+.loading-info {
+    --accent-color: #17a2b8;
+}
+
+/* Dark theme support */
+.page-loading-overlay.dark {
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+}
+
+.section-loading-overlay.dark {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+}
+
+/* تحسينات للطباعة */
+@media print {
+    .page-loading-overlay,
+    .section-loading-overlay,
+    .loading-spinner,
+    .loading-dots,
+    .loading-bars,
+    .loading-wave,
+    .skeleton-container {
+        display: none !important;
+    }
+}
+
+/* تحسينات الوصولية */
+@media (prefers-reduced-motion: reduce) {
+    .loading-spinner,
+    .loading-dots .dot,
+    .loading-bars .bar,
+    .loading-wave .wave-bar {
+        animation-duration: 2s;
+    }
+}
+
+@media (prefers-contrast: high) {
+    .loading-spinner {
+        border-top-color: currentColor;
+        border-color: transparent;
+    }
+    
+    .page-loading-overlay {
+        background: rgba(255, 255, 255, 0.98);
+    }
+}
+</style>
+
+<!-- تضمين JavaScript المحسن -->
+<script src="{{ url_for('static', filename='js/enhanced-loading-manager.js') }}"></script>
+
+<!-- JavaScript للتحميل التلقائي والتطبيق الذكي -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Loading indicators system initialized');
+    
+    // تطبيق loading على العناصر الموجودة
+    applyLoadingToExistingElements();
+    
+    // مراقبة العناصر الجديدة
+    observeNewElements();
+    
+    // تهيئة loading للأحداث الخاصة
+    initSpecialLoadingEvents();
+    
+    // إعداد تطبيق Loading تلقائياً
+    setupAutoLoading();
+});
+
+function applyLoadingToExistingElements() {
+    // تطبيق loading على الصور
+    document.querySelectorAll('img:not([data-no-loading])').forEach(img => {
+        if (!img.complete && img.src) {
+            img.classList.add('image-loading');
+            
+            const handleLoad = () => {
+                img.classList.remove('image-loading');
+                img.removeEventListener('load', handleLoad);
+                img.removeEventListener('error', handleLoad);
+            };
+            
+            img.addEventListener('load', handleLoad);
+            img.addEventListener('error', handleLoad);
+        }
+    });
+    
+    // تطبيق loading على النماذج
+    document.querySelectorAll('form:not([data-no-loading])').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('[type="submit"]');
+            if (submitBtn && !submitBtn.disabled) {
+                if (window.enhancedLoading) {
+                    window.enhancedLoading.showButtonLoading(submitBtn, {
+                        text: submitBtn.getAttribute('data-loading-text') || 'جاري الإرسال...',
+                        keepText: submitBtn.hasAttribute('data-keep-text')
+                    });
+                } else {
+                    submitBtn.classList.add('loading');
+                    submitBtn.disabled = true;
+                }
+            }
+        });
+    });
+    
+    // تطبيق loading على الروابط
+    document.querySelectorAll('a[data-loading]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (!link.getAttribute('href').startsWith('#') && link.target !== '_blank') {
+                const loadingText = link.getAttribute('data-loading-text') || 'جاري التحميل...';
+                const loadingType = link.getAttribute('data-loading-type') || 'spinner';
+                
+                if (window.enhancedLoading) {
+                    window.enhancedLoading.showPageLoading({
+                        text: loadingText,
+                        type: loadingType
+                    });
+                }
+            }
+        });
+    });
+    
+    // تطبيق loading على الأزرار مع data attributes
+    document.querySelectorAll('[data-loading-on-click]').forEach(element => {
+        element.addEventListener('click', function() {
+            const loadingText = this.getAttribute('data-loading-text') || 'جاري المعالجة...';
+            const loadingType = this.getAttribute('data-loading-type') || 'spinner';
+            const keepText = this.hasAttribute('data-keep-text');
+            
+            if (window.enhancedLoading) {
+                if (this.tagName === 'BUTTON') {
+                    window.enhancedLoading.showButtonLoading(this, {
+                        text: loadingText,
+                        type: loadingType,
+                        keepText: keepText
+                    });
+                } else {
+                    window.enhancedLoading.showPageLoading({
+                        text: loadingText,
+                        type: loadingType
+                    });
+                }
+            }
+        });
+    });
+}
+
+function observeNewElements() {
+    if (typeof MutationObserver !== 'undefined') {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1) { // Element node
+                        // إضافة loading للصور الجديدة
+                        const images = node.querySelectorAll ? node.querySelectorAll('img:not([data-no-loading])') : [];
+                        images.forEach(img => {
+                            if (!img.complete && img.src) {
+                                img.classList.add('image-loading');
+                                
+                                const handleLoad = () => {
+                                    img.classList.remove('image-loading');
+                                    img.removeEventListener('load', handleLoad);
+                                    img.removeEventListener('error', handleLoad);
+                                };
+                                
+                                img.addEventListener('load', handleLoad);
+                                img.addEventListener('error', handleLoad);
+                            }
+                        });
+                        
+                        // إضافة loading للنماذج الجديدة
+                        const forms = node.querySelectorAll ? node.querySelectorAll('form:not([data-no-loading])') : [];
+                        forms.forEach(form => {
+                            form.addEventListener('submit', function(e) {
+                                const submitBtn = form.querySelector('[type="submit"]');
+                                if (submitBtn && !submitBtn.disabled) {
+                                    if (window.enhancedLoading) {
+                                        window.enhancedLoading.showButtonLoading(submitBtn);
+                                    } else {
+                                        submitBtn.classList.add('loading');
+                                        submitBtn.disabled = true;
+                                    }
+                                }
+                            });
+                        });
+                        
+                        // إضافة loading للروابط الجديدة
+                        const links = node.querySelectorAll ? node.querySelectorAll('a[data-loading]') : [];
+                        links.forEach(link => {
+                            link.addEventListener('click', function(e) {
+                                if (!link.getAttribute('href').startsWith('#') && link.target !== '_blank') {
+                                    const loadingText = link.getAttribute('data-loading-text') || 'جاري التحميل...';
+                                    if (window.enhancedLoading) {
+                                        window.enhancedLoading.showPageLoading(loadingText);
+                                    }
+                                }
+                            });
+                        });
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+}
+
+function initSpecialLoadingEvents() {
+    // Loading للـ AJAX requests
+    if (typeof $ !== 'undefined') {
+        $(document).ajaxStart(function() {
+            if (window.enhancedLoading && !window.enhancedLoading.isLoading('page')) {
+                window.enhancedLoading.showPageLoading('جاري تحميل البيانات...');
+            }
+        });
+        
+        $(document).ajaxStop(function() {
+            if (window.enhancedLoading) {
+                window.enhancedLoading.hidePageLoading();
+            }
+        });
+        
+        $(document).ajaxError(function(event, xhr, settings) {
+            if (window.enhancedLoading) {
+                window.enhancedLoading.hidePageLoading();
+                console.error('AJAX Error:', xhr.status, xhr.statusText);
+            }
+        });
+    }
+    
+    // Loading للفيديو
+    document.querySelectorAll('video').forEach(video => {
+        video.addEventListener('loadstart', function() {
+            this.classList.add('loading');
+        });
+        
+        video.addEventListener('canplay', function() {
+            this.classList.remove('loading');
+        });
+        
+        video.addEventListener('error', function() {
+            this.classList.remove('loading');
+        });
+    });
+    
+    // Loading للتبويبات
+    document.querySelectorAll('[data-bs-toggle="tab"], [data-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const target = document.querySelector(this.getAttribute('data-bs-target') || this.getAttribute('href'));
+            if (target && window.enhancedLoading) {
+                window.enhancedLoading.showSectionLoading(target, 'جاري تحميل المحتوى...');
+                
+                setTimeout(() => {
+                    window.enhancedLoading.hideSectionLoading(target);
+                }, 500);
+            }
+        });
+    });
+    
+    // Loading للمودال
+    document.querySelectorAll('[data-bs-toggle="modal"], [data-toggle="modal"]').forEach(trigger => {
+        trigger.addEventListener('click', function() {
+            const target = document.querySelector(this.getAttribute('data-bs-target') || this.getAttribute('data-target'));
+            if (target) {
+                target.classList.add('loading');
+                
+                setTimeout(() => {
+                    target.classList.remove('loading');
+                }, 300);
+            }
+        });
+    });
+}
+
+function setupAutoLoading() {
+    // تطبيق loading تلقائي للنماذج الكبيرة
+    document.querySelectorAll('form[data-auto-loading]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (window.enhancedLoading) {
+                const loadingText = form.getAttribute('data-loading-text') || 'جاري معالجة البيانات...';
+                window.enhancedLoading.showPageLoading(loadingText);
+            }
+        });
+    });
+    
+    // تطبيق skeleton loading للمحتوى الديناميكي
+    document.querySelectorAll('[data-skeleton]').forEach(element => {
+        if (window.enhancedLoading) {
+            const lines = parseInt(element.getAttribute('data-skeleton-lines')) || 3;
+            const avatar = element.hasAttribute('data-skeleton-avatar');
+            
+            window.enhancedLoading.showSkeleton(element, {
+                lines: lines,
+                avatar: avatar
+            });
+            
+            // إخفاء skeleton بعد تحميل المحتوى
+            const hideAfter = parseInt(element.getAttribute('data-skeleton-duration')) || 2000;
+            setTimeout(() => {
+                window.enhancedLoading.hideSkeleton(element);
+            }, hideAfter);
+        }
+    });
+    
+    // تطبيق progress loading للعمليات الطويلة
+    document.querySelectorAll('[data-progress-loading]').forEach(element => {
+        element.addEventListener('click', function() {
+            if (window.enhancedLoading) {
+                window.enhancedLoading.showPageLoading({
+                    text: 'جاري المعالجة...',
+                    progress: true
+                });
+                
+                // محاكاة progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            window.enhancedLoading.hidePageLoading();
+                        }, 500);
+                    }
+                    window.enhancedLoading.updateProgress(progress);
+                }, 200);
+            }
+        });
+    });
+}
+
+// دوال مساعدة للاستخدام السريع
+window.addLoadingToElement = function(element, type = 'spinner', options = {}) {
+    if (typeof element === 'string') {
+        element = document.querySelector(element);
+    }
+    
+    if (!element) return;
+    
+    switch (type) {
+        case 'overlay':
+            if (window.enhancedLoading) {
+                window.enhancedLoading.showSectionLoading(element, options);
+            }
+            break;
+        case 'skeleton':
+            if (window.enhancedLoading) {
+                window.enhancedLoading.showSkeleton(element, options);
+            }
+            break;
+        case 'content':
+            element.classList.add('content-loading');
+            break;
+        case 'button':
+            if (window.enhancedLoading) {
+                window.enhancedLoading.showButtonLoading(element, options);
+            }
+            break;
+        default:
+            element.classList.add('loading');
+    }
+};
+
+window.removeLoadingFromElement = function(element, type = 'spinner') {
+    if (typeof element === 'string') {
+        element = document.querySelector(element);
+    }
+    
+    if (!element) return;
+    
+    switch (type) {
+        case 'overlay':
+            if (window.enhancedLoading) {
+                window.enhancedLoading.hideSectionLoading(element);
+            }
+            break;
+        case 'skeleton':
+            if (window.enhancedLoading) {
+                window.enhancedLoading.hideSkeleton(element);
+            }
+            break;
+        case 'content':
+            element.classList.remove('content-loading');
+            break;
+        case 'button':
+            if (window.enhancedLoading) {
+                window.enhancedLoading.hideButtonLoading(element);
+            }
+            break;
+        default:
+            element.classList.remove('loading');
+    }
+};
+
+// دالة لتطبيق loading على الصفحة بالكامل
+window.showPageLoading = function(text = 'جاري التحميل...', options = {}) {
+    if (window.enhancedLoading) {
+        return window.enhancedLoading.showPageLoading(typeof text === 'string' ? { text, ...options } : text);
+    }
+};
+
+window.hidePageLoading = function(id) {
+    if (window.enhancedLoading) {
+        window.enhancedLoading.hidePageLoading(id);
+    }
+};
+
+// دالة لإظهار skeleton loading
+window.showSkeletonLoading = function(element, config = {}) {
+    if (window.enhancedLoading) {
+        window.enhancedLoading.showSkeleton(element, config);
+    }
+};
+
+// دالة لتحديث progress
+window.updateLoadingProgress = function(progress, text = null) {
+    if (window.enhancedLoading) {
+        window.enhancedLoading.updateProgress(progress, text);
+    }
+};
+
+// دالة للحصول على إحصائيات Loading
+window.getLoadingStats = function() {
+    if (window.enhancedLoading) {
+        return window.enhancedLoading.getStats();
+    }
+    return null;
+};
+
+// دالة لتطبيق theme loading
+window.setLoadingTheme = function(theme = 'light') {
+    const overlay = document.getElementById('enhanced-page-loading-overlay');
+    if (overlay) {
+        overlay.className = overlay.className.replace(/\b(light|dark)\b/g, '');
+        overlay.classList.add(theme);
+    }
+};
+
+// معالجة أخطاء JavaScript
+window.addEventListener('error', function(e) {
+    console.error('JavaScript Error caught by loading system:', e.error);
+    if (window.enhancedLoading && window.enhancedLoading.isLoading()) {
+        setTimeout(() => {
+            window.enhancedLoading.clearAllLoading();
+        }, 1000);
+    }
+});
+
+// معالجة Promise rejections
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('Unhandled Promise Rejection caught by loading system:', e.reason);
+    if (window.enhancedLoading && window.enhancedLoading.isLoading()) {
+        setTimeout(() => {
+            window.enhancedLoading.clearAllLoading();
+        }, 1000);
+    }
+});
+
+// تنظيف Loading عند مغادرة الصفحة
+window.addEventListener('beforeunload', function() {
+    if (window.enhancedLoading) {
+        window.enhancedLoading.clearAllLoading(true);
+    }
+});
+
+// تطبيق loading responsive
+window.addEventListener('resize', function() {
+    // تحديث أحجام loading indicators حسب الشاشة
+    const isMobile = window.innerWidth <= 768;
+    const overlay = document.getElementById('enhanced-page-loading-overlay');
+    
+    if (overlay) {
+        const spinner = overlay.querySelector('.loading-spinner');
+        if (spinner) {
+            if (isMobile) {
+                spinner.classList.remove('xl');
+                spinner.classList.add('lg');
+            } else {
+                spinner.classList.remove('lg');
+                spinner.classList.add('xl');
+            }
+        }
+    }
+});
+
+console.log('✅ Enhanced Loading Indicators System fully loaded and ready!');
+</script>

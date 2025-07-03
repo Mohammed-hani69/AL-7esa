@@ -295,6 +295,9 @@ a:hover {
         </div>
     </div>
 
+    <!-- تضمين Loading Indicators -->
+    {% include 'components/loading_indicators.html' %}
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
@@ -310,13 +313,52 @@ a:hover {
         phoneInputs.forEach(input => {
             input.addEventListener('blur', function() {
                 let phone = this.value.trim();
-                if (phone && !phone.startsWith('+')) {
-                    if (phone.startsWith('0')) {
-                        phone = '+20' + phone.substring(1);
-                    } else {
-                        phone = '+20' + phone;
-                    }
-                    this.value = phone;
+                this.value = phone;
+            });
+        });
+        
+        const registerForm = document.getElementById('registerForm');
+        const submitBtn = document.getElementById('registerSubmit');
+        
+        // تطبيق loading على نموذج التسجيل
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                if (window.enhancedLoading) {
+                    window.enhancedLoading.showButtonLoading(submitBtn, {
+                        text: 'جاري إنشاء الحساب...',
+                        type: 'spinner'
+                    });
+                    
+                    // إظهار loading للصفحة كاملة
+                    setTimeout(() => {
+                        window.enhancedLoading.showPageLoading({
+                            text: 'جاري إنشاء حسابك...',
+                            type: 'dots'
+                    });
+                }, 500);
+                }
+            });
+        }
+        
+        // تطبيق loading على روابط تسجيل الدخول
+        document.querySelectorAll('a[href*="login"]').forEach(link => {
+            link.setAttribute('data-loading', 'true');
+            link.setAttribute('data-loading-text', 'جاري تحميل صفحة تسجيل الدخول...');
+        });
+        
+        // تطبيق loading على اختيار نوع المستخدم
+        document.querySelectorAll('input[name="user_type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const form = document.querySelector('.auth-card');
+                if (window.enhancedLoading && form) {
+                    window.enhancedLoading.showSectionLoading(form, {
+                        text: 'جاري تحديث النموذج...',
+                        type: 'pulse'
+                    });
+                    
+                    setTimeout(() => {
+                        window.enhancedLoading.hideSectionLoading(form);
+                    }, 800);
                 }
             });
         });

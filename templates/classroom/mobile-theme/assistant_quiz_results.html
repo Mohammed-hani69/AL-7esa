@@ -108,6 +108,21 @@
             color: var(--text-secondary);
         }
 
+        /* شارة الفصل النشط */
+        .classroom-badge {
+            position: fixed;
+            top: 80px;
+            right: 15px;
+            background: var(--accent-color);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
+        }
+
         /* البطاقات الإحصائية */
         .stats-card {
             background: var(--surface-color);
@@ -388,6 +403,11 @@
                 </div>
             </header>
 
+            <!-- شارة الفصل النشط -->
+            <div class="classroom-badge">
+                {{ classroom.name }}
+            </div>
+
             <!-- القسم الإحصائي -->
             <div class="row g-3 mb-4">
                 <div class="col-lg-6">
@@ -480,21 +500,17 @@
 
         <!-- شريط التنقل السفلي للموبايل -->
         <nav class="bottom-navigation">
-            <a href="{{ url_for('assistant.assignments', classroom_id=classroom.id) }}" class="nav-pill">
-                <i class="fas fa-tasks"></i>
-                <span>الواجبات</span>
+            <a href="{{ url_for('assistant.dashboard') }}" class="nav-pill">
+                <i class="fas fa-home"></i>
+                <span>الرئيسية</span>
             </a>
-            <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="nav-pill active">
-                <i class="fas fa-question-circle"></i>
-                <span>الاختبارات</span>
+            <a href="#" class="nav-pill" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span>الإشعارات</span>
             </a>
-            <a href="{{ url_for('assistant.students', classroom_id=classroom.id) }}" class="nav-pill">
-                <i class="fas fa-users"></i>
-                <span>الطلاب</span>
-            </a>
-            <a href="{{ url_for('assistant.chat', classroom_id=classroom.id) }}" class="nav-pill">
-                <i class="fas fa-comments"></i>
-                <span>المحادثة</span>
+            <a href="{{ url_for('auth.profile') }}" class="nav-pill">
+                <i class="fas fa-user"></i>
+                <span>حسابي</span>
             </a>
         </nav>
     </div>
@@ -530,6 +546,11 @@
                 }
             });
         });
+        
+        // وظيفة الإشعارات
+        function showNotifications() {
+            // يمكن إضافة منطق الإشعارات هنا لاحقاً
+        }
     </script>
 </body>
 </html>

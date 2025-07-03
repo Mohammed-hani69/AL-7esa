@@ -1,83 +1,338 @@
-{% extends "layout.html" %}
-
-{% block title %}الاختبارات - {{ classroom.name }} - الحصة{% endblock %}
-
-{% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">الاختبارات - {{ classroom.name }}</h1>
-        <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-right me-1"></i>العودة للفصل
-        </a>
-    </div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الاختبارات - {{ classroom.name }} - الحصة</title>
     
-    <!-- Quizzes List -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">جميع الاختبارات</h6>
-        </div>
-        <div class="card-body">
-            {% if quizzes %}
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>العنوان</th>
-                                <th>الوقت المتاح</th>
-                                <th>المدة</th>
-                                <th>النقاط</th>
-                                <th>المحاولات</th>
-                                <th>تاريخ الإنشاء</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for quiz in quizzes %}
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: {{ primary_color|default('#6c63ff', true) }};
+            --accent-gradient: linear-gradient(120deg, {{ primary_color|default('#6c63ff', true) }}, {{ secondary_color|default('#4285f4', true) }});
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .innovative-sidebar {
+            background: var(--accent-gradient);
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 2rem;
+            height: calc(100vh - 4rem);
+            color: var(--surface-color);
+        }
+
+        .sidebar-brand {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .brand-text {
+            color: var(--surface-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--surface-color);
+            transform: translateX(-10px);
+        }
+
+        .nav-link i {
+            margin-left: 1rem;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .content-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background-color: rgba(108, 99, 255, 0.05);
+            border-bottom: none;
+            font-weight: 600;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        .badge {
+            padding: 0.5em 1em;
+            border-radius: 30px;
+            font-weight: 500;
+        }
+
+        .badge-info {
+            background-color: rgba(66, 133, 244, 0.1);
+            color: #4285f4;
+        }
+
+        .badge-warning {
+            background-color: rgba(251, 188, 5, 0.1);
+            color: #fbbc05;
+        }
+
+        .badge-success {
+            background-color: rgba(52, 168, 83, 0.1);
+            color: #34a853;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.875rem;
+            border-radius: var(--border-radius-sm);
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 250px 1fr;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .innovative-sidebar {
+                position: fixed;
+                right: -300px;
+                z-index: 1000;
+                transition: 0.3s ease;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .innovative-sidebar.show {
+                right: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                right: 1rem;
+                top: 1rem;
+                z-index: 1001;
+                background: var(--surface-color);
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: var(--box-shadow);
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <h1 class="brand-text">الحصة</h1>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.dashboard') }}" class="nav-link">
+                        <i class="fas fa-th-large"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="nav-link active">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>{{ classroom.name }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="content-section">
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">الاختبارات - {{ classroom.name }}</h1>
+                    <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right me-1"></i>العودة للفصل
+                    </a>
+                </div>
+            </div>
+
+            <!-- قائمة الاختبارات -->
+            <div class="content-section">
+                <h6 class="text-primary mb-4">جميع الاختبارات</h6>
+                {% if quizzes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                                 <tr>
-                                    <td>{{ quiz.title }}</td>
-                                    <td>
-                                        {% if quiz.start_time and quiz.end_time %}
-                                            <span class="badge badge-info">
-                                                {{ quiz.start_time.strftime('%Y-%m-%d') }}
-                                                إلى
-                                                {{ quiz.end_time.strftime('%Y-%m-%d') }}
-                                            </span>
-                                        {% elif quiz.end_time %}
-                                            <span class="badge badge-warning">
-                                                ينتهي: {{ quiz.end_time.strftime('%Y-%m-%d') }}
-                                            </span>
-                                        {% else %}
-                                            <span class="badge badge-success">متاح دائماً</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ quiz.duration_minutes }} دقيقة</td>
-                                    <td>{{ quiz.total_points }}</td>
-                                    <td>
-                                        <span class="badge badge-info">
-                                            {{ quiz.attempts|length }} محاولة
-                                        </span>
-                                    </td>
-                                    <td>{{ quiz.created_at.strftime('%Y-%m-%d') }}</td>
-                                    <td>
-                                        <a href="{{ url_for('assistant.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="btn btn-sm btn-warning">
-                                            <i class="fas fa-check-circle me-1"></i>تصحيح الإجابات المقالية
-                                        </a>
-                                        <a href="{{ url_for('assistant.quiz_results', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="btn btn-sm btn-info ms-1">
-                                            <i class="fas fa-users me-1"></i>نتائج الطلاب
-                                        </a>
-                                    </td>
+                                    <th>العنوان</th>
+                                    <th>الوقت المتاح</th>
+                                    <th>المدة</th>
+                                    <th>النقاط</th>
+                                    <th>المحاولات</th>
+                                    <th>تاريخ الإنشاء</th>
+                                    <th>الإجراءات</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-question-circle fa-3x text-gray-300 mb-3"></i>
-                    <h5>لا توجد اختبارات بعد</h5>
-                </div>
-            {% endif %}
-        </div>
+                            </thead>
+                            <tbody>
+                                {% for quiz in quizzes %}
+                                    <tr>
+                                        <td>{{ quiz.title }}</td>
+                                        <td>
+                                            {% if quiz.start_time and quiz.end_time %}
+                                                <span class="badge badge-info">
+                                                    {{ quiz.start_time.strftime('%Y-%m-%d') }}
+                                                    إلى
+                                                    {{ quiz.end_time.strftime('%Y-%m-%d') }}
+                                                </span>
+                                            {% elif quiz.end_time %}
+                                                <span class="badge badge-warning">
+                                                    ينتهي: {{ quiz.end_time.strftime('%Y-%m-%d') }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge badge-success">متاح دائماً</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ quiz.duration_minutes }} دقيقة</td>
+                                        <td>{{ quiz.total_points }}</td>
+                                        <td>
+                                            <span class="badge badge-info">
+                                                {{ quiz.attempts|length }} محاولة
+                                            </span>
+                                        </td>
+                                        <td>{{ quiz.created_at.strftime('%Y-%m-%d') }}</td>
+                                        <td>
+                                            <a href="{{ url_for('assistant.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-check-circle me-1"></i>تصحيح الإجابات المقالية
+                                            </a>
+                                            <a href="{{ url_for('assistant.quiz_results', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="btn btn-sm btn-info ms-1">
+                                                <i class="fas fa-users me-1"></i>نتائج الطلاب
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-question-circle fa-3x text-gray-300 mb-3"></i>
+                        <h5>لا توجد اختبارات بعد</h5>
+                        <p class="text-muted">سيظهر هنا الاختبارات عندما يقوم المعلم بإضافتها</p>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
     </div>
-</div>
-{% endblock %}
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && 
+                !$(e.target).closest('.innovative-sidebar').length && 
+                !$(e.target).closest('.mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -275,6 +275,7 @@
                         </div>
                         <div class="attempt-content">
                             <form method="POST" action="{{ url_for('teacher.grade_quiz_attempt', classroom_id=classroom.id, quiz_id=quiz.id, attempt_id=attempt.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 {% for answer in attempt.answers %}
                                     {% if answer.question.question_type in ['essay', 'short_answer'] and answer.points_earned is none %}
                                         <div class="question-item">

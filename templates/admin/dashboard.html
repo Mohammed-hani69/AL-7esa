@@ -449,10 +449,9 @@
         </main>
     </div>
 
-    <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+    <!-- تضمين Loading Indicators -->
+    {% include 'components/loading_indicators.html' %}
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // تفعيل زر القائمة للموبايل
@@ -554,6 +553,128 @@
                     }
                 }
             });
+            
+            // تطبيق skeleton loading للإحصائيات
+            document.querySelectorAll('.stats-card').forEach((card, index) => {
+                if (window.enhancedLoading) {
+                    window.enhancedLoading.showSkeleton(card, {
+                        lines: 2,
+                        avatar: false,
+                        animated: true
+                    });
+                    
+                    setTimeout(() => {
+                        window.enhancedLoading.hideSkeleton(card);
+                    }, 1200 + (index * 150));
+                }
+            });
+            
+            // تطبيق loading على الجداول
+            document.querySelectorAll('.data-table').forEach((table, index) => {
+                if (window.enhancedLoading) {
+                    setTimeout(() => {
+                        window.enhancedLoading.showSkeleton(table, {
+                            lines: 5,
+                            animated: true
+                        });
+                        
+                        setTimeout(() => {
+                            window.enhancedLoading.hideSkeleton(table);
+                        }, 800);
+                    }, index * 200);
+                }
+            });
+            
+            // تطبيق loading على الرسوم البيانية
+            document.querySelectorAll('.chart-container').forEach(chart => {
+                chart.classList.add('chart-loading');
+                
+                setTimeout(() => {
+                    chart.classList.remove('chart-loading');
+                }, 2000);
+            });
+            
+            // تطبيق loading على النماذج الإدارية
+            document.querySelectorAll('form[data-admin-form]').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showPageLoading({
+                            text: 'جاري معالجة العملية الإدارية...',
+                            type: 'bars'
+                        });
+                    }
+                });
+            });
+            
+            // تطبيق loading على أزرار الإجراءات
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const action = this.getAttribute('data-action');
+                    let loadingText = 'جاري تنفيذ العملية...';
+                    
+                    switch(action) {
+                        case 'approve':
+                            loadingText = 'جاري الموافقة...';
+                            break;
+                        case 'reject':
+                            loadingText = 'جاري الرفض...';
+                            break;
+                        case 'delete':
+                            loadingText = 'جاري الحذف...';
+                            break;
+                        case 'export':
+                            loadingText = 'جاري تصدير البيانات...';
+                            break;
+                    }
+                    
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showButtonLoading(this, {
+                            text: loadingText,
+                            type: 'spinner'
+                        });
+                    }
+                });
+            });
+            
+            // تطبيق loading على التصفية والبحث
+            const filterForm = document.querySelector('.filter-form');
+            if (filterForm) {
+                filterForm.addEventListener('submit', function(e) {
+                    if (window.enhancedLoading) {
+                        const resultsContainer = document.querySelector('.results-container');
+                        if (resultsContainer) {
+                            window.enhancedLoading.showSectionLoading(resultsContainer, {
+                                text: 'جاري تطبيق المرشحات...',
+                                type: 'wave'
+                            });
+                        }
+                    }
+                });
+            }
+            
+            // تطبيق loading على روابط التنقل
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.setAttribute('data-loading', 'true');
+                link.setAttribute('data-loading-text', 'جاري تحميل القسم...');
+            });
+            
+            // تطبيق loading للتحديث التلقائي
+            setInterval(() => {
+                const statsCards = document.querySelectorAll('.stats-card[data-auto-refresh]');
+                statsCards.forEach(card => {
+                    if (window.enhancedLoading) {
+                        window.enhancedLoading.showSectionLoading(card, {
+                            text: 'جاري تحديث البيانات...',
+                            type: 'pulse',
+                            timeout: 3000
+                        });
+                        
+                        setTimeout(() => {
+                            window.enhancedLoading.hideSectionLoading(card);
+                        }, 1000);
+                    }
+                });
+            }, 30000); // كل 30 ثانية
         });
     </script>
 </body>

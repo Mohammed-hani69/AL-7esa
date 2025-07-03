@@ -1,0 +1,875 @@
+/* ==============================================
+   نظام الإشعارات والرسائل الموحد
+   Unified Notifications & Messages System
+   ============================================== */
+
+/* متغيرات النظام المحسنة */
+:root {
+    --notification-accent: #6C63FF;
+    --notification-gradient: linear-gradient(120deg, #6C63FF, #FF6CAB);
+    --notification-surface: #FFFFFF;
+    --notification-background: #F4F7FE;
+    --notification-text-primary: #2D3748;
+    --notification-text-secondary: #718096;
+    --notification-border-radius: 12px;
+    --notification-shadow: 0 8px 32px rgba(108, 99, 255, 0.12);
+    --notification-transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    --notification-z-index: 9999;
+    
+    /* ألوان الحالات */
+    --notification-success: #10B981;
+    --notification-warning: #F59E0B;
+    --notification-error: #EF4444;
+    --notification-info: #3B82F6;
+    
+    /* ألوان خلفية خفيفة للحالات */
+    --notification-success-bg: rgba(16, 185, 129, 0.1);
+    --notification-warning-bg: rgba(245, 158, 11, 0.1);
+    --notification-error-bg: rgba(239, 68, 68, 0.1);
+    --notification-info-bg: rgba(59, 130, 246, 0.1);
+    
+    /* تحسينات جديدة */
+    --notification-mobile-padding: 16px;
+    --notification-desktop-padding: 20px;
+    --notification-border-width: 3px;
+    --notification-icon-size: 24px;
+    --notification-font-size-title: 14px;
+    --notification-font-size-message: 13px;
+    --notification-animation-duration: 0.3s;
+    --notification-backdrop-blur: 8px;
+}
+
+/* ==============================================
+   نظام الإشعارات المنبثقة (Toast Notifications)
+   ============================================== */
+
+/* حاوي الإشعارات الرئيسي */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 360px;
+    max-width: calc(100vw - 40px);
+    z-index: var(--notification-z-index);
+    pointer-events: none;
+}
+
+/* الإشعار الفردي */
+.notification-toast {
+    background: var(--notification-surface);
+    border-radius: var(--notification-border-radius);
+    box-shadow: var(--notification-shadow);
+    margin-bottom: 12px;
+    padding: var(--notification-desktop-padding);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    pointer-events: all;
+    position: relative;
+    overflow: hidden;
+    transform: translateX(-120%);
+    transition: var(--notification-transition);
+    min-height: 64px;
+}
+
+/* حالة الظهور */
+.notification-toast.show {
+    transform: translateX(0);
+}
+
+/* حالة الإخفاء */
+.notification-toast.hide {
+    transform: translateX(-120%);
+    opacity: 0;
+}
+
+/* شريط جانبي ملون حسب النوع */
+.notification-toast::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: var(--notification-border-width);
+    height: 100%;
+    border-radius: 0 var(--notification-border-radius) var(--notification-border-radius) 0;
+}
+
+/* أيقونة الإشعار */
+.notification-icon {
+    width: var(--notification-icon-size);
+    height: var(--notification-icon-size);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+    color: white;
+}
+
+/* محتوى الإشعار */
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-title {
+    font-weight: 600;
+    color: var(--notification-text-primary);
+    margin-bottom: 4px;
+    font-size: var(--notification-font-size-title);
+    line-height: 1.3;
+}
+
+.notification-message {
+    color: var(--notification-text-secondary);
+    font-size: var(--notification-font-size-message);
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* زر الإغلاق */
+.notification-close {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: var(--notification-text-secondary);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: var(--notification-transition);
+}
+
+.notification-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--notification-text-primary);
+}
+
+/* أنواع الإشعارات */
+.notification-toast.success::before {
+    background: var(--notification-success);
+}
+
+.notification-toast.success .notification-icon {
+    background: var(--notification-success);
+}
+
+.notification-toast.warning::before {
+    background: var(--notification-warning);
+}
+
+.notification-toast.warning .notification-icon {
+    background: var(--notification-warning);
+}
+
+.notification-toast.error::before {
+    background: var(--notification-error);
+}
+
+.notification-toast.error .notification-icon {
+    background: var(--notification-error);
+}
+
+.notification-toast.info::before {
+    background: var(--notification-info);
+}
+
+.notification-toast.info .notification-icon {
+    background: var(--notification-info);
+}
+
+/* شريط التقدم للإغلاق التلقائي */
+.notification-progress {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 var(--notification-border-radius) var(--notification-border-radius);
+}
+
+.notification-progress-bar {
+    height: 100%;
+    background: var(--notification-accent);
+    border-radius: inherit;
+    transition: width linear;
+}
+
+/* ==============================================
+   نظام الإشعارات في الصفحة (Flash Messages)
+   ============================================== */
+
+.flash-messages {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(50%);
+    width: 90%;
+    max-width: 500px;
+    z-index: calc(var(--notification-z-index) - 1);
+    pointer-events: none;
+}
+
+.flash-message {
+    background: var(--notification-surface);
+    border-radius: var(--notification-border-radius);
+    box-shadow: var(--notification-shadow);
+    margin-bottom: 12px;
+    padding: var(--notification-desktop-padding) 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    pointer-events: all;
+    position: relative;
+    overflow: hidden;
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: var(--notification-transition);
+}
+
+.flash-message.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.flash-message.hide {
+    transform: translateY(-20px);
+    opacity: 0;
+}
+
+/* رسائل Flash حسب النوع */
+.flash-message.success {
+    background: var(--notification-success-bg);
+    border-right: var(--notification-border-width) solid var(--notification-success);
+}
+
+.flash-message.warning {
+    background: var(--notification-warning-bg);
+    border-right: var(--notification-border-width) solid var(--notification-warning);
+}
+
+.flash-message.error,
+.flash-message.danger {
+    background: var(--notification-error-bg);
+    border-right: var(--notification-border-width) solid var(--notification-error);
+}
+
+.flash-message.info {
+    background: var(--notification-info-bg);
+    border-right: var(--notification-border-width) solid var(--notification-info);
+}
+
+.flash-message-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+.flash-message.success .flash-message-icon {
+    background: var(--notification-success);
+}
+
+.flash-message.warning .flash-message-icon {
+    background: var(--notification-warning);
+}
+
+.flash-message.error .flash-message-icon,
+.flash-message.danger .flash-message-icon {
+    background: var(--notification-error);
+}
+
+.flash-message.info .flash-message-icon {
+    background: var(--notification-info);
+}
+
+.flash-message-content {
+    flex: 1;
+    color: var(--notification-text-primary);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.flash-message-close {
+    background: none;
+    border: none;
+    color: var(--notification-text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--notification-transition);
+}
+
+.flash-message-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--notification-text-primary);
+}
+
+/* ==============================================
+   قوائم الإشعارات المنسدلة (Notification Panels)
+   ============================================== */
+
+.notifications-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.notifications-toggle {
+    background: none;
+    border: none;
+    position: relative;
+    padding: 8px;
+    border-radius: 50%;
+    transition: var(--notification-transition);
+    cursor: pointer;
+    color: var(--notification-text-secondary);
+}
+
+.notifications-toggle:hover {
+    background: rgba(108, 99, 255, 0.1);
+    color: var(--notification-accent);
+}
+
+.notifications-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: var(--notification-error);
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: scale(0);
+    transition: var(--notification-transition);
+}
+
+.notifications-badge.show {
+    transform: scale(1);
+}
+
+.notifications-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 360px;
+    max-width: 90vw;
+    background: var(--notification-surface);
+    border-radius: var(--notification-border-radius);
+    box-shadow: var(--notification-shadow);
+    z-index: var(--notification-z-index);
+    opacity: 0;
+    transform: translateY(-10px);
+    visibility: hidden;
+    transition: var(--notification-transition);
+    max-height: 500px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.notifications-panel.show {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+.notifications-header {
+    padding: var(--notification-desktop-padding) 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--notification-background);
+    border-radius: var(--notification-border-radius) var(--notification-border-radius) 0 0;
+}
+
+.notifications-title {
+    font-weight: 600;
+    color: var(--notification-text-primary);
+    margin: 0;
+    font-size: 16px;
+}
+
+.notifications-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.notification-action-btn {
+    background: none;
+    border: none;
+    color: var(--notification-accent);
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--notification-transition);
+    font-weight: 500;
+}
+
+.notification-action-btn:hover {
+    background: rgba(108, 99, 255, 0.1);
+}
+
+.notifications-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+.notification-item {
+    display: flex;
+    padding: var(--notification-desktop-padding) 20px;
+    gap: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: var(--notification-transition);
+    position: relative;
+}
+
+.notification-item:hover {
+    background: var(--notification-background);
+}
+
+.notification-item.unread {
+    background: rgba(108, 99, 255, 0.05);
+}
+
+.notification-item.unread::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background: var(--notification-accent);
+    border-radius: 50%;
+}
+
+.notification-item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+    color: white;
+    background: var(--notification-accent);
+}
+
+.notification-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-item-title {
+    font-weight: 600;
+    color: var(--notification-text-primary);
+    margin-bottom: 4px;
+    font-size: var(--notification-font-size-title);
+    line-height: 1.3;
+}
+
+.notification-item-text {
+    color: var(--notification-text-secondary);
+    font-size: var(--notification-font-size-message);
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.notification-item-time {
+    color: var(--notification-text-secondary);
+    font-size: 11px;
+}
+
+.notifications-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--notification-text-secondary);
+}
+
+.notifications-empty i {
+    font-size: 48px;
+    color: rgba(108, 99, 255, 0.3);
+    margin-bottom: 16px;
+}
+
+.notifications-footer {
+    padding: 12px 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    text-align: center;
+    background: var(--notification-background);
+    border-radius: 0 0 var(--notification-border-radius) var(--notification-border-radius);
+}
+
+.notifications-footer a {
+    color: var(--notification-accent);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: var(--notification-transition);
+}
+
+.notifications-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ==============================================
+   تصميم responsive للموبايل
+   ============================================== */
+
+@media (max-width: 768px) {
+    .notification-container {
+        width: calc(100vw - 20px);
+        left: 10px;
+        right: 10px;
+    }
+    
+    .notification-toast {
+        margin-bottom: 8px;
+        padding: var(--notification-mobile-padding);
+    }
+    
+    .notifications-panel {
+        width: calc(100vw - 20px);
+        left: -160px;
+        max-height: 70vh;
+    }
+    
+    .flash-messages {
+        width: calc(100vw - 20px);
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-container {
+        top: 10px;
+        width: calc(100vw - 16px);
+        left: 8px;
+    }
+    
+    .notification-toast {
+        padding: 10px;
+        gap: 8px;
+    }
+    
+    .notification-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+    
+    .notification-title {
+        font-size: 13px;
+    }
+    
+    .notification-message {
+        font-size: 12px;
+    }
+}
+
+/* ==============================================
+   الوضع الليلي (Dark Mode)
+   ============================================== */
+
+.dark-mode {
+    --notification-surface: #2D3748;
+    --notification-background: #1A202C;
+    --notification-text-primary: #F7FAFC;
+    --notification-text-secondary: #A0AEC0;
+    --notification-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    
+    --notification-success-bg: rgba(16, 185, 129, 0.2);
+    --notification-warning-bg: rgba(245, 158, 11, 0.2);
+    --notification-error-bg: rgba(239, 68, 68, 0.2);
+    --notification-info-bg: rgba(59, 130, 246, 0.2);
+}
+
+/* ==============================================
+   حركات وانتقالات متقدمة
+   ============================================== */
+
+@keyframes slideInFromLeft {
+    from {
+        transform: translateX(-120%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutToLeft {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-120%);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOutDown {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.notification-toast.animate-in {
+    animation: slideInFromLeft 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.notification-toast.animate-out {
+    animation: slideOutToLeft 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.flash-message.animate-in {
+    animation: fadeInUp 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.flash-message.animate-out {
+    animation: fadeOutDown 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.notifications-badge.pulse {
+    animation: pulse 2s infinite;
+}
+
+/* ==============================================
+   دعم خاص للنسخة المطبوعة
+   ============================================== */
+
+@media print {
+    .notification-container,
+    .flash-messages,
+    .notifications-panel {
+        display: none !important;
+    }
+}
+
+/* ==============================================
+   دعم accessibility
+   ============================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    .notification-toast,
+    .flash-message,
+    .notifications-panel,
+    .notifications-badge {
+        transition: none;
+        animation: none;
+    }
+}
+
+/* Focus states للتنقل بلوحة المفاتيح */
+.notification-close:focus,
+.flash-message-close:focus,
+.notification-action-btn:focus,
+.notifications-toggle:focus {
+    outline: 2px solid var(--notification-accent);
+    outline-offset: 2px;
+}
+
+/* دعم high contrast */
+@media (prefers-contrast: high) {
+    :root {
+        --notification-shadow: 0 0 0 2px rgba(0, 0, 0, 0.8);
+    }
+    
+    .notification-toast,
+    .flash-message,
+    .notifications-panel {
+        border: 2px solid var(--notification-text-primary);
+    }
+}
+
+/* ==============================================
+   تحسينات إضافية محسنة
+   ============================================== */
+
+/* تحسينات الشاشات الصغيرة جداً */
+@media (max-width: 320px) {
+    .notification-container {
+        top: 5px;
+        width: calc(100vw - 10px);
+        left: 5px;
+    }
+    
+    .notification-toast {
+        padding: 10px;
+        gap: 8px;
+        min-height: 50px;
+    }
+    
+    .notification-icon {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+    }
+    
+    .notification-title {
+        font-size: 12px;
+    }
+    
+    .notification-message {
+        font-size: 11px;
+        line-height: 1.3;
+    }
+}
+
+/* تحسينات للتفاعل اللمسي */
+@media (pointer: coarse) {
+    .notification-close,
+    .flash-message-close,
+    .notifications-toggle {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 10px;
+    }
+}
+
+/* تحسينات hover للشاشات غير اللمسية */
+@media (pointer: fine) {
+    .notification-close:hover,
+    .flash-message-close:hover {
+        background: rgba(0, 0, 0, 0.1);
+        transform: scale(1.1);
+    }
+    
+    .notification-toast:hover {
+        transform: translateX(-5px);
+        box-shadow: 0 12px 40px rgba(108, 99, 255, 0.15);
+    }
+}
+
+/* دعم إضافي للحركة */
+.notification-enhanced {
+    animation: slideInEnhanced 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideInEnhanced {
+    0% {
+        transform: translateX(-120%) rotate(-5deg);
+        opacity: 0;
+        scale: 0.8;
+    }
+    50% {
+        transform: translateX(10px) rotate(1deg);
+        opacity: 0.8;
+        scale: 1.05;
+    }
+    100% {
+        transform: translateX(0) rotate(0deg);
+        opacity: 1;
+        scale: 1;
+    }
+}
+
+/* تحسينات الأداء */
+.notification-toast,
+.flash-message,
+.notifications-panel {
+    will-change: transform, opacity;
+    contain: layout style paint;
+}
+
+/* تحسينات إمكانية الوصول المتقدمة */
+@media (prefers-reduced-motion: reduce) {
+    .notification-enhanced {
+        animation: none;
+    }
+    
+    .notification-toast,
+    .flash-message {
+        transition: opacity 0.2s ease;
+    }
+}
+
+/* دعم RTL محسن */
+[dir="rtl"] .notification-container {
+    left: auto;
+    right: 20px;
+}
+
+[dir="rtl"] .notification-toast {
+    transform: translateX(120%);
+}
+
+[dir="rtl"] .notification-toast.show {
+    transform: translateX(0);
+}
+
+[dir="rtl"] .notifications-panel {
+    left: auto;
+    right: -200px;
+}
+
+[dir="rtl"] .notifications-panel.show {
+    right: 0;
+}
+
+/* تحسينات الطباعة */
+@media print {
+    .notification-container,
+    .flash-messages,
+    .notifications-panel,
+    .mobile-notifications {
+        display: none !important;
+    }
+}

@@ -434,92 +434,106 @@
 
         /* تحسين المحادثة */
         .chat-container {
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: var(--border-radius-md);
-            padding: 1.5rem;
-            height: 400px;
+            display: flex;
+            flex-direction: column;
             overflow-y: auto;
+            padding: 1rem;
+            gap: 1rem;
             background: var(--surface-color);
+            height: 400px !important;
         }
 
-        #chat-message {
-            border-top-right-radius: var(--border-radius-sm);
-            border-bottom-right-radius: var (--border-radius-sm);
+        .chat-message {
+            max-width: 80%;
+            position: relative;
+            word-break: break-word;
         }
 
-        /* تحسين المودال */
-        .modal-content {
-            border: none;
-            border-radius: var(--border-radius-md);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-        }
-
-        .modal-header {
+        .message-sent {
+            align-self: flex-end;
             background: var(--accent-gradient);
-            padding: 1.5rem;
-            border-top-left-radius: var(--border-radius-md);
-            border-top-right-radius: var(--border-radius-md);
-        }
-
-        .modal-header .modal-title {
             color: white;
-            font-weight: 600;
+            border-radius: 1rem 1rem 0.25rem 1rem;
+            padding: 0.75rem 1rem;
+            margin-left: 20%;
         }
 
-        .modal-header .btn-close {
-            color: white;
-            box-shadow: none;
-        }
-
-        .modal-body {
-            padding: 2rem;
-        }
-
-        .modal-footer {
-            padding: 1.5rem;
-            border-top: 1px solid rgba(0,0,0,0.05);
-        }
-
-        /* تحسينات إضافية */
-        .date-separator {
-            position: relative;
-            text-align: center;
-            margin: 2rem 0;
-        }
-
-        .date-separator h6 {
-            background: var(--surface-color);
-            padding: 0 1rem;
-            display: inline-block;
-            position: relative;
-            z-index: 1;
-            color: var(--text-secondary);
-        }
-
-        .date-separator:before {
-            content: '';
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 50%;
-            height: 1px;
-            background: rgba(0,0,0,0.1);
-            z-index: 0;
-        }
-
-        /* تحسين عرض الملفات */
-        .file-card {
+        .message-received {
+            align-self: flex-start;
             background: var(--background-color);
-            border-radius: var(--border-radius-sm);
-            padding: 1.5rem;
-            transition: all 0.3s ease;
+            border-radius: 1rem 1rem 1rem 0.25rem;
+            padding: 0.75rem 1rem;
+            margin-right: 20%;
+            color: var(--text-primary);
         }
 
-        .file-card:hover {
-            background: var(--surface-color);
-            transform: translateY(-2px);
-            box-shadow: var(--box-shadow);
+        .chat-message .sender {
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
+
+        .chat-message .content {
+            position: relative;
+            line-height: 1.4;
+        }
+
+        .chat-message .timestamp {
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+
+        .message-status {
+            font-size: 0.7rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            justify-content: flex-end;
+            opacity: 0.8;
+        }
+
+        .teacher-message { border-right: 3px solid #4CAF50; }
+        .assistant-message { border-right: 3px solid #2196F3; }
+        .student-message { border-right: 3px solid #9C27B0; }
+
+        .typing-indicator {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        .typing-indicator.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-message .content.deleted {
+            color: #999;
+            font-style: italic;
+        }
+
+        .delete-message {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            border: none;
+            background: none;
+            padding: 0;
+            margin-left: 0.5rem;
+        }
+
+        .chat-message:hover .delete-message {
+            opacity: 1;
+        }
+
     </style>
 </head>
 <body>
@@ -908,13 +922,17 @@
                         <i class="fas fa-cog me-1"></i>إعدادات المحادثة
                     </a>
                 </div>
-                <div class="chat-container bg-light rounded p-3" style="height: 400px;">
+                <div class="chat-container bg-light rounded p-3" style="height: 400px;" id="messages-container">
                     <!-- Chat messages will be loaded here -->
+                </div>
+                <div class="typing-indicator" id="typing-indicator">
+                    يكتب الآن...
                 </div>
                 <div class="mt-3">
                     <div class="input-group">
-                        <input type="text" id="chat-message" class="form-control" placeholder="اكتب رسالتك هنا...">
-                        <button class="btn btn-primary" id="send-message">
+                        <input type="text" id="chat-message" class="form-control" placeholder="اكتب رسالتك هنا..."
+                               onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }">
+                        <button class="btn btn-primary" onclick="sendMessage()">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
@@ -1029,127 +1047,224 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script>
-        // تفعيل زر القائمة للموبايل
-        $('.mobile-toggle').on('click', function() {
-            $('.innovative-sidebar').toggleClass('show');
-        });
+        // Firebase تهيئة
+        const firebaseConfig = {
+            apiKey: "AIzaSyCB_GPRRlb6BCe1Mlv7rTIbtnD-Y3vpAj8",
+            authDomain: "al-7esa.firebaseapp.com",
+            projectId: "al-7esa",
+            storageBucket: "al-7esa.appspot.com",
+            messagingSenderId: "893628750909",
+            appId: "1:893628750909:web:3cd09924c12987b3ef9e54",
+            measurementId: "G-B026ZL6KXG"
+        };
 
-        // إغلاق السايدبار عند النقر خارجه
-        $(document).on('click', function(e) {
-            if ($(window).width() < 992 && 
-                !$(e.target).closest('.innovative-sidebar').length && 
-                !$(e.target).closest('.mobile-toggle').length) {
-                $('.innovative-sidebar').removeClass('show');
-            }
-        });
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // معلومات المستخدم الحالي
+        const currentUser = {
+            id: "{{ current_user.id }}",
+            name: "{{ current_user.name }}",
+            role: "{{ current_user.role }}"
+        };
+        const classroomId = "{{ classroom.id }}";
 
-        // نسخ كود الفصل
-        $('#copy-code-btn').on('click', function() {
-            const code = $('#classroom-code').text().trim();
-            navigator.clipboard.writeText(code).then(() => {
-                $(this).html('<i class="fas fa-check me-1"></i>تم النسخ');
-                setTimeout(() => {
-                    $(this).html('<i class="fas fa-copy me-1"></i>نسخ الكود');
+        // المراجع
+        const messagesRef = db.collection("classrooms").doc(classroomId).collection("messages");
+        const typingRef = db.collection("classrooms").doc(classroomId).collection("typing");
+        const presenceRef = db.collection("classrooms").doc(classroomId).collection("presence");
+
+        // تنسيق التوقيت
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return '';
+            const date = timestamp.toDate();
+            return new Intl.DateTimeFormat('ar-SA', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            }).format(date);
+        }
+
+        // إرسال رسالة
+        function sendMessage() {
+            const messageInput = document.getElementById('chat-message');
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            const messageRef = messagesRef.doc();
+            const messageData = {
+                id: messageRef.id,
+                userId: currentUser.id,
+                name: currentUser.name,
+                role: currentUser.role,
+                text: text,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                status: 'sending',
+                seen: {}
+            };
+            
+            messageRef.set(messageData)
+                .then(() => {
+                    messageInput.value = '';
+                    messageRef.update({ status: 'sent' });
+                })
+                .catch((error) => {
+                    console.error("Error sending message:", error);
+                    messageRef.update({ status: 'failed' });
+                });
+        }
+
+        // عرض الرسائل
+        function displayMessage(data, messageId) {
+            const chatContainer = document.getElementById('messages-container');
+            if (!chatContainer) return;
+            
+            const messageEl = document.createElement('div');
+            messageEl.className = 'chat-message';
+            messageEl.setAttribute('data-message-id', messageId);
+
+            const isOwnMessage = data.userId === currentUser.id;
+            messageEl.classList.add(isOwnMessage ? 'message-sent' : 'message-received');
+
+            const roleClass = data.role === 'TEACHER' ? 'teacher-message' : 
+                            data.role === 'ASSISTANT' ? 'assistant-message' : 'student-message';
+            messageEl.classList.add(roleClass);
+
+            // Check if user can delete the message (owner, teacher, or assistant)
+            const canDelete = isOwnMessage || currentUser.role === 'TEACHER' || currentUser.role === 'ASSISTANT';
+            
+            const deleteButton = canDelete && !data.isDeleted ? `
+                <button class="btn btn-sm text-danger delete-message" onclick="deleteMessage('${messageId}')">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            ` : '';
+
+            const messageContent = data.isDeleted ? 
+                '<span class="text-muted">تم حذف هذه الرسالة</span>' : 
+                data.text;
+
+            const statusIcon = isOwnMessage ? `
+                <div class="message-status">
+                    ${data.status === 'sending' ? '<i class="fas fa-clock"></i>' :
+                      data.status === 'sent' ? '<i class="fas fa-check"></i>' :
+                      data.status === 'failed' ? '<i class="fas fa-exclamation-circle"></i>' : ''}
+                    ${Object.keys(data.seen || {}).length > 0 ? '<i class="fas fa-check-double"></i>' : ''}
+                </div>` : '';
+
+            messageEl.innerHTML = `
+                <div class="sender">
+                    <span class="role ${roleClass}">${data.name}</span>
+                    <span class="timestamp">${formatTimestamp(data.timestamp)}</span>
+                    ${deleteButton}
+                </div>
+                <div class="content">
+                    ${messageContent}
+                    ${statusIcon}
+                </div>
+            `;
+
+            chatContainer.appendChild(messageEl);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // الاستماع للرسائل
+        messagesRef.orderBy('timestamp', 'asc')
+            .onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === "added") {
+                        displayMessage(change.doc.data(), change.doc.id);
+                    }
+                });
+            });
+
+        // تتبع حالة الكتابة
+        let typingTimeout;
+        const messageInput = document.getElementById('chat-message');
+
+        if (messageInput) {
+            messageInput.addEventListener('input', () => {
+                clearTimeout(typingTimeout);
+                
+                typingRef.doc(currentUser.id).set({
+                    userId: currentUser.id,
+                    name: currentUser.name,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                typingTimeout = setTimeout(() => {
+                    typingRef.doc(currentUser.id).delete();
                 }, 2000);
             });
-        });
+        }
 
-        // تبديل أنواع المحتوى في النموذج
-        $('#content_type').on('change', function() {
-            $('.content-input').addClass('d-none');
-            const selectedType = $(this).val();
-            const fileInput = $('#content_file');
-            const fileTypesInfo = $('.file-types-info');
-            
-            if (selectedType === 'text') {
-                $('#text-content').removeClass('d-none');
-            } else {
-                $('#file-content').removeClass('d-none');
-                
-                // تحديد أنواع الملفات المسموح بها حسب النوع
-                switch (selectedType) {
-                    case 'image':
-                        fileInput.attr('accept', 'image/*');
-                        fileTypesInfo.text('الملفات المسموحة: JPG, JPEG, PNG, GIF, WEBP');
-                        break;
-                    case 'video':
-                        fileInput.attr('accept', 'video/*');
-                        fileTypesInfo.text('الملفات المسموحة: MP4, WEBM, MOV');
-                        break;
-                    case 'audio':
-                        fileInput.attr('accept', 'audio/*');
-                        fileTypesInfo.text('الملفات المسموحة: MP3, WAV, OGG');
-                        break;
-                    case 'file':
-                        fileInput.attr('accept', '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar');
-                        fileTypesInfo.text('الملفات المسموحة: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, RAR');
-                        break;
-                }
-            }
-        });
-
-        // التحقق من نوع الملف
-        $('#content_file').on('change', function() {
-            const file = this.files[0];
-            const fileType = file.type;
-            const contentType = $('#content_type').val();
-            
-            let isValid = true;
-            const validTypes = {
-                'image': ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-                'video': ['video/mp4', 'video/webm', 'video/quicktime'],
-                'audio': ['audio/mpeg', 'audio/wav', 'audio/ogg'],
-                'file': ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                        'text/plain', 'application/zip', 'application/x-rar-compressed']
-            };
-
-            if (contentType !== 'text' && validTypes[contentType]) {
-                isValid = validTypes[contentType].includes(fileType);
-            }
-
-            if (!isValid) {
-                alert('نوع الملف غير مسموح به');
-                this.value = '';
-            }
-        });
-
-        // التحقق من النموذج قبل الإرسال
-        $('form[action*="add_content"]').on('submit', function(e) {
-            const contentType = $('#content_type').val();
-            const titleInput = $('input[name="title"]');
-            
-            if (!titleInput.val().trim()) {
+        // إضافة مستمعي الأحداث
+        document.getElementById('send-message')?.addEventListener('click', sendMessage);
+        messageInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                alert('يرجى إدخال عنوان المحتوى');
-                return;
+                sendMessage();
             }
-
-            if (contentType === 'text') {
-                const contentText = $('textarea[name="content_text"]');
-                if (!contentText.val().trim()) {
-                    e.preventDefault();
-                    alert('يرجى إدخال المحتوى النصي');
-                    return;
-                }
-            } else {
-                const fileInput = $('input[name="content_file"]');
-                if (!fileInput[0].files.length) {
-                    e.preventDefault();
-                    alert('يرجى اختيار ملف للرفع');
-                    return;
-                }
-            }
-            
-            const submitBtn = $(this).find('button[type="submit"]');
-            submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري الرفع...');
-            submitBtn.prop('disabled', true);
         });
+
+        // تحديث حالة الاتصال
+        updateOnlineStatus(true);
+        window.addEventListener('beforeunload', () => {
+            updateOnlineStatus(false);
+        });
+
+        function updateOnlineStatus(online = true) {
+            presenceRef.doc(currentUser.id).set({
+                userId: currentUser.id,
+                name: currentUser.name,
+                role: currentUser.role,
+                online,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        // حذف الرسائل
+        function deleteMessage(messageId) {
+            if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
+
+            const messageRef = db.collection("classrooms")
+                .doc(classroomId)
+                .collection("messages")
+                .doc(messageId);
+
+            messageRef.get().then(doc => {
+                if (!doc.exists) {
+                    console.error('Message not found');
+                    return;
+                }
+
+                const data = doc.data();
+                // Only allow deletion if user is message owner, teacher, or assistant
+                if (data.userId !== currentUser.id && 
+                    currentUser.role !== 'TEACHER' && 
+                    currentUser.role !== 'ASSISTANT') {
+                    alert('غير مصرح لك بحذف هذه الرسالة');
+                    return;
+                }
+
+                // Mark message as deleted
+                messageRef.update({
+                    isDeleted: true,
+                    deletedBy: currentUser.id,
+                    deletedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(error => {
+                    console.error('Error deleting message:', error);
+                    alert('حدث خطأ أثناء حذف الرسالة');
+                });
+            }).catch(error => {
+                console.error('Error getting message:', error);
+                alert('حدث خطأ أثناء حذف الرسالة');
+            });
+        }
+
     </script>
 </body>
 </html>

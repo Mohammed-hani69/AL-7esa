@@ -1,115 +1,333 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نتائج الاختبار - {{ quiz.title }} - {{ classroom.name }} - الحصة</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Bootstrap RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+            --success-color: #1cc88a;
+            --info-color: #36b9cc;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+            --light-color: #f8f9fc;
+            --dark-color: #5a5c69;
+            --sidebar-dark-bg: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+        }
 
-{% block title %}نتائج الاختبار - {{ quiz.title }} - {{ classroom.name }}{% endblock %}
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f8f9fc;
+        }
 
-{% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">نتائج الاختبار - {{ quiz.title }}</h1>
-            <p class="text-muted mb-0">{{ classroom.name }}</p>
-        </div>
-        <div>
-            <a href="{{ url_for('assistant.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="btn btn-warning me-2">
-                <i class="fas fa-check-circle me-1"></i>تصحيح الإجابات المقالية
-            </a>
-            <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-right me-1"></i>العودة للاختبارات
-            </a>
-        </div>
-    </div>
+        #wrapper {
+            display: flex;
+        }
 
-    <!-- Quiz Info -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">إجمالي المحاولات</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ attempts|length }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-dark-bg);
+            min-height: 100vh;
+            transition: width 0.15s ease-in-out;
+        }
+
+        .sidebar-brand {
+            padding: 1.5rem 1rem;
+            color: white;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            padding: 0.5rem 1rem;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.35rem;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .nav-link:hover {
+            color: white;
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-link i {
+            margin-left: 0.5rem;
+        }
+
+        /* Content Styles */
+        #content {
+            flex: 1;
+            padding: 1.5rem;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #e3e6f0;
+            padding: 1rem 1.25rem;
+        }
+
+        .border-left-primary {
+            border-left: 0.25rem solid var(--primary-color);
+        }
+
+        .border-left-success {
+            border-left: 0.25rem solid var(--success-color);
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            background-color: #f8f9fc;
+            border-top: none;
+            font-weight: 700;
+        }
+
+        .badge {
+            padding: 0.5em 0.75em;
+            font-size: 0.75em;
+        }
+
+        .badge-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .badge-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            border-color: var(--warning-color);
+            color: white;
+        }
+
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+
+        .text-success {
+            color: var(--success-color) !important;
+        }
+
+        .text-gray-300 {
+            color: #dddfeb !important;
+        }
+
+        .text-gray-800 {
+            color: #5a5c69 !important;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100px;
+            }
+            
+            .sidebar.collapsed {
+                width: 0;
+                display: none;
+            }
+            
+            #content {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-brand">
+                <h2>الحصة</h2>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-item">
+                    <a href="{{ url_for('assistant.dashboard') }}" class="nav-link">
+                        <i class="fas fa-fw fa-tachometer-alt"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ url_for('assistant.classroom', classroom_id=classroom.id) }}" class="nav-link">
+                        <i class="fas fa-fw fa-chalkboard"></i>
+                        <span>{{ classroom.name }}</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="nav-link">
+                        <i class="fas fa-fw fa-question-circle"></i>
+                        <span>الاختبارات</span>
+                    </a>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">متوسط الدرجات</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {% if attempts %}
-                                    {{ "%.1f"|format(attempts|map(attribute='score')|sum / attempts|length) }}/{{ quiz.total_points }}
-                                {% else %}
-                                    0/{{ quiz.total_points }}
-                                {% endif %}
+
+        <!-- Content -->
+        <div id="content">
+            <div class="container-fluid">
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h1 class="h3 mb-0 text-gray-800">نتائج الاختبار - {{ quiz.title }}</h1>
+                        <p class="text-muted mb-0">{{ classroom.name }}</p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('assistant.grade_quiz', classroom_id=classroom.id, quiz_id=quiz.id) }}" class="btn btn-warning me-2">
+                            <i class="fas fa-check-circle me-1"></i>تصحيح الإجابات المقالية
+                        </a>
+                        <a href="{{ url_for('assistant.quizzes', classroom_id=classroom.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right me-1"></i>العودة للاختبارات
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quiz Info -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">إجمالي المحاولات</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ attempts|length }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                    </div>
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">متوسط الدرجات</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {% if attempts %}
+                                                {{ "%.1f"|format(attempts|map(attribute='score')|sum / attempts|length) }}/{{ quiz.total_points }}
+                                            {% else %}
+                                                0/{{ quiz.total_points }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Student Attempts -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">محاولات الطلاب</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if attempts %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>اسم الطالب</th>
+                                            <th>وقت البدء</th>
+                                            <th>وقت الانتهاء</th>
+                                            <th>الدرجة</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for attempt in attempts %}
+                                            <tr>
+                                                <td>{{ attempt.enrollment.user.name }}</td>
+                                                <td>{{ attempt.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                <td>{{ attempt.end_time.strftime('%Y-%m-%d %H:%M') if attempt.end_time else 'لم ينته بعد' }}</td>
+                                                <td>
+                                                    {% if attempt.is_completed %}
+                                                        <span class="badge badge-success">{{ attempt.score }}/{{ quiz.total_points }}</span>
+                                                    {% else %}
+                                                        <span class="badge badge-warning">جاري الحل</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if attempt.is_completed %}
+                                                        <a href="{{ url_for('assistant.view_student_attempt', classroom_id=classroom.id, quiz_id=quiz.id, attempt_id=attempt.id) }}" 
+                                                           class="btn btn-sm btn-info">
+                                                            <i class="fas fa-eye me-1"></i>عرض الإجابات
+                                                        </a>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                                <h5>لا توجد محاولات بعد</h5>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Student Attempts -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">محاولات الطلاب</h6>
-        </div>
-        <div class="card-body">
-            {% if attempts %}
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>اسم الطالب</th>
-                                <th>وقت البدء</th>
-                                <th>وقت الانتهاء</th>
-                                <th>الدرجة</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for attempt in attempts %}
-                                <tr>
-                                    <td>{{ attempt.enrollment.user.name }}</td>
-                                    <td>{{ attempt.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
-                                    <td>{{ attempt.end_time.strftime('%Y-%m-%d %H:%M') if attempt.end_time else 'لم ينته بعد' }}</td>
-                                    <td>
-                                        {% if attempt.is_completed %}
-                                            <span class="badge badge-success">{{ attempt.score }}/{{ quiz.total_points }}</span>
-                                        {% else %}
-                                            <span class="badge badge-warning">جاري الحل</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if attempt.is_completed %}
-                                            <a href="{{ url_for('assistant.view_student_attempt', classroom_id=classroom.id, quiz_id=quiz.id, attempt_id=attempt.id) }}" 
-                                               class="btn btn-sm btn-info">
-                                                <i class="fas fa-eye me-1"></i>عرض الإجابات
-                                            </a>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
-                    <h5>لا توجد محاولات بعد</h5>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-{% endblock %}
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile sidebar toggle
+            const sidebarToggle = document.createElement('button');
+            sidebarToggle.classList.add('btn', 'btn-link', 'd-md-none', 'rounded-circle', 'mr-3');
+            sidebarToggle.innerHTML = '<i class="fa fa-bars"></i>';
+            document.querySelector('#content').prepend(sidebarToggle);
+
+            sidebarToggle.addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.toggle('collapsed');
+            });
+        });
+    </script>
+</body>
+</html>
