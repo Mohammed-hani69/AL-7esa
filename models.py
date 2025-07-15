@@ -3,10 +3,13 @@
 يحتوي على تعريف جميع الجداول وعلاقاتها
 """
 
-from datetime import datetime
-from app import db
+from datetime import datetime, timedelta
 from flask_login import UserMixin
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+
+# Initialize db here to avoid circular imports
+db = SQLAlchemy()
 
 # User roles
 class Role:
@@ -42,6 +45,7 @@ class User(UserMixin, db.Model):
     teacher_classrooms = db.relationship('Classroom', back_populates='teacher', foreign_keys='Classroom.teacher_id')
     assistant_classrooms = db.relationship('Classroom', back_populates='assistant', foreign_keys='Classroom.assistant_id')
     payments = db.relationship('Payment', back_populates='user')
+    live_streams = db.relationship('LiveStream', back_populates='teacher')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -128,6 +132,7 @@ class Classroom(db.Model):
     chat_participants = db.relationship('ChatParticipant', back_populates='classroom', cascade='all, delete-orphan')
     payments = db.relationship('Payment', back_populates='classroom', cascade='all, delete-orphan')
     chat_settings = db.relationship('ChatSettings', back_populates='classroom', uselist=False, cascade='all, delete-orphan')
+    live_streams = db.relationship('LiveStream', back_populates='classroom', cascade='all, delete-orphan')
 
     @property
     def interaction_rate(self):
@@ -580,3 +585,47 @@ class FAQ(db.Model):
 
     def __repr__(self):
         return f'<FAQ {self.question[:50]}...>'
+
+"""
+نموذج البث المباشر (LiveStream)
+يخزن جلسات البث المباشر للمدرسين
+"""
+class LiveStream(db.Model):
+    __tablename__ = 'live_stream'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    stream_url = db.Column(db.String(500), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    started_at = db.Column(db.DateTime, nullable=True)
+    ended_at = db.Column(db.DateTime, nullable=True)
+    auto_end_at = db.Column(db.DateTime, nullable=True)  # Auto-end after 24 hours
+    
+    # Relationships
+    classroom = db.relationship('Classroom', back_populates='live_streams')
+    teacher = db.relationship('User', back_populates='live_streams')
+    
+    @property
+    def is_expired(self):
+        """Check if the stream has expired (24 hours passed)"""
+        if self.auto_end_at and datetime.utcnow() > self.auto_end_at:
+            return True
+        return False
+    
+    @property
+    def is_currently_active(self):
+        """Check if the stream is currently active and not expired"""
+        return self.is_active and not self.is_expired and not self.ended_at
+    
+    def end_stream(self):
+        """Manually end the live stream"""
+        self.is_active = False
+        self.ended_at = datetime.utcnow()
+        db.session.commit()
+    
+    def __repr__(self):
+        return f'<LiveStream {self.title} - {self.classroom.name}>'

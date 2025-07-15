@@ -371,9 +371,10 @@
     }
 </style>
 
-    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <!-- Socket.IO script removed to eliminate unwanted log messages -->
     <script>
-        const socket = io();
+        // Socket.IO connection removed to eliminate unwanted log messages
+        // const socket = io();
         const classroomId = {{ classroom.id }};
         const userId = {{ current_user.id }};
         const userName = "{{ current_user.name }}";

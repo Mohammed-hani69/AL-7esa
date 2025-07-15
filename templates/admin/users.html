@@ -768,6 +768,90 @@
     .dataTables_wrapper .dataTables_paginate {
         margin-top: 1rem;
     }
+
+    /* تصميم أزرار التصدير */
+    .dropdown-menu {
+        border: 1px solid #E2E8F0;
+        border-radius: var(--border-radius-sm);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        padding: 0.5rem 0;
+        min-width: 280px;
+    }
+
+    .dropdown-item {
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+        border: none;
+        background: none;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        font-weight: 500;
+        min-width: 250px;
+    }
+
+    .dropdown-item:hover {
+        background-color: var(--background-color);
+        color: var(--text-primary);
+        transform: translateX(-3px);
+    }
+
+    .dropdown-item:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .dropdown-item:disabled:hover {
+        background: none;
+        transform: none;
+    }
+
+    .dropdown-divider {
+        margin: 0.5rem 1rem;
+        border-color: #E2E8F0;
+    }
+
+    /* تصميم Toast الإشعارات */
+    .toast {
+        border-radius: var(--border-radius-sm);
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        min-width: 350px;
+        max-width: 500px;
+    }
+
+    .toast-header {
+        background-color: var(--surface-color);
+        border-bottom: 1px solid #E2E8F0;
+        padding: 0.75rem 1rem;
+    }
+
+    .toast-body {
+        padding: 1rem;
+        color: var(--text-primary);
+        font-weight: 500;
+        line-height: 1.4;
+    }
+
+    /* تصميم التوست المحدث */
+    .toast {
+        background: linear-gradient(45deg, #059669, #10B981);
+        color: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
+        border: none;
+    }
+
+    .toast .toast-body {
+        font-weight: 500;
+        padding: 1rem;
+        color: white;
+    }
+
+    .btn-close-white {
+        filter: invert(1);
+    }
+
     </style>
 </head>
 <body>
@@ -998,9 +1082,33 @@
             <div class="card shadow">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="card-title">قائمة المستخدمين ({{ users.total }})</h6>
-                    <button class="btn btn-success btn-sm" id="exportUsers">
-                        <i class="fas fa-file-excel"></i> تصدير لملف Excel
-                    </button>
+                    <div class="btn-group">
+                        <button class="btn btn-success btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-excel"></i> تصدير التقارير
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" id="exportUsersCSV" href="users/export/excel" >
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-file-csv text-primary me-2"></i>
+                                    <div>
+                                        <div>تصدير CSV</div>
+                                        <small class="text-muted">ملف بسيط للبيانات الأساسية</small>
+                                    </div>
+                                </div>
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" id="exportUsersExcel" href="users/export/excel"  
+                                   title="تقرير مفصل يحتوي على الملخص التنفيذي، بيانات المستخدمين التفصيلية، والرسوم البيانية التحليلية">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-file-excel text-success me-2"></i>
+                                    <div>
+                                        <div>تقرير Excel مفصل</div>
+                                        <small class="text-muted">3 أوراق: ملخص + بيانات + تحليلات</small>
+                                    </div>
+                                </div>
+                            </a></li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -1359,13 +1467,28 @@
         </div>
     </div>
 
+    <!-- Toast الإشعارات -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+        <div id="exportToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toastMessage">
+                    تم تصدير البيانات بنجاح!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
     <script>
+        console.log('Script loaded successfully');
+        
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
             // إعداد القائمة المتنقلة
             const mobileToggle = document.querySelector('.mobile-toggle');
             const mobileNav = document.querySelector('.mobile-nav');
@@ -1445,52 +1568,187 @@
                 }
             });
 
+            // تصدير البيانات إلى ملف CSV
+            $('#exportUsersCSV').on('click', function(e) {
+                console.log('CSV button clicked');
+                e.preventDefault();
+                exportUserData('csv');
+            });
+
             // تصدير البيانات إلى ملف Excel
-            $('#exportUsers').on('click', function() {
-                const rows = [];
+            $('#exportUsersExcel').on('click', function(e) {
+                console.log('Excel button clicked');
+                e.preventDefault();
+                exportUserData('excel');
+            });
+
+            // دالة تصدير البيانات
+            function exportUserData(format) {
+                const btn = format === 'excel' ? $('#exportUsersExcel') : $('#exportUsersCSV');
+                const originalHtml = btn.html();
+                
+                // تعطيل الزر وإظهار مؤشر التحميل
+                btn.prop('disabled', true);
+                btn.html('<i class="fas fa-spinner fa-spin"></i> جاري التصدير...');
+                
+                try {
+                    // الحصول على الفلاتر الحالية من النموذج
+                    const currentFilters = {};
+                    const roleFilter = $('select[name="role"]').val();
+                    const statusFilter = $('select[name="status"]').val();
+                    const searchFilter = $('input[name="search"]').val();
+                    
+                    if (roleFilter) currentFilters.role = roleFilter;
+                    if (statusFilter) currentFilters.status = statusFilter;
+                    if (searchFilter) currentFilters.search = searchFilter;
+                    
+                    // بناء URL التصدير
+                    const baseUrl = format === 'excel' ? '/admin/users/export/excel' : '/admin/users/export';
+                    const exportUrl = baseUrl + '?' + new URLSearchParams(currentFilters).toString();
+                    
+                    if (format === 'excel') {
+                        // تصدير Excel - استخدام رابط مباشر
+                        const link = document.createElement('a');
+                        link.href = exportUrl;
+                        link.style.display = 'none';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // إظهار رسالة نجاح
+                        setTimeout(() => {
+                            btn.prop('disabled', false);
+                            btn.html('<i class="fas fa-check text-white"></i> تم التصدير بنجاح');
+                            showToast('تم تصدير تقرير المستخدمين المفصل بنجاح! يحتوي على 3 أوراق: الملخص التنفيذي، بيانات المستخدمين، والتحليلات البيانية 📊', 'success');
+                            
+                            setTimeout(() => {
+                                btn.html(originalHtml);
+                            }, 3000);
+                        }, 1000);
+                        
+                    } else {
+                        // تصدير CSV - استخدام AJAX
+                        $.ajax({
+                            url: exportUrl,
+                            method: 'GET',
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.success && response.data) {
+                                    // إنشاء ملف CSV
+                                    const csvData = convertToCSV(response.data);
+                                    downloadCSV(csvData, 'قائمة_المستخدمين.csv');
+                                    
+                                    // إظهار رسالة نجاح
+                                    btn.prop('disabled', false);
+                                    btn.html('<i class="fas fa-check text-white"></i> تم التصدير بنجاح');
+                                    showToast(`تم تصدير ${response.total} مستخدم إلى ملف CSV بنجاح! 📄`, 'success');
+                                    
+                                    setTimeout(() => {
+                                        btn.html(originalHtml);
+                                    }, 3000);
+                                } else {
+                                    throw new Error(response.error || 'فشل في جلب البيانات');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('خطأ في تصدير CSV:', error);
+                                showExportError(btn, originalHtml, 'حدث خطأ أثناء تصدير CSV');
+                            }
+                        });
+                    }
+                    
+                } catch (error) {
+                    console.error('خطأ في التصدير:', error);
+                    showExportError(btn, originalHtml, 'حدث خطأ أثناء التصدير');
+                }
+            }
+
+            // دالة تحويل البيانات إلى CSV
+            function convertToCSV(data) {
                 const headers = [
                     'الاسم',
-                    'رقم الهاتف',
+                    'رقم الهاتف', 
                     'البريد الإلكتروني',
                     'الصلاحية',
                     'تاريخ التسجيل',
-                    'الحالة'
+                    'الحالة',
+                    'تاريخ آخر تحديث',
+                    'العنوان'
                 ];
 
-                // إضافة عناوين الأعمدة
-                rows.push(headers.join('\t'));
-
-                // إضافة بيانات المستخدمين
-                usersTable.rows().every(function() {
-                    const data = this.data();
-                    const rowData = [
-                        $(data[0]).text().trim().replace(/[\r\n\t,]/g, ' '), // الاسم
-                        (data[1] || '').replace(/[\r\n\t,]/g, ' '), // رقم الهاتف
-                        (data[2] || '').replace(/[\r\n\t,]/g, ' '), // البريد الإلكتروني
-                        $(data[3]).text().trim().replace(/[\r\n\t,]/g, ' '), // الصلاحية
-                        (data[4] || '').replace(/[\r\n\t,]/g, ' '), // تاريخ التسجيل
-                        $(data[5]).text().trim().replace(/[\r\n\t,]/g, ' ') // الحالة
+                const csvArray = [headers];
+                
+                data.forEach(user => {
+                    const row = [
+                        user.name || '',
+                        user.phone || '',
+                        user.email || '',
+                        user.role || '',
+                        user.created_at || '',
+                        user.status || '',
+                        user.updated_at || '',
+                        user.address || ''
                     ];
-                    rows.push(rowData.join('\t'));
+                    csvArray.push(row);
                 });
 
-                // إنشاء Blob مع BOM لدعم العربية في Excel
-                const BOM = "\uFEFF";
-                const csvContent = BOM + rows.join('\r\n');
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+                // تحويل إلى نص CSV
+                return csvArray.map(row => 
+                    row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')
+                ).join('\r\n');
+            }
+
+            // دالة تحميل ملف CSV
+            function downloadCSV(csvContent, filename) {
+                const BOM = '\uFEFF'; // UTF-8 BOM for Arabic support
+                const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8' });
                 
-                // إنشاء رابط التحميل
-                const fileName = "قائمة_المستخدمين_" + new Date().toLocaleDateString('ar-SA').replace(/\//g, '-') + ".csv";
-                const link = document.createElement("a");
+                const link = document.createElement('a');
                 link.href = window.URL.createObjectURL(blob);
-                link.download = fileName;
+                link.download = filename;
+                link.style.display = 'none';
                 
-                // تنفيذ التحميل
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                
                 window.URL.revokeObjectURL(link.href);
-            });
+            }
+
+            // دالة عرض خطأ التصدير
+            function showExportError(btn, originalText, message = 'فشل في التصدير') {
+                btn.prop('disabled', false);
+                btn.html('<i class="fas fa-exclamation-triangle text-white"></i> فشل التصدير');
+                showToast(message, 'error');
+                
+                setTimeout(() => {
+                    btn.html(originalText);
+                }, 3000);
+            }
+
+            // دالة إظهار الإشعارات (مبسطة مثل صفحة الفصول)
+            function showToast(message, type = 'success') {
+                const toastElement = document.getElementById('exportToast');
+                const toastBody = document.getElementById('toastMessage');
+                
+                toastBody.textContent = message;
+                
+                // تغيير لون التوست حسب النوع
+                if (type === 'success') {
+                    toastElement.style.background = 'linear-gradient(45deg, #059669, #10B981)';
+                } else if (type === 'error') {
+                    toastElement.style.background = 'linear-gradient(45deg, #DC2626, #EF4444)';
+                } else if (type === 'warning') {
+                    toastElement.style.background = 'linear-gradient(45deg, #D97706, #F59E0B)';
+                }
+                
+                // إظهار التوست
+                const toast = new bootstrap.Toast(toastElement, {
+                    autohide: true,
+                    delay: 4000
+                });
+                toast.show();
+            }
 
             // تفعيل زر القائمة للموبايل
             const menuToggle = document.querySelector('.mobile-toggle');

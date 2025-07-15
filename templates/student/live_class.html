@@ -5,1292 +5,576 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>البث المباشر - {{ classroom.name }}</title>
     
-    <!-- الخطوط وملفات CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/unified-notifications.css') }}">
+    <!-- Bootstrap CSS (RTL) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --accent-color: {{ primary_color }};
-            --accent-gradient: linear-gradient(120deg, {{ primary_color }}, {{ secondary_color }});
-            --surface-color: #FFFFFF;
-            --background-color: #F4F7FE;
-            --text-primary: #2D3748;
-            --text-secondary: #718096;
-            --border-radius-lg: 24px;
-            --border-radius-md: 16px;
-            --border-radius-sm: 8px;
-            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        * {
+            font-family: 'Cairo', sans-serif;
         }
-
-        /* تنسيق عام */
+        
         body {
-            font-family: 'Tajawal', sans-serif;
-            background: var(--background-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             margin: 0;
             padding: 0;
-            min-height: 100vh;
         }
-
-        .app-container {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 2rem;
-            min-height: 100vh;
-            padding: 2rem;
-        }
-
-        /* تصميم الهيدر */
-        .mobile-header {
-            position: fixed;
-            top: 0;
-            right: 0;
-            left: 0;
-            z-index: 1000;
-            background: var(--accent-gradient);
-            padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            color: white;
-        }
-
-        .mobile-header-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: white;
-            text-decoration: none;
-        }
-
-        .mobile-header-logo {
-            width: 35px;
-            height: 35px;
-            border-radius: 8px;
-            background: white;
-            padding: 5px;
-            object-fit: contain;
-        }
-
-        .mobile-header-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        .innovative-sidebar {
-            background: var(--accent-gradient);
-            padding: 2rem;
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--box-shadow);
-            position: sticky;
-            top: 2rem;
-            height: fit-content;
-            color: var(--surface-color);
-        }
-
-        .sidebar-brand {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .brand-logo {
-            width: 60px;
-            height: 60px;
-            background: var(--surface-color);
-            border-radius: var(--border-radius-md);
-            padding: 10px;
-            margin-bottom: 1rem;
-        }
-
-        .brand-text {
-            color: var(--surface-color);
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .nav-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .nav-item {
-            margin-bottom: 1rem;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            color: rgba(255,255,255,0.8);
-            padding: 1rem;
-            border-radius: var(--border-radius-md);
-            transition: all 0.3s ease;
-            text-decoration: none;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255,255,255,0.1);
-            color: var(--surface-color);
-            transform: translateX(-10px);
-        }
-
-        .nav-link i {
-            margin-left: 1rem;
-            font-size: 1.2rem;
-            width: 24px;
-            text-align: center;
-        }
-
-        .main-content {
-            flex: 1;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            background: var(--surface-color);
-            padding: 1.5rem;
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--box-shadow);
-        }
-
-        .page-title {
-            font-size: 1.5rem;
-            color: var(--text-primary);
-            margin: 0;
-        }
-
-        /* تصميم البث المباشر */
-        .stream-container {
-            display: flex;
-            gap: 1.5rem;
-            height: calc(100vh - 7rem);
-            background: var(--surface-color);
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--box-shadow);
-            margin-bottom: 1rem;
-            padding: 1.5rem;
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            margin: 20px auto;
+            max-width: 1400px;
             overflow: hidden;
+            min-height: calc(100vh - 40px);
         }
-
-        .stream-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            max-width: 75%;
-            min-width: 0;
-        }
-
-        .stream-video {
-            flex: 1;
-            background-color: var(--dark-color);
-            border-radius: var(--border-radius-md);
+        
+        .header-section {
+            background: linear-gradient(135deg, {{ primary_color or '#667eea' }} 0%, {{ secondary_color or '#764ba2' }} 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
             position: relative;
-            overflow: hidden;
-            min-height: 400px;
-            box-shadow: var(--box-shadow);
         }
-
-        .stream-controls {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            padding: 1rem;
-            background-color: var(--surface-color);
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--box-shadow);
-        }
-
-        .stream-side {
-            width: 25%;
-            min-width: 300px;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .stream-control-btn i {
-            font-size: 1.5rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .stream-control-btn.mic {
-            background-color: var(--accent-color);
-            color: white;
-        }
-
-        .stream-control-btn.mic.off {
-            background-color: #dc3545;
-        }
-
-        .stream-control-btn.hand {
-            background-color: #ffc107;
-            color: white;
-        }
-
-        .stream-control-btn.hand.active {
-            background-color: #dc3545;
-            animation: handRaise 1s ease-in-out infinite;
-        }
-
-        @keyframes handRaise {
-            0% {
-                transform: scale(1) translateY(0);
-            }
-            50% {
-                transform: scale(1.1) translateY(-5px);
-            }
-            100% {
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        .participants-box {
-            background-color: var(--surface-color);
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--box-shadow);
-            overflow: hidden;
-        }
-
-        .participants-header {
-            padding: 1rem;
-            background-color: var(--accent-color);
-            color: white;
-            font-weight: 700;
-        }
-
-        .participants-list {
-            padding: 1rem;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .participant-item {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
-
-        .participant-item:last-child {
-            border-bottom: none;
-        }
-
-        .participant-name {
-            margin-right: 0.5rem;
-            font-weight: 500;
-        }
-
-        .participant-role {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .hand-raised {
-            margin-right: auto;
-            color: #ffc107;
-        }
-
-        .chat-box {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--surface-color);
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--box-shadow);
-            overflow: hidden;
-        }
-
-        .chat-header {
-            padding: 1rem;
-            background-color: var(--accent-color);
-            color: white;
-            font-weight: 700;
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 1rem;
-            overflow-y: auto;
-        }
-
-        .chat-input-container {
-            display: flex;
-            padding: 1rem;
-            background-color: rgba(0,0,0,0.05);
-            gap: 0.5rem;
-        }
-
-        .chat-input {
-            flex: 1;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: var(--border-radius-sm);
-            background: white;
-        }
-
-        .chat-message {
-            margin-bottom: 1rem;
-        }
-
-        .chat-message .sender {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .chat-message .sender .role {
-            font-size: 0.75rem;
-            font-weight: 400;
-            color: var(--text-secondary);
-            margin-right: 0.5rem;
-            padding: 0.25rem 0.5rem;
-            background: rgba(108, 99, 255, 0.1);
-            border-radius: var(--border-radius-sm);
-        }
-
-        .chat-message .content {
-            padding: 0.75rem 1rem;
-            background-color: rgba(0,0,0,0.05);
-            border-radius: var(--border-radius-sm);
-        }
-
-        .stream-status {
+        
+        .header-section::before {
+            content: '';
             position: absolute;
-            top: 1rem;
-            left: 1rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: var(--border-radius-sm);
-            background-color: #dc3545;
-            color: white;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" patternUnits="userSpaceOnUse" width="100" height="100"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="20" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="30" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        }
+        
+        .header-title {
+            font-size: 2.5rem;
             font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .content-section {
+            padding: 40px;
+        }
+        
+        .stream-container {
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .stream-container iframe {
+            background: #000;
+            border-radius: 15px;
+        }
+
+        .stream-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .stream-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .live-badge {
+            background: linear-gradient(45deg, #ff4757, #ff3838);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
             animation: pulse 2s infinite;
         }
-
-        .no-stream-message {
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 71, 87, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+            }
+        }
+        
+        .btn {
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-group .btn {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 25px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, {{ primary_color or '#667eea' }}, {{ secondary_color or '#764ba2' }});
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.6);
+        }
+        
+        .alert {
+            border-radius: 15px;
+            border: none;
+            padding: 20px;
+        }
+        
+        .badge {
+            border-radius: 20px;
+            padding: 8px 15px;
+        }
+        
+        .table {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .table th {
+            background: linear-gradient(135deg, {{ primary_color or '#667eea' }}, {{ secondary_color or '#764ba2' }});
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .table td {
+            border-color: #f1f3f4;
+            padding: 15px;
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 10px 20px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .stream-info-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-item {
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-item i {
+            width: 40px;
+            height: 40px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            height: 100%;
-            color: rgba(255,255,255,0.7);
+            border-radius: 50%;
+            margin-left: 15px;
+            color: white;
+        }
+        
+        .empty-state {
             text-align: center;
+            padding: 80px 20px;
+            color: #6c757d;
         }
-
-        .no-stream-message i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
         }
-
-        .remote-video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .meet-info {
-            text-align: center;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: var(--border-radius-md);
-            margin: 2rem;
-        }
-
-        .meet-info p {
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-
-        .meet-info .btn {
-            font-size: 1.1rem;
-            padding: 0.75rem 1.5rem;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        @media (max-width: 1200px) {
-            .app-container {
-                grid-template-columns: 250px 1fr;
-                padding: 1rem;
-            }
-        }
-
-        @media (max-width: 992px) {
-            .app-container {
-                grid-template-columns: 1fr;
+        
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+                border-radius: 15px;
+                min-height: calc(100vh - 20px);
             }
             
-            .innovative-sidebar {
-                position: fixed;
-                right: -300px;
-                z-index: 1000;
-                transition: 0.3s ease;
-                height: 100vh;
-                border-radius: 0;
+            .header-section {
+                padding: 20px 15px;
             }
             
-            .innovative-sidebar.show {
-                right: 0;
+            .header-title {
+                font-size: 1.8rem;
             }
             
-            .mobile-toggle {
-                display: block;
-                position: fixed;
-                right: 1rem;
-                top: 1rem;
-                z-index: 1001;
-                background: var(--surface-color);
-                border: none;
-                border-radius: 50%;
-                width: 50px;
-                height: 50px;
-                box-shadow: var(--box-shadow);
+            .content-section {
+                padding: 20px 15px;
             }
-
-            .stream-container {
-                flex-direction: column;
-                height: auto;
+            
+            .back-btn {
+                position: static;
+                display: inline-block;
+                margin-bottom: 15px;
             }
-
-            .stream-main {
-                max-width: 100%;
+            
+            .position-absolute.top-0.end-0 {
+                position: relative !important;
+                margin: 1rem !important;
             }
-
-            .stream-video {
-                height: 50vh;
-            }
-
-            .stream-side {
+            
+            .btn-group {
                 width: 100%;
             }
-        }
-
-        @media (max-width: 768px) {
-            .page-header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
             
-            .stream-controls {
-                flex-wrap: wrap;
-                justify-content: center;
+            .btn-group .btn {
+                flex: 1;
             }
         }
     </style>
 </head>
 <body>
-    <button class="mobile-toggle d-lg-none">
-        <i class="fas fa-bars"></i>
-    </button>
-
-    <div class="app-container">
-        <!-- السايدبار -->
-        <aside class="innovative-sidebar">
-            <div class="sidebar-brand">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
-                <h1 class="brand-text">الحصة</h1>
+    <div class="main-container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="back-btn">
+                <i class="fas fa-arrow-right me-2"></i>العودة للفصل
+            </a>
+            <div class="header-title">
+                <i class="fas fa-video me-3"></i>البث المباشر
             </div>
-            
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="{{ url_for('student.dashboard') }}" class="nav-link">
-                        <i class="fas fa-th-large"></i>
-                        <span>لوحة التحكم</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="nav-link">
-                        <i class="fas fa-chalkboard"></i>
-                        <span>الفصل</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link active">
-                        <i class="fas fa-video"></i>
-                        <span>البث المباشر</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('student.assignments', classroom_id=classroom.id) }}" class="nav-link">
-                        <i class="fas fa-tasks"></i>
-                        <span>الواجبات</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('student.quizzes', classroom_id=classroom.id) }}" class="nav-link">
-                        <i class="fas fa-question-circle"></i>
-                        <span>الاختبارات</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
-                        <i class="fas fa-user-circle"></i>
-                        <span>الملف الشخصي</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>تسجيل الخروج</span>
-                    </a>
-                </li>
-            </ul>
-        </aside>
+            <div class="header-subtitle">{{ classroom.name }}</div>
+        </div>
 
-        <!-- المحتوى الرئيسي -->
-        <main class="main-content">
-            <div class="page-header">
-                <h1 class="page-title">{{ classroom.name }} - البث المباشر</h1>
-                <div class="d-flex gap-2">
-                    <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-right me-1"></i>
-                        العودة للفصل
-                    </a>
-                </div>
-            </div>
+        <!-- Content Section -->
+        <div class="content-section">
 
-            <div class="stream-container">
-                <div class="stream-main">
-                    <div class="stream-video">
-                        <div id="no-stream" class="no-stream-message">
-                            <i class="fas fa-video-slash"></i>
-                            <h4>لا يوجد بث مباشر الآن</h4>
-                            <p>انتظر حتى يبدأ المعلم البث المباشر.</p>
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
-                        
-                        <div id="active-stream" class="d-none" style="width: 100%; height: 100%;">
-                            <div class="stream-status">مباشر</div>
-                            <div id="meet-info" class="meet-info">
-                                <p>البث المباشر نشط الآن. اضغط على الزر أدناه للانضمام:</p>
-                                <a id="meet-link" href="#" target="_blank" class="btn btn-primary mt-2">
-                                    <i class="fas fa-video me-1"></i>
-                                    الانضمام للبث المباشر
-                                </a>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="row">
+                <div class="col-12">
+                    {% if active_stream %}
+                        <!-- Active Live Stream -->
+                        <div class="stream-card card shadow-lg border-0">
+                            <div class="card-header bg-primary text-white">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h4 class="card-title mb-0">
+                                        <i class="fas fa-broadcast-tower me-2"></i>
+                                        <span class="live-badge me-2">مباشر</span>
+                                        {{ active_stream.title }}
+                                    </h4>
+                                    <small class="text-light">
+                                        بدأ: {{ active_stream.created_at.strftime('%H:%M') }}
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <!-- Stream Embed Area -->
+                                <div class="stream-container position-relative">
+                                    <div class="ratio ratio-16x9">
+                                        <iframe 
+                                            src="{{ active_stream.stream_url }}" 
+                                            title="{{ active_stream.title }}"
+                                            frameborder="0" 
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                            allowfullscreen
+                                            class="rounded-bottom">
+                                        </iframe>
+                                    </div>
+                                    
+                                    <!-- Stream Controls Overlay -->
+                                    <div class="position-absolute top-0 end-0 m-3">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ active_stream.stream_url }}" target="_blank" class="btn btn-light btn-sm">
+                                                <i class="fas fa-external-link-alt"></i> فتح في تبويب جديد
+                                            </a>
+                                            <button type="button" class="btn btn-light btn-sm" onclick="toggleFullscreen()">
+                                                <i class="fas fa-expand"></i> ملء الشاشة
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Stream Info -->
+                                <div class="p-4">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <h5 class="mb-3">حول هذا البث</h5>
+                                            {% if active_stream.description %}
+                                                <p class="text-muted mb-3">{{ active_stream.description }}</p>
+                                            {% else %}
+                                                <p class="text-muted mb-3">لا يوجد وصف متاح.</p>
+                                            {% endif %}
+                                            
+                                            <div class="row text-center">
+                                                <div class="col-sm-4">
+                                                    <div class="info-item">
+                                                        <i class="fas fa-user-tie bg-primary"></i>
+                                                        <div>
+                                                            <h6 class="mb-0">المعلم</h6>
+                                                            <small class="text-muted">{{ classroom.teacher.name }}</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-4">
+                                                    <div class="info-item">
+                                                        <i class="fas fa-clock bg-success"></i>
+                                                        <div>
+                                                            <h6 class="mb-0">بدأ</h6>
+                                                            <small class="text-muted">{{ active_stream.created_at.strftime('%H:%M') }}</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-4">
+                                                    <div class="info-item">
+                                                        <i class="fas fa-calendar bg-info"></i>
+                                                        <div>
+                                                            <h6 class="mb-0">التاريخ</h6>
+                                                            <small class="text-muted">{{ active_stream.created_at.strftime('%Y-%m-%d') }}</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-4">
+                                            <div class="stream-info-card">
+                                                <h6 class="card-title">
+                                                    <i class="fas fa-info-circle me-2"></i>معلومات البث
+                                                </h6>
+                                                <div class="info-item">
+                                                    <strong>الحالة:</strong> 
+                                                    <span class="live-badge ms-1">مباشر</span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <strong>الفصل:</strong> {{ classroom.name }}
+                                                </div>
+                                                <div class="info-item">
+                                                    <strong>المادة:</strong> {{ classroom.subject }}
+                                                </div>
+                                                <div class="info-item">
+                                                    <strong>ينتهي تلقائياً:</strong> 
+                                                    <small class="text-muted">{{ active_stream.auto_end_at.strftime('%H:%M') }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="stream-side">
-                    <div class="participants-box">
-                        <div class="participants-header">
-                            <i class="fas fa-users me-1"></i>
-                            المشاركون
-                            <span id="participants-count" class="badge bg-light text-dark ms-1">0</span>
+                        
+                        <!-- Instructions -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card border-info">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-info">
+                                            <i class="fas fa-lightbulb me-2"></i>نصائح للمشاهدة
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <ul class="list-unstyled mb-0">
+                                                    <li><i class="fas fa-check text-success me-2"></i>تأكد من وجود اتصال إنترنت مستقر</li>
+                                                    <li><i class="fas fa-check text-success me-2"></i>استخدم السماعات للحصول على جودة صوت أفضل</li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <ul class="list-unstyled mb-0">
+                                                    <li><i class="fas fa-check text-success me-2"></i>يمكنك فتح البث في تبويب جديد للمشاهدة بشكل أفضل</li>
+                                                    <li><i class="fas fa-check text-success me-2"></i>سينتهي البث تلقائياً بعد 24 ساعة</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="participants-list" class="participants-list">
-                            <!-- Participants will be added here dynamically -->
+                        
+                    {% else %}
+                        <!-- No Active Stream -->
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="empty-state">
+                                    <i class="fas fa-video-slash"></i>
+                                    <h3 class="text-muted">لا يوجد بث مباشر متاح</h3>
+                                    <p class="text-muted mb-4">
+                                        لم يبدأ معلمك بثاً مباشراً بعد لهذا الفصل.
+                                        <br>ستتلقى إشعاراً عندما يبدأ بث مباشر جديد.
+                                    </p>
+                                    
+                                    <div class="row justify-content-center">
+                                        <div class="col-md-8">
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-bell me-2"></i>
+                                                <strong>ابق متابعاً!</strong> 
+                                                ستتلقى إشعاراً عندما يبدأ معلمك بثاً مباشراً.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn btn-primary">
+                                        <i class="fas fa-arrow-left me-2"></i>العودة للفصل
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="chat-box">
-                        <div class="chat-header">
-                            <i class="fas fa-comments me-1"></i>
-                            المحادثة
+                        
+                        <!-- Recent Streams -->
+                        {% if recent_streams %}
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="stream-card card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-history me-2"></i>البثوث السابقة
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>العنوان</th>
+                                                        <th>التاريخ</th>
+                                                        <th>المدة</th>
+                                                        <th>الحالة</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for stream in recent_streams %}
+                                                        <tr>
+                                                            <td>
+                                                                <strong>{{ stream.title }}</strong>
+                                                                {% if stream.description %}
+                                                                    <br><small class="text-muted">{{ stream.description[:100] }}{% if stream.description|length > 100 %}...{% endif %}</small>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>{{ stream.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                            <td>
+                                                                {% if stream.ended_at %}
+                                                                    {% set duration = (stream.ended_at - stream.created_at).total_seconds() %}
+                                                                    {% if duration < 3600 %}
+                                                                        {{ "%.0f"|format(duration / 60) }} دقيقة
+                                                                    {% else %}
+                                                                        {{ "%.1f"|format(duration / 3600) }} ساعة
+                                                                    {% endif %}
+                                                                {% else %}
+                                                                    <span class="text-muted">-</span>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-secondary">انتهى</span>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="chat-messages" class="chat-messages">
-                            <!-- Chat messages will be added here dynamically -->
-                        </div>
-                        <div class="chat-input-container">
-                            <input type="text" id="chat-input" class="chat-input" placeholder="اكتب رسالتك هنا...">
-                            <button id="send-chat-btn" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
-                    </div>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
-        </main>
+        </div>
     </div>
 
-    <!-- تضمين مكونات نظام الإشعارات الموحد -->
-    {% include 'components/unified_notifications.html' %}
-
-    <!-- JavaScript -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
-    <script src="{{ url_for('static', filename='js/unified-notifications.js') }}" defer></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        // Classroom data
-        const classroomId = {{ classroom.id }};
-        const userId = {{ current_user.id }};
-        const userName = "{{ current_user.name }}";
-        const userRole = "{{ current_user.role }}";
-        
-        // WebRTC variables
-        let socket;
-        let localStream;
-        let peerConnection;
-        let isStreaming = false;
-        let isHandRaised = false;
-        
-        // Participants
-        let participants = [];
-        let handsRaised = [];
-        
-        // DOM elements
-        const noStreamEl = document.getElementById('no-stream');
-        const activeStreamEl = document.getElementById('active-stream');
-        const streamPlaceholderEl = document.getElementById('stream-controls');
-        const micBtn = document.getElementById('mic-btn');
-        const handBtn = document.getElementById('hand-btn');
-        const remoteVideoEl = document.getElementById('remote-video');
-        const participantsListEl = document.getElementById('participants-list');
-        const participantsCountEl = document.getElementById('participants-count');
-        const chatMessagesEl = document.getElementById('chat-messages');
-        const chatInputEl = document.getElementById('chat-input');
-        const sendChatBtn = document.getElementById('send-chat-btn');
-        
-        // Initialize when document is ready
-        document.addEventListener('DOMContentLoaded', initialize);
-        
-        // Mobile menu toggle
-        $('.mobile-toggle').on('click', function() {
-            $('.innovative-sidebar').toggleClass('show');
-        });
-
-        // Close sidebar when clicking outside
-        $(document).on('click', function(e) {
-            if ($(window).width() < 992 && 
-                !$(e.target).closest('.innovative-sidebar').length && 
-                !$(e.target).closest('.mobile-toggle').length) {
-                $('.innovative-sidebar').removeClass('show');
-            }
-        });
-        
-        // Initialize the streaming page
-        function initialize() {
-            connectToSocketServer();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-refresh page every 30 seconds to check for new streams
+            setTimeout(function() {
+                window.location.reload();
+            }, 30000);
             
-            handBtn.addEventListener('click', toggleHandRaise);
-            micBtn.addEventListener('click', toggleMic);
-            sendChatBtn.addEventListener('click', sendChatMessage);
-            chatInputEl.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    sendChatMessage();
-                }
-            });
-        }
-        
-        // Connect to Socket.IO server
-        function connectToSocketServer() {
-            socket = io({
-                reconnection: true,
-                reconnectionDelay: 1000,
-                reconnectionDelayMax: 5000,
-                reconnectionAttempts: 5
-            });
-            
-            socket.on('connect', () => {
-                console.log('Connected to Socket.IO server');
-                joinClassroom();
-                // Clear any disconnect UI state
-                clearDisconnectState();
-            });
-            
-            socket.on('connect_error', (error) => {
-                console.log('Connection error:', error);
-                showConnectionError();
-            });
-
-            socket.on('reconnect', (attemptNumber) => {
-                console.log('Reconnected after ' + attemptNumber + ' attempts');
-                joinClassroom();
-                // Clear any disconnect UI state
-                clearDisconnectState();
-            });
-
-            socket.on('reconnect_failed', () => {
-                console.log('Failed to reconnect');
-                showFatalError('فشل الاتصال بالخادم. يرجى تحديث الصفحة.');
-            });
-            
-            socket.on('connection_response', (data) => {
-                console.log('Connection response:', data);
-            });
-            
-            socket.on('join_response', handleJoinResponse);
-            socket.on('user_joined', handleUserJoined);
-            socket.on('user_left', handleUserLeft);
-            socket.on('stream_started', handleStreamStarted);
-            socket.on('stream_ended', handleStreamEnded);
-            socket.on('stream_signal', handleStreamSignal);
-            socket.on('new_chat_message', handleNewChatMessage);
-            socket.on('hand_raised', handleHandRaised);
-            socket.on('hand_lowered', handleHandLowered);
-            
-            socket.on('disconnect', () => {
-                console.log('Disconnected from Socket.IO server');
-                cleanupStream();
-            });
-        }
-        
-        // Join the classroom room
-        function joinClassroom() {
-            socket.emit('join_classroom', {
-                classroom_id: classroomId
-            });
-        }
-        
-        // Handle join classroom response
-        function handleJoinResponse(data) {
-            console.log('Join response:', data);
-            
-            if (data.status === 'success') {
-                // Store participants
-                participants = data.participants;
-                updateParticipantsList();
+            // Check if stream is still active every 5 minutes
+            {% if active_stream %}
+            setInterval(function() {
+                const now = new Date();
+                const endTime = new Date('{{ active_stream.auto_end_at.isoformat() }}');
                 
-                // Check if there's already a stream
-                if (data.classroom.is_streaming && data.stream) {
-                    handleStreamStarted({
-                        classroom_id: data.classroom.id,
-                        teacher_id: data.classroom.teacher_id,
-                        room_name: data.stream.room_name,
-                        token: data.stream.token,
-                        url: data.stream.url
-                    });
+                if (now >= endTime) {
+                    window.location.reload();
                 }
+            }, 300000); // 5 minutes
+            {% endif %}
+        });
+
+        function toggleFullscreen() {
+            const iframe = document.querySelector('.stream-container iframe');
+            if (iframe) {
+                if (iframe.requestFullscreen) {
+                    iframe.requestFullscreen();
+                } else if (iframe.webkitRequestFullscreen) {
+                    iframe.webkitRequestFullscreen();
+                } else if (iframe.msRequestFullscreen) {
+                    iframe.msRequestFullscreen();
+                }
+            }
+        }
+
+        // Handle fullscreen changes
+        document.addEventListener('fullscreenchange', function() {
+            const iframe = document.querySelector('.stream-container iframe');
+            if (document.fullscreenElement) {
+                iframe.style.width = '100vw';
+                iframe.style.height = '100vh';
             } else {
-                showAlert('error', data.message);
-            }
-        }
-        
-        // Handle user joined event
-        function handleUserJoined(data) {
-            console.log('User joined:', data);
-            
-            // Add to participants list if not already there
-            if (!participants.find(p => p.id === data.user_id)) {
-                participants.push({
-                    id: data.user_id,
-                    name: data.user_name,
-                    role: data.user_role
-                });
-                updateParticipantsList();
-            }
-        }
-        
-        // Handle user left event
-        function handleUserLeft(data) {
-        console.log('User left:', data);
-        
-        // Remove from participants list
-        participants = participants.filter(p => p.id !== data.user_id);
-        updateParticipantsList();
-        
-        // Remove from hands raised list
-        handsRaised = handsRaised.filter(id => id !== data.user_id);
-    }
-    
-    // Update the participants list UI
-    function updateParticipantsList() {
-        participantsListEl.innerHTML = '';
-        participantsCountEl.textContent = participants.length;
-        
-        participants.forEach(participant => {
-            const participantEl = document.createElement('div');
-            participantEl.className = 'participant-item';
-            
-            const nameEl = document.createElement('div');
-            nameEl.className = 'participant-name';
-            nameEl.textContent = participant.name;
-            
-            const roleEl = document.createElement('div');
-            roleEl.className = 'participant-role';
-            let roleText = '';
-            switch (participant.role) {
-                case 'teacher':
-                    roleText = 'معلم';
-                    break;
-                case 'student':
-                    roleText = 'طالب';
-                    break;
-                case 'assistant':
-                    roleText = 'مساعد';
-                    break;
-                case 'admin':
-                    roleText = 'مدير';
-                    break;
-                default:
-                    roleText = participant.role;
-            }
-            roleEl.textContent = roleText;
-            
-            participantEl.appendChild(nameEl);
-            participantEl.appendChild(roleEl);
-            
-            // Add hand raised icon if applicable
-            if (handsRaised.includes(participant.id)) {
-                const handEl = document.createElement('div');
-                handEl.className = 'hand-raised';
-                handEl.innerHTML = '<i class="fas fa-hand-paper"></i>';
-                participantEl.appendChild(handEl);
-            }
-            
-            participantsListEl.appendChild(participantEl);
-        });
-    }
-    
-    let jitsiApi = null;
-
-    // Handle stream started event
-    function handleStreamStarted(data) {
-        console.log('Stream started:', data);
-        isStreaming = true;
-        
-        // Show streaming UI
-        noStreamEl.classList.add('d-none');
-        activeStreamEl.classList.remove('d-none');
-        
-        // Initialize Jitsi Meet
-        initializeJitsiMeet();
-    }
-    
-    // Handle stream ended event
-    function handleStreamEnded(data) {
-        console.log('Stream ended:', data);
-        
-        // Reset UI
-        activeStreamEl.classList.add('d-none');
-        noStreamEl.classList.remove('d-none');
-        
-        // Clean up resources
-        cleanupStream();
-    }
-    
-    // Clean up streaming resources
-    function cleanupStream() {
-        isStreaming = false;
-        
-        if (jitsiApi) {
-            jitsiApi.dispose();
-            jitsiApi = null;
-        }
-        
-        // Stop local stream if exists
-        if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
-            localStream = null;
-        }
-        
-        // Reset hand raise
-        if (isHandRaised) {
-            isHandRaised = false;
-            handBtn.classList.remove('active');
-            socket.emit('lower_hand', {
-                classroom_id: classroomId
-            });
-        }
-        
-        // Hide mic button
-        micBtn.classList.add('d-none');
-    }
-    
-    // Create RTCPeerConnection
-    function createPeerConnection() {
-        // Close existing connection if any
-        if (peerConnection) {
-            peerConnection.close();
-        }
-        
-        // Create new connection
-        peerConnection = new RTCPeerConnection({
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' }
-            ]
-        });
-        
-        // ICE candidate event
-        peerConnection.onicecandidate = event => {
-            if (event.candidate) {
-                // Find teacher in participants
-                const teacher = participants.find(p => p.role === 'teacher');
-                if (teacher) {
-                    socket.emit('stream_signal', {
-                        classroom_id: classroomId,
-                        to_user_id: teacher.id,
-                        signal: {
-                            type: 'ice-candidate',
-                            candidate: event.candidate
-                        }
-                    });
-                }
-            }
-        };
-        
-        // Track event for receiving remote stream
-        peerConnection.ontrack = event => {
-            remoteVideoEl.srcObject = event.streams[0];
-        };
-        
-        // Connection state change
-        peerConnection.onconnectionstatechange = () => {
-            console.log(`Connection state: ${peerConnection.connectionState}`);
-        };
-        
-        return peerConnection;
-    }
-    
-    // Handle WebRTC signaling
-    function handleStreamSignal(data) {
-        const signal = data.signal;
-        const fromUserId = data.from_user_id;
-        
-        if (!peerConnection) {
-            createPeerConnection();
-        }
-        
-        if (signal.type === 'offer') {
-            peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp))
-                .then(() => peerConnection.createAnswer())
-                .then(answer => peerConnection.setLocalDescription(answer))
-                .then(() => {
-                    socket.emit('stream_signal', {
-                        classroom_id: classroomId,
-                        to_user_id: fromUserId,
-                        signal: {
-                            type: 'answer',
-                            sdp: peerConnection.localDescription
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('Error handling offer:', error);
-                });
-        } else if (signal.type === 'ice-candidate') {
-            peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate))
-                .catch(error => {
-                    console.error('Error adding ICE candidate:', error);
-                });
-        }
-    }
-    
-    // Toggle hand raise
-    function toggleHandRaise() {
-        isHandRaised = !isHandRaised;
-        
-        if (isHandRaised) {
-            handBtn.classList.add('active');
-            handBtn.querySelector('i').classList.add('fa-shake');
-            socket.emit('raise_hand', {
-                classroom_id: classroomId
-            });
-        } else {
-            handBtn.classList.remove('active');
-            handBtn.querySelector('i').classList.remove('fa-shake');
-            socket.emit('lower_hand', {
-                classroom_id: classroomId
-            });
-        }
-    }
-    
-    // Toggle microphone (when allowed by teacher)
-    function toggleMic() {
-        if (!localStream) return;
-        
-        const audioTracks = localStream.getAudioTracks();
-        if (audioTracks.length === 0) return;
-        
-        const isMicOn = !audioTracks[0].enabled;
-        audioTracks[0].enabled = isMicOn;
-        
-        if (isMicOn) {
-            micBtn.classList.remove('off');
-            micBtn.querySelector('i').className = 'fas fa-microphone';
-        } else {
-            micBtn.classList.add('off');
-            micBtn.querySelector('i').className = 'fas fa-microphone-slash';
-        }
-    }
-    
-    // Send chat message
-    function sendChatMessage() {
-        const message = chatInputEl.value.trim();
-        if (!message) return;
-        
-        socket.emit('chat_message', {
-            classroom_id: classroomId,
-            message: message
-        });
-        
-        chatInputEl.value = '';
-    }
-    
-    // Handle new chat message
-    function handleNewChatMessage(data) {
-        const messageEl = document.createElement('div');
-        messageEl.className = 'chat-message';
-        
-        const senderEl = document.createElement('div');
-        senderEl.className = 'sender';
-        
-        let roleText = '';
-        switch (data.user_role) {
-            case 'teacher':
-                roleText = 'معلم';
-                break;
-            case 'student':
-                roleText = 'طالب';
-                break;
-            case 'assistant':
-                roleText = 'مساعد';
-                break;
-            case 'admin':
-                roleText = 'مدير';
-                break;
-            default:
-                roleText = data.user_role;
-        }
-        
-        senderEl.innerHTML = `
-            <span class="role">${roleText}</span>
-            ${data.user_name}
-            <span class="timestamp">${new Date().toLocaleTimeString()}</span>
-        `;
-        
-        const contentEl = document.createElement('div');
-        contentEl.className = 'content';
-        contentEl.textContent = data.message;
-        
-        messageEl.appendChild(senderEl);
-        messageEl.appendChild(contentEl);
-        
-        chatMessagesEl.appendChild(messageEl);
-        chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-    }
-    
-    // Handle hand raised event
-    function handleHandRaised(data) {
-        if (!handsRaised.includes(data.user_id)) {
-            handsRaised.push(data.user_id);
-            updateParticipantsList();
-        }
-    }
-    
-    // Handle hand lowered event
-    function handleHandLowered(data) {
-        handsRaised = handsRaised.filter(id => id !== data.user_id);
-        updateParticipantsList();
-    }
-    
-    // Show alert
-    function showAlert(type, message) {
-        const alertEl = document.createElement('div');
-        alertEl.className = `alert alert-${type} alert-dismissible fade show`;
-        alertEl.innerHTML = `
-            ${message}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        `;
-        
-        document.querySelector('.stream-container').prepend(alertEl);
-        
-        // Auto dismiss after 5 seconds
-        setTimeout(() => {
-            alertEl.classList.remove('show');
-            setTimeout(() => alertEl.remove(), 150);
-        }, 5000);
-    }
-    
-    // UI functions for connection state
-        function showConnectionError() {
-            const alertEl = document.createElement('div');
-            alertEl.id = 'connection-alert';
-            alertEl.className = 'alert alert-warning alert-dismissible fade show reconnecting';
-            alertEl.innerHTML = `
-                <i class="fas fa-sync fa-spin me-2"></i>
-                جاري إعادة الاتصال...
-            `;
-            document.querySelector('.stream-container').prepend(alertEl);
-        }
-        
-        function clearDisconnectState() {
-            const alertEl = document.getElementById('connection-alert');
-            if (alertEl) alertEl.remove();
-        }
-        
-        function showFatalError(message) {
-            const alertEl = document.createElement('div');
-            alertEl.className = 'alert alert-danger alert-dismissible fade show';
-            alertEl.innerHTML = `
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
-            document.querySelector('.stream-container').prepend(alertEl);
-        }
-    
-    // Clean up when leaving page
-    window.addEventListener('beforeunload', () => {
-        // If hand is raised, lower it
-        if (isHandRaised) {
-            socket.emit('lower_hand', {
-                classroom_id: classroomId
-            });
-        }
-        
-        // Leave classroom
-        socket.emit('leave_classroom', {
-            classroom_id: classroomId
-        });
-        
-        // Clean up resources
-        cleanupStream();
-    });
-
-    function initializeJitsiMeet() {
-        if (jitsiApi) {
-            jitsiApi.dispose();
-        }
-
-        const domain = 'meet.jit.si';
-        const options = {
-            roomName: `al7esa_classroom_${classroomId}`,
-            width: '100%',
-            height: '100%',
-            userInfo: {
-                displayName: userName,
-                email: ''
-            },
-            configOverwrite: {
-                startWithAudioMuted: true,
-                startWithVideoMuted: true,
-                prejoinPageEnabled: false,
-                disableDeepLinking: true
-            },
-            interfaceConfigOverwrite: {
-                TOOLBAR_BUTTONS: [
-                    'microphone', 'camera', 'chat',
-                    'raisehand', 'tileview'
-                ],
-                SHOW_JITSI_WATERMARK: false,
-                SHOW_WATERMARK_FOR_GUESTS: false,
-                DEFAULT_REMOTE_DISPLAY_NAME: 'مشارك',
-                DISPLAY_WELCOME_PAGE_CONTENT: false,
-                DISPLAY_WELCOME_PAGE_TOOLBAR_ADDITIONAL_CONTENT: false
-            },
-            lang: 'ar'
-        };
-
-        // Create new Jitsi Meet instance
-        jitsiApi = new JitsiMeetExternalAPI(domain, options);
-        
-        // Add event listeners
-        jitsiApi.addEventListeners({
-            videoConferenceJoined: () => {
-                // Show controls after joining
-                document.getElementById('stream-controls').classList.remove('d-none');
-            },
-            audioMuteStatusChanged: (muted) => {
-                const micBtn = document.getElementById('mic-btn');
-                if (micBtn) {
-                    micBtn.classList.toggle('off', muted.muted);
-                    micBtn.querySelector('i').className = muted.muted ? 'fas fa-microphone-slash' : 'fas fa-microphone';
-                }
-            },
-            readyToClose: () => {
-                cleanupStream();
-            },
-            participantLeft: (participant) => {
-                // If teacher left, end stream for student
-                const teacher = participants.find(p => p.role === 'teacher');
-                if (teacher && participant.id === teacher.id) {
-                    handleStreamEnded();
-                }
+                iframe.style.width = '';
+                iframe.style.height = '';
             }
         });
-
-        // Set the participant role
-        jitsiApi.executeCommand('setRole', 'participant');
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const socket = io();
-        let isStreaming = false;
-        
-        // DOM Elements
-        const noStreamEl = document.getElementById('no-stream');
-        const activeStreamEl = document.getElementById('active-stream');
-        const meetLinkEl = document.getElementById('meet-link');
-        
-        // Socket event handlers
-        socket.on('stream_started', function(data) {
-            if (data.classroom_id === {{ classroom.id }}) {
-                isStreaming = true;
-                noStreamEl.classList.add('d-none');
-                activeStreamEl.classList.remove('d-none');
-                
-                // Update Meet link
-                if (meetLinkEl) {
-                    meetLinkEl.href = data.meet_link;
-                }
-            }
-        });
-        
-        socket.on('stream_ended', function(data) {
-            if (data.classroom_id === {{ classroom.id }}) {
-                isStreaming = false;
-                noStreamEl.classList.remove('d-none');
-                activeStreamEl.classList.add('d-none');
-                
-                // Show ended message
-                showMessage('تم إنهاء البث المباشر', 'info');
-            }
-        });
-        
-        socket.on('stream_error', function(data) {
-            showError(data.message);
-        });
-        
-        // Initialize current state
-        socket.emit('join_classroom', {
-            classroom_id: {{ classroom.id }}
-        });
-        
-        function showError(message) {
-            window.showError('خطأ', message);
-        }
-        
-        function showMessage(message, type = 'info') {
-            const typeMap = {
-                'info': 'info',
-                'success': 'success',
-                'warning': 'warning', 
-                'danger': 'error'
-            };
-            const notificationType = typeMap[type] || 'info';
-            
-            if (notificationType === 'success') {
-                window.showSuccess('نجح', message);
-            } else if (notificationType === 'warning') {
-                window.showWarning('تنبيه', message);
-            } else if (notificationType === 'error') {
-                window.showError('خطأ', message);
-            } else {
-                window.showInfo('معلومة', message);
-            }
-        }
-    });
     </script>
 </body>
 </html>

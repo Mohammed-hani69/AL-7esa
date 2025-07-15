@@ -1,15 +1,15 @@
 """
-Utility functions for URL validation and room code generation for Jitsi Meet
+Utility functions for general platform utilities
 """
 import re
 import secrets
 import string
+from datetime import datetime
 from urllib.parse import urlparse, urlencode
-from config import JITSI_DOMAIN, JITSI_PROTOCOL
 
 def generate_room_name(prefix="room"):
     """
-    Generate a secure room name for Jitsi Meet:
+    Generate a secure room name:
     - Format: prefix-randomstring
     - Random string uses letters and numbers
     - Returns a URL-safe room name
@@ -21,75 +21,37 @@ def generate_room_name(prefix="room"):
     # Combine with prefix
     return f"{prefix}-{random_part}"
 
-def is_valid_jitsi_room_name(room_name):
+def generate_classroom_room_name(classroom_id, user_type="room"):
     """
-    Validate a Jitsi room name format
-    - Must be alphanumeric with hyphens
-    - 4-64 characters long
+    Generate a unique room name for a specific classroom
+    Format: hsa-classroom{id}-{user_type}-{random}
     """
-    if not room_name or not isinstance(room_name, str):
-        return False
-        
-    # Only allow letters, numbers, and hyphens
-    if not re.match(r'^[a-z0-9-]+$', room_name):
-        return False
-        
-    # Check length
-    if not (4 <= len(room_name) <= 64):
-        return False
-        
-    return True
+    alphabet = string.ascii_lowercase + string.digits
+    random_part = ''.join(secrets.choice(alphabet) for _ in range(8))
+    
+    return f"hsa-classroom{classroom_id}-{user_type}-{random_part}"
 
-def is_valid_jitsi_url(url):
+def cleanup_expired_streams():
     """
-    Validate that a URL is a proper Jitsi Meet URL
-    Format: https://domain/roomname[?jwt=token]
+    Clean up expired live streams that are still marked as active.
+    This function should be called periodically to ensure expired streams are properly ended.
+    Returns the number of streams that were cleaned up.
     """
-    if not url or not isinstance(url, str):
-        return False
-        
-    try:
-        parsed = urlparse(url)
-        
-        # Validate URL components
-        if not all([
-            parsed.scheme in ('http', 'https'),
-            parsed.netloc == JITSI_DOMAIN,
-            parsed.path.startswith('/')
-        ]):
-            return False
-            
-        # Extract and validate the room name
-        room_name = parsed.path.strip('/')
-        return is_valid_jitsi_room_name(room_name)
-    except:
-        return False
-
-def clean_room_name(name):
-    """
-    Clean a room name to match Jitsi Meet requirements:
-    - Alphanumeric with hyphens only
-    - Lowercase
-    - 4-64 characters
-    Returns None if the name cannot be properly cleaned
-    """
-    if not name or not isinstance(name, str):
-        return None
-        
-    # Convert to lowercase and replace spaces with hyphens
-    clean = name.lower().replace(' ', '-')
+    from models import LiveStream, db
     
-    # Keep only allowed chars
-    clean = ''.join(c for c in clean if c.isalnum() or c == '-')
+    # Find all active streams that have expired
+    expired_streams = LiveStream.query.filter(
+        LiveStream.is_active == True,
+        LiveStream.auto_end_at < datetime.utcnow()
+    ).all()
     
-    # Remove consecutive hyphens
-    clean = re.sub(r'-+', '-', clean)
+    cleaned_count = 0
+    for stream in expired_streams:
+        if stream.is_expired:
+            stream.end_stream()
+            cleaned_count += 1
     
-    # Remove leading/trailing hyphens
-    clean = clean.strip('-')
+    if cleaned_count > 0:
+        print(f"Cleaned up {cleaned_count} expired live streams")
     
-    # Validate length
-    if not (4 <= len(clean) <= 64):
-        return None
-        
-    return clean if is_valid_jitsi_room_name(clean) else None
+    return cleaned_count

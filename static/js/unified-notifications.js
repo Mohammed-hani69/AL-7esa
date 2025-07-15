@@ -5,6 +5,11 @@
  * ==============================================
  */
 
+// منع التحميل المتعدد للنظام
+if (window.UnifiedNotificationSystem) {
+    console.warn('UnifiedNotificationSystem already exists. Skipping redefinition.');
+} else {
+
 class UnifiedNotificationSystem {
     constructor() {
         this.container = null;
@@ -94,10 +99,20 @@ class UnifiedNotificationSystem {
         const observer = new MutationObserver(() => {
             this.processExistingFlashMessages();
         });
-
+        
         observer.observe(document.body, {
             childList: true,
             subtree: true
+        });
+        
+        // معالجة الأخطاء العامة
+        window.addEventListener('error', (event) => {
+            console.error('JavaScript Error:', event.error);
+        });
+        
+        // معالجة الأخطاء غير المعالجة في الـ Promises
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled Promise Rejection:', event.reason);
         });
     }
 
@@ -804,4 +819,7 @@ window.addEventListener('online', function() {
 // تصدير للاستخدام كوحدة
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UnifiedNotificationSystem;
+}
+
+// إغلاق الشرطة للتحقق من التحميل المتعدد
 }

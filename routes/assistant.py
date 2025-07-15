@@ -4,10 +4,11 @@ from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
 from functools import wraps
-from app import db
 from models import Subscription, SystemSettings, User, Role, Classroom, ClassroomEnrollment, Assignment, AssignmentSubmission
 from models import ChatMessage, ChatSettings, ChatParticipant
 from models import Quiz, QuizQuestion, QuizAnswer, QuizAttempt
+from models import db
+
 
 
 # دالة للتحقق من نوع الجهاز (موبايل أو جهاز مكتبي)

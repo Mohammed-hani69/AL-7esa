@@ -13,12 +13,13 @@ from flask import Blueprint, abort, make_response, render_template, redirect, se
 from flask_login import login_required, current_user
 from functools import wraps
 from datetime import datetime, timedelta
-from app import db
 from models import ChatMessage, Payment, QuizAnswer, QuizAttempt, User, Role, Classroom, ClassroomEnrollment, ClassroomContent, ContentType
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizQuestionOption
 from models import Subscription, SubscriptionPlan, ChatSettings, ChatParticipant, SubscriptionPayment, SubscriptionPayment
-from models import SystemSettings
-from rate_limiting import RATE_LIMITS, get_limiter
+from models import SystemSettings, LiveStream, Notification
+
+from models import db
+
 
 teacher_bp = Blueprint('teacher', __name__)
 
@@ -210,6 +211,10 @@ def dashboard():
             classroom.recent_activities = []
 
     template = 'dashboard/mobile-theme/teacher.html' if is_mobile() else 'dashboard/teacher.html'
+    
+    # جلب الإشعارات غير المقروءة
+    unread_notifications_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+    
     return render_template(template,
                          classrooms=classrooms,
                          total_students=total_students,
@@ -218,6 +223,7 @@ def dashboard():
                          has_active_subscription=has_active_sub,
                          subscription_days_left=subscription_days_left,
                          can_create_classroom=can_create_classroom(),
+                         unread_notifications_count=unread_notifications_count,
                          primary_color=primary_color,
                          secondary_color=secondary_color)
 
@@ -476,15 +482,9 @@ def create_classroom():
         return redirect(url_for('teacher.dashboard'))
 
     if request.method == 'POST':
-        # تطبيق Rate Limiting فقط على إنشاء الفصل الفعلي (POST)
-        limiter = get_limiter()
-        if limiter:
-            try:
-                limiter.limit(RATE_LIMITS['teacher']['create_classroom'])(lambda: None)()
-            except Exception:
-                flash('تم تجاوز الحد المسموح من إنشاء الفصول. يرجى المحاولة لاحقاً.', 'warning')
-                return redirect(url_for('teacher.create_classroom'))
-        
+
+
+   
         name = request.form.get('name')
         subject = request.form.get('subject')
         grade = request.form.get('grade')
@@ -638,13 +638,15 @@ def list_classrooms():
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
-
+    # جلب الإشعارات غير المقروءة
+    unread_notifications_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
 
     return render_template(template,
                          classrooms=classrooms,
                          primary_color=primary_color,
                          secondary_color=secondary_color,
                          classroom_stats=classroom_stats,
+                         unread_notifications_count=unread_notifications_count,
                          can_create_classroom=can_create_classroom())
 
 """
@@ -662,20 +664,33 @@ def live_classroom(classroom_id):
         flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
         return redirect(url_for('teacher.dashboard'))
     
-    # Get active stream info if exists
-    from streaming import active_streams
-    stream_info = active_streams.get(classroom_id, None)
-    meet_link = stream_info.url if stream_info else None
+    # Get current active live stream for this classroom
+    active_stream = LiveStream.query.filter_by(
+        classroom_id=classroom_id,
+        is_active=True
+    ).first()
+    
+    # Check if the stream has expired and auto-end it
+    if active_stream and active_stream.is_expired:
+        active_stream.end_stream()
+        active_stream = None
+    
+    # Get recent streams for this classroom (last 10)
+    recent_streams = LiveStream.query.filter_by(
+        classroom_id=classroom_id
+    ).order_by(LiveStream.created_at.desc()).limit(10).all()
     
     # Get system colors
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')
 
-    template = 'classroom/mobile-theme/live_class.html' if is_mobile() else 'classroom/live_class.html'
+    template = 'teacher/live_class.html' if not is_mobile() else 'teacher/mobile-theme/live_class.html'
     return render_template(template, 
                          classroom=classroom,
+                         active_stream=active_stream,
+                         recent_streams=recent_streams,
+                         current_time=datetime.utcnow(),
                          user_type='teacher',
-                         meet_link=meet_link,
                          primary_color=primary_color,
                          secondary_color=secondary_color)
 
@@ -683,15 +698,8 @@ def live_classroom(classroom_id):
 @login_required
 @teacher_required
 def add_content(classroom_id):
-    # تطبيق Rate Limiting لرفع المحتوى
-    limiter = get_limiter()
-    if limiter:
-        try:
-            limiter.limit(RATE_LIMITS['teacher']['upload_content'])(lambda: None)()
-        except Exception:
-            flash('تم تجاوز الحد المسموح من رفع المحتوى. يرجى المحاولة لاحقاً.', 'warning')
-            return redirect(url_for('teacher.classroom', classroom_id=classroom_id))
-        
+
+     
     classroom = Classroom.query.get_or_404(classroom_id)
 
     # Ensure the teacher owns this classroom
@@ -800,15 +808,8 @@ def add_content(classroom_id):
 @login_required
 @teacher_required
 def delete_content(classroom_id, content_id):
-    # تطبيق Rate Limiting على حذف المحتوى
-    limiter = get_limiter()
-    if limiter:
-        try:
-            limiter.limit("10 per hour")(lambda: None)()
-        except Exception:
-            flash('لقد تجاوزت الحد المسموح لحذف المحتوى. حاول مرة أخرى لاحقاً.', 'warning')
-            return redirect(url_for('teacher.classroom', classroom_id=classroom_id))
-    
+
+  
     classroom = Classroom.query.get_or_404(classroom_id)
     content = ClassroomContent.query.get_or_404(content_id)
 
@@ -879,15 +880,9 @@ def create_assignment(classroom_id):
         return redirect(url_for('teacher.dashboard'))
 
     if request.method == 'POST':
-        # تطبيق Rate Limiting فقط على إنشاء الواجب الفعلي (POST)
-        limiter = get_limiter()
-        if limiter:
-            try:
-                limiter.limit(RATE_LIMITS['teacher']['create_assignment'])(lambda: None)()
-            except Exception:
-                flash('تم تجاوز الحد المسموح من إنشاء الواجبات. يرجى المحاولة لاحقاً.', 'warning')
-                return redirect(url_for('teacher.create_assignment', classroom_id=classroom.id))
-        
+
+
+      
         title = request.form.get('title')
         description = request.form.get('description')
         due_date_str = request.form.get('due_date')
@@ -1125,14 +1120,7 @@ def assignment_submissions(classroom_id, assignment_id):
 @login_required
 @teacher_required
 def grade_submission(classroom_id, assignment_id, submission_id):
-    # تطبيق Rate Limiting على تقييم الواجبات
-    limiter = get_limiter()
-    if limiter:
-        try:
-            limiter.limit("20 per hour")(lambda: None)()
-        except Exception:
-            flash('لقد تجاوزت الحد المسموح لتقييم الواجبات. حاول مرة أخرى لاحقاً.', 'warning')
-            return redirect(url_for('teacher.dashboard'))
+
     
     classroom = Classroom.query.get_or_404(classroom_id)
     assignment = Assignment.query.get_or_404(assignment_id)
@@ -1209,14 +1197,7 @@ def create_quiz(classroom_id):
         return redirect(url_for('teacher.dashboard'))
 
     if request.method == 'POST':
-        # تطبيق Rate Limiting فقط على إنشاء الاختبار الفعلي (POST)
-        limiter = get_limiter()
-        if limiter:
-            try:
-                limiter.limit(RATE_LIMITS['teacher']['create_quiz'])(lambda: None)()
-            except Exception:
-                flash('تم تجاوز الحد المسموح من إنشاء الاختبارات. يرجى المحاولة لاحقاً.', 'warning')
-                return redirect(url_for('teacher.create_quiz', classroom_id=classroom.id))
+
         
         title = request.form.get('title')
         description = request.form.get('description', '')
@@ -2332,3 +2313,258 @@ def assistant_settings(classroom_id):
                          current_assistant=User.query.get(classroom.assistant_id) if classroom.assistant_id else None,
                          primary_color=primary_color,
                          secondary_color=secondary_color,)
+
+
+@teacher_bp.route('/classroom/<int:classroom_id>/start_live_stream', methods=['POST'])
+@login_required
+@teacher_required
+def start_live_stream(classroom_id):
+    """Start a new live stream for the classroom"""
+    classroom = Classroom.query.get_or_404(classroom_id)
+
+    # Ensure the teacher owns this classroom
+    if classroom.teacher_id != current_user.id:
+        flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+
+    # Check if there's already an active stream
+    existing_stream = LiveStream.query.filter_by(
+        classroom_id=classroom_id,
+        is_active=True
+    ).first()
+    
+    if existing_stream and existing_stream.is_currently_active:
+        message = 'يوجد بث مباشر نشط بالفعل'
+        flash(message, 'warning')
+        return redirect(url_for('teacher.live_classroom', classroom_id=classroom_id))
+
+    # Get form data
+    stream_url = request.form.get('stream_url', '').strip()
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+
+    if not stream_url or not title:
+        message = 'رابط البث والعنوان مطلوبان'
+        flash(message, 'danger')
+        return redirect(url_for('teacher.live_classroom', classroom_id=classroom_id))
+
+    try:
+        # Create new live stream
+        auto_end_time = datetime.utcnow() + timedelta(hours=24)
+        live_stream = LiveStream(
+            classroom_id=classroom_id,
+            teacher_id=current_user.id,
+            stream_url=stream_url,
+            title=title,
+            description=description,
+            started_at=datetime.utcnow(),
+            auto_end_at=auto_end_time
+        )
+        
+        db.session.add(live_stream)
+        db.session.commit()
+
+        # Send notifications to all students in the classroom
+        enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom_id).all()
+        notifications_created = 0
+        
+        for enrollment in enrollments:
+            if enrollment.user.role == Role.STUDENT:
+                notification = Notification(
+                    user_id=enrollment.user.id,
+                    title=f'بث مباشر جديد في {classroom.name}',
+                    message=f'بدأ الأستاذ {current_user.name} بثًا مباشرًا بعنوان: {title}'
+                )
+                db.session.add(notification)
+                notifications_created += 1
+
+        db.session.commit()
+        
+        success_message = f'تم بدء البث المباشر بنجاح وإرسال {notifications_created} إشعار للطلاب'
+        flash(success_message, 'success')
+        return redirect(url_for('teacher.live_classroom', classroom_id=classroom_id))
+
+    except Exception as e:
+        db.session.rollback()
+        error_message = 'حدث خطأ أثناء بدء البث المباشر'
+        flash(error_message, 'danger')
+        return redirect(url_for('teacher.live_classroom', classroom_id=classroom_id))
+
+@teacher_bp.route('/classroom/<int:classroom_id>/end_live_stream', methods=['POST'])
+@login_required
+@teacher_required
+def end_live_stream(classroom_id):
+    """End the current live stream for the classroom"""
+    classroom = Classroom.query.get_or_404(classroom_id)
+
+    # Ensure the teacher owns this classroom
+    if classroom.teacher_id != current_user.id:
+        flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+
+    # Find the active stream
+    current_stream = LiveStream.query.filter_by(
+        classroom_id=classroom_id,
+        is_active=True
+    ).first()
+
+    if not current_stream:
+        message = 'لا يوجد بث مباشر نشط'
+        flash(message, 'warning')
+        return redirect(url_for('teacher.live_classroom', classroom_id=classroom_id))
+
+    try:
+        # End the stream
+        current_stream.end_stream()
+        
+        # Send notifications to all students
+        enrollments = ClassroomEnrollment.query.filter_by(classroom_id=classroom_id).all()
+        notifications_created = 0
+        
+        for enrollment in enrollments:
+            if enrollment.user.role == Role.STUDENT:
+                notification = Notification(
+                    user_id=enrollment.user.id,
+                    title=f'انتهى البث المباشر في {classroom.name}',
+                    message=f'انتهى البث المباشر "{current_stream.title}" من الأستاذ {current_user.name}'
+                )
+                db.session.add(notification)
+                notifications_created += 1
+
+        db.session.commit()
+        
+        success_message = f'تم إنهاء البث المباشر بنجاح وإرسال {notifications_created} إشعار للطلاب'
+        flash(success_message, 'success')
+        return redirect(url_for('teacher.live_classroom', classroom_id=classroom_id))
+
+    except Exception as e:
+        db.session.rollback()
+        error_message = 'حدث خطأ أثناء إنهاء البث المباشر'
+        flash(error_message, 'danger')
+        return redirect(url_for('teacher.live_classroom', classroom_id=classroom_id))
+
+
+@teacher_bp.route('/notifications')
+@login_required
+@teacher_required
+def notifications():
+    """صفحة الإشعارات للمعلم"""
+    # جلب الإشعارات الخاصة بالمعلم الحالي مرتبة بالتاريخ
+    notifications_query = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc())
+    
+    # تطبيق التصفية حسب حالة القراءة إذا تم تحديدها
+    status_filter = request.args.get('status')
+    if status_filter == 'unread':
+        notifications_query = notifications_query.filter_by(is_read=False)
+    elif status_filter == 'read':
+        notifications_query = notifications_query.filter_by(is_read=True)
+    
+    # تطبيق البحث إذا تم تحديده
+    search_query = request.args.get('search', '').strip()
+    if search_query:
+        notifications_query = notifications_query.filter(
+            db.or_(
+                Notification.title.ilike(f'%{search_query}%'),
+                Notification.message.ilike(f'%{search_query}%')
+            )
+        )
+    
+    # التقسيم على صفحات (10 إشعارات لكل صفحة)
+    page = request.args.get('page', 1, type=int)
+    notifications_pagination = notifications_query.paginate(
+        page=page, per_page=10, error_out=False
+    )
+    
+    # إحصائيات الإشعارات
+    total_notifications = Notification.query.filter_by(user_id=current_user.id).count()
+    unread_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+    read_count = total_notifications - unread_count
+    
+    # تحديد القالب حسب نوع الجهاز
+    if is_mobile():
+        template = 'teacher/mobile-theme/notifications.html'
+    else:
+        template = 'teacher/notifications.html'
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+    
+    return render_template(template,
+                         notifications=notifications_pagination.items,
+                         pagination=notifications_pagination,
+                         total_notifications=total_notifications,
+                         unread_count=unread_count,
+                         read_count=read_count,
+                         status_filter=status_filter,
+                         search_query=search_query,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color)
+
+
+@teacher_bp.route('/notifications/mark_read/<int:notification_id>', methods=['POST'])
+@login_required
+@teacher_required
+def mark_notification_read(notification_id):
+    """تعيين إشعار كمقروء"""
+    notification = Notification.query.filter_by(
+        id=notification_id, 
+        user_id=current_user.id
+    ).first_or_404()
+    
+    notification.is_read = True
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'تم تعيين الإشعار كمقروء'})
+
+
+@teacher_bp.route('/notifications/mark_all_read', methods=['POST'])
+@login_required
+@teacher_required
+def mark_all_notifications_read():
+    """تعيين جميع الإشعارات كمقروءة"""
+    Notification.query.filter_by(
+        user_id=current_user.id, 
+        is_read=False
+    ).update({'is_read': True})
+    
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'تم تعيين جميع الإشعارات كمقروءة'})
+
+
+@teacher_bp.route('/notifications/delete/<int:notification_id>', methods=['POST'])
+@login_required
+@teacher_required
+def delete_notification(notification_id):
+    """حذف إشعار"""
+    notification = Notification.query.filter_by(
+        id=notification_id, 
+        user_id=current_user.id
+    ).first_or_404()
+    
+    db.session.delete(notification)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'تم حذف الإشعار بنجاح'})
+
+
+@teacher_bp.route('/notifications/delete_all_read', methods=['POST'])
+@login_required
+@teacher_required
+def delete_all_read_notifications():
+    """حذف جميع الإشعارات المقروءة"""
+    read_notifications = Notification.query.filter_by(
+        user_id=current_user.id, 
+        is_read=True
+    ).all()
+    
+    for notification in read_notifications:
+        db.session.delete(notification)
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True, 
+        'message': f'تم حذف {len(read_notifications)} إشعار مقروء'
+    })

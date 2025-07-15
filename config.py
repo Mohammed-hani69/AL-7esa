@@ -21,9 +21,6 @@ class Config:
     CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'X-CSRFToken', 'X-Requested-With']
     CORS_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
     
-    # SocketIO CORS Configuration
-    SOCKETIO_CORS_ALLOWED_ORIGINS = os.environ.get("SOCKETIO_CORS_ORIGINS", "*").split(",") if os.environ.get("SOCKETIO_CORS_ORIGINS") else ["*"]
-
     # Rate Limiting Configuration
     RATE_LIMIT_STORAGE_URI = os.environ.get('RATE_LIMIT_STORAGE_URI', 'memory://')
     RATE_LIMIT_WHITELIST = os.environ.get('RATE_LIMIT_WHITELIST', '').split(',') if os.environ.get('RATE_LIMIT_WHITELIST') else []
@@ -102,7 +99,6 @@ class DevelopmentConfig(Config):
     DEBUG = True
     # في بيئة التطوير، نسمح بجميع المصادر لسهولة التطوير
     CORS_ORIGINS = ["*"]
-    SOCKETIO_CORS_ALLOWED_ORIGINS = ["*"]
 
 
 class ProductionConfig(Config):
@@ -111,7 +107,6 @@ class ProductionConfig(Config):
     
     # في الإنتاج، يجب تحديد المصادر المسموحة بدقة
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "https://yourdomain.com,https://www.yourdomain.com").split(",")
-    SOCKETIO_CORS_ALLOWED_ORIGINS = os.environ.get("SOCKETIO_CORS_ORIGINS", "https://yourdomain.com,https://www.yourdomain.com").split(",")
     
     # إعدادات أمان إضافية للإنتاج
     CORS_SUPPORTS_CREDENTIALS = True
@@ -129,14 +124,6 @@ class ProductionConfig(Config):
             # إذا لم تكن هناك مصادر محددة، استخدم localhost فقط كاحتياط آمن
             return ["http://localhost:5000", "https://localhost:5000"]
         return filtered_origins
-    
-    @property
-    def SOCKETIO_CORS_ALLOWED_ORIGINS(self):
-        origins = os.environ.get("SOCKETIO_CORS_ORIGINS", "").split(",")
-        filtered_origins = [origin.strip() for origin in origins if origin.strip() and origin.strip() != "*"]
-        if not filtered_origins:
-            return ["http://localhost:5000", "https://localhost:5000"]
-        return filtered_origins
 
 
 class TestingConfig(Config):
@@ -145,7 +132,7 @@ class TestingConfig(Config):
     TESTING = True
     WTF_CSRF_ENABLED = False  # تعطيل CSRF للاختبارات
     CORS_ORIGINS = ["http://localhost", "http://127.0.0.1"]
-    SOCKETIO_CORS_ALLOWED_ORIGINS = ["http://localhost", "http://127.0.0.1"]
+    CORS_ORIGINS = ["http://localhost", "http://127.0.0.1"]
 
 
 # معالج اختيار التكوين حسب البيئة

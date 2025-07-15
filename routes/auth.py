@@ -12,10 +12,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
-from app import db
-from models import SystemSettings, User, Role, Subscription, SubscriptionPlan
 from firebase_utils import verify_firebase_token
-from rate_limiting import RATE_LIMITS, get_limiter, apply_rate_limit
+from models import Role, Subscription, SubscriptionPlan, SystemSettings, User , db
 
 # دالة للتحقق من نوع الجهاز (موبايل أو جهاز مكتبي)
 def is_mobile():
@@ -50,17 +48,7 @@ def login():
 
     form = LoginForm()
     if request.method == 'POST' and form.validate_on_submit():
-        # تطبيق Rate Limiting فقط على محاولات تسجيل الدخول (POST)
-        if not apply_rate_limit('auth_login'):
-            flash('تم تجاوز الحد المسموح من محاولات تسجيل الدخول. يرجى المحاولة لاحقاً.', 'warning')
-            return render_template('auth/login.html' if not is_mobile() else 'auth/auth-mobile/login.html',
-                                 form=form,
-                                 primary_color=SystemSettings.get_setting('primary_color', '#3498db'),
-                                 secondary_color=SystemSettings.get_setting('secondary_color', '#2ecc71'),
-                                 firebase_api_key=os.environ.get("FIREBASE_API_KEY", ""),
-                                 firebase_project_id=os.environ.get("FIREBASE_PROJECT_ID", ""),
-                                 firebase_app_id=os.environ.get("FIREBASE_APP_ID", ""))
-        
+        from models import User
         user = User.query.filter_by(phone=form.phone.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
@@ -79,6 +67,7 @@ def login():
     template = 'auth/auth-mobile/login.html' if is_mobile() else 'auth/login.html'
 
     # الحصول على قيم الألوان من إعدادات النظام
+    from models import SystemSettings
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
@@ -102,16 +91,6 @@ def register():
     # لا نطبق Rate Limiting على طلبات GET لتجنب منع الوصول للصفحة
 
     if request.method == 'POST':
-        # تطبيق Rate Limiting فقط على محاولات التسجيل (POST)
-        if not apply_rate_limit('auth_register'):
-            flash('تم تجاوز الحد المسموح من محاولات التسجيل. يرجى المحاولة لاحقاً.', 'warning')
-            return render_template('auth/register.html' if not is_mobile() else 'auth/auth-mobile/register.html',
-                                 primary_color=SystemSettings.get_setting('primary_color', '#3498db'),
-                                 secondary_color=SystemSettings.get_setting('secondary_color', '#2ecc71'),
-                                 firebase_api_key=os.environ.get("FIREBASE_API_KEY", ""),
-                                 firebase_project_id=os.environ.get("FIREBASE_PROJECT_ID", ""),
-                                 firebase_app_id=os.environ.get("FIREBASE_APP_ID", ""))
-        
         name = request.form.get('name')
         phone = request.form.get('phone')
         password = request.form.get('password')
@@ -202,13 +181,6 @@ def register():
 
 @auth_bp.route('/verify-token', methods=['POST'])
 def verify_token():
-    # تطبيق Rate Limiting على التحقق من الرمز المميز
-    if not apply_rate_limit('auth_verify_token'):
-        return jsonify({
-            'error': 'تم تجاوز الحد المسموح من محاولات التحقق',
-            'message': 'يرجى المحاولة لاحقاً'
-        }), 429
-    
     data = request.json
     id_token = data.get('idToken')
 

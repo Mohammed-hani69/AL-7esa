@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>البث المباشر - {{ classroom.name }}</title>
     
-    <!-- الخطوط وملفات CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
@@ -13,27 +12,29 @@
     
     <style>
         :root {
-            --accent-color: {{ primary_color }};
-            --accent-gradient: linear-gradient(120deg, {{ primary_color }}, {{ secondary_color }});
+            --accent-color: {{ primary_color or '#667eea' }};
+            --accent-gradient: linear-gradient(120deg, {{ primary_color or '#667eea' }}, {{ secondary_color or '#764ba2' }});
             --surface-color: #FFFFFF;
             --background-color: #F4F7FE;
             --text-primary: #2D3748;
             --text-secondary: #718096;
-            --border-radius-lg: 24px;
+            --border-radius-lg: 20px;
             --border-radius-md: 16px;
-            --border-radius-sm: 8px;
-            --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+            --border-radius-sm: 12px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.1);
+            --bottom-nav-height: 64px;
         }
 
         body {
             font-family: 'Tajawal', sans-serif;
             background: var(--background-color);
-            margin: 0 0 4.5rem 0;
+            margin: 0;
             padding: 0;
             min-height: 100vh;
-            overflow-x: hidden;
-        }        
-        
+            padding-bottom: 70px;
+        }
+
+        /* Mobile Header */
         .mobile-header {
             position: fixed;
             top: 0;
@@ -41,731 +42,776 @@
             left: 0;
             z-index: 1000;
             background: var(--accent-gradient);
-            padding: 0.75rem 1rem;
-            box-shadow: var(--box-shadow);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            height: 60px;
             color: white;
         }
 
-        .mobile-header .title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin: 0;
-            flex: 1;
-            text-align: center;
-            color: white;
-        }
-
-        .mobile-header .btn-link {
-            color: white;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: var(--border-radius-sm);
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0;
-        }
-
-        .mobile-header .btn-link:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .mobile-content {
-            margin-top: 60px;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .stream-container {
-            position: relative;
-            background: var(--surface-color);
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--box-shadow);
-        }
-
-        .stream-video {
-            height: calc(100vh - 60px - 200px);
-            background-color: #1a1a1a;
-            border-radius: var(--border-radius-md);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .remote-video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .stream-controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-
-        }
-
-        .stream-control-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: none;
-        }
-
-        .stream-control-btn i {
-            font-size: 1.2rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .stream-control-btn.mic {
-            background-color: var(--accent-color);
-            color: white;
-        }
-
-        .stream-control-btn.mic.off {
-            background-color: #dc3545;
-        }
-
-        .stream-control-btn.hand {
-            background-color: #ffc107;
-            color: white;
-        }
-
-        .stream-control-btn.hand.active {
-            background-color: #dc3545;
-            animation: handRaise 1s ease-in-out infinite;
-        }        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            padding: 1rem;
-            padding-bottom: 80px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .chat-input-container {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 1rem;
-            background: var(--surface-color);
-            border-top: 1px solid rgba(0,0,0,0.1);
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            z-index: 2;
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 0.75rem 1rem;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: var(--border-radius-sm);
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .chat-input:focus {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
-        }
-
-        .mobile-tabs {
-            display: flex;
-            background: var(--surface-color);
-            border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-            margin-top: 1rem;
-            overflow: hidden;
-            box-shadow: var(--box-shadow);
-            position: relative;
-            z-index: 2;
-        }
-
-        .mobile-tab {
-            flex: 1;
-            padding: 1rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: var(--text-secondary);
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            position: relative;
-            background: transparent;
-            border: none;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .mobile-tab i {
-            font-size: 1.2rem;
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .mobile-tab.active {
-            color: var(--accent-color);
-            background: linear-gradient(0deg, rgba(108, 99, 255, 0.05) 0%, rgba(108, 99, 255, 0) 100%);
-        }
-
-        .mobile-tab.active i {
-            transform: scale(1.1);
-        }
-
-        .mobile-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--accent-gradient);
-            animation: slideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .tab-content {
-            display: none;
-            background: var(--surface-color);
-            border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
-            box-shadow: var(--box-shadow);
-            height: calc(100vh - 400px);
-            max-height: calc(100vh - 65px - 200px);
-            overflow: hidden;
-            position: relative;
-            z-index: 1;
-        }
-
-        .tab-content.active {
-            display: flex;
-            flex-direction: column;
-            animation: fadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .participants-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .participant-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            border: 1px solid rgba(108, 99, 255, 0.1);
-            border-radius: var(--border-radius-sm);
-            background: rgba(108, 99, 255, 0.05);
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .participant-item.hand-raised {
-            background: rgba(255, 193, 7, 0.1);
-            animation: pulse 2s infinite;
-        }
-
-        .participant-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--accent-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 500;
-        }
-
-        .participant-info {
-            flex: 1;
-        }
-
-        .participant-name {
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .participant-status {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes slideIn {
-            from { transform: scaleX(0); }
-            to { transform: scaleX(1); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes handRaise {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-            100% { transform: translateY(0); }
-        }
-
-        .chat-message {
-            max-width: 85%;
-            padding: 0.75rem;
-            border-radius: var(--border-radius-sm);
-            background: rgba(108, 99, 255, 0.05);
-            margin-bottom: 1rem;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .chat-message.self {
-            background: var(--accent-color);
-            color: white;
-            margin-left: auto;
-            border-bottom-right-radius: 0;
-        }
-
-        .chat-message:not(.self) {
-            border-bottom-left-radius: 0;
-        }
-
-        .message-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-        }
-
-        .chat-message.self .message-header {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .message-sender {
-            font-weight: 500;
-        }
-
-        .message-time {
-            font-size: 0.75rem;
-            opacity: 0.8;
-        }
-
-        .message-content {
-            line-height: 1.4;
-            word-break: break-word;
-        }
-
-        .chat-message:not(.self)::before,
-        .chat-message.self::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            width: 12px;
-            height: 12px;
-            background: inherit;
-        }
-
-        .chat-message:not(.self)::before {
-            left: -6px;
-            clip-path: polygon(100% 0, 100% 100%, 0 100%);
-        }
-
-        .chat-message.self::before {
-            right: -6px;
-            clip-path: polygon(0 0, 100% 100%, 0 100%);
-        }
-
-        #send-chat-btn {
-            background: var(--accent-gradient);
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: var(--border-radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        #send-chat-btn:active {
-            transform: scale(0.95);
-        }
-
-        #send-chat-btn i {
-            color: white;
-            font-size: 1rem;
-
-        }
-
-        .mobile-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--surface-color);
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-around;
-            padding: 0.5rem 0.5rem;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(108, 99, 255, 0.1);
-        }
-
-        .bottom-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-            padding: 0.5rem;
-            position: relative;
-            min-width: 60px;
-            border-radius: var(--border-radius-sm);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .bottom-nav-item i {
-            font-size: 1.25rem;
-            margin-bottom: 0.25rem;
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .bottom-nav-item span {
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .bottom-nav-item::before {
+        .mobile-header::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: var(--accent-gradient);
-            border-radius: var(--border-radius-sm);
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            z-index: -1;
+            opacity: 0.2;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E");
         }
 
-        .bottom-nav-item:active {
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        .mobile-header-logo {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: white;
+            padding: 5px;
+            object-fit: contain;
+        }
+
+        .mobile-header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .header-btn:hover, .header-btn:active {
+            background: rgba(255,255,255,0.3);
+            color: white;
             transform: scale(0.95);
         }
 
-        .bottom-nav-item.active {
+        /* Main Content */
+        .main-content {
+            margin-top: 4rem;
+            padding: 1rem;
+        }
+
+        /* Live Badge */
+        .live-badge {
+            background: linear-gradient(45deg, #ff4757, #ff3838);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+            animation: pulse 2s infinite;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 71, 87, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+            }
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        /* Stream Card */
+        .stream-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stream-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(108, 99, 255, 0.15);
+        }
+
+        .stream-header {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stream-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.2;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+
+        .stream-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stream-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stream-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stream-time {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* Stream Container */
+        .stream-container {
+            position: relative;
+            background: #000;
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .stream-container iframe {
+            width: 100%;
+            height: 250px;
+            border: none;
+            background: #000;
+        }
+
+        .stream-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .stream-btn {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stream-btn:hover, .stream-btn:active {
+            background: rgba(0,0,0,0.9);
+            color: white;
+            transform: scale(0.95);
+        }
+
+        /* Stream Info */
+        .stream-info {
+            padding: 1.25rem;
+        }
+
+        .stream-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            background: var(--background-color);
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            text-align: center;
+        }
+
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-gradient);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Tips Card */
+        .tips-card {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border: none;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 1rem;
+        }
+
+        .tips-header {
+            background: none;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding: 1rem;
+            color: var(--text-primary);
+        }
+
+        .tips-body {
+            padding: 1rem;
+        }
+
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .tip-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .tip-icon {
+            color: #4caf50;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        /* History Section */
+        .history-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1rem;
+        }
+
+        .history-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid #E2E8F0;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .history-item {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #F7FAFC;
+            transition: background-color 0.2s ease;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-item:active {
+            background: var(--background-color);
+        }
+
+        .history-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+
+        .history-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .history-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .history-date {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
             color: white;
         }
 
-        .bottom-nav-item.active::before {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .bottom-nav-item.active i {
+        .btn-primary:hover {
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+            color: white;
         }
 
-        .bottom-nav-item:not(.active):hover {
+        .btn-full {
+            width: 100%;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-secondary {
+            background: #E2E8F0;
+            color: #4A5568;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+            border: none;
+        }
+
+        .alert-info {
+            background: #D6EAF8;
+            color: #1B4F72;
+            border-left: 4px solid #3498db;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.2s ease;
+        }
+
+        .bottom-nav-item.active {
             color: var(--accent-color);
-            background: rgba(108, 99, 255, 0.05);
+        }
+
+        .bottom-nav-item:hover {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .bottom-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        /* Flash Messages */
+        .flash-messages {
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 0.75rem;
+            }
+            
+            .stream-container iframe {
+                height: 220px;
+            }
+            
+            .stream-header {
+                padding: 1rem;
+            }
+            
+            .stream-info {
+                padding: 1rem;
+            }
+            
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 768px) {
+            .stream-container iframe {
+                height: 300px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- هيدر الموبايل -->
     <header class="mobile-header">
-        <button class="btn btn-link" onclick="history.back()">
-            <i class="fas fa-arrow-right"></i>
-        </button>
-        <h1 class="title">{{ classroom.name }} - البث المباشر</h1>
-        <span style="width: 40px;"></span>
+        <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="mobile-header-brand">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+            <h1 class="mobile-header-title">البث المباشر</h1>
+        </a>
+        <div class="header-actions">
+            <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="header-btn" title="العودة للفصل">
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
     </header>
 
-    <main class="mobile-content">
-        <div class="stream-container">
-            <div class="stream-video">
-                <div id="no-stream" class="no-stream-message">
-                    <i class="fas fa-video-slash"></i>
-                    <h4>لا يوجد بث مباشر الآن</h4>
-                    <p>انتظر حتى يبدأ المعلم البث المباشر</p>
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <!-- Flash Messages -->
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {% if active_stream %}
+            <!-- Active Live Stream -->
+            <div class="stream-card">
+                <div class="stream-header">
+                    <div class="stream-title">
+                        <i class="fas fa-broadcast-tower me-2"></i>{{ active_stream.title }}
+                    </div>
+                    <div class="stream-subtitle">{{ classroom.name }}</div>
+                    <div class="stream-meta">
+                        <div class="live-badge">
+                            <div class="live-dot"></div>
+                            مباشر الآن
+                        </div>
+                        <div class="stream-time">
+                            بدأ: {{ active_stream.created_at.strftime('%H:%M') }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stream Embed Area -->
+                <div class="stream-container">
+                    <iframe 
+                        src="{{ active_stream.stream_url }}" 
+                        title="{{ active_stream.title }}"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                    
+                    <!-- Stream Controls -->
+                    <div class="stream-controls">
+                        <a href="{{ active_stream.stream_url }}" target="_blank" class="stream-btn">
+                            <i class="fas fa-external-link-alt"></i> فتح في تبويب جديد
+                        </a>
+                        <button type="button" class="stream-btn" onclick="toggleFullscreen()">
+                            <i class="fas fa-expand"></i> ملء الشاشة
+                        </button>
+                    </div>
                 </div>
                 
-                <div id="active-stream" class="d-none">
-                    <div class="stream-status">مباشر</div>
-                    <video id="remote-video" class="remote-video" autoplay playsinline></video>
+                <!-- Stream Info -->
+                <div class="stream-info">
+                    {% if active_stream.description %}
+                        <div class="stream-description">{{ active_stream.description }}</div>
+                    {% endif %}
+                    
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="info-label">يبدأ من</div>
+                            <div>{{ active_stream.created_at.strftime('%H:%M') }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-hourglass-end"></i>
+                            </div>
+                            <div class="info-label">ينتهي في</div>
+                            <div>{{ active_stream.auto_end_at.strftime('%H:%M') }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="info-label">المعلم</div>
+                            <div>{{ classroom.teacher.name }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <div class="stream-controls">
-                <button id="mic-btn" class="stream-control-btn mic off d-none">
-                    <i class="fas fa-microphone-slash"></i>
-                </button>
-                <button id="hand-btn" class="stream-control-btn hand">
-                    <i class="fas fa-hand-paper"></i>
-                </button>
+            <!-- Tips Card -->
+            <div class="tips-card">
+                <div class="tips-header">
+                    <i class="fas fa-lightbulb me-2"></i>نصائح للمشاهدة
+                </div>
+                <div class="tips-body">
+                    <div class="tip-item">
+                        <i class="fas fa-check tip-icon"></i>
+                        <span>تأكد من اتصالك بالإنترنت قوي ومستقر</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-check tip-icon"></i>
+                        <span>استخدم السماعات للحصول على جودة صوت أفضل</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-check tip-icon"></i>
+                        <span>يمكنك فتح البث في تبويب جديد للمشاهدة بشكل أفضل</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-check tip-icon"></i>
+                        <span>سينتهي البث تلقائياً بعد 24 ساعة</span>
+                    </div>
+                </div>
             </div>
-        </div>
+            
+        {% else %}
+            <!-- No Active Stream -->
+            <div class="empty-state">
+                <i class="fas fa-video-slash"></i>
+                <h3>لا يوجد بث مباشر متاح</h3>
+                <p>
+                    لم يبدأ معلمك بثاً مباشراً بعد لهذا الفصل.
+                    <br>ستتلقى إشعاراً عندما يبدأ بث مباشر جديد.
+                </p>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    تابع إشعاراتك للحصول على تنبيه فوري عند بدء البث المباشر
+                </div>
+                
+                <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="btn btn-primary btn-full">
+                    <i class="fas fa-arrow-right me-2"></i>العودة للفصل
+                </a>
+            </div>
+        {% endif %}
 
-        <div class="mobile-tabs">
-            <div class="mobile-tab active" data-tab="chat">
-                <i class="fas fa-comments"></i>
-                المحادثة
+        <!-- Stream History -->
+        {% if recent_streams %}
+        <div class="history-section">
+            <div class="history-header">
+                <i class="fas fa-history me-2"></i>البثوث السابقة
             </div>
-            <div class="mobile-tab" data-tab="participants">
-                <i class="fas fa-users"></i>
-                المشاركون (<span id="participants-count">0</span>)
+            {% for stream in recent_streams %}
+            <div class="history-item">
+                <div class="history-title">{{ stream.title }}</div>
+                {% if stream.description %}
+                <div class="history-subtitle">{{ stream.description[:80] }}{% if stream.description|length > 80 %}...{% endif %}</div>
+                {% endif %}
+                <div class="history-meta">
+                    <div class="history-date">{{ stream.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    <div>
+                        <span class="badge badge-secondary">انتهى</span>
+                    </div>
+                </div>
+                {% if stream.ended_at %}
+                <div class="history-date mt-2">
+                    المدة: 
+                    {% set duration = (stream.ended_at - stream.created_at).total_seconds() %}
+                    {% if duration < 3600 %}
+                        {{ "%.0f"|format(duration / 60) }} دقيقة
+                    {% else %}
+                        {{ "%.1f"|format(duration / 3600) }} ساعة
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
+            {% endfor %}
         </div>
-
-        <div class="tab-content active" data-tab-content="chat">
-            <div id="chat-messages" class="chat-messages">
-                <!-- Chat messages will be added here dynamically -->
-            </div>
-            <div class="chat-input-container">
-                <input type="text" id="chat-input" class="chat-input" placeholder="اكتب رسالتك هنا...">
-                <button id="send-chat-btn" class="btn btn-primary">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="tab-content" data-tab-content="participants">
-            <div id="participants-list" class="participants-list">
-                <!-- Participants will be added here dynamically -->
-            </div>
-        </div>
+        {% endif %}
     </main>
 
-    <nav class="mobile-nav">
+    <!-- القائمة السفلية -->
+    <nav class="bottom-nav">
         <a href="{{ url_for('student.dashboard') }}" class="bottom-nav-item">
-            <i class="fas fa-th-large"></i>
+            <i class="fas fa-home"></i>
             <span>الرئيسية</span>
         </a>
-        <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" class="bottom-nav-item">
+        <a href="{{ url_for('student.classrooms') }}" class="bottom-nav-item">
             <i class="fas fa-chalkboard"></i>
-            <span>الفصل</span>
+            <span>الفصول</span>
         </a>
-        <a href="#" class="bottom-nav-item active">
+        <a href="{{ url_for('student.live_classroom', classroom_id=classroom.id) }}" class="bottom-nav-item active">
             <i class="fas fa-video"></i>
-            <span>البث</span>
+            <span>البث المباشر</span>
         </a>
         <a href="{{ url_for('student.assignments', classroom_id=classroom.id) }}" class="bottom-nav-item">
             <i class="fas fa-tasks"></i>
             <span>الواجبات</span>
         </a>
+        <a href="{{ url_for('auth.profile') }}" class="bottom-nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
     </nav>
 
     <!-- JavaScript -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
     <script>
-        // Classroom data
-        const classroomId = {{ classroom.id }};
-        const userId = {{ current_user.id }};
-        const userName = "{{ current_user.name }}";
-        const userRole = "{{ current_user.role }}";
-        
-        // WebRTC variables
-        let socket;
-        let localStream;
-        let peerConnection;
-        let isStreaming = false;
-        let isHandRaised = false;
-        
-        // Participants
-        let participants = [];
-        let handsRaised = [];
-        
-        // Initialize when document is ready
-        document.addEventListener('DOMContentLoaded', initialize);
-
-        // Handle mobile tabs
-        document.querySelectorAll('.mobile-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                const tabName = this.dataset.tab;
-                switchTab(tabName);
-            });
-        });        function switchTab(tabName) {
-            // Update tabs
-            document.querySelectorAll('.mobile-tab').forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.tab === tabName);
-            });
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-refresh page every 30 seconds to check for new streams
+            setTimeout(function() {
+                window.location.reload();
+            }, 30000);
             
-            // Update content with smooth transition
-            document.querySelectorAll('.tab-content').forEach(content => {
-                const chatInput = document.querySelector('.chat-input-container');
+            // Check if stream is still active every 5 minutes
+            {% if active_stream %}
+            setInterval(function() {
+                const now = new Date();
+                const endTime = new Date('{{ active_stream.auto_end_at.isoformat() }}');
                 
-                if (content.dataset.tabContent === tabName) {
-                    content.classList.add('active');
-                    
-                    if (tabName === 'chat') {
-                        // إظهار حقل الإدخال وتمرير المحادثة للأسفل
-                        chatInput.style.display = 'flex';
-                        const chatMessages = document.getElementById('chat-messages');
-                        setTimeout(() => {
-                            chatMessages.scrollTop = chatMessages.scrollHeight;
-                        }, 100);
-                    } else if (tabName === 'participants') {
-                        // إخفاء حقل الإدخال وتحديث قائمة المشاركين
-                        chatInput.style.display = 'none';
-                        updateParticipantsList(participants);
-                    }
-                } else {
-                    content.classList.remove('active');
+                if (now >= endTime) {
+                    window.location.reload();
                 }
-            });
-        }
-
-        // Chat input handling
-        const chatInput = document.getElementById('chat-input');
-        const sendChatBtn = document.getElementById('send-chat-btn');
-
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
+            }, 300000); // 5 minutes
+            {% endif %}
         });
 
-        sendChatBtn.addEventListener('click', sendMessage);
-
-        function sendMessage() {
-            const message = chatInput.value.trim();
-            if (!message) return;
-            
-            // Send message via socket
-            socket.emit('message', {
-                classroomId,
-                userId,
-                userName,
-                message,
-                timestamp: new Date().toISOString()
-            });
-            
-            // Clear input
-            chatInput.value = '';
-            
-            // Add message to chat (optimistic UI update)
-            addMessageToChat({
-                userId,
-                userName,
-                message,
-                timestamp: new Date().toISOString(),
-                isSelf: true
-            });
-        }
-
-        function addMessageToChat(data) {
-            const chatMessages = document.getElementById('chat-messages');
-            const messageElement = document.createElement('div');
-            messageElement.className = `chat-message ${data.isSelf ? 'self' : ''}`;
-            
-            const time = new Date(data.timestamp).toLocaleTimeString('ar-SA', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            
-            messageElement.innerHTML = `
-                <div class="message-header">
-                    <span class="message-sender">${data.userName}</span>
-                    <span class="message-time">${time}</span>
-                </div>
-                <div class="message-content">${data.message}</div>
-            `;
-            
-            chatMessages.appendChild(messageElement);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            // Add subtle animation
-            requestAnimationFrame(() => {
-                messageElement.style.opacity = '0';
-                messageElement.style.transform = 'translateY(10px)';
-                requestAnimationFrame(() => {
-                    messageElement.style.transition = 'all 0.3s ease';
-                    messageElement.style.opacity = '1';
-                    messageElement.style.transform = 'translateY(0)';
-                });
-            });
-        }
-
-        // Update participants list
-        function updateParticipantsList(participants) {
-            const participantsList = document.getElementById('participants-list');
-            const participantsCount = document.getElementById('participants-count');
-            
-            participantsList.innerHTML = '';
-            participantsCount.textContent = participants.length;
-
-            if (participants.length === 0) {
-                participantsList.innerHTML = `
-                    <div class="text-center p-4">
-                        <i class="fas fa-users fa-3x mb-3 text-muted"></i>
-                        <p class="text-muted">لا يوجد مشاركون حالياً في البث</p>
-                    </div>
-                `;
-                return;
+        function toggleFullscreen() {
+            const iframe = document.querySelector('.stream-container iframe');
+            if (iframe) {
+                if (iframe.requestFullscreen) {
+                    iframe.requestFullscreen();
+                } else if (iframe.webkitRequestFullscreen) {
+                    iframe.webkitRequestFullscreen();
+                } else if (iframe.msRequestFullscreen) {
+                    iframe.msRequestFullscreen();
+                }
             }
-            
-            participants.forEach(participant => {
-                const element = document.createElement('div');
-                element.className = `participant-item ${participant.isHandRaised ? 'hand-raised' : ''}`;
-                
-                const initials = participant.name
-                    .split(' ')
-                    .map(n => n[0])
-                    .slice(0, 2)
-                    .join('')
-                    .toUpperCase();
-                
-                element.innerHTML = `
-                    <div class="participant-avatar">${initials}</div>
-                    <div class="participant-info">
-                        <div class="participant-name">${participant.name}</div>
-                        <div class="participant-status">
-                            ${participant.isHandRaised ? '<i class="fas fa-hand-paper"></i> رفع يده' : 'مستمع'}
-                        </div>
-                    </div>
-                `;
-                
-                participantsList.appendChild(element);
-            });
         }
-        // Rest of the JavaScript remains the same as in the original file
-        // All WebRTC and socket.io functionality is identical
+
+        // Handle fullscreen changes
+        document.addEventListener('fullscreenchange', function() {
+            const iframe = document.querySelector('.stream-container iframe');
+            if (document.fullscreenElement) {
+                iframe.style.width = '100vw';
+                iframe.style.height = '100vh';
+            } else {
+                iframe.style.width = '';
+                iframe.style.height = '';
+            }
+        });
     </script>
 </body>
 </html>

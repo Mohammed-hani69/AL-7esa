@@ -108,6 +108,19 @@
             text-align: center;
         }
 
+        /* شارة الإشعارات */
+        .notification-badge {
+            background: #ff4757;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 10px;
+            margin-right: 0.5rem;
+            min-width: 16px;
+            text-align: center;
+            font-weight: 600;
+        }
+
         .page-header {
             margin-bottom: 2rem;
             display: flex;
@@ -506,6 +519,15 @@
                     <a href="{{ url_for('teacher.subscriptions') }}" class="nav-link">
                         <i class="fas fa-crown"></i>
                         <span>الاشتراكات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.notifications') }}" class="nav-link">
+                        <i class="fas fa-bell"></i>
+                        <span>الإشعارات</span>
+                        {% if unread_notifications_count and unread_notifications_count > 0 %}
+                        <span class="notification-badge">{{ unread_notifications_count }}</span>
+                        {% endif %}
                     </a>
                 </li>
                 <li class="nav-item">

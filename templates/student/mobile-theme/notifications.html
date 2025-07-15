@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الإشعارات - الحصة</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: {{ primary_color }};
+            --accent-gradient: linear-gradient(120deg, {{ primary_color }}, {{ secondary_color }});
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --success-color: #48BB78;
+            --warning-color: #ED8936;
+            --danger-color: #F56565;
+            --info-color: #4299E1;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 80px;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--box-shadow);
+        }
+
+        .mobile-header-brand {
+            display: flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .mobile-header-brand:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .mobile-header-brand i {
+            margin-left: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .mobile-header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .header-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .header-btn:hover, .header-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 1rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            border-top: 3px solid var(--accent-color);
+        }
+
+        .stat-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card p {
+            color: var(--text-secondary);
+            margin: 0;
+            font-size: 0.875rem;
+        }
+
+        /* Search and Filter */
+        .search-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .search-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #E2E8F0;
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .search-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-tab {
+            flex: 1;
+            padding: 0.75rem;
+            background: var(--background-color);
+            color: var(--text-secondary);
+            text-decoration: none;
+            text-align: center;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .filter-tab.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        /* Action Buttons */
+        .action-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .action-btn {
+            padding: 0.75rem;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-mark-all {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-mark-all:hover {
+            background: #38A169;
+        }
+
+        .btn-delete-read {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-delete-read:hover {
+            background: #E53E3E;
+        }
+
+        /* Notifications List */
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .notification-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            box-shadow: var(--box-shadow);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .notification-card.unread {
+            border-right: 4px solid var(--accent-color);
+            background: rgba(108, 99, 255, 0.02);
+        }
+
+        .notification-card.unread::before {
+            content: '';
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-color);
+            border-radius: 50%;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1rem;
+            flex: 1;
+            margin-left: 0.5rem;
+        }
+
+        .notification-time {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .notification-message {
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .notification-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        .btn-mark-read {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-mark-read:hover {
+            background: #38A169;
+        }
+
+        .btn-delete {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #E53E3E;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+        }
+
+        /* Pagination */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .page-link {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #E2E8F0;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .page-link:hover, .page-link.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface-color);
+            border-top: 1px solid #E2E8F0;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            z-index: 100;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.75rem 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .bottom-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--accent-color);
+            background: rgba(108, 99, 255, 0.05);
+        }
+
+        .bottom-nav-item:active {
+            transform: scale(0.95);
+        }
+
+        /* Loading Indicator */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .loading i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- هيدر الموبايل -->
+    <header class="mobile-header">
+        <a href="{{ url_for('student.dashboard') }}" class="mobile-header-brand">
+            <i class="fas fa-arrow-right"></i>
+            رجوع
+        </a>
+        <h1 class="mobile-header-title">الإشعارات</h1>
+        <div class="header-actions">
+            <button type="button" class="header-btn" onclick="refreshNotifications()">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <!-- إحصائيات الإشعارات -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>{{ total_notifications }}</h3>
+                <p>الإجمالي</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ unread_count }}</h3>
+                <p>غير مقروءة</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ read_count }}</h3>
+                <p>مقروءة</p>
+            </div>
+        </div>
+
+        <!-- البحث والتصفية -->
+        <div class="search-section">
+            <form method="GET" class="search-form">
+                <input type="text" name="search" value="{{ search_query or '' }}" 
+                       placeholder="البحث في الإشعارات..." class="search-input">
+                {% if status_filter %}
+                <input type="hidden" name="status" value="{{ status_filter }}">
+                {% endif %}
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+            
+            <div class="filter-tabs">
+                <a href="{{ url_for('student.notifications') }}" 
+                   class="filter-tab {{ 'active' if not status_filter }}">الكل</a>
+                <a href="{{ url_for('student.notifications', status='unread') }}" 
+                   class="filter-tab {{ 'active' if status_filter == 'unread' }}">غير مقروءة</a>
+                <a href="{{ url_for('student.notifications', status='read') }}" 
+                   class="filter-tab {{ 'active' if status_filter == 'read' }}">مقروءة</a>
+            </div>
+        </div>
+
+        <!-- أزرار الإجراءات -->
+        {% if notifications %}
+        <div class="action-section">
+            <button type="button" class="action-btn btn-mark-all" onclick="markAllAsRead()">
+                <i class="fas fa-check-double"></i>
+                تعيين الكل كمقروء
+            </button>
+            <button type="button" class="action-btn btn-delete-read" onclick="deleteAllRead()">
+                <i class="fas fa-trash"></i>
+                حذف المقروءة
+            </button>
+        </div>
+        {% endif %}
+
+        <!-- حالة التحميل -->
+        <div class="loading" id="loadingIndicator">
+            <i class="fas fa-spinner"></i>
+            <p>جاري التحميل...</p>
+        </div>
+
+        <!-- قائمة الإشعارات -->
+        {% if notifications %}
+        <div class="notifications-list" id="notificationsList">
+            {% for notification in notifications %}
+            <div class="notification-card {{ 'unread' if not notification.is_read }}" 
+                 data-id="{{ notification.id }}">
+                <div class="notification-header">
+                    <div class="notification-title">{{ notification.title }}</div>
+                    <div class="notification-time">{{ notification.created_at.strftime('%m-%d %H:%M') }}</div>
+                </div>
+                <div class="notification-message">{{ notification.message }}</div>
+                <div class="notification-actions">
+                    {% if not notification.is_read %}
+                    <button type="button" class="notification-btn btn-mark-read" 
+                            onclick="markAsRead({{ notification.id }})">
+                        <i class="fas fa-check"></i>
+                        مقروء
+                    </button>
+                    {% endif %}
+                    <button type="button" class="notification-btn btn-delete" 
+                            onclick="deleteNotification({{ notification.id }})">
+                        <i class="fas fa-trash"></i>
+                        حذف
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- التقسيم على صفحات -->
+        {% if pagination.pages > 1 %}
+        <div class="pagination-wrapper">
+            <div class="pagination">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('student.notifications', page=pagination.prev_num, status=status_filter, search=search_query) }}" 
+                   class="page-link">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+                
+                {% for page in pagination.iter_pages() %}
+                    {% if page %}
+                        {% if page != pagination.page %}
+                        <a href="{{ url_for('student.notifications', page=page, status=status_filter, search=search_query) }}" 
+                           class="page-link">{{ page }}</a>
+                        {% else %}
+                        <span class="page-link active">{{ page }}</span>
+                        {% endif %}
+                    {% else %}
+                    <span class="page-link">...</span>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination.has_next %}
+                <a href="{{ url_for('student.notifications', page=pagination.next_num, status=status_filter, search=search_query) }}" 
+                   class="page-link">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- حالة عدم وجود إشعارات -->
+        <div class="empty-state">
+            <i class="fas fa-bell-slash"></i>
+            <h3>لا توجد إشعارات</h3>
+            <p>لم تتلقى أي إشعارات بعد</p>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- القائمة السفلية -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('student.dashboard') }}" class="bottom-nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('student.classrooms') }}" class="bottom-nav-item">
+            <i class="fas fa-chalkboard"></i>
+            <span>الفصول</span>
+        </a>
+        <a href="{{ url_for('student.notifications') }}" class="bottom-nav-item active">
+            <i class="fas fa-bell"></i>
+            <span>الإشعارات</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="bottom-nav-item">
+            <i class="fas fa-user"></i>
+            <span>الملف الشخصي</span>
+        </a>
+    </nav>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // إعداد CSRF token للطلبات
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+                }
+            }
+        });
+
+        // تعيين إشعار كمقروء
+        function markAsRead(notificationId) {
+            showLoading();
+            $.post(`/student/notifications/mark_read/${notificationId}`)
+                .done(function(response) {
+                    if (response.success) {
+                        location.reload();
+                    }
+                })
+                .fail(function() {
+                    hideLoading();
+                    alert('حدث خطأ في تعيين الإشعار كمقروء');
+                });
+        }
+
+        // تعيين جميع الإشعارات كمقروءة
+        function markAllAsRead() {
+            if (confirm('هل تريد تعيين جميع الإشعارات كمقروءة؟')) {
+                showLoading();
+                $.post('/student/notifications/mark_all_read')
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        }
+                    })
+                    .fail(function() {
+                        hideLoading();
+                        alert('حدث خطأ في تعيين الإشعارات كمقروءة');
+                    });
+            }
+        }
+
+        // حذف إشعار
+        function deleteNotification(notificationId) {
+            if (confirm('هل تريد حذف هذا الإشعار؟')) {
+                showLoading();
+                $.post(`/student/notifications/delete/${notificationId}`)
+                    .done(function(response) {
+                        if (response.success) {
+                            location.reload();
+                        }
+                    })
+                    .fail(function() {
+                        hideLoading();
+                        alert('حدث خطأ في حذف الإشعار');
+                    });
+            }
+        }
+
+        // حذف جميع الإشعارات المقروءة
+        function deleteAllRead() {
+            if (confirm('هل تريد حذف جميع الإشعارات المقروءة؟')) {
+                showLoading();
+                $.post('/student/notifications/delete_all_read')
+                    .done(function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload();
+                        }
+                    })
+                    .fail(function() {
+                        hideLoading();
+                        alert('حدث خطأ في حذف الإشعارات');
+                    });
+            }
+        }
+
+        // تحديث الإشعارات
+        function refreshNotifications() {
+            location.reload();
+        }
+
+        // إظهار حالة التحميل
+        function showLoading() {
+            $('#loadingIndicator').show();
+            $('#notificationsList').hide();
+        }
+
+        // إخفاء حالة التحميل
+        function hideLoading() {
+            $('#loadingIndicator').hide();
+            $('#notificationsList').show();
+        }
+
+        // تأثير النقر على البطاقات
+        $(document).on('touchstart', '.notification-card', function() {
+            $(this).css('transform', 'scale(0.98)');
+        });
+
+        $(document).on('touchend', '.notification-card', function() {
+            $(this).css('transform', 'scale(1)');
+        });
+    </script>
+</body>
+</html>

@@ -4,8 +4,6 @@
 
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, current_app
 from flask_login import current_user, login_required
-from models import Role, SystemSettings, User, ClassroomEnrollment, Classroom, SubscriptionPlan, Contact, FAQ
-from app import db
 
 # تعريف المسارات الأساسية
 main_bp = Blueprint('main', __name__)
@@ -14,6 +12,10 @@ main_bp = Blueprint('main', __name__)
 def index():
     """الصفحة الرئيسية"""
     try:
+        # Import models locally to avoid circular imports
+        from models import Role, SystemSettings, Classroom, SubscriptionPlan
+        from app import db
+        
         # الحصول على قيم الألوان من إعدادات النظام
         primary_color = SystemSettings.get_setting('primary_color')  # يمكن أن يكون اللون الافتراضي
         secondary_color = SystemSettings.get_setting('secondary_color')  # اللون الافتراضي
@@ -45,7 +47,8 @@ def index():
 @main_bp.route('/about')
 def about():
     """صفحة من نحن"""
-
+    from models import SystemSettings
+    
     # الحصول على قيم الألوان من إعدادات النظام
     primary_color = SystemSettings.get_setting('primary_color')  # يمكن أن يكون اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color')  # اللون الافتراضي
@@ -57,6 +60,9 @@ def about():
 @main_bp.route('/contact', methods=['GET', 'POST'])
 def contact():
     """صفحة اتصل بنا"""
+    from models import SystemSettings, Contact
+    from app import db
+    
     # الحصول على قيم الألوان من إعدادات النظام
     primary_color = SystemSettings.get_setting('primary_color')
     secondary_color = SystemSettings.get_setting('secondary_color')
@@ -92,6 +98,8 @@ def contact():
 @main_bp.route('/privacy')
 def privacy():
     """صفحة سياسة الخصوصية"""
+    from models import SystemSettings
+    
     # الحصول على قيم الألوان من إعدادات النظام
     primary_color = SystemSettings.get_setting('primary_color')
     secondary_color = SystemSettings.get_setting('secondary_color')
@@ -103,6 +111,8 @@ def privacy():
 @main_bp.route('/faq')
 def faq():
     """صفحة الأسئلة الشائعة"""
+    from models import SystemSettings, FAQ
+    
     # الحصول على قيم الألوان من إعدادات النظام
     primary_color = SystemSettings.get_setting('primary_color')
     secondary_color = SystemSettings.get_setting('secondary_color')
@@ -126,6 +136,8 @@ def faq():
 @main_bp.route('/support')
 def support():
     """صفحة الدعم الفني"""
+    from models import SystemSettings
+    
     # الحصول على قيم الألوان من إعدادات النظام
     primary_color = SystemSettings.get_setting('primary_color')
     secondary_color = SystemSettings.get_setting('secondary_color')
@@ -137,6 +149,8 @@ def support():
 @main_bp.route('/terms')
 def terms():
     """صفحة شروط الاستخدام"""
+    from models import SystemSettings
+    
     # الحصول على قيم الألوان من إعدادات النظام
     primary_color = SystemSettings.get_setting('primary_color')
     secondary_color = SystemSettings.get_setting('secondary_color')

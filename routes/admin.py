@@ -1,13 +1,19 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
+from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from functools import wraps
-from app import db
-from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings, SubscriptionPayment
+from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings, SubscriptionPayment, ClassroomEnrollment
 from flask_wtf.csrf import CSRFProtect, CSRFError
-from rate_limiting import RATE_LIMITS, get_limiter
-# Add current time for template filters
-from datetime import datetime
+from models import db
+
+
+# استيراد db من داخل الدالة لتجنب الاستيراد الدائري
+def get_db():
+    global db
+    if not hasattr(db, 'session'):
+        from app import db as app_db
+        return app_db
+    return db
 
 
 
@@ -96,11 +102,7 @@ def dashboard():
 @login_required
 @admin_required
 def users():
-    # تطبيق Rate Limiting على إدارة المستخدمين
-    if request.method == 'POST':
-        limiter = get_limiter()
-        if limiter:
-            limiter.limit(RATE_LIMITS['admin_user_management'])(lambda: None)()
+
     
     # إذا كان طلب POST، فقم بمعالجة تحديث أو إضافة المستخدم
     if request.method == 'POST':
@@ -932,3 +934,574 @@ def settings():
                            now=now,
                            primary_color=primary_color,
                            secondary_color=secondary_color,)
+
+@admin_bp.route('/payment/<int:payment_id>/approve', methods=['POST'])
+@login_required
+@admin_required
+def approve_payment(payment_id):
+    """
+    قبول دفعة الطالب في الفصل (للإدارة)
+    """
+    payment = Payment.query.get_or_404(payment_id)
+    
+    if payment.status != 'pending':
+        flash('لا يمكن قبول هذا الطلب لأنه تم معالجته مسبقاً', 'warning')
+        return redirect(url_for('admin.subscriptions'))
+    
+    # تحديث حالة الدفع
+    payment.status = 'success'
+    
+    # تفعيل اشتراك الطالب في الفصل
+    enrollment = ClassroomEnrollment.query.filter_by(
+        user_id=payment.user_id,
+        classroom_id=payment.classroom_id
+    ).first()
+    
+    if enrollment:
+        enrollment.payment_status = 'paid'
+        enrollment.is_active = True
+        enrollment.payment_date = datetime.utcnow()
+    
+    db.session.commit()
+    
+    flash('تم تفعيل اشتراك الطالب بنجاح', 'success')
+    return redirect(url_for('admin.subscriptions'))
+
+@admin_bp.route('/payment/<int:payment_id>/reject', methods=['POST'])
+@login_required
+@admin_required
+def reject_payment(payment_id):
+    """
+    رفض دفعة الطالب في الفصل (للإدارة)
+    """
+    payment = Payment.query.get_or_404(payment_id)
+    
+    if payment.status != 'pending':
+        flash('لا يمكن رفض هذا الطلب لأنه تم معالجته مسبقاً', 'warning')
+        return redirect(url_for('admin.subscriptions'))
+    
+    # تحديث حالة الدفع
+    payment.status = 'failed'
+    
+    # تعطيل اشتراك الطالب في الفصل
+    enrollment = ClassroomEnrollment.query.filter_by(
+        user_id=payment.user_id,
+        classroom_id=payment.classroom_id
+    ).first()
+    
+    if enrollment:
+        enrollment.payment_status = 'failed'
+        enrollment.is_active = False
+    
+    db.session.commit()
+    
+    flash('تم رفض عملية الدفع', 'danger')
+    return redirect(url_for('admin.subscriptions'))
+
+@admin_bp.route('/users/export')
+@login_required
+@admin_required
+def export_users():
+    """تصدير بيانات المستخدمين إلى ملف Excel"""
+    try:
+        # Get filter parameters
+        role_filter = request.args.get('role', '')
+        status_filter = request.args.get('status', '')
+        search = request.args.get('search', '')
+
+        # Base query
+        query = User.query
+
+        # Apply filters
+        if role_filter and role_filter in [Role.STUDENT, Role.TEACHER, Role.ASSISTANT, Role.ADMIN]:
+            query = query.filter_by(role=role_filter)
+
+        if status_filter:
+            if status_filter == 'active':
+                query = query.filter_by(is_active=True)
+            elif status_filter == 'inactive':
+                query = query.filter_by(is_active=False)
+
+        if search:
+            query = query.filter(
+                (User.name.ilike(f'%{search}%')) | 
+                (User.phone.ilike(f'%{search}%')) |
+                (User.email.ilike(f'%{search}%'))
+            )
+
+        # Get all users
+        users = query.order_by(User.created_at.desc()).all()
+
+        # Prepare data for export
+        users_data = []
+        for user in users:
+            role_name = {
+                'student': 'طالب',
+                'teacher': 'معلم', 
+                'assistant': 'مساعد',
+                'admin': 'مسؤول'
+            }.get(user.role, user.role)
+            
+            status_name = 'نشط' if user.is_active else 'معطل'
+            
+            user_data = {
+                'name': user.name,
+                'phone': user.phone,
+                'email': user.email or '',
+                'role': role_name,
+                'created_at': user.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'status': status_name,
+                'updated_at': user.updated_at.strftime('%Y-%m-%d %H:%M:%S') if user.updated_at else '',
+                'address': user.address or ''
+            }
+            users_data.append(user_data)
+
+        return jsonify({
+            'success': True,
+            'data': users_data,
+            'total': len(users_data)
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@admin_bp.route('/users/export/excel')
+@login_required
+@admin_required  
+def export_users_excel():
+    """تصدير بيانات المستخدمين إلى ملف Excel"""
+    try:
+        # استيراد مكتبة openpyxl
+        try:
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            from openpyxl.utils import get_column_letter
+            excel_available = True
+        except ImportError:
+            return jsonify({
+                'success': False,
+                'error': 'مكتبة openpyxl غير مثبتة'
+            }), 500
+
+        # الحصول على جميع المستخدمين
+        users = User.query.all()
+        
+        # إحصائيات
+        total_users = len(users)
+        active_users = len([u for u in users if u.is_active])
+        inactive_users = total_users - active_users
+        
+        # إحصائيات الأدوار
+        students_count = len([u for u in users if u.role == 'student'])
+        teachers_count = len([u for u in users if u.role == 'teacher'])
+        assistants_count = len([u for u in users if u.role == 'assistant'])
+        admins_count = len([u for u in users if u.role == 'admin'])
+
+        # إنشاء كتاب Excel جديد
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "بيانات المستخدمين"
+        
+        # تعيين خصائص الكتاب
+        wb.properties.creator = "AL-7esa Platform"
+        wb.properties.title = "تقرير المستخدمين"
+        
+        # تعريف الأنماط البسيطة
+        header_font = Font(name='Arial', size=12, bold=True, color='FFFFFF')
+        normal_font = Font(name='Arial', size=11)
+        primary_fill = PatternFill(start_color='2E4057', end_color='2E4057', fill_type='solid')
+        success_fill = PatternFill(start_color='D4F6D4', end_color='D4F6D4', fill_type='solid')
+        warning_fill = PatternFill(start_color='FFF3CD', end_color='FFF3CD', fill_type='solid')
+        
+        # المحاذاة
+        center_alignment = Alignment(horizontal='center', vertical='center')
+        right_alignment = Alignment(horizontal='right', vertical='center')
+        
+        # الحدود
+        thin_border = Side(border_style="thin", color="B0B0B0")
+        border = Border(left=thin_border, right=thin_border, top=thin_border, bottom=thin_border)
+
+        # العنوان الرئيسي
+        ws.merge_cells('A1:I2')
+        title_cell = ws['A1']
+        title_cell.value = 'تقرير المستخدمين - منصة الحصة التعليمية'
+        title_cell.font = Font(name='Arial', size=16, bold=True, color='FFFFFF')
+        title_cell.alignment = center_alignment
+        title_cell.fill = primary_fill
+        
+        # معلومات التقرير
+        from datetime import datetime
+        current_time = datetime.now()
+        
+        info_row = 3
+        ws[f'A{info_row}'] = f'تاريخ التقرير: {current_time.strftime("%Y-%m-%d %H:%M")}'
+        ws[f'A{info_row}'].font = normal_font
+        
+        info_row += 1
+        ws[f'A{info_row}'] = f'إجمالي المستخدمين: {total_users} | النشطين: {active_users} | المعطلين: {inactive_users}'
+        ws[f'A{info_row}'].font = normal_font
+        
+        info_row += 1
+        ws[f'A{info_row}'] = f'الطلاب: {students_count} | المعلمين: {teachers_count} | المساعدين: {assistants_count} | المديرين: {admins_count}'
+        ws[f'A{info_row}'].font = normal_font
+        
+        # عناوين الأعمدة
+        headers = [
+            'الرقم',
+            'الاسم الكامل',
+            'رقم الهاتف', 
+            'البريد الإلكتروني',
+            'الدور',
+            'الحالة',
+            'تاريخ التسجيل',
+            'آخر تحديث',
+            'العنوان'
+        ]
+
+        header_row = 7
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=header_row, column=col, value=header)
+            cell.font = header_font
+            cell.fill = primary_fill
+            cell.alignment = center_alignment
+            cell.border = border
+
+        # إضافة بيانات المستخدمين
+        for row, user in enumerate(users, header_row + 1):
+            role_name = {
+                'student': 'طالب',
+                'teacher': 'معلم', 
+                'assistant': 'مساعد',
+                'admin': 'مدير'
+            }.get(user.role, user.role)
+            
+            status_name = 'نشط' if user.is_active else 'معطل'
+            
+            user_data = [
+                row - header_row,  # الرقم
+                user.name,
+                user.phone,
+                user.email or '',
+                role_name,
+                status_name,
+                user.created_at.strftime('%Y-%m-%d'),
+                user.updated_at.strftime('%Y-%m-%d') if user.updated_at else '',
+                user.address or ''
+            ]
+            
+            for col, value in enumerate(user_data, 1):
+                cell = ws.cell(row=row, column=col, value=value)
+                cell.font = normal_font
+                cell.alignment = center_alignment if col == 1 else right_alignment
+                cell.border = border
+                
+                # تلوين الصفوف بالتناوب
+                if row % 2 == 0:
+                    cell.fill = PatternFill(start_color='F8F9FA', end_color='F8F9FA', fill_type='solid')
+                
+                # تلوين خاص للحالة
+                if col == 6:  # عمود الحالة
+                    if user.is_active:
+                        cell.fill = success_fill
+                        cell.font = Font(name='Arial', size=11, bold=True, color='155724')
+                    else:
+                        cell.fill = warning_fill
+                        cell.font = Font(name='Arial', size=11, bold=True, color='856404')
+
+        # تعديل عرض الأعمدة
+        column_widths = [8, 25, 15, 30, 12, 10, 15, 15, 35]
+        for col, width in enumerate(column_widths, 1):
+            column_letter = get_column_letter(col)
+            ws.column_dimensions[column_letter].width = width
+
+        # حفظ الملف
+        from io import BytesIO
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        from flask import send_file
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'تقرير_المستخدمين_{timestamp}.xlsx'
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin_bp.route('/classrooms/export/excel')
+@login_required
+@admin_required
+def export_classrooms_excel():
+    """تصدير بيانات الفصول الدراسية إلى ملف Excel مع تصميم مميز"""
+    try:
+        # استيراد مكتبة openpyxl
+        try:
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            from openpyxl.utils import get_column_letter
+            from openpyxl.drawing.image import Image
+            excel_available = True
+        except ImportError:
+            excel_available = False
+
+        if not excel_available:
+            return jsonify({
+                'success': False,
+                'error': 'مكتبة Excel غير متاحة. يرجى تثبيت openpyxl'
+            }), 400
+
+        # Get filter parameters
+        is_free_filter = request.args.get('is_free', '')
+        subject_filter = request.args.get('subject', '')
+        grade_filter = request.args.get('grade', '')
+        sort_filter = request.args.get('sort', '')
+
+        # Base query with joins
+        query = Classroom.query.options(
+            db.joinedload(Classroom.teacher),
+            db.joinedload(Classroom.assistant),
+            db.joinedload(Classroom.enrollments)
+        )
+
+        # Apply filters
+        if is_free_filter == 'true':
+            query = query.filter_by(is_free=True)
+        elif is_free_filter == 'false':
+            query = query.filter_by(is_free=False)
+
+        if subject_filter:
+            query = query.filter(Classroom.subject.ilike(f'%{subject_filter}%'))
+
+        if grade_filter:
+            query = query.filter(Classroom.grade.ilike(f'%{grade_filter}%'))
+
+        # Apply sorting
+        if sort_filter == 'newest':
+            query = query.order_by(Classroom.created_at.desc())
+        elif sort_filter == 'oldest':
+            query = query.order_by(Classroom.created_at.asc())
+        else:
+            query = query.order_by(Classroom.created_at.desc())
+
+        # Get all classrooms
+        classrooms = query.all()
+
+        # Create Excel workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "تقرير الفصول الدراسية"
+
+        # Define colors and styles
+        header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")  # Dark Blue
+        subheader_fill = PatternFill(start_color="3B82F6", end_color="3B82F6", fill_type="solid")  # Blue
+        free_fill = PatternFill(start_color="10B981", end_color="10B981", fill_type="solid")  # Green
+        paid_fill = PatternFill(start_color="F59E0B", end_color="F59E0B", fill_type="solid")  # Orange
+        
+        header_font = Font(bold=True, color="FFFFFF", size=14)
+        subheader_font = Font(bold=True, color="FFFFFF", size=12)
+        title_font = Font(bold=True, color="1E3A8A", size=18)
+        normal_font = Font(color="374151", size=11)
+        
+        center_alignment = Alignment(horizontal="center", vertical="center")
+        left_alignment = Alignment(horizontal="left", vertical="center")
+        
+        thin_border = Border(
+            left=Side(style='thin', color='E5E7EB'),
+            right=Side(style='thin', color='E5E7EB'),
+            top=Side(style='thin', color='E5E7EB'),
+            bottom=Side(style='thin', color='E5E7EB')
+        )
+
+        # Add title and summary section
+        ws.merge_cells('A1:I3')
+        title_cell = ws['A1']
+        title_cell.value = "تقرير الفصول الدراسية - منصة الحصة التعليمية"
+        title_cell.font = title_font
+        title_cell.alignment = center_alignment
+        title_cell.fill = PatternFill(start_color="F3F4F6", end_color="F3F4F6", fill_type="solid")
+
+        # Add date and statistics
+        from datetime import datetime
+        current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        ws.merge_cells('A4:I4')
+        date_cell = ws['A4']
+        date_cell.value = f"تاريخ التقرير: {current_date}"
+        date_cell.font = Font(color="6B7280", size=12, italic=True)
+        date_cell.alignment = center_alignment
+
+        # Statistics row
+        total_classrooms = len(classrooms)
+        free_classrooms = len([c for c in classrooms if c.is_free])
+        paid_classrooms = total_classrooms - free_classrooms
+        total_students = sum(len(c.enrollments) for c in classrooms)
+
+        ws.merge_cells('A6:B6')
+        ws['A6'] = "إجمالي الفصول:"
+        ws['A6'].font = Font(bold=True, color="1E3A8A")
+        ws['C6'] = total_classrooms
+        ws['C6'].font = Font(bold=True, color="059669")
+
+        ws.merge_cells('D6:E6')
+        ws['D6'] = "الفصول المجانية:"
+        ws['D6'].font = Font(bold=True, color="1E3A8A")
+        ws['F6'] = free_classrooms
+        ws['F6'].font = Font(bold=True, color="059669")
+
+        ws.merge_cells('G6:H6')
+        ws['G6'] = "الفصول المدفوعة:"
+        ws['G6'].font = Font(bold=True, color="1E3A8A")
+        ws['I6'] = paid_classrooms
+        ws['I6'].font = Font(bold=True, color="D97706")
+
+        ws.merge_cells('A7:B7')
+        ws['A7'] = "إجمالي الطلاب:"
+        ws['A7'].font = Font(bold=True, color="1E3A8A")
+        ws['C7'] = total_students
+        ws['C7'].font = Font(bold=True, color="7C2D12")
+
+        # Headers for data table
+        headers = [
+            'كود الفصل',
+            'اسم الفصل', 
+            'المادة',
+            'المستوى/الصف',
+            'المعلم',
+            'المساعد',
+            'عدد الطلاب',
+            'النوع',
+            'السعر (جنية)',
+            'تاريخ الإنشاء'
+        ]
+
+        # Add headers starting from row 9
+        start_row = 9
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=start_row, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = center_alignment
+            cell.border = thin_border
+
+        # Add classroom data
+        for row_idx, classroom in enumerate(classrooms, start_row + 1):
+            # Basic information
+            ws.cell(row=row_idx, column=1, value=classroom.code)
+            ws.cell(row=row_idx, column=2, value=classroom.name)
+            ws.cell(row=row_idx, column=3, value=classroom.subject)
+            ws.cell(row=row_idx, column=4, value=classroom.grade)
+            ws.cell(row=row_idx, column=5, value=classroom.teacher.name if classroom.teacher else 'غير محدد')
+            ws.cell(row=row_idx, column=6, value=classroom.assistant.name if classroom.assistant else '-')
+            ws.cell(row=row_idx, column=7, value=len(classroom.enrollments))
+            
+            # Type and price with color coding
+            type_cell = ws.cell(row=row_idx, column=8)
+            price_cell = ws.cell(row=row_idx, column=9)
+            
+            if classroom.is_free:
+                type_cell.value = "مجاني"
+                type_cell.fill = free_fill
+                type_cell.font = Font(bold=True, color="FFFFFF")
+                price_cell.value = "مجاني"
+                price_cell.fill = free_fill
+                price_cell.font = Font(bold=True, color="FFFFFF")
+            else:
+                type_cell.value = "مدفوع"
+                type_cell.fill = paid_fill
+                type_cell.font = Font(bold=True, color="FFFFFF")
+                price_cell.value = f"{classroom.price or 0} جنية"
+                price_cell.fill = paid_fill
+                price_cell.font = Font(bold=True, color="FFFFFF")
+            
+            # Creation date
+            date_cell = ws.cell(row=row_idx, column=10, value=classroom.created_at.strftime('%Y-%m-%d'))
+            
+            # Apply styling to all cells in the row
+            for col in range(1, len(headers) + 1):
+                cell = ws.cell(row=row_idx, column=col)
+                cell.font = normal_font
+                cell.alignment = center_alignment
+                cell.border = thin_border
+                
+                # Alternate row colors
+                if row_idx % 2 == 0:
+                    if col not in [8, 9]:  # Skip type and price columns
+                        cell.fill = PatternFill(start_color="F9FAFB", end_color="F9FAFB", fill_type="solid")
+
+        # Auto-adjust column widths
+        for col in range(1, len(headers) + 1):
+            column_letter = get_column_letter(col)
+            max_length = 0
+            
+            # Check header length
+            max_length = max(max_length, len(str(headers[col-1])))
+            
+            # Check data length
+            for row in range(start_row + 1, ws.max_row + 1):
+                cell_value = str(ws[f"{column_letter}{row}"].value or "")
+                max_length = max(max_length, len(cell_value))
+            
+            # Set column width with some padding
+            adjusted_width = min(max_length + 3, 50)
+            ws.column_dimensions[column_letter].width = adjusted_width
+
+        # Add a summary section at the bottom
+        summary_row = ws.max_row + 3
+        
+        ws.merge_cells(f'A{summary_row}:J{summary_row}')
+        summary_cell = ws[f'A{summary_row}']
+        summary_cell.value = "ملخص التقرير"
+        summary_cell.font = Font(bold=True, color="FFFFFF", size=14)
+        summary_cell.fill = header_fill
+        summary_cell.alignment = center_alignment
+
+        # Summary statistics
+        summary_data = [
+            ("إجمالي الفصول الدراسية:", total_classrooms),
+            ("الفصول المجانية:", free_classrooms),
+            ("الفصول المدفوعة:", paid_classrooms),
+            ("إجمالي الطلاب المسجلين:", total_students),
+            ("متوسط الطلاب لكل فصل:", round(total_students / total_classrooms, 2) if total_classrooms > 0 else 0)
+        ]
+
+        for i, (label, value) in enumerate(summary_data):
+            row = summary_row + 1 + i
+            ws.cell(row=row, column=1, value=label).font = Font(bold=True, color="1E3A8A")
+            ws.cell(row=row, column=2, value=value).font = Font(bold=True, color="059669")
+
+        # Create response
+        from io import BytesIO
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        from flask import send_file
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'تقرير_الفصول_الدراسية_{timestamp}.xlsx'
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+    except Exception as e:
+        current_app.logger.error(f"خطأ في تصدير الفصول: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'حدث خطأ أثناء تصدير البيانات: {str(e)}'
+        }), 500

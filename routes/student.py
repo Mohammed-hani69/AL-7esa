@@ -4,11 +4,16 @@ from functools import wraps
 from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
-from app import db
-from models import Subscription, SubscriptionPlan, User, Role, Classroom, ClassroomEnrollment, ClassroomContent
+from models import LiveStream, Subscription, SubscriptionPlan, User, Role, Classroom, ClassroomEnrollment, ClassroomContent
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizAttempt, QuizAnswer, QuizQuestionOption
-from models import Payment, ChatParticipant, SystemSettings
-from rate_limiting import RATE_LIMITS, get_limiter
+from models import Payment, ChatParticipant, SystemSettings, Notification
+
+# استيراد db بطريقة آمنة
+try:
+    from app import db
+except ImportError:
+    from flask_sqlalchemy import SQLAlchemy
+    db = SQLAlchemy()
 
 student_bp = Blueprint('student', __name__)
 
@@ -133,6 +138,9 @@ def dashboard():
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
+    # جلب الإشعارات للطالب
+    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(5).all()
+    unread_notifications = Notification.query.filter_by(user_id=current_user.id, is_read=False).all()
 
     return render_template(template,
         enrollments=enrollments,
@@ -140,6 +148,8 @@ def dashboard():
         secondary_color=secondary_color,
         upcoming_assignments=upcoming_assignments,
         upcoming_quizzes=upcoming_quizzes,
+        notifications=notifications,
+        unread_notifications=unread_notifications,
         now=datetime.utcnow(),
         # بيانات الرسوم البيانية
         assignment_dates=assignment_dates,
@@ -166,19 +176,22 @@ def classrooms():
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
+    # جلب الإشعارات للطالب
+    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(5).all()
+    unread_notifications = Notification.query.filter_by(user_id=current_user.id, is_read=False).all()
+
     return render_template(template, enrollments=enrollments,
                            primary_color=primary_color,
-                           secondary_color=secondary_color,)
+                           secondary_color=secondary_color,
+                           notifications=notifications,
+                           unread_notifications=unread_notifications)
 
 @student_bp.route('/join', methods=['GET', 'POST'])
 @login_required
 @student_required
 def join_classroom():
-    # تطبيق Rate Limiting على الانضمام للفصول
+
     if request.method == 'POST':
-        limiter = get_limiter()
-        if limiter:
-            limiter.limit(RATE_LIMITS['student']['join_classroom'])(lambda: None)()
         
         classroom_code = request.form.get('classroom_code')
 
@@ -275,10 +288,7 @@ def payment(classroom_id):
 @login_required
 @student_required
 def process_payment(classroom_id):
-    # تطبيق Rate Limiting على معالجة المدفوعات
-    limiter = get_limiter()
-    if limiter:
-        limiter.limit(RATE_LIMITS['payment_submit'])(lambda: None)()
+
     
     classroom = Classroom.query.get_or_404(classroom_id)
 
@@ -490,15 +500,8 @@ def view_assignment(classroom_id, assignment_id):
     ).first()
 
     if request.method == 'POST':
-        # تطبيق Rate Limiting على تسليم الواجبات
-        limiter = get_limiter()
-        if limiter:
-            try:
-                limiter.limit(RATE_LIMITS['student']['submit_assignment'])(lambda: None)()
-            except Exception:
-                flash('لقد تجاوزت الحد المسموح لتسليم الواجبات. حاول مرة أخرى لاحقاً.', 'warning')
-                return redirect(url_for('student.view_assignment', classroom_id=classroom.id, assignment_id=assignment.id))
-        
+
+     
         # Check if past due date
         if assignment.due_date and assignment.due_date < datetime.utcnow():
             flash('انتهت مهلة تسليم الواجب', 'danger')
@@ -896,10 +899,22 @@ def live_classroom(classroom_id):
         flash('يجب أن تكون مسجلاً في الفصل للوصول إليه', 'danger')
         return redirect(url_for('student.dashboard'))
 
-    # Get active stream info if exists
-    from streaming import active_streams
-    stream_info = active_streams.get(classroom_id, None)
-    meet_link = stream_info.url if stream_info else None
+    # Get current active live stream for this classroom
+    active_stream = LiveStream.query.filter_by(
+        classroom_id=classroom_id,
+        is_active=True
+    ).first()
+    
+    # Check if the stream has expired and auto-end it
+    if active_stream and active_stream.is_expired:
+        active_stream.end_stream()
+        active_stream = None
+    
+    # Get recent streams for this classroom (last 5 for students)
+    recent_streams = LiveStream.query.filter_by(
+        classroom_id=classroom_id
+    ).filter(LiveStream.ended_at.isnot(None))\
+     .order_by(LiveStream.created_at.desc()).limit(5).all()
 
     template = 'student/mobile-theme/live_class.html' if is_mobile() else 'student/live_class.html'
 
@@ -909,11 +924,13 @@ def live_classroom(classroom_id):
 
     return render_template(template,
                          classroom=classroom,
+                         active_stream=active_stream,
+                         recent_streams=recent_streams,
+                         current_time=datetime.utcnow(),
                          primary_color=primary_color,
                          secondary_color=secondary_color,
                          enrollment=enrollment,
-                         user_type='student',
-                         meet_link=meet_link)
+                         user_type='student')
 
 @student_bp.route('/classroom/<int:classroom_id>/chat')
 @login_required
@@ -943,3 +960,125 @@ def chat(classroom_id):
                          secondary_color=secondary_color,
                          enrollment=enrollment,
                          is_chat_participant=chat_participant is not None and chat_participant.is_enabled)
+
+# Student notifications routes
+@student_bp.route('/notifications')
+@login_required
+@student_required
+def notifications():
+    """صفحة الإشعارات للطالب"""
+    # جلب الإشعارات الخاصة بالطالب الحالي مرتبة بالتاريخ
+    notifications_query = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc())
+    
+    # تطبيق التصفية حسب حالة القراءة إذا تم تحديدها
+    status_filter = request.args.get('status')
+    if status_filter == 'unread':
+        notifications_query = notifications_query.filter_by(is_read=False)
+    elif status_filter == 'read':
+        notifications_query = notifications_query.filter_by(is_read=True)
+    
+    # تطبيق البحث إذا تم تحديده
+    search_query = request.args.get('search', '').strip()
+    if search_query:
+        notifications_query = notifications_query.filter(
+            db.or_(
+                Notification.title.ilike(f'%{search_query}%'),
+                Notification.message.ilike(f'%{search_query}%')
+            )
+        )
+    
+    # التقسيم على صفحات (10 إشعارات لكل صفحة)
+    page = request.args.get('page', 1, type=int)
+    notifications_pagination = notifications_query.paginate(
+        page=page, per_page=10, error_out=False
+    )
+    
+    # إحصائيات الإشعارات
+    total_notifications = Notification.query.filter_by(user_id=current_user.id).count()
+    unread_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+    read_count = total_notifications - unread_count
+    
+    # تحديد القالب حسب نوع الجهاز
+    if is_mobile():
+        template = 'student/mobile-theme/notifications.html'
+    else:
+        template = 'student/notifications.html'
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')
+    
+    return render_template(template,
+                         notifications=notifications_pagination.items,
+                         pagination=notifications_pagination,
+                         total_notifications=total_notifications,
+                         unread_count=unread_count,
+                         read_count=read_count,
+                         status_filter=status_filter,
+                         search_query=search_query,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color)
+
+@student_bp.route('/notifications/mark_read/<int:notification_id>', methods=['POST'])
+@login_required
+@student_required
+def mark_notification_read(notification_id):
+    """تعيين إشعار كمقروء"""
+    notification = Notification.query.filter_by(
+        id=notification_id, 
+        user_id=current_user.id
+    ).first_or_404()
+    
+    notification.is_read = True
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'تم تعيين الإشعار كمقروء'})
+
+@student_bp.route('/notifications/mark_all_read', methods=['POST'])
+@login_required
+@student_required
+def mark_all_notifications_read():
+    """تعيين جميع الإشعارات كمقروءة"""
+    Notification.query.filter_by(
+        user_id=current_user.id, 
+        is_read=False
+    ).update({'is_read': True})
+    
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'تم تعيين جميع الإشعارات كمقروءة'})
+
+@student_bp.route('/notifications/delete/<int:notification_id>', methods=['POST'])
+@login_required
+@student_required
+def delete_notification(notification_id):
+    """حذف إشعار"""
+    notification = Notification.query.filter_by(
+        id=notification_id, 
+        user_id=current_user.id
+    ).first_or_404()
+    
+    db.session.delete(notification)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'تم حذف الإشعار بنجاح'})
+
+@student_bp.route('/notifications/delete_all_read', methods=['POST'])
+@login_required
+@student_required
+def delete_all_read_notifications():
+    """حذف جميع الإشعارات المقروءة"""
+    read_notifications = Notification.query.filter_by(
+        user_id=current_user.id, 
+        is_read=True
+    ).all()
+    
+    for notification in read_notifications:
+        db.session.delete(notification)
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True, 
+        'message': f'تم حذف {len(read_notifications)} إشعار مقروء'
+    })

@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الإشعارات - منصة الحساب التعليمية</title>
+    
+    <!-- الخطوط والأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        /* متغيرات التصميم المخصص */
+        :root {
+            --primary-color: {{ primary_color|default('#6C63FF') }};
+            --secondary-color: {{ secondary_color|default('#4ECDC4') }};
+            --accent-gradient: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+            --surface-color: #FFFFFF;
+            --background-color: #F8F9FA;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-color: #E2E8F0;
+            --success-color: #48BB78;
+            --warning-color: #ED8936;
+            --danger-color: #F56565;
+            --border-radius-lg: 20px;
+            --border-radius-md: 12px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 4px 20px rgba(108, 99, 255, 0.1);
+        }
+
+        /* تنسيق عام */
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* تخطيط الصفحة */
+        .notifications-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* الهيدر */
+        .page-header {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+            border-right: 5px solid var(--primary-color);
+        }
+
+        .header-navigation {
+            margin-bottom: 1rem;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            background: var(--background-color);
+        }
+
+        .back-button:hover {
+            color: var(--primary-color);
+            background: var(--border-color);
+        }
+
+        .back-button i {
+            margin-left: 0.5rem;
+        }
+
+        .page-title {
+            color: var(--text-primary);
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-title i {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 0.75rem;
+            border-radius: var(--border-radius-md);
+            font-size: 1.5rem;
+        }
+
+        /* إحصائيات الإشعارات */
+        .notifications-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            border-right: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(108, 99, 255, 0.15);
+        }
+
+        .stat-card.total { border-color: var(--primary-color); }
+        .stat-card.unread { border-color: var(--warning-color); }
+        .stat-card.read { border-color: var(--success-color); }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card.total .stat-number { color: var(--primary-color); }
+        .stat-card.unread .stat-number { color: var(--warning-color); }
+        .stat-card.read .stat-number { color: var(--success-color); }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* أدوات التحكم */
+        .controls-section {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .controls-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            background: var(--surface-color);
+            border-radius: var(--border-radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .action-btn.mark-all { background: var(--success-color); }
+        .action-btn.delete-read { background: var(--danger-color); }
+
+        /* قائمة الإشعارات */
+        .notifications-list {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .notification-item {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s ease;
+            position: relative;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item:hover {
+            background: rgba(108, 99, 255, 0.02);
+        }
+
+        .notification-item.unread {
+            background: rgba(237, 137, 54, 0.05);
+            border-right: 4px solid var(--warning-color);
+        }
+
+        .notification-item.unread::before {
+            content: '';
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            width: 8px;
+            height: 8px;
+            background: var(--warning-color);
+            border-radius: 50%;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            gap: 1rem;
+        }
+
+        .notification-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .notification-time {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .notification-message {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .notification-action-btn {
+            padding: 0.25rem 0.75rem;
+            border: 1px solid var(--border-color);
+            background: var(--surface-color);
+            border-radius: var(--border-radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+        }
+
+        .notification-action-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .notification-action-btn.mark-read {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+
+        .notification-action-btn.delete {
+            background: var(--danger-color);
+            border-color: var(--danger-color);
+            color: white;
+        }
+
+        /* التقسيم على صفحات */
+        .pagination-container {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .pagination .page-item .page-link {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .pagination .page-item .page-link:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* حالة فارغة */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        /* تنسيق الموبايل */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .page-header {
+                padding: 1.5rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .controls-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .filter-buttons,
+            .action-buttons {
+                justify-content: center;
+            }
+
+            .notification-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .notification-actions {
+                justify-content: center;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="notifications-container">
+        <!-- هيدر الصفحة -->
+        <div class="page-header">
+            <div class="header-navigation">
+                <a href="{{ url_for('teacher.dashboard') }}" class="back-button">
+                    <i class="fas fa-arrow-right"></i>
+                    العودة إلى لوحة التحكم
+                </a>
+            </div>
+            <h1 class="page-title">
+                <i class="fas fa-bell"></i>
+                الإشعارات
+            </h1>
+        </div>
+
+        <!-- إحصائيات الإشعارات -->
+        <div class="notifications-stats">
+            <div class="stat-card total">
+                <div class="stat-number">{{ total_notifications }}</div>
+                <div class="stat-label">
+                    <i class="fas fa-bell"></i>
+                    إجمالي الإشعارات
+                </div>
+            </div>
+            <div class="stat-card unread">
+                <div class="stat-number">{{ unread_count }}</div>
+                <div class="stat-label">
+                    <i class="fas fa-bell-slash"></i>
+                    غير مقروءة
+                </div>
+            </div>
+            <div class="stat-card read">
+                <div class="stat-number">{{ read_count }}</div>
+                <div class="stat-label">
+                    <i class="fas fa-check"></i>
+                    مقروءة
+                </div>
+            </div>
+        </div>
+
+        <!-- أدوات التحكم -->
+        <div class="controls-section">
+            <div class="controls-header">
+                <!-- مربع البحث -->
+                <div class="search-box">
+                    <form method="GET" id="searchForm">
+                        <input type="hidden" name="status" value="{{ status_filter or '' }}">
+                        <input type="text" 
+                               name="search" 
+                               value="{{ search_query }}" 
+                               placeholder="البحث في الإشعارات..." 
+                               class="search-input"
+                               onchange="document.getElementById('searchForm').submit()">
+                        <i class="fas fa-search search-icon"></i>
+                    </form>
+                </div>
+
+                <!-- أزرار التصفية -->
+                <div class="filter-buttons">
+                    <a href="{{ url_for('teacher.notifications') }}" 
+                       class="filter-btn {{ 'active' if not status_filter }}">
+                        <i class="fas fa-list"></i> الكل
+                    </a>
+                    <a href="{{ url_for('teacher.notifications', status='unread') }}" 
+                       class="filter-btn {{ 'active' if status_filter == 'unread' }}">
+                        <i class="fas fa-bell"></i> غير مقروءة
+                    </a>
+                    <a href="{{ url_for('teacher.notifications', status='read') }}" 
+                       class="filter-btn {{ 'active' if status_filter == 'read' }}">
+                        <i class="fas fa-check"></i> مقروءة
+                    </a>
+                </div>
+
+                <!-- أزرار العمليات -->
+                <div class="action-buttons">
+                    <button class="action-btn mark-all" onclick="markAllAsRead()">
+                        <i class="fas fa-check-double"></i> تعيين الكل كمقروء
+                    </button>
+                    <button class="action-btn delete-read" onclick="deleteAllRead()">
+                        <i class="fas fa-trash"></i> حذف المقروءة
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- قائمة الإشعارات -->
+        <div class="notifications-list">
+            {% if notifications %}
+                {% for notification in notifications %}
+                <div class="notification-item {{ 'unread' if not notification.is_read }}" 
+                     data-id="{{ notification.id }}">
+                    <div class="notification-header">
+                        <div class="notification-title">{{ notification.title }}</div>
+                        <div class="notification-time">
+                            {{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </div>
+                    </div>
+                    
+                    <div class="notification-message">{{ notification.message }}</div>
+                    
+                    <div class="notification-actions">
+                        {% if not notification.is_read %}
+                        <button class="notification-action-btn mark-read" 
+                                onclick="markAsRead({{ notification.id }})">
+                            <i class="fas fa-check"></i> تعيين كمقروء
+                        </button>
+                        {% endif %}
+                        <button class="notification-action-btn delete" 
+                                onclick="deleteNotification({{ notification.id }})">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-bell-slash"></i>
+                    <h3>لا توجد إشعارات</h3>
+                    <p>
+                        {% if search_query %}
+                            لم يتم العثور على إشعارات تطابق البحث "{{ search_query }}"
+                        {% elif status_filter %}
+                            لا توجد إشعارات {{ 'غير مقروءة' if status_filter == 'unread' else 'مقروءة' }}
+                        {% else %}
+                            لم تتلق أي إشعارات بعد
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- التقسيم على صفحات -->
+        {% if pagination.pages > 1 %}
+        <div class="pagination-container">
+            <nav>
+                <ul class="pagination">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('teacher.notifications', page=pagination.prev_num, status=status_filter, search=search_query) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for page_num in pagination.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != pagination.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('teacher.notifications', page=page_num, status=status_filter, search=search_query) }}">{{ page_num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('teacher.notifications', page=pagination.next_num, status=status_filter, search=search_query) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تعيين إشعار كمقروء
+        function markAsRead(notificationId) {
+            $.post(`/teacher/notifications/mark_read/${notificationId}`)
+                .done(function(response) {
+                    if (response.success) {
+                        $(`[data-id="${notificationId}"]`).removeClass('unread');
+                        $(`[data-id="${notificationId}"] .mark-read`).remove();
+                        updateStats();
+                        showToast('success', response.message);
+                    }
+                })
+                .fail(function() {
+                    showToast('error', 'حدث خطأ أثناء تحديث الإشعار');
+                });
+        }
+
+        // تعيين جميع الإشعارات كمقروءة
+        function markAllAsRead() {
+            if (!confirm('هل تريد تعيين جميع الإشعارات كمقروءة؟')) return;
+
+            $.post('/teacher/notifications/mark_all_read')
+                .done(function(response) {
+                    if (response.success) {
+                        $('.notification-item').removeClass('unread');
+                        $('.mark-read').remove();
+                        updateStats();
+                        showToast('success', response.message);
+                    }
+                })
+                .fail(function() {
+                    showToast('error', 'حدث خطأ أثناء تحديث الإشعارات');
+                });
+        }
+
+        // حذف إشعار
+        function deleteNotification(notificationId) {
+            if (!confirm('هل تريد حذف هذا الإشعار؟')) return;
+
+            $.post(`/teacher/notifications/delete/${notificationId}`)
+                .done(function(response) {
+                    if (response.success) {
+                        $(`[data-id="${notificationId}"]`).fadeOut(300, function() {
+                            $(this).remove();
+                            updateStats();
+                        });
+                        showToast('success', response.message);
+                    }
+                })
+                .fail(function() {
+                    showToast('error', 'حدث خطأ أثناء حذف الإشعار');
+                });
+        }
+
+        // حذف جميع الإشعارات المقروءة
+        function deleteAllRead() {
+            if (!confirm('هل تريد حذف جميع الإشعارات المقروءة؟')) return;
+
+            $.post('/teacher/notifications/delete_all_read')
+                .done(function(response) {
+                    if (response.success) {
+                        $('.notification-item:not(.unread)').fadeOut(300, function() {
+                            $(this).remove();
+                            updateStats();
+                        });
+                        showToast('success', response.message);
+                    }
+                })
+                .fail(function() {
+                    showToast('error', 'حدث خطأ أثناء حذف الإشعارات');
+                });
+        }
+
+        // تحديث الإحصائيات
+        function updateStats() {
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+
+        // عرض رسالة توضيحية
+        function showToast(type, message) {
+            // يمكن إضافة نظام toast هنا
+            console.log(`${type}: ${message}`);
+        }
+    </script>
+</body>
+</html>

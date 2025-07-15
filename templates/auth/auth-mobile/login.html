@@ -192,17 +192,41 @@
             </div>
 
             <div class="auth-tabs">
-                <a href="#phone-auth" class="auth-tab active" data-bs-toggle="tab">
-                    <i class="fas fa-mobile-alt me-2"></i>رقم الهاتف
-                </a>
-                <a href="#password-auth" class="auth-tab" data-bs-toggle="tab">
+                <a href="#password-auth" class="auth-tab active" data-bs-toggle="tab">
                     <i class="fas fa-key me-2"></i>كلمة المرور
+                </a>
+                <a href="#phone-auth" class="auth-tab" data-bs-toggle="tab">
+                    <i class="fas fa-mobile-alt me-2"></i>رقم الهاتف
                 </a>
             </div>
                 
             <div class="tab-content p-4">
+                <!-- تسجيل الدخول بكلمة المرور -->
+                <div class="tab-pane fade show active" id="password-auth">
+                    <form method="POST" action="{{ url_for('auth.login', auth_type='password') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-group">
+                            <label class="form-label" for="login-phone">
+                                <i class="fas fa-phone me-2"></i>رقم الهاتف
+                            </label>
+                            <input type="tel" id="login-phone" name="phone" class="form-control" required dir="ltr">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="login-password">
+                                <i class="fas fa-lock me-2"></i>كلمة المرور
+                            </label>
+                            <input type="password" id="login-password" name="password" class="form-control" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
+                        </button>
+                    </form>
+                </div>
+                
                 <!-- تسجيل الدخول برقم الهاتف -->
-                <div class="tab-pane fade show active" id="phone-auth">
+                <div class="tab-pane fade" id="phone-auth">
                     <div id="phone-auth-step-1">
                         <form id="phone-form" method="POST" action="{{ url_for('auth.login', auth_type='phone') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -262,10 +286,33 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
                         </button>
+                    </form>                    </div>
+                </div>
+                
+                <!-- تسجيل الدخول بكلمة المرور -->
+                <div class="tab-pane fade" id="password-auth">
+                    <form method="POST" action="{{ url_for('auth.login', auth_type='password') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-group">
+                            <label class="form-label" for="login-phone">
+                                <i class="fas fa-phone me-2"></i>رقم الهاتف
+                            </label>
+                            <input type="tel" id="login-phone" name="phone" class="form-control" required dir="ltr">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="login-password">
+                                <i class="fas fa-lock me-2"></i>كلمة المرور
+                            </label>
+                            <input type="password" id="login-password" name="password" class="form-control" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
+                        </button>
                     </form>
                 </div>
             </div>
-        </div>
 
         <div class="create-account-link">
             ليس لديك حساب؟ <a href="{{ url_for('auth.register') }}">إنشاء حساب جديد</a>

@@ -203,6 +203,7 @@
             text-decoration: none;
             padding: 0.35rem;
             font-size: 0.7rem;
+            position: relative;
         }
 
         .nav-item i {
@@ -212,6 +213,23 @@
 
         .nav-item.active {
             color: var(--accent-color);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 2px;
+            right: 20px;
+            background: var(--danger-color);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Create Classroom FAB */
@@ -364,12 +382,12 @@
     <header class="mobile-header">
         <h1 class="header-title">الفصول الدراسية</h1>
         <div class="header-actions">
-            <button class="header-button" id="notificationsToggle">
+            <a href="{{ url_for('teacher.notifications') }}" class="header-button" id="notificationsToggle">
                 <i class="fas fa-bell"></i>
-                {% if unread_notifications %}
-                <span class="notifications-badge">{{ unread_notifications|length }}</span>
+                {% if unread_notifications_count and unread_notifications_count > 0 %}
+                <span class="notifications-badge">{{ unread_notifications_count }}</span>
                 {% endif %}
-            </button>
+            </a>
         </div>
     </header>
 
@@ -460,13 +478,16 @@
             <i class="fas fa-chalkboard"></i>
             <span>الفصول</span>
         </a>
+        <a href="{{ url_for('teacher.notifications') }}" class="nav-item">
+            <i class="fas fa-bell"></i>
+            <span>الإشعارات</span>
+            {% if unread_notifications_count and unread_notifications_count > 0 %}
+            <span class="notification-badge">{{ unread_notifications_count }}</span>
+            {% endif %}
+        </a>
         <a href="{{ url_for('teacher.subscriptions') }}" class="nav-item">
             <i class="fas fa-crown"></i>
             <span>اشتراكاتي</span>
-        </a>
-        <a href="{{ url_for('teacher.payments') }}" class="nav-item">
-            <i class="fas fa-money-bill-wave"></i>
-            <span>المدفوعات</span>
         </a>
         <a href="{{ url_for('auth.profile') }}" class="nav-item">
             <i class="fas fa-user"></i>

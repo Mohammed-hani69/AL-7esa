@@ -432,6 +432,15 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ url_for('student.notifications') }}" class="nav-link">
+                        <i class="fas fa-bell"></i>
+                        <span>الإشعارات</span>
+                        {% if unread_notifications %}
+                        <span class="notification-badge">{{ unread_notifications|length }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ url_for('auth.profile') }}" class="nav-link">
                         <i class="fas fa-user-circle"></i>
                         <span>الملف الشخصي</span>

@@ -180,20 +180,72 @@ a:hover {
             <div class="auth-body">
                 <ul class="nav nav-tabs nav-justified mb-4" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" data-bs-toggle="tab" href="#phone-auth">
-                            <i class="fas fa-mobile-alt me-2"></i>رقم الهاتف
+                        <a class="nav-link active" data-bs-toggle="tab" href="#password-auth">
+                            <i class="fas fa-key me-2"></i>كلمة المرور
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#password-auth">
-                            <i class="fas fa-key me-2"></i>كلمة المرور
+                        <a class="nav-link" data-bs-toggle="tab" href="#phone-auth">
+                            <i class="fas fa-mobile-alt me-2"></i>رقم الهاتف
                         </a>
                     </li>
                 </ul>
                 
                 <div class="tab-content">
+                    <!-- تسجيل حساب بكلمة المرور -->
+                    <div class="tab-pane fade show active" id="password-auth">
+                        <form method="POST" action="{{ url_for('auth.register') }}" class="needs-validation" novalidate id="registerForm">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="form-group">
+                                <label class="form-label" for="name">
+                                    <i class="fas fa-user me-2"></i>الاسم الكامل
+                                </label>
+                                <input type="text" id="name" name="name" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="register-phone">
+                                    <i class="fas fa-phone me-2"></i>رقم الهاتف
+                                </label>
+                                <input type="tel" id="register-phone" name="phone" class="form-control" placeholder="+20xxxxxxxx" required dir="ltr">
+                                <small class="form-text">مثال:+20123456789</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="register-password">
+                                    <i class="fas fa-lock me-2"></i>كلمة المرور
+                                </label>
+                                <input type="password" id="register-password" name="password" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user-tag me-2"></i>نوع الحساب
+                                </label>
+                                <div class="d-flex justify-content-between">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="role" id="role-student" value="student" checked>
+                                        <label class="form-check-label" for="role-student">طالب</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="role" id="role-teacher" value="teacher">
+                                        <label class="form-check-label" for="role-teacher">معلم</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="role" id="role-assistant" value="assistant">
+                                        <label class="form-check-label" for="role-assistant">مساعد</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" id="registerSubmit">
+                                <i class="fas fa-user-plus me-2"></i>إنشاء حساب
+                            </button>
+                        </form>
+                    </div>
+                    
                     <!-- تسجيل حساب برقم الهاتف -->
-                    <div class="tab-pane fade show active" id="phone-auth">
+                    <div class="tab-pane fade" id="phone-auth">
                         <div id="phone-auth-step-1">
                             <form id="phone-auth-form">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -201,7 +253,7 @@ a:hover {
                                     <label class="form-label" for="phone">
                                         <i class="fas fa-phone me-2"></i>رقم الهاتف
                                     </label>
-                                    <input type="tel" id="phone" class="form-control" placeholder="05xxxxxxxx" dir="ltr">
+                                    <input type="tel" id="phone" class="form-control" placeholder="+20xxxxxxxx" dir="ltr">
                                     <small class="form-text">سيتم إرسال رمز التحقق إلى هذا الرقم</small>
                                 </div>
                                 
@@ -233,58 +285,6 @@ a:hover {
                                 <i class="fas fa-arrow-right me-2"></i>العودة
                             </button>
                         </div>
-                    </div>
-                    
-                    <!-- تسجيل حساب بكلمة المرور -->
-                    <div class="tab-pane fade" id="password-auth">
-                        <form method="POST" action="{{ url_for('auth.register') }}" class="needs-validation" novalidate>
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="form-group">
-                                <label class="form-label" for="name">
-                                    <i class="fas fa-user me-2"></i>الاسم الكامل
-                                </label>
-                                <input type="text" id="name" name="name" class="form-control" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="register-phone">
-                                    <i class="fas fa-phone me-2"></i>رقم الهاتف
-                                </label>
-                                <input type="tel" id="register-phone" name="phone" class="form-control" required dir="ltr">
-                                <small class="form-text">مثال: +966512345678</small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="register-password">
-                                    <i class="fas fa-lock me-2"></i>كلمة المرور
-                                </label>
-                                <input type="password" id="register-password" name="password" class="form-control" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-user-tag me-2"></i>نوع الحساب
-                                </label>
-                                <div class="d-flex justify-content-between">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="role" id="role-student" value="student" checked>
-                                        <label class="form-check-label" for="role-student">طالب</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="role" id="role-teacher" value="teacher">
-                                        <label class="form-check-label" for="role-teacher">معلم</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="role" id="role-assistant" value="assistant">
-                                        <label class="form-check-label" for="role-assistant">مساعد</label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-user-plus me-2"></i>إنشاء حساب
-                            </button>
-                        </form>
                     </div>
                 </div>
                 

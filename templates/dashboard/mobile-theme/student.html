@@ -111,6 +111,24 @@
             color: var(--text-secondary);
             text-decoration: none;
             font-size: 0.8rem;
+            position: relative;
+        }
+
+        .bottom-nav-item .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: 12px;
+            background: #FF6B6B;
+            color: white;
+            border-radius: 50%;
+            padding: 0.15rem 0.4rem;
+            font-size: 0.6rem;
+            min-width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
         }
 
         .bottom-nav-item.active {
@@ -520,17 +538,13 @@
             <i class="fas fa-chalkboard"></i>
             <span>الفصول</span>
         </a>
-        {% if enrollments %}
-        <a href="{{ url_for('student.assignments', classroom_id=enrollments[0].classroom.id) }}" class="bottom-nav-item">
-            <i class="fas fa-tasks"></i>
-            <span>الواجبات</span>
+        <a href="{{ url_for('student.notifications') }}" class="bottom-nav-item">
+            <i class="fas fa-bell"></i>
+            <span>الإشعارات</span>
+            {% if unread_notifications %}
+            <span class="notification-badge">{{ unread_notifications|length }}</span>
+            {% endif %}
         </a>
-        {% else %}
-        <a href="#" onclick="alert('يرجى الانضمام إلى فصل أولاً');" class="bottom-nav-item">
-            <i class="fas fa-tasks"></i>
-            <span>الواجبات</span>
-        </a>
-        {% endif %}
         <a href="{{ url_for('auth.profile') }}" class="bottom-nav-item">
             <i class="fas fa-user"></i>
             <span>حسابي</span>
@@ -599,7 +613,7 @@
         // تفعيل قائمة الإشعارات
         const notificationButton = document.getElementById('notificationButton');
         notificationButton.addEventListener('click', function() {
-            // يمكنك إضافة منطق عرض الإشعارات هنا
+            window.location.href = "{{ url_for('student.notifications') }}";
         });
 
         // تفعيل القائمة الجانبية
