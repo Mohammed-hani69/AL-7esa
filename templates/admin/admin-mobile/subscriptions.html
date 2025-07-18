@@ -825,8 +825,9 @@
             <input type="hidden" name="subscription_id" id="deleteSubscriptionId">
         </form>
 
-        <form id="cancelSubscriptionForm" action="{{ url_for('admin.cancel_subscription', subscription_id=0) }}" method="post" style="display: none;">
+        <form id="cancelSubscriptionForm" action="{{ url_for('admin.cancel_subscription_form') }}" method="post" style="display: none;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="subscription_id" id="cancelSubscriptionId">
         </form>
 
         <!-- نموذج تمديد الاشتراك -->

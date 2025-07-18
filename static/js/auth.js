@@ -1,7 +1,62 @@
 // Auth related functionality
 
+// Initialize Firebase when page loads
+let firebaseApp = null;
+let firebaseAuth = null;
+
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyCB_GPRRlb6BCe1Mlv7rTIbtnD-Y3vpAj8",
+    authDomain: "al-7esa.firebaseapp.com",
+    projectId: "al-7esa",
+    storageBucket: "al-7esa.appspot.com",
+    messagingSenderId: "893628750909",
+    appId: "1:893628750909:web:3cd09924c12987b3ef9e54"
+};
+
+// Initialize Firebase
+function initFirebase() {
+    try {
+        if (!firebaseApp && typeof firebase !== 'undefined') {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+            firebaseAuth = firebase.auth();
+            firebaseAuth.languageCode = 'ar';
+            console.log("Firebase initialized successfully");
+            return firebaseApp;
+        }
+        return firebaseApp;
+    } catch (error) {
+        console.error("Error initializing Firebase:", error);
+        return null;
+    }
+}
+
+// Setup phone authentication
+async function setupPhoneAuth(phoneNumber, recaptchaContainerId) {
+    try {
+        if (!firebaseAuth) {
+            throw new Error('Firebase Auth not initialized');
+        }
+
+        // Create recaptcha verifier
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(recaptchaContainerId, {
+            'size': 'normal',
+            'callback': (response) => {
+                console.log('reCAPTCHA solved');
+            },
+            'expired-callback': () => {
+                console.warn('reCAPTCHA expired');
+            }
+        });
+
+        return await firebaseAuth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier);
+    } catch (error) {
+        console.error("Error setting up phone auth:", error);
+        throw error;
+    }
+}
+
 // Initialize phone authentication
-// Using window object to declare globally
 window.initPhoneAuth = (phoneInputId, recaptchaContainerId, submitBtnId) => {
   const phoneInput = document.getElementById(phoneInputId);
   const submitBtn = document.getElementById(submitBtnId);
@@ -30,23 +85,21 @@ window.initPhoneAuth = (phoneInputId, recaptchaContainerId, submitBtnId) => {
       if (!phone) {
         showAlert('يرجى إدخال رقم الهاتف', 'danger');
         return;
-      }
-      
-      try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
-        
-        // Initialize Firebase if not already done
-        const firebaseApp = initFirebase();
-        if (!firebaseApp) {
-          throw new Error('تعذر تهيئة Firebase. يرجى التحقق من إعدادات الموقع.');
-        }
-        
-        // Start phone verification
-        const confirmationResult = await setupPhoneAuth(phone, recaptchaContainerId);
-        
-        // Store confirmation result for later use
-        window.confirmationResult = confirmationResult;
+      }        try {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+            
+            // Initialize Firebase if not already done
+            const app = initFirebase();
+            if (!app) {
+                throw new Error('تعذر تهيئة Firebase. يرجى التحقق من إعدادات الموقع.');
+            }
+            
+            // Start phone verification
+            const confirmationResult = await setupPhoneAuth(phone, recaptchaContainerId);
+            
+            // Store confirmation result for later use
+            window.confirmationResult = confirmationResult;
         
         // Show verification code input
         document.getElementById('phone-auth-step-1').classList.add('d-none');
@@ -143,42 +196,57 @@ window.verifyTokenWithServer = async (idToken) => {
 
 // Logout function
 window.logout = async () => {
-  try {
-    // Initialize Firebase if not already done
-    initFirebase();
-    
-    // Sign out from Firebase
-    await signOut();
-    
-    // Redirect to server logout endpoint
-    window.location.href = '/auth/logout';
-  } catch (error) {
-    console.error('Error during logout:', error);
-    showAlert('حدث خطأ أثناء تسجيل الخروج. يرجى المحاولة مرة أخرى', 'danger');
-  }
+    try {
+        // Make sure Firebase is initialized
+        if (!firebaseAuth) {
+            initFirebase();
+        }
+        
+        // Sign out from Firebase
+        if (firebaseAuth) {
+            await firebaseAuth.signOut();
+        }
+        
+        // Redirect to server logout endpoint
+        window.location.href = '/logout';
+    } catch (error) {
+        console.error('Error during logout:', error);
+        showAlert('حدث خطأ أثناء تسجيل الخروج. يرجى المحاولة مرة أخرى', 'danger');
+    }
 };
 
 // Show alert message
 window.showAlert = (message, type = 'info') => {
-  const alertsContainer = document.getElementById('alerts-container');
-  if (!alertsContainer) return;
-  
-  const alert = document.createElement('div');
-  alert.className = `alert alert-${type} alert-dismissible fade show`;
-  alert.innerHTML = `
-    ${message}
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  `;
-  
-  alertsContainer.appendChild(alert);
-  
-  // Auto-dismiss after 5 seconds
-  setTimeout(() => {
-    alert.classList.remove('show');
+    // Create alert container if it doesn't exist
+    let alertsContainer = document.getElementById('alerts-container');
+    if (!alertsContainer) {
+        alertsContainer = document.createElement('div');
+        alertsContainer.id = 'alerts-container';
+        alertsContainer.style.position = 'fixed';
+        alertsContainer.style.top = '20px';
+        alertsContainer.style.right = '20px';
+        alertsContainer.style.zIndex = '9999';
+        alertsContainer.style.maxWidth = '400px';
+        document.body.appendChild(alertsContainer);
+    }
+    
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.style.marginBottom = '10px';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    alertsContainer.appendChild(alert);
+    
+    // Auto-dismiss after 5 seconds
     setTimeout(() => {
-      alert.remove();
-    }, 150);
-  }, 5000);
+        alert.classList.remove('show');
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 150);
+    }, 5000);
 };

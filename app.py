@@ -1,5 +1,12 @@
 """
-منصة الحصة التعليمية - ملف التطبيق الرئيسي
+مimport os
+import logging
+from datetime import datetime
+import re
+from urllib.parse import urlparse
+from models import db
+from flask import Flask, render_template, request
+from flask_sqlalchemy import SQLAlchemyة التعليمية - ملف التطبيق الرئيسي
 يحتوي على إعداد تطبيق Flask وتكوين المسارات الأساسية
 """
 
@@ -9,7 +16,7 @@ from datetime import datetime
 import re
 from urllib.parse import urlparse
 from models import db
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.orm import DeclarativeBase
@@ -52,10 +59,30 @@ cors = CORS(app,
 )
 
 csrf = CSRFProtect(app)
+
+# إضافة معالج مخصص للتحقق من CSRF
+@app.before_request
+def check_csrf():
+    # تجاهل CSRF للطلبات JSON في مسارات Firebase المخصصة
+    if request.endpoint and hasattr(app.view_functions.get(request.endpoint), '_csrf_exempt'):
+        # للـ routes المستثناة، تحقق من CSRF في header بدلاً من النموذج
+        if request.method == 'POST':
+            csrf_token = request.headers.get('X-CSRFToken')
+            if not csrf_token:
+                from flask import abort
+                abort(400, description='CSRF token is missing in headers')
+        return
+    # السماح للـ Flask-WTF بالتعامل مع CSRF بشكل طبيعي
+    return
+
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Initialize database after app is created
 db.init_app(app)
+
+# Initialize Firebase
+from firebase_config import firebase_config
+firebase_config.initialize()
 
 # Initialize Flask-Migrate  
 migrate = Migrate(app, db)

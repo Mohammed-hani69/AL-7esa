@@ -497,6 +497,11 @@ def create_classroom():
         price = None
         duration_days = None
         if not is_free:
+            # التحقق من وجود أرقام المحافظ الإلكترونية للمعلم قبل إنشاء فصل مدفوع
+            if not current_user.has_ewallet_numbers():
+                flash('يجب إضافة رقم محفظة إلكترونية في ملفك الشخصي قبل إنشاء فصل مدفوع', 'warning')
+                return redirect(url_for('auth.profile'))
+                
             price = float(request.form.get('price', 0))
             duration_days = int(request.form.get('duration_days', 30))
 
@@ -2029,7 +2034,7 @@ def payment(plan_id):
     plan = SubscriptionPlan.query.get_or_404(plan_id)
     
     # Get e-wallet number from system settings
-    ewallet_number = SystemSettings.get_setting('ewallet_number', '0000000000')
+    ewallet_number = SystemSettings.get_setting('ewallet_number', '01145425207 / 01033607749 او انستا باي zezohani777@instapay')
 
     if request.method == 'POST':
         # Handle file upload

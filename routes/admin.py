@@ -488,11 +488,30 @@ def delete_subscription_plan(plan_id):
     flash('تم حذف باقة الاشتراك بنجاح', 'success')
     return redirect(url_for('admin.subscriptions'))
 
-@admin_bp.route('/subscription/<int:subscription_id>/cancel', methods=['GET'])
+@admin_bp.route('/subscription/<int:subscription_id>/cancel', methods=['POST'])
 @login_required
 @admin_required
 def cancel_subscription(subscription_id):
     subscription = Subscription.query.get_or_404(subscription_id)
+
+    # Set end date to now to effectively cancel the subscription
+    subscription.end_date = datetime.utcnow()
+    subscription.is_active = False
+    db.session.commit()
+
+    flash(f'تم إلغاء اشتراك {subscription.user.name} في باقة {subscription.plan.name} بنجاح', 'success')
+    return redirect(url_for('admin.subscriptions'))
+
+@admin_bp.route('/subscription/cancel_form', methods=['POST'])
+@login_required
+@admin_required
+def cancel_subscription_form():
+    subscription_id = request.form.get('subscription_id')
+    if not subscription_id:
+        flash('معرف الاشتراك مطلوب', 'error')
+        return redirect(url_for('admin.subscriptions'))
+    
+    subscription = Subscription.query.get_or_404(int(subscription_id))
 
     # Set end date to now to effectively cancel the subscription
     subscription.end_date = datetime.utcnow()

@@ -269,8 +269,14 @@ def payment(classroom_id):
         flash('أنت مسجل بالفعل في هذا الفصل', 'info')
         return redirect(url_for('student.classroom', classroom_id=classroom.id))
 
-    # Get e-wallet number from system settings
-    ewallet_number = SystemSettings.get_setting('ewallet_number', '01145425207')
+    # الحصول على رقم المحفظة الإلكترونية من ملف المعلم الشخصي
+    teacher = classroom.teacher
+    if not teacher.has_ewallet_numbers():
+        flash('عذراً، لا يمكن إجراء عملية الدفع حالياً. المعلم لم يقم بإضافة أرقام المحافظ الإلكترونية.', 'warning')
+        return redirect(url_for('student.classroom', classroom_id=classroom.id))
+    
+    # استخدام رقم المحفظة الأول للمعلم
+    ewallet_number = teacher.ewallet_number_1
 
     template = 'student/mobile-theme/payment.html' if is_mobile() else 'student/payment.html'
 
@@ -313,8 +319,9 @@ def process_payment(classroom_id):
     file_path = os.path.join(screenshots_dir, filename)
     file.save(file_path)
     
-    # Get e-wallet number from system settings
-    ewallet_number = SystemSettings.get_setting('ewallet_number', '01145425207')
+    # الحصول على رقم المحفظة الإلكترونية من ملف المعلم الشخصي
+    teacher = classroom.teacher
+    ewallet_number = teacher.ewallet_number_1 if teacher.ewallet_number_1 else teacher.ewallet_number_2
 
     # Create payment record
     payment = Payment(

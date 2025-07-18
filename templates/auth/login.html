@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>تسجيل الدخول - الحصة</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -217,41 +218,50 @@
                         </form>
                     </div>
                     
-                    <!-- تسجيل الدخول برقم الهاتف -->
+                    <!-- تسجيل الدخول برقم الهاتف (Firebase) -->
                     <div class="tab-pane fade" id="phone-auth">
-                        <div id="phone-auth-step-1">
-                            <form id="phone-form" method="POST" action="{{ url_for('auth.login', auth_type='phone') }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div id="firebase-phone-auth-step-1">
+                            <form id="firebase-login-form">
                                 <div class="form-group">
-                                    <label class="form-label" for="phone">
+                                    <label class="form-label" for="firebase-phone">
                                         <i class="fas fa-phone me-2"></i>رقم الهاتف
                                     </label>
-                                    <input type="tel" id="phone" class="form-control" placeholder="+20xxxxxxxx" dir="ltr">
+                                    <input type="tel" id="firebase-phone" class="form-control" placeholder="+20xxxxxxxx" dir="ltr">
                                     <small class="form-text">سيتم إرسال رمز التحقق إلى هذا الرقم</small>
                                 </div>
                                 
-                                <div id="recaptcha-container" class="mb-3"></div>
+                                <div id="firebase-recaptcha-container" class="mb-3"></div>
                                 
-                                <button id="auth-submit-btn" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane me-2"></i>إرسال رمز التحقق
+                                <button type="submit" id="firebase-send-code-btn" class="btn btn-primary">
+                                    <span class="btn-text">
+                                        <i class="fas fa-paper-plane me-2"></i>إرسال رمز التحقق
+                                    </span>
+                                    <span class="loading d-none">
+                                        <i class="fas fa-spinner fa-spin me-2"></i>جاري الإرسال...
+                                    </span>
                                 </button>
                             </form>
                         </div>
                         
-                        <div id="phone-auth-step-2" class="d-none">
+                        <div id="firebase-phone-auth-step-2" class="d-none">
                             <div class="form-group">
-                                <label class="form-label" for="verification-code">
+                                <label class="form-label" for="firebase-verification-code">
                                     <i class="fas fa-shield-alt me-2"></i>رمز التحقق
                                 </label>
-                                <input type="text" id="verification-code" class="form-control" placeholder="أدخل الرمز">
+                                <input type="text" id="firebase-verification-code" class="form-control" placeholder="أدخل الرمز" maxlength="6">
                                 <small class="form-text">أدخل الرمز المرسل إلى هاتفك</small>
                             </div>
                             
-                            <button id="verify-code-btn" class="btn btn-primary mb-3">
-                                <i class="fas fa-check-circle me-2"></i>تحقق
+                            <button id="firebase-verify-code-btn" class="btn btn-primary mb-3">
+                                <span class="btn-text">
+                                    <i class="fas fa-check-circle me-2"></i>تحقق
+                                </span>
+                                <span class="loading d-none">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>جاري التحقق...
+                                </span>
                             </button>
                             
-                            <button class="btn btn-link w-100" onclick="showPhoneStep1()">
+                            <button class="btn btn-link w-100" onclick="showFirebasePhoneStep1()">
                                 <i class="fas fa-arrow-right me-2"></i>العودة
                             </button>
                         </div>
@@ -268,24 +278,213 @@
     <!-- تضمين Loading Indicators -->
     {% include 'components/loading_indicators.html' %}
     
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function showPhoneStep1() {
-            document.getElementById('phone-auth-step-1').classList.remove('d-none');
-            document.getElementById('phone-auth-step-2').classList.add('d-none');
+        // دالة للحصول على CSRF token
+        function getCSRFToken() {
+            const metaTag = document.querySelector('meta[name="csrf-token"]');
+            if (metaTag) {
+                return metaTag.getAttribute('content');
+            }
+            
+            // كحل بديل، البحث في النماذج
+            const csrfInput = document.querySelector('input[name="csrf_token"]');
+            if (csrfInput) {
+                return csrfInput.value;
+            }
+            
+            return null;
+        }
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "{{ firebase_api_key }}",
+            authDomain: "{{ firebase_project_id }}.firebaseapp.com",
+            projectId: "{{ firebase_project_id }}",
+            storageBucket: "{{ firebase_project_id }}.appspot.com",
+            messagingSenderId: "{{ firebase_app_id }}",
+            appId: "{{ firebase_app_id }}"
+        };
+
+        // Initialize Firebase
+        let firebaseApp, firebaseAuth;
+        if (typeof firebase !== 'undefined') {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+            firebaseAuth = firebase.auth();
+            firebaseAuth.languageCode = 'ar';
+        }
+        
+        let confirmationResult;
+
+        // Phone number validation
+        function formatPhoneNumber(phone) {
+            phone = phone.replace(/\D/g, '');
+            if (phone.startsWith('20')) {
+                return '+' + phone;
+            } else if (phone.startsWith('01')) {
+                return '+20' + phone.substring(1);
+            } else if (phone.startsWith('1') && phone.length === 10) {
+                return '+20' + phone;
+            }
+            return '+20' + phone;
+        }
+
+        function showFirebasePhoneStep1() {
+            document.getElementById('firebase-phone-auth-step-1').classList.remove('d-none');
+            document.getElementById('firebase-phone-auth-step-2').classList.add('d-none');
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Firebase initialization code should be here
-            if (window.initPhoneAuth) {
-                window.initPhoneAuth('phone', 'recaptcha-container', 'auth-submit-btn');
+            // Initialize reCAPTCHA for Firebase
+            if (typeof firebase !== 'undefined') {
+                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('firebase-recaptcha-container', {
+                    'size': 'normal',
+                    'callback': function(response) {
+                        console.log('reCAPTCHA solved');
+                        document.getElementById('firebase-send-code-btn').disabled = false;
+                    },
+                    'expired-callback': function() {
+                        document.getElementById('firebase-send-code-btn').disabled = true;
+                    }
+                });
+            }
+
+            // Handle Firebase phone authentication form
+            const firebaseLoginForm = document.getElementById('firebase-login-form');
+            if (firebaseLoginForm) {
+                firebaseLoginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const phoneInput = document.getElementById('firebase-phone');
+                    const sendBtn = document.getElementById('firebase-send-code-btn');
+                    
+                    if (!phoneInput.value) {
+                        alert('الرجاء إدخال رقم الهاتف');
+                        return;
+                    }
+
+                    const formattedPhone = formatPhoneNumber(phoneInput.value);
+                    
+                    // Check if phone exists first
+                    try {
+                        const csrfToken = getCSRFToken();
+                        const checkResponse = await fetch('/check-phone', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: JSON.stringify({
+                                phone: formattedPhone
+                            })
+                        });
+
+                        const checkData = await checkResponse.json();
+                        
+                        if (!checkData.success) {
+                            alert(checkData.message);
+                            return;
+                        }
+                        
+                        if (!checkData.exists) {
+                            alert('رقم الهاتف غير مسجل. الرجاء إنشاء حساب جديد.');
+                            return;
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error checking phone:', error);
+                        alert('خطأ في التحقق من رقم الهاتف');
+                        return;
+                    }
+                    
+                    // Show loading
+                    sendBtn.disabled = true;
+                    sendBtn.querySelector('.btn-text').classList.add('d-none');
+                    sendBtn.querySelector('.loading').classList.remove('d-none');
+
+                    try {
+                        confirmationResult = await firebaseAuth.signInWithPhoneNumber(
+                            formattedPhone, 
+                            window.recaptchaVerifier
+                        );
+                        
+                        // Show verification step
+                        showFirebasePhoneStep2();
+                        
+                    } catch (error) {
+                        console.error('Error sending code:', error);
+                        alert('خطأ في إرسال الرمز: ' + error.message);
+                    } finally {
+                        sendBtn.disabled = false;
+                        sendBtn.querySelector('.btn-text').classList.remove('d-none');
+                        sendBtn.querySelector('.loading').classList.add('d-none');
+                    }
+                });
+            }
+
+            // Handle Firebase code verification
+            const verifyBtn = document.getElementById('firebase-verify-code-btn');
+            if (verifyBtn) {
+                verifyBtn.addEventListener('click', async function() {
+                    const codeInput = document.getElementById('firebase-verification-code');
+                    const code = codeInput.value.trim();
+                    
+                    if (!code) {
+                        alert('الرجاء إدخال رمز التحقق');
+                        return;
+                    }
+
+                    verifyBtn.disabled = true;
+                    verifyBtn.querySelector('.btn-text').classList.add('d-none');
+                    verifyBtn.querySelector('.loading').classList.remove('d-none');
+
+                    try {
+                        const result = await confirmationResult.confirm(code);
+                        const user = result.user;
+                        const idToken = await user.getIdToken();
+                        
+                        // Send to backend
+                        const csrfToken = getCSRFToken();
+                        const response = await fetch('/verify-phone', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: JSON.stringify({
+                                idToken: idToken
+                            })
+                        });
+
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            alert(data.message);
+                            window.location.href = data.redirect;
+                        } else {
+                            alert(data.message);
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error verifying code:', error);
+                        alert('رمز التحقق غير صحيح');
+                    } finally {
+                        verifyBtn.disabled = false;
+                        verifyBtn.querySelector('.btn-text').classList.remove('d-none');
+                        verifyBtn.querySelector('.loading').classList.add('d-none');
+                    }
+                });
             }
             
+            // Original login form handling (regular password login)
             const loginForm = document.getElementById('loginForm');
             const submitBtn = document.getElementById('loginSubmit');
             
-            // تطبيق loading على النموذج
             if (loginForm) {
                 loginForm.addEventListener('submit', function(e) {
                     if (window.enhancedLoading) {
@@ -297,18 +496,23 @@
                 });
             }
             
-            // تطبيق loading على روابط التسجيل
+            // Apply loading to registration links
             document.querySelectorAll('a[href*="register"]').forEach(link => {
                 link.setAttribute('data-loading', 'true');
                 link.setAttribute('data-loading-text', 'جاري تحميل صفحة التسجيل...');
             });
             
-            // تطبيق loading على رابط نسيان كلمة المرور
+            // Apply loading to password reset links
             document.querySelectorAll('a[href*="reset"]').forEach(link => {
                 link.setAttribute('data-loading', 'true');
                 link.setAttribute('data-loading-text', 'جاري تحميل صفحة استعادة كلمة المرور...');
             });
         });
+
+        function showFirebasePhoneStep2() {
+            document.getElementById('firebase-phone-auth-step-1').classList.add('d-none');
+            document.getElementById('firebase-phone-auth-step-2').classList.remove('d-none');
+        }
     </script>
 </body>
 </html>

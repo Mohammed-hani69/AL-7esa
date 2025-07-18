@@ -60,7 +60,7 @@ pip install -r requirements.txt
 4. For future changes:
 ```bash
 git add .
-git commit -m "update to v 1.1.0 push on vps"
+git commit -m "update to v 1.1.1 push on vps"
 git push origin main
 ```
 

@@ -989,7 +989,7 @@
                                                         <i class="fas fa-calendar-plus"></i> تمديد
                                                     </button>
                                                     <button type="button" class="btn btn-sm btn-danger" 
-                                                            onclick="if(confirm('هل أنت متأكد من إلغاء هذا الاشتراك؟')) document.getElementById('cancelSubscriptionForm').submit();">
+                                                            onclick="if(confirm('هل أنت متأكد من إلغاء هذا الاشتراك؟')) { document.getElementById('cancelSubscriptionId').value = '{{ sub.id }}'; document.getElementById('cancelSubscriptionForm').submit(); }">
                                                         <i class="fas fa-ban"></i> إلغاء
                                                     </button>
                                                 </div>
@@ -1092,6 +1092,7 @@
                                             <form action="{{ url_for('admin.approve_subscription_payment', payment_id=payment.id) }}" 
                                                   method="POST" 
                                                   style="display: inline;">
+                                                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button type="submit"
                                                         class="btn btn-sm btn-success"
                                                         onclick="return confirm('هل أنت متأكد من قبول هذا الطلب؟')"
@@ -1336,8 +1337,9 @@
     </form>
 
     <!-- نموذج إلغاء الاشتراك -->
-    <form id="cancelSubscriptionForm" action="{{ url_for('admin.cancel_subscription', subscription_id=0) }}" method="post" style="display: none;">
+    <form id="cancelSubscriptionForm" action="{{ url_for('admin.cancel_subscription_form') }}" method="post" style="display: none;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="subscription_id" id="cancelSubscriptionId">
     </form>
 
     <!-- إضافة أنماط خاصة بالنموذج -->

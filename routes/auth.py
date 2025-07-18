@@ -14,6 +14,8 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 from firebase_utils import verify_firebase_token
 from models import Role, Subscription, SubscriptionPlan, SystemSettings, User , db
+import re
+from firebase_config import firebase_config
 
 # دالة للتحقق من نوع الجهاز (موبايل أو جهاز مكتبي)
 def is_mobile():
@@ -23,6 +25,16 @@ def is_mobile():
         'blackberry', 'opera mini', 'opera mobi', 'webos', 'fennec'
     ]
     return any(pattern in user_agent for pattern in mobile_patterns)
+
+# Custom decorator to skip CSRF for specific routes
+def csrf_exempt(f):
+    """Decorator to exempt a route from CSRF protection"""
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        return f(*args, **kwargs)
+    decorated_function._csrf_exempt = True
+    return decorated_function
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -351,6 +363,15 @@ def profile():
         alt_phone = request.form.get('alt_phone') or None
         address = request.form.get('address') or None
         interests = request.form.get('interests') or None
+        
+        # معالجة أرقام المحافظ للمعلمين
+        if current_user.role == 'teacher':
+            ewallet_number_1 = request.form.get('ewallet_number_1') or None
+            ewallet_number_2 = request.form.get('ewallet_number_2') or None
+            
+            # تحديث أرقام المحافظ
+            current_user.ewallet_number_1 = ewallet_number_1
+            current_user.ewallet_number_2 = ewallet_number_2
 
         # Update user info
         current_user.name = name
@@ -390,11 +411,140 @@ def profile():
         flash('تم تحديث الملف الشخصي بنجاح', 'success')
         return redirect(url_for('auth.profile'))
     
+    # للMELLMين فقط: جلب الاشتراك النشط
+    active_subscription = None
+    if current_user.role == 'teacher':
+        active_subscription = Subscription.query.filter(
+            Subscription.user_id == current_user.id,
+            Subscription.end_date > datetime.utcnow(),
+            Subscription.is_active == True
+        ).first()
+    
     # الحصول على قيم الألوان من إعدادات النظام
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
-
     return render_template(template, now=datetime.utcnow(),
                            primary_color=primary_color,
-                           secondary_color=secondary_color,)
+                           secondary_color=secondary_color,
+                           active_subscription=active_subscription)
+
+# ============================================
+# Firebase Phone Authentication Routes
+# ============================================
+
+def validate_phone_number(phone):
+    """التحقق من صحة رقم الهاتف"""
+    # إزالة المسافات والرموز
+    phone = re.sub(r'[^\d+]', '', phone)
+    
+    # التحقق من التنسيق السعودي
+    if phone.startswith('+20'):
+        return phone
+    elif phone.startswith('20'):
+        return '+' + phone
+    elif phone.startswith('01'):
+        return '+20' + phone[1:]
+    elif phone.startswith('1') and len(phone) == 9:
+        return '+20' + phone
+    
+    return None
+
+@auth_bp.route('/verify-phone', methods=['POST'])
+@csrf_exempt
+def verify_phone():
+    """التحقق من رقم الهاتف باستخدام Firebase"""
+    try:
+        data = request.get_json()
+        id_token = data.get('idToken')
+        name = data.get('name', '')
+        user_type = data.get('userType', 'student')
+        
+        if not id_token:
+            return jsonify({'success': False, 'message': 'رمز التحقق مطلوب'})
+        
+        # التحقق من الرمز مع Firebase
+        decoded_token = firebase_config.verify_phone_token(id_token)
+        
+        if not decoded_token:
+            return jsonify({'success': False, 'message': 'رمز التحقق غير صحيح'})
+        
+        firebase_uid = decoded_token['uid']
+        phone_number = decoded_token.get('phone_number')
+        
+        if not phone_number:
+            return jsonify({'success': False, 'message': 'رقم الهاتف غير متوفر'})
+        
+        # البحث عن المستخدم الحالي
+        user = User.query.filter_by(firebase_uid=firebase_uid).first()
+        
+        if user:
+            # تسجيل دخول المستخدم الموجود
+            if not user.is_verified:
+                user.is_verified = True
+                db.session.commit()
+            
+            login_user(user)
+            
+            return jsonify({
+                'success': True, 
+                'message': 'تم تسجيل الدخول بنجاح',
+                'redirect': f'/{user.role}/dashboard'
+            })
+        else:
+            # إنشاء مستخدم جديد
+            if not name:
+                return jsonify({'success': False, 'message': 'الاسم مطلوب للتسجيل'})
+            
+            new_user = User(
+                name=name,
+                phone=phone_number,
+                role=user_type,
+                firebase_uid=firebase_uid,
+                is_verified=True
+            )
+            
+            db.session.add(new_user)
+            db.session.commit()
+            
+            login_user(new_user)
+            
+            return jsonify({
+                'success': True,
+                'message': 'تم إنشاء الحساب بنجاح',
+                'redirect': f'/{new_user.role}/dashboard'
+            })
+            
+    except Exception as e:
+        print(f"Verification error: {e}")
+        return jsonify({'success': False, 'message': 'حدث خطأ في التحقق'})
+
+@auth_bp.route('/check-phone', methods=['POST'])
+@csrf_exempt
+def check_phone():
+    """التحقق من وجود رقم الهاتف"""
+    try:
+        data = request.get_json()
+        phone = data.get('phone')
+        
+        if not phone:
+            return jsonify({'success': False, 'message': 'رقم الهاتف مطلوب'})
+        
+        # تنسيق رقم الهاتف
+        formatted_phone = validate_phone_number(phone)
+        
+        if not formatted_phone:
+            return jsonify({'success': False, 'message': 'رقم الهاتف غير صحيح'})
+        
+        # البحث عن المستخدم
+        user = User.query.filter_by(phone=formatted_phone).first()
+        
+        return jsonify({
+            'success': True,
+            'exists': user is not None,
+            'phone': formatted_phone
+        })
+        
+    except Exception as e:
+        print(f"Check phone error: {e}")
+        return jsonify({'success': False, 'message': 'حدث خطأ في التحقق'})

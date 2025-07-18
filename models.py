@@ -38,7 +38,30 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
+    is_verified = db.Column(db.Boolean, default=False)
     firebase_uid = db.Column(db.String(100), unique=True, nullable=True)
+    
+    # أرقام المحافظ الإلكترونية للمعلم
+    ewallet_number_1 = db.Column(db.String(50), nullable=True)  # رقم المحفظة الأول
+    ewallet_number_2 = db.Column(db.String(50), nullable=True)  # رقم المحفظة الثاني
+    
+    # التحقق من وجود أرقام محافظ للمعلم
+    def has_ewallet_numbers(self):
+        """التحقق من وجود رقم محفظة واحد على الأقل"""
+        return bool(self.ewallet_number_1 or self.ewallet_number_2)
+    
+    def get_ewallet_numbers_display(self):
+        """الحصول على أرقام المحافظ في تنسيق عرض مناسب"""
+        numbers = []
+        if self.ewallet_number_1:
+            numbers.append(self.ewallet_number_1)
+        if self.ewallet_number_2:
+            numbers.append(self.ewallet_number_2)
+        
+        if not numbers:
+            return "لم يتم إضافة أرقام محافظ"
+        
+        return " / ".join(numbers)
 
     # Relationships
     classrooms = db.relationship('ClassroomEnrollment', back_populates='user')

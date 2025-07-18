@@ -416,6 +416,42 @@
                                     <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email or '' }}">
                                 </div>
 
+                                {% if current_user.role == 'teacher' %}
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-wallet me-2"></i>
+                                            <strong>أرقام المحافظ الإلكترونية:</strong> يمكنك إضافة رقمين للمحفظة الإلكترونية لاستقبال المدفوعات من الطلاب
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="ewallet_number_1">
+                                                <i class="fas fa-wallet me-2"></i>رقم المحفظة الأول
+                                            </label>
+                                            <input type="tel" class="form-control" id="ewallet_number_1" name="ewallet_number_1" 
+                                                   value="{{ current_user.ewallet_number_1 or '' }}" dir="ltr" 
+                                                   placeholder="01xxxxxxxxx">
+                                            <small class="text-muted">مثال: 01145425207</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="ewallet_number_2">
+                                                <i class="fas fa-wallet me-2"></i>رقم المحفظة الثاني (اختياري)
+                                            </label>
+                                            <input type="tel" class="form-control" id="ewallet_number_2" name="ewallet_number_2" 
+                                                   value="{{ current_user.ewallet_number_2 or '' }}" dir="ltr" 
+                                                   placeholder="01xxxxxxxxx">
+                                            <small class="text-muted">رقم بديل للمحفظة الإلكترونية</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
                                 <div class="form-group">
                                     <label class="form-label" for="profile_picture">
                                         <i class="fas fa-camera me-2"></i>صورة الملف الشخصي
