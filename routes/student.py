@@ -961,12 +961,77 @@ def chat(classroom_id):
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
 
-    return render_template('classroom/chat.html',
+    return render_template('student/chat.html',
                          classroom=classroom,
                          primary_color=primary_color,
                          secondary_color=secondary_color,
                          enrollment=enrollment,
                          is_chat_participant=chat_participant is not None and chat_participant.is_enabled)
+
+@student_bp.route('/classroom/<int:classroom_id>/participants')
+@login_required
+@student_required
+@check_chat_access
+def chat_participants(classroom_id):
+    """جلب قائمة المشاركين في المحادثة"""
+    try:
+        classroom = Classroom.query.get_or_404(classroom_id)
+        
+        # جلب جميع المشاركين في المحادثة
+        participants = []
+        
+        # إضافة المعلم
+        if classroom.teacher:
+            participants.append({
+                'id': classroom.teacher.id,
+                'name': classroom.teacher.name,
+                'role': 'teacher',
+                'status': 'online'  # يمكن تحديث هذا لاحقاً
+            })
+        
+        # إضافة المساعد إذا وجد
+        if classroom.assistant_id:
+            assistant = User.query.get(classroom.assistant_id)
+            if assistant:
+                participants.append({
+                    'id': assistant.id,
+                    'name': assistant.name,
+                    'role': 'assistant',
+                    'status': 'online'
+                })
+        
+        # إضافة الطلاب المسجلين
+        enrollments = ClassroomEnrollment.query.filter_by(
+            classroom_id=classroom.id,
+            is_active=True
+        ).all()
+        
+        for enrollment in enrollments:
+            # التحقق من أن الطالب مسموح له بالمحادثة
+            chat_participant = ChatParticipant.query.filter_by(
+                classroom_id=classroom.id,
+                enrollment_id=enrollment.id,
+                is_enabled=True
+            ).first()
+            
+            if chat_participant:
+                participants.append({
+                    'id': enrollment.user.id,
+                    'name': enrollment.user.name,
+                    'role': 'student',
+                    'status': 'online'
+                })
+        
+        return jsonify({
+            'success': True,
+            'participants': participants
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 # Student notifications routes
 @student_bp.route('/notifications')

@@ -10,6 +10,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFError
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 from firebase_utils import verify_firebase_token
@@ -37,6 +38,29 @@ def csrf_exempt(f):
     return decorated_function
 
 auth_bp = Blueprint('auth', __name__)
+
+# CSRF error handler
+@auth_bp.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    from flask import request, jsonify
+    from flask_wtf.csrf import generate_csrf
+    
+    # Check if this is an AJAX request
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.headers.get('Content-Type') == 'application/json':
+        return jsonify({
+            'error': 'csrf_token_expired',
+            'message': 'انتهت صلاحية النموذج. يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.',
+            'csrf_token': generate_csrf()
+        }), 400
+    else:
+        flash('انتهت صلاحية النموذج. يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.', 'danger')
+        return redirect(url_for('auth.login'))
+
+# Route to get fresh CSRF token
+@auth_bp.route('/csrf-token')
+def get_csrf_token():
+    from flask_wtf.csrf import generate_csrf
+    return jsonify({'csrf_token': generate_csrf()})
 
 class LoginForm(FlaskForm):
     phone = StringField('رقم الهاتف', validators=[DataRequired()])

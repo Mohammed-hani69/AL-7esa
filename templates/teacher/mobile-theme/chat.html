@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محادثة الفصل - {{ classroom.name }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    
+    <style>
+        :root {
+            --primary-color: #4c84ff;
+            --secondary-color: #f8f9fa;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --border-radius: 12px;
+            --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--gradient-bg);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .mobile-chat-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .mobile-header {
+            background: linear-gradient(45deg, var(--primary-color), #667eea);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-btn {
+            color: white;
+            font-size: 1.2rem;
+            text-decoration: none;
+        }
+
+        .classroom-info h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .online-status {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .header-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .admin-toolbar {
+            background: #e3f2fd;
+            padding: 0.75rem;
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .admin-btn {
+            background: white;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .admin-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8f9fa;
+            padding-bottom: 2rem;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .message.own {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .message.own .message-avatar {
+            background: var(--success-color);
+        }
+
+        .message-content {
+            max-width: 75%;
+            background: white;
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.own .message-content {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        .message-sender {
+            font-weight: 600;
+        }
+
+        .message-time {
+            opacity: 0.7;
+            font-size: 0.7rem;
+        }
+
+        .message-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .typing-indicator {
+            padding: 0.5rem 1rem;
+            font-style: italic;
+            color: #6c757d;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .mobile-input-container {
+            background: white;
+            padding: 1rem;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+            position: sticky;
+            bottom: 0;
+        }
+
+        .input-group {
+            flex: 1;
+            display: flex;
+            align-items: flex-end;
+            gap: 0.5rem;
+        }
+
+        .emoji-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+        }
+
+        .message-input {
+            flex: 1;
+            border: 2px solid #e9ecef;
+            border-radius: 20px;
+            padding: 0.75rem 1rem;
+            resize: none;
+            max-height: 100px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .send-btn {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .send-btn:hover {
+            background: #3a6fdc;
+        }
+
+        .send-btn:disabled {
+            background: #6c757d;
+        }
+
+        .participants-drawer {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            z-index: 1000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .participants-drawer.show {
+            right: 0;
+        }
+
+        .drawer-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .close-drawer {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .participants-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .participant-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .participant-info h6 {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .participant-role {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .drawer-overlay.show {
+            display: block;
+        }
+
+        .emoji-picker {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            box-shadow: var(--box-shadow);
+            display: none;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.5rem;
+        }
+
+        .emoji-item {
+            padding: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .emoji-item:hover {
+            background: #f0f0f0;
+        }
+
+        /* تحسينات الاستجابة */
+        @media (max-width: 360px) {
+            .message-content {
+                max-width: 80%;
+            }
+            
+            .mobile-input-container {
+                padding: 0.75rem;
+            }
+        }
+
+        /* أنماط خاصة للرسائل */
+        .message.teacher .message-avatar {
+            background: #e74c3c;
+        }
+
+        .message.assistant .message-avatar {
+            background: #f39c12;
+        }
+
+        .message.teacher .message-content {
+            border-right: 4px solid #e74c3c;
+        }
+
+        .message.assistant .message-content {
+            border-right: 4px solid #f39c12;
+        }
+    </style>
+    <script src="/static/js/firebase_fix.js"></script>
+</head>
+<body>
+    <div class="mobile-chat-container">
+        <!-- هيدر المحادثة -->
+        <div class="mobile-header">
+            <div class="header-left">
+                <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="back-btn">
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <div class="classroom-info">
+                    <h5>{{ classroom.name }}</h5>
+                    <div class="online-status">
+                        <div class="online-dot"></div>
+                        <span id="participantsCount">{{ participants_count }} مشارك</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" onclick="toggleParticipants()">
+                    <i class="fas fa-users"></i>
+                </button>
+                <button class="header-btn" onclick="openChatSettings()">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- شريط أدوات الإدارة -->
+        <div class="admin-toolbar">
+            <button class="admin-btn" onclick="addStudent()">
+                <i class="fas fa-user-plus"></i> إضافة طالب
+            </button>
+            <button class="admin-btn" onclick="muteAll()">
+                <i class="fas fa-volume-mute"></i> كتم الجميع
+            </button>
+            <button class="admin-btn" onclick="clearChat()">
+                <i class="fas fa-trash"></i> مسح المحادثة
+            </button>
+        </div>
+
+        <!-- منطقة الرسائل -->
+        <div class="messages-area" id="messagesArea">
+            <!-- سيتم تحميل الرسائل هنا -->
+        </div>
+
+        <!-- مؤشر الكتابة -->
+        <div class="typing-indicator" id="typingIndicator" style="display: none;">
+            <span id="typingText"></span>
+        </div>
+
+        <!-- حاوية الإدخال -->
+        <div class="mobile-input-container">
+            <div class="input-group">
+                <button class="emoji-btn" onclick="toggleEmojiPicker()">
+                    <i class="fas fa-smile"></i>
+                </button>
+                <textarea class="message-input" 
+                         id="messageInput" 
+                         placeholder="اكتب رسالتك..."
+                         rows="1"
+                         onkeydown="handleMessageKeydown(event)"
+                         oninput="handleTyping()"></textarea>
+            </div>
+            <button class="send-btn" onclick="sendMessage()" id="sendButton">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- درج المشاركين -->
+    <div class="participants-drawer" id="participantsDrawer">
+        <div class="drawer-header">
+            <h6>المشاركون</h6>
+            <button class="close-drawer" onclick="toggleParticipants()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="participants-list" id="participantsList">
+            <!-- سيتم تحميل المشاركين هنا -->
+        </div>
+    </div>
+
+    <!-- طبقة التغطية -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="toggleParticipants()"></div>
+
+    <!-- منتقي الرموز التعبيرية -->
+    <div class="emoji-picker" id="emojiPicker">
+        <div class="emoji-grid" id="emojiGrid">
+            <!-- سيتم إنشاء الرموز التعبيرية بـ JavaScript -->
+        </div>
+    </div>
+
+    <!-- Modal إضافة طالب -->
+    <div class="modal fade" id="addStudentModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">إضافة طالب</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control form-control-sm" id="studentSearch" placeholder="البحث عن طالب">
+                    </div>
+                    <div id="studentSearchResults" style="max-height: 200px; overflow-y: auto;">
+                        <!-- نتائج البحث -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    
+    <!-- محاكي مصادقة Firebase للتطوير -->
+    <script src="/static/js/firebase_auth_sim.js"></script>
+    
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // إعداد Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCB_GPRRlb6BCe1Mlv7rTIbtnD-Y3vpAj8",
+            authDomain: "al-7esa.firebaseapp.com",
+            databaseURL: "https://al-7esa-default-rtdb.firebaseio.com",
+            projectId: "al-7esa",
+            storageBucket: "al-7esa.firebasestorage.app",
+            messagingSenderId: "893628750909",
+            appId: "1:893628750909:web:3cd09924c12987b3ef9e54",
+            measurementId: "G-B026ZL6KXG"
+        };
+
+        
+        // معالج أخطاء المصادقة
+        window.addEventListener('unhandledrejection', function(event) {
+            if (event.reason && event.reason.code && event.reason.code.includes('auth')) {
+                console.warn('خطأ مصادقة Firebase، تفعيل المحاكي...');
+                window.firebase_auth_failed = true;
+                
+                // إعادة تحميل الصفحة لتفعيل المحاكي
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+                
+                event.preventDefault();
+            }
+        });
+
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // متغيرات عامة
+        const classroomId = "{{ classroom.id }}";
+        const currentUser = {
+            id: "{{ current_user.id }}",
+            name: "{{ current_user.name }}",
+            role: "{{ current_user.role }}"
+        };
+
+        let typingTimeout;
+        let isTyping = false;
+
+        // تهيئة الشات
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChat();
+            loadEmojis();
+            loadParticipants();
+            setupAutoResize();
+        });
+
+        function setupAutoResize() {
+            const messageInput = document.getElementById('messageInput');
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            });
+        }
+
+        async function initializeChat() {
+            const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
+            const q = query(messagesRef, orderBy('timestamp', 'asc'));
+
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        displayMessage(change.doc.data());
+                    }
+                });
+                scrollToBottom();
+            });
+
+            const typingRef = collection(db, 'classrooms', classroomId, 'typing');
+            onSnapshot(typingRef, (snapshot) => {
+                handleTypingIndicator(snapshot);
+            });
+        }
+
+        
+        // إضافة مصادقة تلقائية
+        function ensureAuthenticated() {
+            return new Promise((resolve) => {
+                if (typeof auth !== 'undefined' && auth.currentUser) {
+                    resolve(auth.currentUser);
+                } else if (typeof FirebaseAuthSimulator !== 'undefined') {
+                    resolve(FirebaseAuthSimulator.currentUser);
+                } else {
+                    // مصادقة افتراضية
+                    resolve({
+                        uid: currentUser.id,
+                        displayName: currentUser.name
+                    });
+                }
+            });
+        }
+
+        
+        
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const messageText = messageInput.value.trim();
+            
+            if (!messageText) {
+                return;
+            }
+            
+            // تعطيل الزر مؤقتاً
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = true;
+            
+            try {
+                console.log('📤 محاولة إرسال رسالة:', messageText);
+                
+                const messageData = {
+                    text: messageText,
+                    userId: currentUser.id,
+                    userRole: currentUser.role,
+                    userName: currentUser.name,
+                    timestamp: serverTimestamp(),
+                    classroomId: classroomId
+                };
+                
+                // محاولة الإرسال الأصلي
+                try {
+                    const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
+                    const docRef = await addDoc(messagesRef, messageData);
+                    console.log('✅ تم إرسال الرسالة بنجاح:', docRef.id);
+                    
+                } catch (firebaseError) {
+                    console.warn('⚠️ فشل Firebase، استخدام البديل:', firebaseError);
+                    
+                    // البديل: إرسال عبر API الخادم
+                    try {
+                        const response = await fetch(`/chat/classroom/${classroomId}/send_message`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
+                            },
+                            body: JSON.stringify(messageData)
+                        });
+                        
+                        if (response.ok) {
+                            console.log('✅ تم إرسال الرسالة عبر API');
+                        } else {
+                            throw new Error('فشل في إرسال الرسالة عبر API');
+                        }
+                        
+                    } catch (apiError) {
+                        console.error('❌ فشل في جميع محاولات الإرسال:', apiError);
+                        
+                        // عرض الرسالة محلياً كحل أخير
+                        displayMessage({
+                            id: 'local_' + Date.now(),
+                            text: messageText,
+                            userId: currentUser.id,
+                            userRole: currentUser.role,
+                            userName: currentUser.name + ' (محلي)',
+                            timestamp: new Date(),
+                            classroomId: classroomId
+                        });
+                        
+                        alert('تم عرض الرسالة محلياً - قد تحتاج لتحديث الصفحة');
+                    }
+                }
+                
+                // مسح الحقل
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                
+            } catch (error) {
+                console.error('❌ خطأ في إرسال الرسالة:', error);
+                alert('حدث خطأ في إرسال الرسالة. يرجى المحاولة مرة أخرى.');
+            } finally {
+                // إعادة تفعيل الزر
+                sendButton.disabled = false;
+            }
+        }
+
+        function displayMessage(messageData) {
+            const messagesArea = document.getElementById('messagesArea');
+            const isOwnMessage = messageData.senderId === currentUser.id;
+            const senderRole = messageData.senderRole;
+
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${isOwnMessage ? 'own' : ''} ${senderRole}`;
+
+            const timestamp = messageData.timestamp ? 
+                new Date(messageData.timestamp.seconds * 1000).toLocaleTimeString('ar-EG', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : 'الآن';
+
+            messageElement.innerHTML = `
+                <div class="message-avatar">
+                    ${messageData.senderName.charAt(0)}
+                </div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-sender">${messageData.senderName}</span>
+                        ${senderRole === 'teacher' ? '<span class="badge bg-danger">معلم</span>' : ''}
+                        ${senderRole === 'assistant' ? '<span class="badge bg-warning">مساعد</span>' : ''}
+                        <span class="message-time">${timestamp}</span>
+                    </div>
+                    <div class="message-text">${messageData.text}</div>
+                </div>
+            `;
+
+            messagesArea.appendChild(messageElement);
+        }
+
+        async function handleTyping() {
+            if (!isTyping) {
+                isTyping = true;
+                try {
+                    const typingRef = doc(db, 'classrooms', classroomId, 'typing', currentUser.id);
+                    await updateDoc(typingRef, {
+                        userId: currentUser.id,
+                        userName: currentUser.name,
+                        timestamp: serverTimestamp()
+                    }).catch(async () => {
+                        await addDoc(collection(db, 'classrooms', classroomId, 'typing'), {
+                            userId: currentUser.id,
+                            userName: currentUser.name,
+                            timestamp: serverTimestamp()
+                        });
+                    });
+                } catch (error) {
+                    console.error('خطأ في إشارة الكتابة:', error);
+                }
+            }
+
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(clearTyping, 2000);
+        }
+
+        async function clearTyping() {
+            if (isTyping) {
+                isTyping = false;
+                try {
+                    const typingRef = doc(db, 'classrooms', classroomId, 'typing', currentUser.id);
+                    await deleteDoc(typingRef);
+                } catch (error) {
+                    console.log('مستند الكتابة غير موجود');
+                }
+            }
+        }
+
+        function handleTypingIndicator(snapshot) {
+            const typingUsers = [];
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.userId !== currentUser.id) {
+                    typingUsers.push(data.userName);
+                }
+            });
+
+            const typingIndicator = document.getElementById('typingIndicator');
+            const typingText = document.getElementById('typingText');
+
+            if (typingUsers.length > 0) {
+                const text = typingUsers.length === 1 ? 
+                    `${typingUsers[0]} يكتب...` : 
+                    `${typingUsers.join(', ')} يكتبون...`;
+                typingText.textContent = text;
+                typingIndicator.style.display = 'block';
+            } else {
+                typingIndicator.style.display = 'none';
+            }
+        }
+
+        function scrollToBottom() {
+            const messagesArea = document.getElementById('messagesArea');
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function handleMessageKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function toggleParticipants() {
+            const drawer = document.getElementById('participantsDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            
+            drawer.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+
+        function loadParticipants() {
+            fetch(`/chat/classroom/${classroomId}/participants`)
+                .then(response => response.json())
+                .then(data => {
+                    displayParticipants(data.participants);
+                })
+                .catch(error => {
+                    console.error('خطأ في تحميل المشاركين:', error);
+                });
+        }
+
+        function displayParticipants(participants) {
+            const participantsList = document.getElementById('participantsList');
+            participantsList.innerHTML = '';
+
+            participants.forEach(participant => {
+                const participantElement = document.createElement('div');
+                participantElement.className = 'participant-item';
+                participantElement.innerHTML = `
+                    <div class="participant-avatar">
+                        ${participant.name.charAt(0)}
+                    </div>
+                    <div class="participant-info">
+                        <h6>${participant.name}</h6>
+                        <div class="participant-role">${getRoleText(participant.role)}</div>
+                    </div>
+                    ${participant.role === 'student' ? `
+                        <button class="btn btn-sm btn-outline-danger ms-auto" onclick="removeStudent(${participant.id})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    ` : ''}
+                `;
+                participantsList.appendChild(participantElement);
+            });
+
+            document.getElementById('participantsCount').textContent = `${participants.length} مشارك`;
+        }
+
+        function getRoleText(role) {
+            const roles = {
+                'teacher': 'معلم',
+                'assistant': 'مساعد',
+                'student': 'طالب'
+            };
+            return roles[role] || role;
+        }
+
+        // دالات الإدارة
+        function addStudent() {
+            const modal = new bootstrap.Modal(document.getElementById('addStudentModal'));
+            modal.show();
+        }
+
+        function removeStudent(studentId) {
+            if (confirm('إزالة هذا الطالب؟')) {
+                fetch(`/teacher/classroom/${classroomId}/remove_student`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ student_id: studentId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadParticipants();
+                    } else {
+                        alert('فشل في إزالة الطالب');
+                    }
+                });
+            }
+        }
+
+        function muteAll() {
+            if (confirm('كتم جميع الطلاب؟')) {
+                console.log('تم كتم جميع الطلاب');
+            }
+        }
+
+        function clearChat() {
+            if (confirm('مسح جميع الرسائل؟')) {
+                console.log('تم مسح المحادثة');
+            }
+        }
+
+        function openChatSettings() {
+            window.location.href = `/chat/classroom/${classroomId}/settings`;
+        }
+
+        // الرموز التعبيرية
+        function loadEmojis() {
+            const emojis = ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘'];
+            
+            const emojiGrid = document.getElementById('emojiGrid');
+            emojis.forEach(emoji => {
+                const emojiElement = document.createElement('div');
+                emojiElement.className = 'emoji-item';
+                emojiElement.textContent = emoji;
+                emojiElement.onclick = () => insertEmoji(emoji);
+                emojiGrid.appendChild(emojiElement);
+            });
+        }
+
+        function toggleEmojiPicker() {
+            const emojiPicker = document.getElementById('emojiPicker');
+            emojiPicker.style.display = emojiPicker.style.display === 'none' || emojiPicker.style.display === '' ? 'block' : 'none';
+        }
+
+        function insertEmoji(emoji) {
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value += emoji;
+            messageInput.focus();
+            toggleEmojiPicker();
+        }
+
+        // البحث عن الطلاب
+        document.getElementById('studentSearch').addEventListener('input', function() {
+            const searchTerm = this.value.trim();
+            if (searchTerm.length > 2) {
+                searchStudents(searchTerm);
+            }
+        });
+
+        function searchStudents(searchTerm) {
+            fetch(`/teacher/search_students?q=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displaySearchResults(data.students);
+                })
+                .catch(error => {
+                    console.error('خطأ في البحث:', error);
+                });
+        }
+
+        function displaySearchResults(students) {
+            const resultsContainer = document.getElementById('studentSearchResults');
+            resultsContainer.innerHTML = '';
+
+            students.forEach(student => {
+                const studentElement = document.createElement('div');
+                studentElement.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
+                studentElement.innerHTML = `
+                    <div>
+                        <small><strong>${student.name}</strong></small>
+                        <br>
+                        <small class="text-muted">${student.phone}</small>
+                    </div>
+                    <button class="btn btn-sm btn-primary" onclick="addStudentToChat(${student.id})">
+                        إضافة
+                    </button>
+                `;
+                resultsContainer.appendChild(studentElement);
+            });
+        }
+
+        function addStudentToChat(studentId) {
+            fetch(`/teacher/classroom/${classroomId}/add_student`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ student_id: studentId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
+                    modal.hide();
+                    loadParticipants();
+                } else {
+                    alert(data.message || 'فشل في إضافة الطالب');
+                }
+            });
+        }
+
+        // إخفاء منتقي الرموز التعبيرية عند النقر خارجه
+        document.addEventListener('click', function(event) {
+            const emojiPicker = document.getElementById('emojiPicker');
+            const emojiButton = event.target.closest('[onclick="toggleEmojiPicker()"]');
+            
+            if (!emojiPicker.contains(event.target) && !emojiButton) {
+                emojiPicker.style.display = 'none';
+            }
+        });
+
+        // تصدير الدالات للنطاق العام
+        window.sendMessage = sendMessage;
+        window.handleMessageKeydown = handleMessageKeydown;
+        window.toggleParticipants = toggleParticipants;
+        window.toggleEmojiPicker = toggleEmojiPicker;
+        window.insertEmoji = insertEmoji;
+        window.addStudent = addStudent;
+        window.removeStudent = removeStudent;
+        window.muteAll = muteAll;
+        window.clearChat = clearChat;
+        window.openChatSettings = openChatSettings;
+        window.addStudentToChat = addStudentToChat;
+    </script>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

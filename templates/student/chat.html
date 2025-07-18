@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محادثة الفصل - {{ classroom.name }} - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --primary-color: #4c84ff;
+            --secondary-color: #f8f9fa;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --dark-color: #343a40;
+            --light-color: #f8f9fa;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .chat-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(45deg, var(--primary-color), #667eea);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .online-indicator {
+            width: 10px;
+            height: 10px;
+            background: #28a745;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .participants-sidebar {
+            width: 280px;
+            background: #f8f9fa;
+            border-left: 1px solid #e9ecef;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .participants-header {
+            padding: 1rem;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+        }
+
+        .participant-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .participant-info h6 {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .participant-role {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .teacher-role, .assistant-role {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .message.own {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .message.own .message-avatar {
+            background: var(--success-color);
+        }
+
+        .message.teacher .message-avatar {
+            background: #e74c3c;
+        }
+
+        .message.assistant .message-avatar {
+            background: #f39c12;
+        }
+
+        .message-content {
+            max-width: 70%;
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .message.own .message-content {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .message.teacher .message-content {
+            border-right: 4px solid #e74c3c;
+        }
+
+        .message.assistant .message-content {
+            border-right: 4px solid #f39c12;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+
+        .message-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .message-input-container {
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            padding: 0.75rem 1rem;
+            resize: none;
+            max-height: 120px;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .message-input:disabled {
+            background: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        .send-button {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-button:hover {
+            background: #3a6fdc;
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            padding: 0.5rem 1rem;
+            font-style: italic;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .chat-disabled {
+            padding: 1rem;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .emoji-picker {
+            position: absolute;
+            bottom: 60px;
+            right: 20px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            box-shadow: var(--box-shadow);
+            display: none;
+            z-index: 1000;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.25rem;
+        }
+
+        .emoji-item {
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 6px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        .emoji-item:hover {
+            background: #f0f0f0;
+        }
+
+        .raise-hand-btn {
+            background: var(--warning-color);
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 0.5rem;
+        }
+
+        .raise-hand-btn:hover {
+            background: #e0a800;
+            transform: scale(1.05);
+        }
+
+        .raise-hand-btn.active {
+            background: var(--danger-color);
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        @media (max-width: 768px) {
+            .participants-sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                height: 100vh;
+                z-index: 1000;
+                transition: left 0.3s;
+            }
+
+            .participants-sidebar.show {
+                left: 0;
+            }
+
+            .chat-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                display: none;
+            }
+
+            .chat-overlay.show {
+                display: block;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <div class="col-12">
+                <div class="chat-container">
+                    <!-- رأس الشات -->
+                    <div class="chat-header">
+                        <div class="d-flex align-items-center gap-3">
+                            <a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}" 
+                               class="btn btn-outline-light btn-sm">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <div>
+                                <h4>محادثة {{ classroom.name }}</h4>
+                                <div class="chat-status">
+                                    <div class="online-indicator"></div>
+                                    <span id="participantsCount">{{ participants_count }} مشارك</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-outline-light btn-sm" onclick="toggleParticipants()">
+                                <i class="fas fa-users"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-row h-100">
+                        <!-- المحادثة الرئيسية -->
+                        <div class="chat-main">
+                            <!-- حاوية الرسائل -->
+                            <div class="messages-container" id="messagesContainer">
+                                <!-- سيتم تحميل الرسائل هنا -->
+                            </div>
+
+                            <!-- مؤشر الكتابة -->
+                            <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                                <span id="typingText"></span>
+                            </div>
+
+                            <!-- إشعار تعطيل الشات -->
+                            <div class="chat-disabled" id="chatDisabled" style="display: none;">
+                                <i class="fas fa-volume-mute"></i>
+                                تم تعطيل المحادثة من قبل المعلم
+                            </div>
+
+                            <!-- إدخال الرسالة -->
+                            <div class="message-input-container" id="messageInputContainer">
+                                <button type="button" class="btn btn-outline-secondary" onclick="toggleEmojiPicker()">
+                                    <i class="fas fa-smile"></i>
+                                </button>
+                                <textarea class="message-input" 
+                                         id="messageInput" 
+                                         placeholder="اكتب رسالتك..."
+                                         rows="1"
+                                         onkeydown="handleMessageKeydown(event)"
+                                         oninput="handleTyping()"></textarea>
+                                <button type="button" class="raise-hand-btn" onclick="raiseHand()" id="raiseHandBtn" title="رفع اليد">
+                                    <i class="fas fa-hand-paper"></i>
+                                </button>
+                                <button type="button" class="send-button" onclick="sendMessage()" id="sendButton">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- قائمة المشاركين -->
+                        <div class="participants-sidebar" id="participantsSidebar">
+                            <div class="participants-header">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span>المشاركون</span>
+                                    <button class="btn btn-sm btn-outline-primary d-lg-none" onclick="toggleParticipants()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="participantsList">
+                                <!-- سيتم تحميل المشاركين هنا -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- طبقة التغطية للموبايل -->
+    <div class="chat-overlay" id="chatOverlay" onclick="toggleParticipants()"></div>
+
+    <!-- منتقي الرموز التعبيرية -->
+    <div class="emoji-picker" id="emojiPicker">
+        <div class="emoji-grid" id="emojiGrid">
+            <!-- سيتم إنشاء الرموز التعبيرية بـ JavaScript -->
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // إعداد Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCB_GPRRlb6BCe1Mlv7rTIbtnD-Y3vpAj8",
+            authDomain: "al-7esa.firebaseapp.com",
+            databaseURL: "https://al-7esa-default-rtdb.firebaseio.com",
+            projectId: "al-7esa",
+            storageBucket: "al-7esa.firebasestorage.app",
+            messagingSenderId: "893628750909",
+            appId: "1:893628750909:web:3cd09924c12987b3ef9e54",
+            measurementId: "G-B026ZL6KXG"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // متغيرات عامة
+        const classroomId = "{{ classroom.id }}";
+        const currentUser = {
+            id: "{{ current_user.id }}",
+            name: "{{ current_user.name }}",
+            role: "{{ current_user.role }}"
+        };
+
+        let typingTimeout;
+        let isTyping = false;
+        let chatEnabled = true;
+        let handRaised = false;
+
+        // تهيئة الشات
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChat();
+            loadEmojis();
+            loadParticipants();
+            checkChatSettings();
+        });
+
+        async function initializeChat() {
+            // الاستماع للرسائل الجديدة
+            const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
+            const q = query(messagesRef, orderBy('timestamp', 'asc'));
+
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        displayMessage(change.doc.data());
+                    }
+                });
+                scrollToBottom();
+            });
+
+            // الاستماع لحالة الكتابة
+            const typingRef = collection(db, 'classrooms', classroomId, 'typing');
+            onSnapshot(typingRef, (snapshot) => {
+                handleTypingIndicator(snapshot);
+            });
+
+            // الاستماع لإعدادات الشات
+            const settingsRef = doc(db, 'classrooms', classroomId, 'settings', 'chat');
+            onSnapshot(settingsRef, (doc) => {
+                if (doc.exists()) {
+                    handleChatSettings(doc.data());
+                }
+            });
+        }
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const messageText = messageInput.value.trim();
+
+            if (messageText === '' || !chatEnabled) return;
+
+            try {
+                const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
+                await addDoc(messagesRef, {
+                    text: messageText,
+                    senderId: currentUser.id,
+                    senderName: currentUser.name,
+                    senderRole: currentUser.role,
+                    timestamp: serverTimestamp(),
+                    type: 'text'
+                });
+
+                messageInput.value = '';
+                clearTyping();
+            } catch (error) {
+                console.error('خطأ في إرسال الرسالة:', error);
+                alert('فشل في إرسال الرسالة');
+            }
+        }
+
+        function displayMessage(messageData) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const isOwnMessage = messageData.senderId === currentUser.id;
+            const senderRole = messageData.senderRole;
+
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${isOwnMessage ? 'own' : ''} ${senderRole}`;
+
+            const timestamp = messageData.timestamp ? 
+                new Date(messageData.timestamp.seconds * 1000).toLocaleTimeString('ar-EG', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : 'الآن';
+
+            messageElement.innerHTML = `
+                <div class="message-avatar">
+                    ${messageData.senderName.charAt(0)}
+                </div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-sender">${messageData.senderName}</span>
+                        ${senderRole === 'teacher' ? '<span class="badge bg-danger">معلم</span>' : ''}
+                        ${senderRole === 'assistant' ? '<span class="badge bg-warning">مساعد</span>' : ''}
+                        <span class="message-time">${timestamp}</span>
+                    </div>
+                    <div class="message-text">${messageData.text}</div>
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageElement);
+        }
+
+        async function handleTyping() {
+            if (!isTyping && chatEnabled) {
+                isTyping = true;
+                const typingRef = doc(db, 'classrooms', classroomId, 'typing', currentUser.id);
+                await updateDoc(typingRef, {
+                    userId: currentUser.id,
+                    userName: currentUser.name,
+                    timestamp: serverTimestamp()
+                }).catch(async () => {
+                    // إذا لم توجد الوثيقة، قم بإنشائها
+                    await addDoc(collection(db, 'classrooms', classroomId, 'typing'), {
+                        userId: currentUser.id,
+                        userName: currentUser.name,
+                        timestamp: serverTimestamp()
+                    });
+                });
+            }
+
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(clearTyping, 2000);
+        }
+
+        async function clearTyping() {
+            if (isTyping) {
+                isTyping = false;
+                try {
+                    const typingRef = doc(db, 'classrooms', classroomId, 'typing', currentUser.id);
+                    await deleteDoc(typingRef);
+                } catch (error) {
+                    console.log('Typing document not found');
+                }
+            }
+        }
+
+        function handleTypingIndicator(snapshot) {
+            const typingUsers = [];
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.userId !== currentUser.id) {
+                    typingUsers.push(data.userName);
+                }
+            });
+
+            const typingIndicator = document.getElementById('typingIndicator');
+            const typingText = document.getElementById('typingText');
+
+            if (typingUsers.length > 0) {
+                const text = typingUsers.length === 1 ? 
+                    `${typingUsers[0]} يكتب...` : 
+                    `${typingUsers.join(', ')} يكتبون...`;
+                typingText.textContent = text;
+                typingIndicator.style.display = 'block';
+            } else {
+                typingIndicator.style.display = 'none';
+            }
+        }
+
+        function handleChatSettings(settings) {
+            chatEnabled = settings.enabled !== false;
+            
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const chatDisabled = document.getElementById('chatDisabled');
+            const messageInputContainer = document.getElementById('messageInputContainer');
+
+            if (!chatEnabled) {
+                messageInput.disabled = true;
+                sendButton.disabled = true;
+                chatDisabled.style.display = 'block';
+                messageInputContainer.style.opacity = '0.6';
+            } else {
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                chatDisabled.style.display = 'none';
+                messageInputContainer.style.opacity = '1';
+            }
+        }
+
+        async function raiseHand() {
+            const raiseHandBtn = document.getElementById('raiseHandBtn');
+            
+            if (!handRaised) {
+                // رفع اليد
+                try {
+                    const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
+                    await addDoc(messagesRef, {
+                        text: '🖐️ رفع يده',
+                        senderId: currentUser.id,
+                        senderName: currentUser.name,
+                        senderRole: currentUser.role,
+                        timestamp: serverTimestamp(),
+                        type: 'hand_raise'
+                    });
+
+                    handRaised = true;
+                    raiseHandBtn.classList.add('active');
+                    raiseHandBtn.title = 'خفض اليد';
+                } catch (error) {
+                    console.error('خطأ في رفع اليد:', error);
+                }
+            } else {
+                // خفض اليد
+                try {
+                    const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
+                    await addDoc(messagesRef, {
+                        text: '✋ خفض يده',
+                        senderId: currentUser.id,
+                        senderName: currentUser.name,
+                        senderRole: currentUser.role,
+                        timestamp: serverTimestamp(),
+                        type: 'hand_lower'
+                    });
+
+                    handRaised = false;
+                    raiseHandBtn.classList.remove('active');
+                    raiseHandBtn.title = 'رفع اليد';
+                } catch (error) {
+                    console.error('خطأ في خفض اليد:', error);
+                }
+            }
+        }
+
+        function scrollToBottom() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function handleMessageKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey && chatEnabled) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function toggleParticipants() {
+            const sidebar = document.getElementById('participantsSidebar');
+            const overlay = document.getElementById('chatOverlay');
+            
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+
+        function checkChatSettings() {
+            // التحقق من إعدادات الشات
+            fetch(`/student/classroom/${classroomId}/chat_settings`)
+                .then(response => response.json())
+                .then(data => {
+                    handleChatSettings(data);
+                })
+                .catch(error => {
+                    console.error('خطأ في تحميل إعدادات الشات:', error);
+                });
+        }
+
+        function loadParticipants() {
+            // تحميل قائمة المشاركين من الخادم
+            fetch(`/student/classroom/${classroomId}/participants`)
+                .then(response => response.json())
+                .then(data => {
+                    displayParticipants(data.participants);
+                })
+                .catch(error => {
+                    console.error('خطأ في تحميل المشاركين:', error);
+                });
+        }
+
+        function displayParticipants(participants) {
+            const participantsList = document.getElementById('participantsList');
+            participantsList.innerHTML = '';
+
+            // ترتيب المشاركين: المعلم والمساعد أولاً
+            participants.sort((a, b) => {
+                const roleOrder = { 'teacher': 0, 'assistant': 1, 'student': 2 };
+                return roleOrder[a.role] - roleOrder[b.role];
+            });
+
+            participants.forEach(participant => {
+                const participantElement = document.createElement('div');
+                participantElement.className = 'participant-item';
+                participantElement.innerHTML = `
+                    <div class="participant-avatar">
+                        ${participant.name.charAt(0)}
+                    </div>
+                    <div class="participant-info">
+                        <h6>${participant.name}</h6>
+                        <div class="participant-role ${participant.role}-role">${getRoleText(participant.role)}</div>
+                    </div>
+                `;
+                participantsList.appendChild(participantElement);
+            });
+
+            document.getElementById('participantsCount').textContent = `${participants.length} مشارك`;
+        }
+
+        function getRoleText(role) {
+            const roles = {
+                'teacher': 'معلم',
+                'assistant': 'مساعد',
+                'student': 'طالب'
+            };
+            return roles[role] || role;
+        }
+
+        // الرموز التعبيرية
+        function loadEmojis() {
+            const emojis = ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '👍', '👎', '👏', '🙌', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋', '🤚', '🖐️', '🖖', '👋', '🤏', '💪', '🦾', '🖕', '✍️', '🙏', '🦶', '🦵', '🦿', '💄', '💋', '👄', '🦷', '👅', '👂', '🦻', '👃', '👣', '👁️', '👀', '🧠', '🗣️', '👤', '👥'];
+            
+            const emojiGrid = document.getElementById('emojiGrid');
+            emojis.forEach(emoji => {
+                const emojiElement = document.createElement('div');
+                emojiElement.className = 'emoji-item';
+                emojiElement.textContent = emoji;
+                emojiElement.onclick = () => insertEmoji(emoji);
+                emojiGrid.appendChild(emojiElement);
+            });
+        }
+
+        function toggleEmojiPicker() {
+            if (!chatEnabled) return;
+            
+            const emojiPicker = document.getElementById('emojiPicker');
+            emojiPicker.style.display = emojiPicker.style.display === 'none' || emojiPicker.style.display === '' ? 'block' : 'none';
+        }
+
+        function insertEmoji(emoji) {
+            if (!chatEnabled) return;
+            
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value += emoji;
+            messageInput.focus();
+            toggleEmojiPicker();
+        }
+
+        // إخفاء منتقي الرموز التعبيرية عند النقر خارجه
+        document.addEventListener('click', function(event) {
+            const emojiPicker = document.getElementById('emojiPicker');
+            const emojiButton = event.target.closest('[onclick="toggleEmojiPicker()"]');
+            
+            if (!emojiPicker.contains(event.target) && !emojiButton) {
+                emojiPicker.style.display = 'none';
+            }
+        });
+
+        // تصدير الدالات للنطاق العام
+        window.sendMessage = sendMessage;
+        window.handleMessageKeydown = handleMessageKeydown;
+        window.toggleParticipants = toggleParticipants;
+        window.toggleEmojiPicker = toggleEmojiPicker;
+        window.insertEmoji = insertEmoji;
+        window.raiseHand = raiseHand;
+    </script>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

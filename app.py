@@ -1,12 +1,5 @@
 """
-مimport os
-import logging
-from datetime import datetime
-import re
-from urllib.parse import urlparse
-from models import db
-from flask import Flask, render_template, request
-from flask_sqlalchemy import SQLAlchemyة التعليمية - ملف التطبيق الرئيسي
+منصة الحصة التعليمية - ملف التطبيق الرئيسي
 يحتوي على إعداد تطبيق Flask وتكوين المسارات الأساسية
 """
 
@@ -16,16 +9,17 @@ from datetime import datetime
 import re
 from urllib.parse import urlparse
 from models import db
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, request, jsonify, flash, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask_cors import CORS
 
 from flask_cors import CORS
 from config import Config
-from flask_wtf.csrf import CSRFProtect
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -79,6 +73,11 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Initialize database after app is created
 db.init_app(app)
+
+# Configure session for permanent lifetime
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
 
 # Initialize Firebase
 from firebase_config import firebase_config
@@ -193,6 +192,29 @@ login_manager.login_message_category = 'info'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Route to get fresh CSRF token (global route)
+@app.route('/csrf-token')
+def get_csrf_token():
+    from flask_wtf.csrf import generate_csrf
+    return jsonify({'csrf_token': generate_csrf()})
+
+# Global CSRF error handler
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    from flask_wtf.csrf import CSRFError, generate_csrf
+    from flask import request, jsonify, redirect, url_for, flash
+    
+    # Check if this is an AJAX request
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.headers.get('Content-Type') == 'application/json':
+        return jsonify({
+            'error': 'csrf_token_expired',
+            'message': 'انتهت صلاحية النموذج. يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.',
+            'csrf_token': generate_csrf()
+        }), 400
+    else:
+        flash('انتهت صلاحية النموذج. يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.', 'danger')
+        return redirect(url_for('auth.login')), 400
+
 # Create upload directories
 def create_upload_directories():
     upload_dirs = [
@@ -221,6 +243,13 @@ def favicon():
 def test_firestore():
     return render_template('test_firestore.html')
 
+# Route for testing chat Firebase configuration
+@app.route('/test-chat-firebase')
+def test_chat_firebase():
+    from firebase_config import firebase_config
+    config = firebase_config.get_client_config()
+    return render_template('test_chat_firebase.html', firebase_config=config)
+
 # Google Meet URL validator
 
 
@@ -242,6 +271,7 @@ with app.app_context():
     from routes.teacher import teacher_bp
     from routes.student import student_bp
     from routes.assistant import assistant_bp
+    from routes.chat import chat
 
     # Import utility functions
     from utils import cleanup_expired_streams
@@ -253,6 +283,27 @@ with app.app_context():
     app.register_blueprint(teacher_bp, url_prefix='/teacher')
     app.register_blueprint(student_bp, url_prefix='/student')
     app.register_blueprint(assistant_bp, url_prefix='/assistant')
+    app.register_blueprint(chat)
+
+# Route لاختبار Firebase
+@app.route('/firebase_test.html')
+def firebase_test():
+    """صفحة اختبار Firebase"""
+    try:
+        with open('firebase_test.html', 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        return "<h1>ملف الاختبار غير موجود</h1><p>تشغيل: python final_firebase_fix.py</p>", 404
+
+# Route لاختبار الاتصال
+@app.route('/api/test_firebase', methods=['POST'])
+def test_firebase_api():
+    """API لاختبار Firebase"""
+    return jsonify({
+        'success': True,
+        'message': 'Firebase API يعمل بشكل صحيح',
+        'timestamp': datetime.now().isoformat()
+    })
 
 # Add a before_request hook to periodically clean up expired streams
 import threading

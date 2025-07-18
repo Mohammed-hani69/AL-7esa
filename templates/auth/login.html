@@ -301,6 +301,37 @@
             return null;
         }
 
+        // Function to refresh CSRF token
+        function refreshCSRFToken() {
+            return fetch('/csrf-token', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.csrf_token) {
+                    // Update all CSRF tokens on the page
+                    document.querySelectorAll('input[name="csrf_token"]').forEach(input => {
+                        input.value = data.csrf_token;
+                    });
+                    // Update meta tag for AJAX requests
+                    const metaTag = document.querySelector('meta[name="csrf-token"]');
+                    if (metaTag) {
+                        metaTag.setAttribute('content', data.csrf_token);
+                    }
+                    console.log('CSRF token refreshed successfully');
+                    return data.csrf_token;
+                }
+                throw new Error('No CSRF token received');
+            })
+            .catch(error => {
+                console.log('CSRF token refresh failed:', error);
+                throw error;
+            });
+        }
+
         // Firebase Configuration
         const firebaseConfig = {
             apiKey: "{{ firebase_api_key }}",
@@ -487,12 +518,33 @@
             
             if (loginForm) {
                 loginForm.addEventListener('submit', function(e) {
+                    // Check if CSRF token is still valid before submitting
+                    const csrfInput = loginForm.querySelector('input[name="csrf_token"]');
+                    if (!csrfInput || !csrfInput.value) {
+                        e.preventDefault();
+                        alert('انتهت صلاحية النموذج. يرجى إعادة تحميل الصفحة.');
+                        window.location.reload();
+                        return;
+                    }
+                    
                     if (window.enhancedLoading) {
                         window.enhancedLoading.showButtonLoading(submitBtn, {
                             text: 'جاري تسجيل الدخول...',
                             type: 'spinner'
                         });
                     }
+                });
+                
+                // Handle CSRF error on form response
+                loginForm.addEventListener('error', function(e) {
+                    // Try to refresh CSRF token and retry submission
+                    refreshCSRFToken();
+                });
+                
+                // Add event listener for server error responses (like CSRF errors)
+                window.addEventListener('beforeunload', function() {
+                    // Refresh CSRF token before page unload
+                    refreshCSRFToken();
                 });
             }
             
@@ -506,6 +558,16 @@
             document.querySelectorAll('a[href*="reset"]').forEach(link => {
                 link.setAttribute('data-loading', 'true');
                 link.setAttribute('data-loading-text', 'جاري تحميل صفحة استعادة كلمة المرور...');
+            });
+            
+            // Refresh CSRF token every 30 minutes
+            setInterval(refreshCSRFToken, 30 * 60 * 1000);
+            
+            // Refresh token when page becomes visible again (user returns to tab)
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    refreshCSRFToken();
+                }
             });
         });
 

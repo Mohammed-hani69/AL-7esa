@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -13,7 +14,15 @@ class Config:
     DEBUG = os.environ.get("FLASK_ENV", "development") == "development"
 
     # CSRF Configuration
-    WTF_CSRF_TIME_LIMIT = 3600  # 1 hour in seconds
+    WTF_CSRF_TIME_LIMIT = None  # No time limit for CSRF tokens
+    WTF_CSRF_SSL_STRICT = False  # Allow CSRF in development without SSL
+    WTF_CSRF_ENABLED = True
+    
+    # Session Configuration
+    PERMANENT_SESSION_LIFETIME = timedelta(days=7)  # 7 days session lifetime
+    SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
 
     # CORS Configuration
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*").split(",") if os.environ.get("CORS_ORIGINS") else ["*"]

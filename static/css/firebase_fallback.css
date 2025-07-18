@@ -1,0 +1,21 @@
+
+/* تصميم خاص للرسائل المحلية */
+.message.local-message {
+    border-left: 3px solid #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.message.local-message .message-meta::after {
+    content: " (محفوظ محلياً)";
+    color: #ffc107;
+    font-size: 0.8em;
+}
+
+.firebase-error-notice {
+    background: #fff3cd;
+    color: #856404;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    border-left: 4px solid #ffc107;
+}

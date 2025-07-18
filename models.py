@@ -143,6 +143,12 @@ class Classroom(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
+    
+    # إعدادات المحادثة
+    chat_enabled = db.Column(db.Boolean, default=True)
+    allow_file_sharing = db.Column(db.Boolean, default=True)
+    allow_emoji = db.Column(db.Boolean, default=True)
+    max_message_length = db.Column(db.Integer, default=500)
 
     # Relationships
     teacher = db.relationship('User', back_populates='teacher_classrooms', foreign_keys=[teacher_id])

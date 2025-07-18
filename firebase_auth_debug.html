@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تشخيص مصادقة Firebase</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 تشخيص مصادقة Firebase</h1>
+    
+    <div class="section">
+        <h3>حالة Firebase</h3>
+        <div id="firebase-status">جاري الفحص...</div>
+        <button onclick="checkFirebaseStatus()">فحص Firebase</button>
+    </div>
+    
+    <div class="section">
+        <h3>حالة المصادقة</h3>
+        <div id="auth-status">جاري الفحص...</div>
+        <button onclick="checkAuthStatus()">فحص المصادقة</button>
+        <button onclick="simulateAuth()">محاكاة مصادقة</button>
+    </div>
+    
+    <div class="section">
+        <h3>اختبار Firestore</h3>
+        <div id="firestore-status">جاري الفحص...</div>
+        <button onclick="testFirestore()">اختبار Firestore</button>
+        <button onclick="testChatMessage()">اختبار رسالة</button>
+    </div>
+
+    <script src="/static/js/firebase_auth_sim.js"></script>
+    <script src="/static/js/firebase_config_override.js"></script>
+    
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCB_GPRRlb6BCe1Mlv7rTIbtnD-Y3vpAj8",
+            authDomain: "al-7esa.firebaseapp.com",
+            projectId: "al-7esa",
+            storageBucket: "al-7esa.firebasestorage.app",
+            messagingSenderId: "893628750909",
+            appId: "1:893628750909:web:3cd09924c12987b3ef9e54"
+        };
+
+        let app, db;
+        
+        window.checkFirebaseStatus = function() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                document.getElementById('firebase-status').innerHTML = '✅ Firebase متصل بنجاح';
+                document.getElementById('firebase-status').parentElement.className = 'section success';
+            } catch (error) {
+                document.getElementById('firebase-status').innerHTML = '❌ خطأ Firebase: ' + error.message;
+                document.getElementById('firebase-status').parentElement.className = 'section error';
+            }
+        }
+
+        window.checkAuthStatus = function() {
+            if (FirebaseAuthSimulator) {
+                document.getElementById('auth-status').innerHTML = '✅ محاكي المصادقة متوفر';
+                document.getElementById('auth-status').parentElement.className = 'section success';
+            } else {
+                document.getElementById('auth-status').innerHTML = '❌ لا توجد مصادقة';
+                document.getElementById('auth-status').parentElement.className = 'section error';
+            }
+        }
+
+        window.simulateAuth = function() {
+            if (FirebaseAuthSimulator) {
+                FirebaseAuthSimulator.signInAnonymously().then(() => {
+                    document.getElementById('auth-status').innerHTML = '✅ تم تسجيل الدخول بالمحاكي';
+                    document.getElementById('auth-status').parentElement.className = 'section success';
+                });
+            }
+        }
+
+        window.testFirestore = async function() {
+            try {
+                const testDoc = await addDoc(collection(db, 'auth_test'), {
+                    message: 'اختبار مصادقة',
+                    timestamp: serverTimestamp(),
+                    user: FirebaseAuthSimulator ? FirebaseAuthSimulator.currentUser.uid : 'anonymous'
+                });
+                
+                document.getElementById('firestore-status').innerHTML = '✅ Firestore يعمل بنجاح';
+                document.getElementById('firestore-status').parentElement.className = 'section success';
+                
+            } catch (error) {
+                document.getElementById('firestore-status').innerHTML = '❌ خطأ Firestore: ' + error.message;
+                document.getElementById('firestore-status').parentElement.className = 'section error';
+            }
+        }
+
+        window.testChatMessage = async function() {
+            try {
+                await addDoc(collection(db, 'classrooms', 'test', 'messages'), {
+                    text: 'رسالة اختبار المصادقة',
+                    senderId: 'test_user',
+                    senderName: 'مستخدم اختبار',
+                    timestamp: serverTimestamp(),
+                    type: 'test'
+                });
+                
+                alert('✅ تم إرسال رسالة الاختبار بنجاح!');
+                
+            } catch (error) {
+                alert('❌ فشل في إرسال رسالة الاختبار: ' + error.message);
+            }
+        }
+
+        // فحص تلقائي عند التحميل
+        setTimeout(() => {
+            checkFirebaseStatus();
+            checkAuthStatus();
+        }, 1000);
+    </script>
+</body>
+</html>

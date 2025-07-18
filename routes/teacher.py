@@ -2268,6 +2268,65 @@ def chat(classroom_id):
                          secondary_color=secondary_color,
                          user_type='teacher')
 
+@teacher_bp.route('/classroom/<int:classroom_id>/participants')
+@login_required
+@teacher_required
+def chat_participants(classroom_id):
+    """جلب قائمة المشاركين في المحادثة"""
+    try:
+        classroom = Classroom.query.get_or_404(classroom_id)
+        
+        # التأكد من أن المعلم يملك هذا الفصل
+        if classroom.teacher_id != current_user.id:
+            return jsonify({'success': False, 'error': 'غير مصرح'}), 403
+        
+        # جلب جميع المشاركين في المحادثة
+        participants = []
+        
+        # إضافة المعلم
+        participants.append({
+            'id': classroom.teacher.id,
+            'name': classroom.teacher.name,
+            'role': 'teacher',
+            'status': 'online'
+        })
+        
+        # إضافة المساعد إذا وجد
+        if classroom.assistant_id:
+            assistant = User.query.get(classroom.assistant_id)
+            if assistant:
+                participants.append({
+                    'id': assistant.id,
+                    'name': assistant.name,
+                    'role': 'assistant',
+                    'status': 'online'
+                })
+        
+        # إضافة الطلاب المسموح لهم بالمحادثة
+        chat_participants = ChatParticipant.query.filter_by(
+            classroom_id=classroom.id,
+            is_enabled=True
+        ).all()
+        
+        for chat_participant in chat_participants:
+            if chat_participant.enrollment:
+                participants.append({
+                    'id': chat_participant.enrollment.user.id,
+                    'name': chat_participant.enrollment.user.name,
+                    'role': 'student',
+                    'status': 'online'
+                })
+        
+        return jsonify({
+            'success': True,
+            'participants': participants
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 @teacher_bp.route('/classroom/<int:classroom_id>/assistant/settings', methods=['GET', 'POST'])
