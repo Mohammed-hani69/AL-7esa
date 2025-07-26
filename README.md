@@ -73,6 +73,24 @@ git push origin main
 python app.py
 ```
 
+## Admin Account Setup | إعداد حساب المسؤول
+
+To create an admin account, use the following command | لإنشاء حساب مسؤول، استخدم الأمر التالي:
+
+```bash
+python create_admin.py "اسم المسؤول" "01xxxxxxxxx" "كلمة_المرور"
+```
+
+Example | مثال:
+```bash
+python create_admin.py "أحمد محمد" "01123456789" "admin123"
+```
+
+**Important Notes | ملاحظات مهمة:**
+- Phone number must start with 01 and be 11 digits | رقم الهاتف يجب أن يبدأ بـ 01 ويتكون من 11 رقم
+- Use a strong password | استخدم كلمة مرور قوية
+- The admin account will have full access to the system | حساب المسؤول سيكون له صلاحية كاملة على النظام
+
 ## Environment Variables | متغيرات البيئة
 
 Create a `.env` file with the following variables | قم بإنشاء ملف `.env` بالمتغيرات التالية:
