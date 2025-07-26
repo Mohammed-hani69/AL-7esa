@@ -857,7 +857,7 @@
 <body>
     <header class="mobile-header d-sm-none">
         <a href="{{ url_for('admin.dashboard') }}" class="mobile-header-brand">
-            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
             <h1 class="mobile-header-title">الحصة</h1>
         </a>
         <button class="mobile-toggle">
@@ -928,7 +928,7 @@
         <!-- السايدبار -->
         <aside class="innovative-sidebar">
             <div class="sidebar-brand">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
                 <h1 class="brand-text">الحصة</h1>
             </div>
             
@@ -967,6 +967,12 @@
                     <a href="{{ url_for('admin.settings') }}" class="nav-link">
                         <i class="fas fa-cog"></i>
                         <span>الإعدادات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin.backup_database_get') }}" class="nav-link">
+                        <i class="fas fa-download"></i>
+                        <span>النسخ الاحتياطي</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -1165,6 +1171,19 @@
                                                     data-is-active="{{ user.is_active|tojson|safe }}">
                                                 <i class="fas {% if user.is_active %}fa-toggle-off{% else %}fa-toggle-on{% endif %} me-1"></i>
                                                 {{ 'تعطيل' if user.is_active else 'تفعيل' }}
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- زر إعادة تعيين كلمة المرور -->
+                                        <form action="{{ url_for('admin.reset_password', user_id=user.id) }}" method="POST" style="display: inline;" class="ms-1">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-info reset-password-btn"
+                                                    data-user-id="{{ user.id }}"
+                                                    data-user-name="{{ user.name }}"
+                                                    title="إعادة تعيين كلمة المرور إلى 12345678">
+                                                <i class="fas fa-key me-1"></i>
+                                                إعادة تعيين
                                             </button>
                                         </form>
                                     </td>
@@ -1912,6 +1931,24 @@
 
                 // إغلاق نافذة التأكيد
                 $('#confirmStatusModal').modal('hide');
+            });
+
+            // إعادة تعيين كلمة المرور
+            $(document).on('click', '.reset-password-btn', function() {
+                const userId = $(this).data('user-id');
+                const userName = $(this).data('user-name');
+                const form = $(this).closest('form');
+
+                if (confirm(`هل أنت متأكد من إعادة تعيين كلمة مرور المستخدم "${userName}" إلى 12345678؟`)) {
+                    // إظهار مؤشر التحميل
+                    const btn = $(this);
+                    const originalHtml = btn.html();
+                    btn.prop('disabled', true)
+                        .html('<i class="fas fa-spinner fa-spin me-1"></i>جاري التنفيذ...');
+
+                    // إرسال الطلب
+                    form.submit();
+                }
             });
 
             // إعادة تعيين كلمة المرور

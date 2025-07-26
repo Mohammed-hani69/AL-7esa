@@ -60,7 +60,7 @@ pip install -r requirements.txt
 4. For future changes:
 ```bash
 git add .
-git commit -m "update to v 1.1.2 push chat"
+git commit -m "update to v 1.1.3 نظام جديد لتسجيل الدخول و اضافة مميزات جديده  "
 git push origin main
 ```
 

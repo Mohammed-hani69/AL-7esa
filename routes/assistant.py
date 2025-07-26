@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
 from functools import wraps
-from models import Subscription, SystemSettings, User, Role, Classroom, ClassroomEnrollment, Assignment, AssignmentSubmission
+from models import Subscription, SystemSettings, User, Role, Classroom, ClassroomEnrollment, Assignment, AssignmentSubmission, Banner
 from models import ChatMessage, ChatSettings, ChatParticipant
 from models import Quiz, QuizQuestion, QuizAnswer, QuizAttempt
 from models import db
@@ -86,12 +86,25 @@ def dashboard():
     primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
     secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
 
+    # جلب البانرات النشطة للمساعدين
+    active_banners = Banner.query.filter(
+        Banner.is_active == True,
+        (Banner.start_date.is_(None)) | (Banner.start_date <= datetime.utcnow()),
+        (Banner.end_date.is_(None)) | (Banner.end_date >= datetime.utcnow())
+    ).filter(
+        (Banner.target_roles == 'all') |
+        (Banner.target_roles.like('%assistant%'))
+    ).order_by(Banner.priority.desc()).all()
+    
+    # فلترة البانرات للمساعدين
+    assistant_banners = [banner for banner in active_banners if banner.is_valid_for_user('assistant')]
+
     return render_template(template, 
                             classrooms=assigned_classrooms,
                             primary_color=primary_color,
                             secondary_color=secondary_color,
                             classrooms_with_chat=classrooms_with_chat,
-                            )
+                            banners=assistant_banners)
 
 
 @assistant_bp.route('/classroom/<int:classroom_id>')

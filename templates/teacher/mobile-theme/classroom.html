@@ -270,6 +270,159 @@
             margin-bottom: 1rem;
             border-radius: var(--border-radius-sm);
         }
+
+        /* Enhanced File Upload Styles */
+        .enhanced-file-upload {
+            margin-bottom: 1rem;
+        }
+
+        .file-drop-zone {
+            border: 2px dashed #dee2e6;
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            text-align: center;
+            background: var(--background-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-drop-zone:hover {
+            border-color: var(--accent-color);
+            background: rgba(108, 99, 255, 0.05);
+        }
+
+        .file-drop-zone.drag-over {
+            border-color: var(--accent-color);
+            background: rgba(108, 99, 255, 0.1);
+            transform: scale(1.02);
+        }
+
+        .selected-file-card {
+            background: var(--surface-color);
+            border: 1px solid #e3f2fd;
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+        }
+
+        .selected-file-card .file-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--background-color);
+            border-radius: var(--border-radius-sm);
+        }
+
+        /* شريط التقدم المحسن */
+        .upload-progress-enhanced {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            animation: slideInUp 0.3s ease;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .upload-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .file-info i {
+            margin-left: 8px;
+            color: var(--accent-color);
+        }
+
+        .upload-speed {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        /* شريط التقدم */
+        .progress {
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #e9ecef;
+        }
+
+        .progress-bar {
+            border-radius: 6px;
+            transition: width 0.3s ease;
+            background: linear-gradient(45deg, var(--accent-color), #28a745);
+        }
+
+        .progress-bar-animated {
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+
+        @keyframes progress-bar-stripes {
+            0% {
+                background-position: 1rem 0;
+            }
+            100% {
+                background-position: 0 0;
+            }
+        }
+
+        #upload-progress {
+            margin-top: 1rem;
+        }
+
+        .modal-header {
+            background: var(--accent-gradient);
+            color: white;
+            border-bottom: none;
+            border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #dee2e6;
+            padding: 1rem 1.5rem;
+        }
+
+        /* تحسينات إضافية للموبايل */
+        @media (max-width: 768px) {
+            .file-drop-zone {
+                padding: 1.5rem 1rem;
+            }
+            
+            .upload-progress-enhanced {
+                padding: 15px;
+                margin-top: 15px;
+            }
+            
+            .upload-stats {
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -277,7 +430,7 @@
     <header class="mobile-header">
         <div class="logo">
             <div class="logo-container">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة">
             </div>
         </div>
         <h1 class="header-title">{{ classroom.name }}</h1>
@@ -318,6 +471,10 @@
 
         <!-- Quick Links -->
         <div class="quick-links">
+            <a href="{{ url_for('teacher.edit_classroom', classroom_id=classroom.id) }}" class="quick-link">
+                <i class="fas fa-edit"></i>
+                <span>تعديل الفصل</span>
+            </a>
             <a href="{{ url_for('teacher.assignments', classroom_id=classroom.id) }}" class="quick-link">
                 <i class="fas fa-tasks"></i>
                 <span>الواجبات</span>
@@ -717,6 +874,7 @@
     </div>    <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/enhanced-file-upload.js') }}"></script>
     <script>        // نسخ كود الفصل
         document.getElementById('copy-code-btn').addEventListener('click', async function() {
             const code = document.getElementById('classroom-code').textContent.trim();
@@ -776,39 +934,479 @@
         });
 
         $(document).ready(function() {
-            // التحكم في عرض حقول المحتوى حسب النوع المختار
-            $('#content_type').change(function() {
-                const selectedType = $(this).val();
+            // إعداد نموذج إضافة المحتوى المحسن
+            initializeContentForm();
+            
+            // دالة إعداد النموذج
+            function initializeContentForm() {
+                const contentTypeSelect = $('#content_type');
+                const fileInput = $('#content_file');
+                const dropZone = $('#fileDropZone');
                 
-                // إخفاء جميع الحقول
-                $('.content-input').addClass('d-none');
-                $('.file-types-info span').addClass('d-none');
+                console.log('بدء إعداد النموذج...');
                 
-                if (selectedType === 'text') {
-                    $('#text-content').removeClass('d-none');
-                    $('#content_file').removeAttr('required');
-                } else {
-                    $('#file-content').removeClass('d-none');
-                    $('#content_file').attr('required', 'required');
-                    $(`.${selectedType}-types`).removeClass('d-none');
-                    $('.file-types-info').removeClass('d-none');
+                // مستمع تغيير نوع المحتوى - الطريقة المحسنة
+                contentTypeSelect.off('change').on('change', function() {
+                    const selectedType = $(this).val();
+                    console.log('تم تغيير نوع المحتوى إلى:', selectedType);
+                    
+                    // إخفاء جميع حقول الإدخال
+                    $('.content-input').addClass('d-none');
+                    $('.file-types-info').addClass('d-none');
+                    
+                    // مسح أي ملف محدد سابقاً
+                    clearSelectedFile();
+                    
+                    if (selectedType === 'text') {
+                        // إظهار حقل النص فقط
+                        $('#text-content').removeClass('d-none');
+                        fileInput.removeAttr('required accept');
+                        console.log('تم عرض حقل النص');
+                    } else {
+                        // إظهار حقل رفع الملفات
+                        $('#file-content').removeClass('d-none');
+                        fileInput.attr('required', 'required');
+                        $('.file-types-info').removeClass('d-none');
+                        console.log('تم عرض حقل رفع الملفات');
+                        
+                        // تحديث إعدادات نوع الملف
+                        updateFileTypeSettings(selectedType);
+                        
+                        // إعداد منطقة السحب والإفلات
+                        setupDropZone();
+                    }
+                });
+                
+                // إعداد معالجة اختيار الملف
+                fileInput.off('change').on('change', function() {
+                    const file = this.files[0];
+                    console.log('تم اختيار ملف:', file ? file.name : 'لا يوجد ملف');
+                    handleFileSelection(file);
+                });
+                
+                // إعداد النموذج للإرسال مع شريط التقدم
+                $('#contentForm').off('submit').on('submit', function(e) {
+                    e.preventDefault();
+                    handleFormSubmission();
+                });
+                
+                // تشغيل التبديل الأولي
+                setTimeout(function() {
+                    contentTypeSelect.val('text').trigger('change');
+                    console.log('تم تعيين النوع الافتراضي إلى نص');
+                }, 100);
+            }
+            
+            // دالة تحديث إعدادات نوع الملف
+            function updateFileTypeSettings(contentType) {
+                let fileTypesText = '';
+                let acceptTypes = '';
+                let dropZoneIcon = 'fas fa-cloud-upload-alt';
+                let dropZoneText = 'اسحب الملف هنا أو انقر للاختيار';
+                let dropZoneDesc = 'قم برفع الملف المطلوب (بدون حد أقصى للحجم)';
+                let labelText = 'رفع الملف *';
+                
+                switch(contentType) {
+                    case 'image':
+                        fileTypesText = 'الصيغ المدعومة: JPG, PNG, GIF, WebP';
+                        acceptTypes = '.jpg,.jpeg,.png,.gif,.webp,image/*';
+                        dropZoneIcon = 'fas fa-image';
+                        dropZoneText = 'اسحب الصورة هنا أو انقر للاختيار';
+                        dropZoneDesc = 'يمكنك رفع صورة بأي حجم';
+                        labelText = 'رفع الصورة *';
+                        break;
+                    case 'video':
+                        fileTypesText = 'الصيغ المدعومة: MP4, WebM, MOV, AVI';
+                        acceptTypes = '.mp4,.webm,.mov,.avi,video/*';
+                        dropZoneIcon = 'fas fa-video';
+                        dropZoneText = 'اسحب الفيديو هنا أو انقر للاختيار';
+                        dropZoneDesc = 'يمكنك رفع فيديو بأي حجم - حتى الملفات الكبيرة';
+                        labelText = 'رفع الفيديو *';
+                        break;
+                    case 'audio':
+                        fileTypesText = 'الصيغ المدعومة: MP3, WAV, OGG, M4A';
+                        acceptTypes = '.mp3,.wav,.ogg,.m4a,audio/*';
+                        dropZoneIcon = 'fas fa-music';
+                        dropZoneText = 'اسحب الملف الصوتي هنا أو انقر للاختيار';
+                        dropZoneDesc = 'يمكنك رفع ملف صوتي بأي حجم';
+                        labelText = 'رفع الملف الصوتي *';
+                        break;
+                    case 'file':
+                        fileTypesText = 'الصيغ المدعومة: PDF, DOC, PPT, XLS, TXT';
+                        acceptTypes = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt';
+                        dropZoneIcon = 'fas fa-file-alt';
+                        dropZoneText = 'اسحب المستند هنا أو انقر للاختيار';
+                        dropZoneDesc = 'يمكنك رفع مستند بأي حجم';
+                        labelText = 'رفع المستند *';
+                        break;
                 }
-            });
+                
+                // تحديث واجهة المستخدم
+                $('#file-upload-label').text(labelText);
+                
+                // تحديث أيقونة منطقة السحب والإفلات
+                const iconElement = dropZone.find('.drop-zone-content i');
+                if (iconElement.length) {
+                    iconElement.attr('class', dropZoneIcon + ' fa-3x text-primary mb-3');
+                }
+                
+                // تحديث نص منطقة السحب والإفلات
+                const textElement = dropZone.find('.drop-zone-content h5');
+                if (textElement.length) {
+                    textElement.text(dropZoneText);
+                }
+                
+                // تحديث الوصف
+                const descElement = dropZone.find('.drop-zone-content p');
+                if (descElement.length) {
+                    descElement.html(`<span class="text-muted">${dropZoneDesc}</span>`);
+                }
+                
+                // تحديث معلومات أنواع الملفات
+                $('.file-types-info').text(fileTypesText).removeClass('d-none');
+                
+                // تحديث خاصية accept في حقل الملف
+                fileInput.attr('accept', acceptTypes);
+                
+                console.log('تم تحديث إعدادات نوع الملف:', contentType);
+            }
+            
+            // دالة إعداد منطقة السحب والإفلات
+            function setupDropZone() {
+                const dropZoneEl = document.getElementById('fileDropZone');
+                const fileInputEl = document.getElementById('content_file');
+                
+                if (!dropZoneEl || !fileInputEl) {
+                    console.log('عناصر السحب والإفلات غير موجودة');
+                    return;
+                }
+                
+                // إزالة المستمعات السابقة لتجنب التكرار
+                const newDropZone = dropZoneEl.cloneNode(true);
+                dropZoneEl.parentNode.replaceChild(newDropZone, dropZoneEl);
+                
+                // إعادة ربط الأحداث
+                const freshDropZone = document.getElementById('fileDropZone');
+                
+                // منع السلوك الافتراضي
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    freshDropZone.addEventListener(eventName, preventDefaults, false);
+                });
+                
+                // تمييز منطقة الإفلات
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    freshDropZone.addEventListener(eventName, highlight, false);
+                });
+                
+                ['dragleave', 'drop'].forEach(eventName => {
+                    freshDropZone.addEventListener(eventName, unhighlight, false);
+                });
+                
+                // معالجة إفلات الملف
+                freshDropZone.addEventListener('drop', handleDrop, false);
+                
+                // معالجة النقر
+                freshDropZone.addEventListener('click', function() {
+                    fileInputEl.click();
+                });
+                
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                
+                function highlight() {
+                    freshDropZone.style.backgroundColor = '#e3f2fd';
+                    freshDropZone.style.borderColor = 'var(--accent-color)';
+                    freshDropZone.classList.add('drag-over');
+                }
+                
+                function unhighlight() {
+                    freshDropZone.style.backgroundColor = 'var(--background-color)';
+                    freshDropZone.style.borderColor = '#dee2e6';
+                    freshDropZone.classList.remove('drag-over');
+                }
+                
+                function handleDrop(e) {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    
+                    if (files.length > 0) {
+                        fileInputEl.files = files;
+                        handleFileSelection(files[0]);
+                    }
+                }
+                
+                console.log('تم إعداد منطقة السحب والإفلات');
+            }
+            
+            // دالة معالجة اختيار الملف
+            function handleFileSelection(file) {
+                if (!file) {
+                    clearSelectedFile();
+                    return;
+                }
+                
+                const contentType = $('#content_type').val();
+                console.log('تم اختيار ملف:', file.name, 'حجم الملف:', formatFileSize(file.size), 'نوع المحتوى:', contentType);
+                
+                // عرض معلومات الملف بدون فحص الحجم
+                displayFileInfo(file, contentType);
+                
+                // إنشاء معاينة للملف
+                createFilePreview(file, contentType);
+            }
+            
+            // دالة عرض معلومات الملف
+            function displayFileInfo(file, contentType) {
+                const filePreview = $('#file-preview');
+                const fileName = $('#file-name');
+                const fileSize = $('#file-size');
+                const fileIcon = $('#file-icon');
+                
+                // تحديد أيقونة الملف
+                let iconClass = 'fas fa-file fa-2x text-primary';
+                switch(contentType) {
+                    case 'image':
+                        iconClass = 'fas fa-image fa-2x text-success';
+                        break;
+                    case 'video':
+                        iconClass = 'fas fa-video fa-2x text-danger';
+                        break;
+                    case 'audio':
+                        iconClass = 'fas fa-music fa-2x text-warning';
+                        break;
+                    case 'file':
+                        if (file.name.toLowerCase().includes('.pdf')) {
+                            iconClass = 'fas fa-file-pdf fa-2x text-danger';
+                        } else if (file.name.toLowerCase().includes('.doc')) {
+                            iconClass = 'fas fa-file-word fa-2x text-primary';
+                        } else if (file.name.toLowerCase().includes('.ppt')) {
+                            iconClass = 'fas fa-file-powerpoint fa-2x text-warning';
+                        } else if (file.name.toLowerCase().includes('.xls')) {
+                            iconClass = 'fas fa-file-excel fa-2x text-success';
+                        }
+                        break;
+                }
+                
+                fileIcon.html(`<i class="${iconClass}"></i>`);
+                fileName.text(file.name);
+                fileSize.text(formatFileSize(file.size));
+                filePreview.show();
+            }
+            
+            // دالة إنشاء معاينة للملف
+            function createFilePreview(file, contentType) {
+                const previewContent = $('#preview-content');
+                previewContent.empty();
+                
+                if (contentType === 'image') {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewContent.html(`
+                            <div class="text-center">
+                                <img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px; max-width: 100%;">
+                            </div>
+                        `);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContent.html(`
+                        <div class="text-center text-muted">
+                            <i class="fas fa-eye-slash"></i>
+                            <span class="ms-2">معاينة غير متوفرة لهذا النوع من الملفات</span>
+                        </div>
+                    `);
+                }
+            }
+            
+            // دالة تنسيق حجم الملف
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            // دالة معالجة إرسال النموذج مع شريط التقدم
+            function handleFormSubmission() {
+                const title = $('#title').val().trim();
+                const contentType = $('#content_type').val();
+                const submitBtn = $('#submit-btn');
+                
+                // التحقق من البيانات المطلوبة
+                if (!title) {
+                    alert('يرجى إدخال عنوان المحتوى');
+                    $('#title').focus();
+                    return;
+                }
+                
+                if (contentType === 'text') {
+                    const textContent = $('textarea[name="content_text"]').val().trim();
+                    if (!textContent) {
+                        alert('يرجى إدخال المحتوى النصي');
+                        $('textarea[name="content_text"]').focus();
+                        return;
+                    }
+                } else {
+                    const file = document.getElementById('content_file').files[0];
+                    if (!file) {
+                        alert('يرجى اختيار ملف');
+                        return;
+                    }
+                }
+                
+                // تعطيل الزر وإظهار شريط التقدم
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>جاري الرفع...');
+                
+                // إظهار شريط التقدم
+                showUploadProgress();
+                
+                // إرسال النموذج مع XMLHttpRequest لشريط التقدم
+                uploadWithProgress();
+            }
+            
+            // دالة إظهار شريط التقدم
+            function showUploadProgress() {
+                const progressHtml = `
+                    <div id="upload-progress-container" class="mt-3">
+                        <div class="upload-progress-enhanced">
+                            <div class="upload-stats">
+                                <div class="file-info">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>جاري رفع الملف...</span>
+                                </div>
+                                <div class="upload-speed">
+                                    <span id="upload-percentage">0%</span>
+                                </div>
+                            </div>
+                            <div class="progress">
+                                <div id="upload-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                                     role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div id="upload-status" class="text-center mt-2 small text-muted">بدء الرفع...</div>
+                        </div>
+                    </div>
+                `;
+                
+                if ($('#upload-progress-container').length === 0) {
+                    $('#file-content').append(progressHtml);
+                } else {
+                    $('#upload-progress-container').show();
+                }
+            }
+            
+            // دالة رفع الملف مع شريط التقدم
+            function uploadWithProgress() {
+                const formData = new FormData($('#contentForm')[0]);
+                
+                $.ajax({
+                    url: $('#contentForm').attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    xhr: function() {
+                        const xhr = new window.XMLHttpRequest();
+                        
+                        // مستمع تقدم الرفع
+                        xhr.upload.addEventListener('progress', function(e) {
+                            if (e.lengthComputable) {
+                                const percentComplete = Math.round((e.loaded / e.total) * 100);
+                                
+                                // تحديث شريط التقدم
+                                $('#upload-progress-bar').css('width', percentComplete + '%').attr('aria-valuenow', percentComplete);
+                                $('#upload-percentage').text(percentComplete + '%');
+                                
+                                // تحديث حالة الرفع
+                                if (percentComplete < 50) {
+                                    $('#upload-status').text('جاري رفع الملف...');
+                                } else if (percentComplete < 90) {
+                                    $('#upload-status').text('معالجة الملف...');
+                                } else if (percentComplete < 100) {
+                                    $('#upload-status').text('إتمام الرفع...');
+                                } else {
+                                    $('#upload-status').text('تم الرفع بنجاح!');
+                                }
+                            }
+                        }, false);
+                        
+                        return xhr;
+                    },
+                    success: function(response) {
+                        console.log('نجح الرفع');
+                        $('#upload-status').text('تم الرفع بنجاح! جاري تحديث الصفحة...');
+                        
+                        // إعادة تحميل الصفحة بعد ثانيتين
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('فشل الرفع:', error);
+                        alert('حدث خطأ أثناء رفع الملف. يرجى المحاولة مرة أخرى.');
+                        
+                        // إعادة تعيين الزر والإخفاء
+                        $('#submit-btn').prop('disabled', false).html('<i class="fas fa-plus me-1"></i>إضافة المحتوى');
+                        $('#upload-progress-container').hide();
+                    }
+                });
+            }
 
             // عند فتح النافذة
             $('#addContentModal').on('shown.bs.modal', function () {
+                console.log('تم فتح نموذج إضافة المحتوى');
                 $('#title').focus();
+                // إعادة تعيين النموذج إلى النص كحالة افتراضية
+                $('#content_type').val('text').trigger('change');
             });
 
             // عند إغلاق النافذة
             $('#addContentModal').on('hidden.bs.modal', function () {
-                // إعادة تعيين النموذج
-                $(this).find('form')[0].reset();
+                console.log('تم إغلاق نموذج إضافة المحتوى');
+                // إعادة تعيين النموذج بالكامل
+                const form = this.querySelector('form');
+                if (form) {
+                    form.reset();
+                }
+                
+                // إخفاء جميع الحقول وإظهار النص فقط
                 $('.content-input').addClass('d-none');
                 $('#text-content').removeClass('d-none');
                 $('.file-types-info').addClass('d-none');
-                $('.file-types-info span').addClass('d-none');
+                $('#file-preview').hide();
+                $('#upload-progress-container').hide();
+                
+                // إعادة تعيين زر الإرسال
+                $('#submit-btn').prop('disabled', false).html('<i class="fas fa-plus me-1"></i>إضافة المحتوى');
+                
+                // مسح الملف المحدد
+                clearSelectedFile();
+                
+                // إعادة تعيين حقل نوع المحتوى
+                $('#content_type').val('text');
             });
+            
+            // دالة مسح الملف المحدد - النسخة المحسنة
+            function clearSelectedFile() {
+                console.log('مسح الملف المحدد');
+                $('#content_file').val('');
+                $('#file-preview').hide();
+                $('#upload-progress-container').hide();
+                
+                // إعادة تعيين واجهة منطقة السحب والإفلات
+                const dropZone = $('#fileDropZone');
+                if (dropZone.length) {
+                    dropZone[0].style.backgroundColor = 'var(--background-color)';
+                    dropZone[0].style.borderColor = '#dee2e6';
+                    dropZone.removeClass('drag-over');
+                }
+            }
+            
+            // جعل الدالة متاحة عالمياً
+            window.clearSelectedFile = clearSelectedFile;
         });
     </script>
 </body>

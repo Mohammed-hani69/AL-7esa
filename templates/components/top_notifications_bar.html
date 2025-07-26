@@ -1,0 +1,282 @@
+<!-- ==============================================
+     شريط الإشعارات العلوي - للإشعارات غير المقروءة
+     Top Notifications Bar - For Unread Notifications
+     ============================================== -->
+
+{% if unread_notifications and unread_notifications|length > 0 %}
+<div class="top-notifications-bar" id="topNotificationsBar">
+    <div class="top-notifications-container">
+        <div class="top-notification-icon">
+            <i class="fas fa-bell animate-pulse"></i>
+        </div>
+        
+        <div class="top-notification-content">
+            <div class="top-notification-counter">
+                لديك {{ unread_notifications|length }} إشعار{% if unread_notifications|length > 1 %}ات{% endif %} غير مقروء{% if unread_notifications|length > 1 %}ة{% endif %}
+            </div>
+            
+            <div class="top-notification-preview">
+                {% set latest_notification = unread_notifications[0] %}
+                <span class="latest-title">{{ latest_notification.title }}</span>
+                {% if unread_notifications|length > 1 %}
+                    <span class="more-count">و {{ unread_notifications|length - 1 }} إشعار آخر</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="top-notification-actions">
+            <button class="top-notification-btn view-all" onclick="openNotificationsPanel()">
+                <i class="fas fa-eye"></i>
+                عرض الكل
+            </button>
+            <button class="top-notification-btn mark-all-read" onclick="markAllTopNotificationsRead()">
+                <i class="fas fa-check-double"></i>
+                تعليم الكل كمقروء
+            </button>
+            <button class="top-notification-btn close-bar" onclick="hideTopNotificationsBar()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- أنماط CSS للشريط العلوي -->
+<style>
+.top-notifications-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 0;
+    box-shadow: 0 2px 15px rgba(102, 126, 234, 0.3);
+    z-index: 9999;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+    font-family: 'Tajawal', sans-serif;
+    direction: rtl;
+}
+
+.top-notifications-bar.show {
+    transform: translateY(0);
+}
+
+.top-notifications-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    gap: 15px;
+}
+
+.top-notification-icon {
+    font-size: 20px;
+    color: #ffd700;
+}
+
+.top-notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.top-notification-counter {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.top-notification-preview {
+    font-size: 12px;
+    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.latest-title {
+    font-weight: 500;
+}
+
+.more-count {
+    margin-right: 8px;
+    opacity: 0.7;
+}
+
+.top-notification-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.top-notification-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.top-notification-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.top-notification-btn.close-bar {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    padding: 6px 8px;
+    border-radius: 50%;
+}
+
+.top-notification-btn.close-bar:hover {
+    background: rgba(255, 0, 0, 0.3);
+}
+
+/* تأثيرات الحركة */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+/* تعديل body padding عند ظهور الشريط */
+body.has-top-notifications {
+    padding-top: 60px;
+}
+
+/* للشاشات الصغيرة */
+@media (max-width: 768px) {
+    .top-notifications-container {
+        padding: 0 15px;
+        gap: 10px;
+    }
+    
+    .top-notification-counter {
+        font-size: 13px;
+    }
+    
+    .top-notification-preview {
+        font-size: 11px;
+    }
+    
+    .top-notification-btn {
+        padding: 5px 8px;
+        font-size: 10px;
+    }
+    
+    .top-notification-actions {
+        gap: 5px;
+    }
+    
+    body.has-top-notifications {
+        padding-top: 55px;
+    }
+}
+
+@media (max-width: 480px) {
+    .top-notification-btn span {
+        display: none; /* إخفاء النصوص في الشاشات الصغيرة جداً */
+    }
+    
+    .top-notification-preview {
+        display: none;
+    }
+}
+</style>
+
+<!-- JavaScript للتحكم في الشريط -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const topBar = document.getElementById('topNotificationsBar');
+    
+    if (topBar) {
+        // إظهار الشريط بعد تحميل الصفحة بثانية واحدة
+        setTimeout(() => {
+            topBar.classList.add('show');
+            document.body.classList.add('has-top-notifications');
+        }, 1000);
+    }
+});
+
+// فتح قائمة الإشعارات
+function openNotificationsPanel() {
+    // البحث عن قائمة الإشعارات في الصفحة
+    const notificationsToggle = document.querySelector('.notifications-toggle, .student-notifications-toggle, .mobile-notifications-toggle');
+    if (notificationsToggle) {
+        notificationsToggle.click();
+    }
+    
+    // إخفاء الشريط العلوي
+    hideTopNotificationsBar();
+}
+
+// تعليم جميع الإشعارات كمقروءة
+async function markAllTopNotificationsRead() {
+    try {
+        const response = await fetch('/api/notifications/mark-all-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            // إخفاء الشريط
+            hideTopNotificationsBar();
+            
+            // تحديث عدادات الإشعارات في الصفحة
+            document.querySelectorAll('.notifications-badge').forEach(badge => {
+                badge.style.display = 'none';
+            });
+            
+            // إظهار رسالة نجاح
+            if (window.showToast) {
+                window.showToast('تم بنجاح', 'تم تعليم جميع الإشعارات كمقروءة', 'success');
+            }
+        }
+    } catch (error) {
+        console.error('Error marking notifications as read:', error);
+        if (window.showToast) {
+            window.showToast('خطأ', 'حدث خطأ أثناء تحديث الإشعارات', 'error');
+        }
+    }
+}
+
+// إخفاء الشريط العلوي
+function hideTopNotificationsBar() {
+    const topBar = document.getElementById('topNotificationsBar');
+    if (topBar) {
+        topBar.classList.remove('show');
+        document.body.classList.remove('has-top-notifications');
+        
+        // حفظ في localStorage لتجنب الإظهار مرة أخرى في هذه الجلسة
+        localStorage.setItem('topNotificationsHidden', 'true');
+    }
+}
+
+// التحقق من إخفاء الشريط مسبقاً
+document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('topNotificationsHidden') === 'true') {
+        // إزالة المفتاح بعد 30 دقيقة
+        setTimeout(() => {
+            localStorage.removeItem('topNotificationsHidden');
+        }, 30 * 60 * 1000);
+    }
+});
+</script>
+{% endif %}

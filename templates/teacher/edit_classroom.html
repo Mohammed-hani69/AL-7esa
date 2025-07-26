@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعديل الفصل - {{ classroom.name }} - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        :root {
+            --accent-color: {{ primary_color }};
+            --accent-gradient: linear-gradient(120deg, {{ primary_color }}, {{ secondary_color }});
+            --surface-color: #FFFFFF;
+            --background-color: #F4F7FE;
+            --text-primary: #2D3748;
+            --text-secondary: #718096;
+            --border-radius-lg: 20px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 8px;
+            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.15);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, var(--accent-color) 0%, rgba(108, 99, 255, 0.9) 100%);
+            position: fixed;
+            right: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h3 {
+            color: white;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            margin: 0.5rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        .nav-link i {
+            width: 24px;
+            margin-left: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            margin-right: 280px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .classroom-card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 1.5rem 2rem;
+            border: none;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-control {
+            border: 2px solid #E2E8F0;
+            border-radius: var(--border-radius-sm);
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(108, 99, 255, 0.25);
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6C757D;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .color-option:hover,
+        .color-option.selected {
+            border-color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .pricing-section {
+            background: #F8F9FA;
+            border-radius: var(--border-radius-sm);
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .form-check {
+            margin-bottom: 1rem;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-right: 0;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- الشريط الجانبي -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h3>لوحة التحكم</h3>
+        </div>
+        <nav class="sidebar-nav">
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.dashboard') }}" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>الرئيسية</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('teacher.list_classrooms') }}" class="nav-link active">
+                        <i class="fas fa-chalkboard"></i>
+                        <span>الفصول</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>الملف الشخصي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">تعديل الفصل: {{ classroom.name }}</h1>
+            <div class="header-actions">
+                <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-1"></i>العودة للفصل
+                </a>
+            </div>
+        </div>
+
+        <div class="classroom-card">
+            <div class="card-header">
+                <h3 class="card-title">تعديل بيانات الفصل</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('teacher.edit_classroom', classroom_id=classroom.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="name">اسم الفصل</label>
+                                <input type="text" class="form-control" id="name" name="name" value="{{ classroom.name }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="subject">المادة</label>
+                                <input type="text" class="form-control" id="subject" name="subject" value="{{ classroom.subject }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="grade">المرحلة الدراسية</label>
+                                <select class="form-control" id="grade" name="grade" required>
+                                    <option value="">اختر المرحلة</option>
+                                    <option value="الصف الأول الابتدائي" {{ 'selected' if classroom.grade == 'الصف الأول الابتدائي' }}>الصف الأول الابتدائي</option>
+                                    <option value="الصف الثاني الابتدائي" {{ 'selected' if classroom.grade == 'الصف الثاني الابتدائي' }}>الصف الثاني الابتدائي</option>
+                                    <option value="الصف الثالث الابتدائي" {{ 'selected' if classroom.grade == 'الصف الثالث الابتدائي' }}>الصف الثالث الابتدائي</option>
+                                    <option value="الصف الرابع الابتدائي" {{ 'selected' if classroom.grade == 'الصف الرابع الابتدائي' }}>الصف الرابع الابتدائي</option>
+                                    <option value="الصف الخامس الابتدائي" {{ 'selected' if classroom.grade == 'الصف الخامس الابتدائي' }}>الصف الخامس الابتدائي</option>
+                                    <option value="الصف السادس الابتدائي" {{ 'selected' if classroom.grade == 'الصف السادس الابتدائي' }}>الصف السادس الابتدائي</option>
+                                    <option value="الصف الأول الإعدادي" {{ 'selected' if classroom.grade == 'الصف الأول الإعدادي' }}>الصف الأول الإعدادي</option>
+                                    <option value="الصف الثاني الإعدادي" {{ 'selected' if classroom.grade == 'الصف الثاني الإعدادي' }}>الصف الثاني الإعدادي</option>
+                                    <option value="الصف الثالث الإعدادي" {{ 'selected' if classroom.grade == 'الصف الثالث الإعدادي' }}>الصف الثالث الإعدادي</option>
+                                    <option value="الصف الأول الثانوي" {{ 'selected' if classroom.grade == 'الصف الأول الثانوي' }}>الصف الأول الثانوي</option>
+                                    <option value="الصف الثاني الثانوي" {{ 'selected' if classroom.grade == 'الصف الثاني الثانوي' }}>الصف الثاني الثانوي</option>
+                                    <option value="الصف الثالث الثانوي" {{ 'selected' if classroom.grade == 'الصف الثالث الثانوي' }}>الصف الثالث الثانوي</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="academic_year">العام الدراسي</label>
+                                <input type="text" class="form-control" id="academic_year" name="academic_year" value="{{ classroom.academic_year }}" placeholder="2024-2025" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="description">وصف الفصل</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="وصف مختصر عن الفصل والمحتوى">{{ classroom.description or '' }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">لون الفصل</label>
+                        <div class="color-picker">
+                            <div class="color-option" style="background-color: #3498db" data-color="#3498db" {{ 'class=selected' if classroom.color == '#3498db' }}></div>
+                            <div class="color-option" style="background-color: #e74c3c" data-color="#e74c3c" {{ 'class=selected' if classroom.color == '#e74c3c' }}></div>
+                            <div class="color-option" style="background-color: #2ecc71" data-color="#2ecc71" {{ 'class=selected' if classroom.color == '#2ecc71' }}></div>
+                            <div class="color-option" style="background-color: #f39c12" data-color="#f39c12" {{ 'class=selected' if classroom.color == '#f39c12' }}></div>
+                            <div class="color-option" style="background-color: #9b59b6" data-color="#9b59b6" {{ 'class=selected' if classroom.color == '#9b59b6' }}></div>
+                            <div class="color-option" style="background-color: #1abc9c" data-color="#1abc9c" {{ 'class=selected' if classroom.color == '#1abc9c' }}></div>
+                            <div class="color-option" style="background-color: #34495e" data-color="#34495e" {{ 'class=selected' if classroom.color == '#34495e' }}></div>
+                            <div class="color-option" style="background-color: #e67e22" data-color="#e67e22" {{ 'class=selected' if classroom.color == '#e67e22' }}></div>
+                        </div>
+                        <input type="hidden" id="color" name="color" value="{{ classroom.color or '#3498db' }}">
+                    </div>
+
+                    <div class="pricing-section">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_free" name="is_free" {{ 'checked' if classroom.is_free }}>
+                            <label class="form-check-label" for="is_free">
+                                فصل مجاني
+                            </label>
+                        </div>
+
+                        <div id="pricing-options" style="{{ 'display: none;' if classroom.is_free }}">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label" for="price">سعر الاشتراك (جنيه)</label>
+                                        <input type="number" class="form-control" id="price" name="price" min="1" step="0.01" value="{{ classroom.price or '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label" for="duration_days">مدة الاشتراك (أيام)</label>
+                                        <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" value="{{ classroom.duration_days or 30 }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-primary me-3">
+                            <i class="fas fa-save me-2"></i>حفظ التغييرات
+                        </button>
+                        <a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>إلغاء
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Color picker functionality
+            const colorOptions = document.querySelectorAll('.color-option');
+            const colorInput = document.getElementById('color');
+
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    colorInput.value = this.dataset.color;
+                });
+            });
+
+            // Pricing toggle
+            const isFreeCheckbox = document.getElementById('is_free');
+            const pricingOptions = document.getElementById('pricing-options');
+            const priceInput = document.getElementById('price');
+            const durationInput = document.getElementById('duration_days');
+
+            isFreeCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    pricingOptions.style.display = 'none';
+                    priceInput.removeAttribute('required');
+                    durationInput.removeAttribute('required');
+                } else {
+                    pricingOptions.style.display = 'block';
+                    priceInput.setAttribute('required', 'required');
+                    durationInput.setAttribute('required', 'required');
+                }
+            });
+
+            // Form validation
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                if (!isFreeCheckbox.checked) {
+                    const price = parseFloat(priceInput.value);
+                    const duration = parseInt(durationInput.value);
+
+                    if (!price || price <= 0) {
+                        e.preventDefault();
+                        alert('يجب إدخال سعر صحيح للفصل المدفوع');
+                        priceInput.focus();
+                        return;
+                    }
+
+                    if (!duration || duration <= 0) {
+                        e.preventDefault();
+                        alert('يجب إدخال مدة صحيحة للاشتراك');
+                        durationInput.focus();
+                        return;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -348,7 +348,7 @@
         <!-- السايدبار المبتكر -->
         <aside class="innovative-sidebar">
             <div class="sidebar-brand">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
                 <h1 class="brand-text">الحصة</h1>
             </div>
             
@@ -614,7 +614,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-custom btn-light" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn-custom btn-info">
+                    <button type="button" class="btn-custom btn-info" id="startBackupBtn" onclick="startBackup()">
                         <i class="fas fa-download"></i>
                         <span>بدء النسخ الاحتياطي</span>
                     </button>
@@ -682,6 +682,88 @@
                 }
             });
         });
+
+        // دالة إنشاء النسخة الاحتياطية
+        function startBackup() {
+            const startBtn = document.getElementById('startBackupBtn');
+            const originalText = startBtn.innerHTML;
+            
+            // تغيير نص الزر لإظهار التحميل
+            startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري إنشاء النسخة...';
+            startBtn.disabled = true;
+            
+            // استخدام GET request للتنزيل المباشر
+            try {
+                // إنشاء رابط تنزيل مخفي
+                const downloadLink = document.createElement('a');
+                downloadLink.href = '{{ url_for("admin.backup_database_get") }}';
+                downloadLink.style.display = 'none';
+                document.body.appendChild(downloadLink);
+                
+                // النقر على الرابط لبدء التنزيل
+                downloadLink.click();
+                
+                // حذف الرابط
+                document.body.removeChild(downloadLink);
+                
+                // إظهار رسالة نجاح
+                setTimeout(() => {
+                    showToast('تم بدء تنزيل النسخة الاحتياطية', 'success');
+                    
+                    // إغلاق النافذة المنبثقة
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('backupModal'));
+                    if (modal) modal.hide();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('خطأ:', error);
+                showToast('حدث خطأ أثناء بدء تنزيل النسخة الاحتياطية', 'error');
+            } finally {
+                // إعادة تعيين الزر بعد ثانية واحدة
+                setTimeout(() => {
+                    startBtn.innerHTML = originalText;
+                    startBtn.disabled = false;
+                }, 1000);
+            }
+        }
+
+        // دالة لإظهار الرسائل
+        function showToast(message, type = 'info') {
+            // إنشاء toast element
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            
+            // إضافة toast container إذا لم يكن موجوداً
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toast-container';
+                toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                document.body.appendChild(toastContainer);
+            }
+            
+            // إضافة toast
+            const toastElement = document.createElement('div');
+            toastElement.innerHTML = toastHtml;
+            toastContainer.appendChild(toastElement.firstElementChild);
+            
+            // تفعيل toast
+            const toast = new bootstrap.Toast(toastContainer.lastElementChild);
+            toast.show();
+            
+            // حذف toast بعد انتهائه
+            toastContainer.lastElementChild.addEventListener('hidden.bs.toast', function () {
+                this.remove();
+            });
+        }
     </script>
 </body>
 </html>

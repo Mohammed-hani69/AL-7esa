@@ -426,6 +426,18 @@
             box-shadow: var(--box-shadow);
             color: white;
         }
+
+        /* Animation for fade out */
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
     </style>
 </head>
 <body>
@@ -437,7 +449,7 @@
         <!-- السايدبار -->
         <aside class="innovative-sidebar">
             <div class="sidebar-brand">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
                 <h1 class="brand-text">الحصة</h1>
             </div>
             
@@ -527,6 +539,45 @@
 
         <!-- المحتوى الرئيسي -->
         <main class="main-content">
+            {% if unread_notifications and unread_notifications|length > 0 %}
+            <!-- تنبيه الإشعارات غير المقروءة -->
+            <div class="alert alert-warning alert-dismissible" role="alert" id="studentNotificationsAlert">
+                <h4 class="alert-heading">
+                    <i class="fas fa-bell me-2"></i>
+                    {% if unread_notifications|length == 1 %}
+                        لديك إشعار جديد غير مقروء
+                    {% else %}
+                        لديك {{ unread_notifications|length }} إشعارات جديدة غير مقروءة
+                    {% endif %}
+                </h4>
+                <div class="notification-preview">
+                    {% for notification in unread_notifications[:3] %}
+                    <div class="mb-2">
+                        <strong>{{ notification.title }}</strong>
+                        <p class="mb-1 text-muted">{{ notification.message|truncate(100) }}</p>
+                        <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                    {% if not loop.last %}<hr class="my-2">{% endif %}
+                    {% endfor %}
+                    {% if unread_notifications|length > 3 %}
+                    <div class="text-muted">
+                        <small>وإشعارات أخرى...</small>
+                    </div>
+                    {% endif %}
+                </div>
+                <hr>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('student.notifications') }}" class="btn btn-warning">
+                        <i class="fas fa-eye me-2"></i>عرض جميع الإشعارات
+                    </a>
+                    <button type="button" class="btn btn-outline-warning" onclick="markAllStudentNotificationsRead()">
+                        <i class="fas fa-check-double me-2"></i>تعليم الكل كمقروء
+                    </button>
+                </div>
+                <button type="button" class="btn-close" onclick="hideStudentNotificationsAlert()" aria-label="إغلاق"></button>
+            </div>
+            {% endif %}
+
             <!-- ترويسة الصفحة -->
             <div class="page-header">
                 <div>
@@ -941,6 +992,43 @@
     
     <!-- تفعيل الإشعارات المحددة للطالب -->
     <script>
+    // دالة إخفاء تنبيه الإشعارات للطالب
+    function hideStudentNotificationsAlert() {
+        const alert = document.getElementById('studentNotificationsAlert');
+        if (alert) {
+            alert.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => alert.remove(), 300);
+        }
+    }
+    
+    // دالة تعليم جميع الإشعارات كمقروءة للطالب
+    async function markAllStudentNotificationsRead() {
+        try {
+            const response = await fetch('/student/notifications/mark_all_read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''
+                }
+            });
+            
+            if (response.ok) {
+                hideStudentNotificationsAlert();
+                // تحديث عداد الإشعارات في الـ sidebar
+                const badge = document.querySelector('.notifications-badge');
+                if (badge) {
+                    badge.remove();
+                }
+                window.showQuickSuccess('تم تعليم جميع الإشعارات كمقروءة');
+            } else {
+                window.showError('خطأ', 'حدث خطأ أثناء تحديث الإشعارات');
+            }
+        } catch (error) {
+            console.error('Error marking notifications as read:', error);
+            window.showError('خطأ', 'حدث خطأ أثناء تحديث الإشعارات');
+        }
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
         // تحديث تطبيق الإشعارات للطالب
         const studentToggle = document.querySelector('.student-notifications-toggle');

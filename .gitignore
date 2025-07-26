@@ -41,10 +41,26 @@ ENV/
 *.sqlite3
 
 # Uploaded files
-static/uploads/chat_images/*
-static/uploads/profile_pictures/*
-!static/uploads/chat_images/.gitkeep
-!static/uploads/profile_pictures/.gitkeep
+static/uploads/
+uploads/
+!static/uploads/.gitkeep
+!uploads/.gitkeep
+
+# Large files
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mkv
+*.m4v
+*.3gp
+*.3g2
+*.f4v
+*.f4p
+*.f4a
+*.f4b
 
 # Firebase
 firebase-debug.log

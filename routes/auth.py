@@ -3,20 +3,60 @@
 التحكم في تسجيل الدخول والخروج وتسجيل المستخدمين الجدد
 """
 
+import re
 import os
+import json
+import requests
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFError
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 from firebase_utils import verify_firebase_token
-from models import Role, Subscription, SubscriptionPlan, SystemSettings, User , db
+from models import Role, Subscription, SubscriptionPlan, SystemSettings, User, Notification, db
 import re
 from firebase_config import firebase_config
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from urllib.parse import urlencode
+
+# Load Google OAuth configuration
+def get_google_client_id():
+    """الحصول على Google Client ID حسب البيئة"""
+    return firebase_config.get_google_client_id()
+
+def get_google_oauth_settings():
+    """الحصول على إعدادات Google OAuth"""
+    return firebase_config.get_google_oauth_settings()
+
+# تحديث متغيرات Google OAuth
+google_settings = get_google_oauth_settings()
+GOOGLE_CLIENT_ID = google_settings.get('client_id') if google_settings else None
+GOOGLE_CLIENT_SECRET = google_settings.get('client_secret') if google_settings else None
+
+# تحديد redirect URI بناءً على البيئة
+def get_google_redirect_uri():
+    """الحصول على redirect URI المناسب للبيئة"""
+    oauth_settings = get_google_oauth_settings()
+    if not oauth_settings or 'redirect_uris' not in oauth_settings:
+        return None
+    
+    redirect_uris = oauth_settings['redirect_uris']
+    
+    # التحقق من البيئة بناءً على الطلب
+    if request:
+        host = request.headers.get('Host', '')
+        if firebase_config.is_production_domain(host):
+            # استخدام URI الإنتاج
+            return next((uri for uri in redirect_uris if 'al-7esa.com' in uri), redirect_uris[0])
+        else:
+            # استخدام URI التطوير
+            return next((uri for uri in redirect_uris if 'localhost' in uri or '127.0.0.1' in uri), redirect_uris[-1])
+    
+    return redirect_uris[0]
 
 # دالة للتحقق من نوع الجهاز (موبايل أو جهاز مكتبي)
 def is_mobile():
@@ -31,10 +71,16 @@ def is_mobile():
 def csrf_exempt(f):
     """Decorator to exempt a route from CSRF protection"""
     from functools import wraps
+    
     @wraps(f)
     def decorated_function(*args, **kwargs):
         return f(*args, **kwargs)
+    
+    # Mark the function as CSRF exempt for Flask-WTF
     decorated_function._csrf_exempt = True
+    # Also add the Flask-WTF specific attribute
+    decorated_function.csrf_exempt = True
+    
     return decorated_function
 
 auth_bp = Blueprint('auth', __name__)
@@ -71,300 +117,218 @@ def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-"""
-مسار تسجيل الدخول (Login)
-معالجة نموذج تسجيل الدخول والتحقق من صحة البيانات
-"""
-@auth_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    # السماح بعرض صفحة تسجيل الدخول حتى لو كان المستخدم مسجل دخوله
-    # فقط نعيد توجيهه بعد تسجيل الدخول بنجاح
-    
-    # لا نطبق Rate Limiting على طلبات GET لتجنب منع الوصول للصفحة
 
-    form = LoginForm()
-    if request.method == 'POST' and form.validate_on_submit():
-        from models import User
-        user = User.query.filter_by(phone=form.phone.data).first()
-        if user and user.check_password(form.password.data):
-            login_user(user)
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('main.index'))
-        else:
-            flash('فشل تسجيل الدخول. الرجاء التحقق من رقم الهاتف وكلمة المرور', 'danger')
-
-    # GET request أو فشل التحقق من صحة النموذج أو المستخدم مسجل دخوله بالفعل
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
-    firebase_api_key = os.environ.get("FIREBASE_API_KEY", "")
-    firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "")
-    firebase_app_id = os.environ.get("FIREBASE_APP_ID", "")
-
-    template = 'auth/auth-mobile/login.html' if is_mobile() else 'auth/login.html'
-
-    # الحصول على قيم الألوان من إعدادات النظام
-    from models import SystemSettings
-    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
-    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
-
-    
-    return render_template(template,
-                          form=form,
-                          primary_color=primary_color,
-                          secondary_color=secondary_color,
-                          firebase_api_key=firebase_api_key,
-                          firebase_project_id=firebase_project_id,
-                          firebase_app_id=firebase_app_id)
-
-"""
-مسار التسجيل (Register)
-إنشاء حساب جديد للمستخدم
-"""
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    # السماح بعرض صفحة التسجيل حتى لو كان المستخدم مسجل دخوله
+    """صفحة التسجيل الرئيسية بالنظام المتدرج"""
+    # الحصول على Google Client ID المناسب للبيئة
+    current_google_client_id = get_google_client_id()
     
-    # لا نطبق Rate Limiting على طلبات GET لتجنب منع الوصول للصفحة
+    template = 'auth/auth-mobile/register.html' if is_mobile() else 'auth/register.html'
+    return render_template(template, google_client_id=current_google_client_id)
 
-    if request.method == 'POST':
-        name = request.form.get('name')
-        phone = request.form.get('phone')
-        password = request.form.get('password')
-        role = request.form.get('role')
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    """صفحة تسجيل الدخول"""
+    if current_user.is_authenticated:
+        # توجيه المستخدم حسب دوره
+        redirect_urls = {
+            'admin': url_for('admin.dashboard'),
+            'teacher': url_for('teacher.dashboard'),
+            'student': url_for('student.dashboard'),
+            'assistant': url_for('assistant.dashboard')
+        }
+        return redirect(redirect_urls.get(current_user.role, url_for('main.index')))
+    
+    # الحصول على Google Client ID المناسب للبيئة
+    current_google_client_id = get_google_client_id()
+    
+    template = 'auth/auth-mobile/login.html' if is_mobile() else 'auth/login.html'
+    return render_template(template, google_client_id=current_google_client_id)
 
-        # Validate role
-        if role not in [Role.STUDENT, Role.TEACHER, Role.ASSISTANT]:
-            flash('دور المستخدم غير صالح', 'danger')
-            return redirect(url_for('auth.register'))
+@auth_bp.route('/login-step', methods=['POST'])
+@csrf_exempt
+def login_step():
+    """معالجة تسجيل الدخول بنظام الخطوات - توجه مباشر من الباك إند"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'بيانات غير صالحة'})
 
-        # Check if user already exists
-        existing_user = User.query.filter_by(phone=phone).first()
-        if existing_user:
-            flash('رقم الهاتف مسجل بالفعل', 'danger')
-            return redirect(url_for('auth.register'))
+        phone = data.get('phone')
+        password = data.get('password')
 
-        # Create new user
-        new_user = User(
-            name=name,
-            phone=phone,
-            role=role
-        )
-        new_user.set_password(password)
+        # التحقق من وجود البيانات المطلوبة
+        if not phone or not password:
+            return jsonify({'success': False, 'message': 'رقم الهاتف وكلمة المرور مطلوبان'})
 
-        # Save user first to get ID
-        db.session.add(new_user)
-        db.session.flush()  # Get ID without committing
+        # تنظيف رقم الهاتف
+        phone = re.sub(r'\D', '', phone)
+        if not phone.startswith('01') or len(phone) != 11:
+            return jsonify({'success': False, 'message': 'رقم الهاتف غير صحيح. يجب أن يبدأ بـ 01 ويتكون من 11 رقم'})
 
-        # If the user is a teacher, create a free trial subscription
-        if role == Role.TEACHER:
-            # Get the premium plan (highest level)
-            premium_plan = SubscriptionPlan.query.order_by(SubscriptionPlan.price.desc()).first()
+        # البحث عن المستخدم
+        user = User.query.filter_by(phone=phone).first()
+        if not user:
+            return jsonify({'success': False, 'message': 'رقم الهاتف غير مسجل في النظام'})
 
-            # If no plan exists yet, create one
-            if not premium_plan:
-                premium_plan = SubscriptionPlan(
-                    name="الباقة الكاملة",
-                    description="جميع المميزات متاحة",
-                    price=299,
-                    duration_days=30,
-                    max_classrooms=99,
-                    has_chat=True,
-                    allow_assistant=True,
-                    advanced_analytics=True
-                )
-                db.session.add(premium_plan)
-                db.session.flush()  # Get ID without committing
+        # التحقق من كلمة المرور
+        if not user.check_password(password):
+            return jsonify({'success': False, 'message': '❌ كلمة المرور غير صحيحة. يرجى التأكد من كلمة المرور وإعادة المحاولة.'})
 
-            # Create trial subscription with explicit user_id
-            trial_days = 14  # 2 weeks trial
-            trial_subscription = Subscription(
-                user_id=new_user.id,  # Now user_id is available
-                plan_id=premium_plan.id,
-                start_date=datetime.utcnow(),
-                end_date=datetime.utcnow() + timedelta(days=trial_days),
-                is_active=True,
-                is_trial=True
-            )
-            db.session.add(trial_subscription)
-
-        # Finally commit all changes
+        # تسجيل دخول المستخدم مع ضمان استمرار الجلسة
+        login_user(user, remember=True, duration=timedelta(days=7))
+        
+        # التأكد من تحديث الجلسة
+        session.permanent = True
+        session['user_id'] = user.id
+        session['user_role'] = user.role
+        session['user_name'] = user.name
+        session.modified = True
+        
+        # فرض حفظ الجلسة
         db.session.commit()
 
-        flash('تم إنشاء الحساب بنجاح. يمكنك الآن تسجيل الدخول', 'success')
-        return redirect(url_for('auth.login'))
+        # تحديد وجهة التوجيه حسب الدور
+        redirect_urls = {
+            'admin': url_for('admin.dashboard'),
+            'teacher': url_for('teacher.dashboard'),
+            'student': url_for('student.dashboard'),
+            'assistant': url_for('assistant.dashboard')
+        }
 
-    # GET request أو فشل في إنشاء الحساب أو المستخدم مسجل دخوله بالفعل
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        redirect_url = redirect_urls.get(user.role, url_for('main.index'))
 
-    firebase_api_key = os.environ.get("FIREBASE_API_KEY", "")
-    firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "")
-    firebase_app_id = os.environ.get("FIREBASE_APP_ID", "")
+        # إضافة flash message للترحيب
+        flash(f'مرحباً بعودتك {user.name}! 👋', 'success')
 
-    template = 'auth/auth-mobile/register.html' if is_mobile() else 'auth/register.html'
+        # التوجه المباشر من الباك إند - بدون الحاجة للجافا سكريبت
+        return jsonify({
+            'success': True,
+            'message': f'تم تسجيل الدخول بنجاح',
+            'redirect_url': redirect_url,
+            'user': {
+                'name': user.name,
+                'role': user.role,
+                'id': user.id
+            },
+            'direct_redirect': True  # إشارة للفرونت إند للتوجه فوراً
+        })
 
-    # الحصول على قيم الألوان من إعدادات النظام
-    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
-    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
+    except Exception as e:
+        current_app.logger.error(f"Login error: {str(e)}")
+        return jsonify({'success': False, 'message': 'حدث خطأ أثناء تسجيل الدخول'})
 
-    
-    return render_template(template,
-                           primary_color=primary_color,
-                           secondary_color=secondary_color,
-                          firebase_api_key=firebase_api_key,
-                          firebase_project_id=firebase_project_id,
-                          firebase_app_id=firebase_app_id)
+    except Exception as e:
+        current_app.logger.error(f"Login error: {str(e)}")
+        return jsonify({'success': False, 'message': 'حدث خطأ أثناء تسجيل الدخول'})
 
 @auth_bp.route('/verify-token', methods=['POST'])
 def verify_token():
-    data = request.json
-    id_token = data.get('idToken')
-
-    if not id_token:
-        return jsonify({'error': 'No token provided'}), 400
-
-    try:
-        # Verify the Firebase ID token
-        decoded_token = verify_firebase_token(id_token)
-
-        if not decoded_token:
-            return jsonify({'error': 'Invalid token'}), 401
-
-        # Get user information from the token
-        firebase_uid = decoded_token['uid']
-        phone_number = decoded_token.get('phone_number')
-
-        if not phone_number:
-            return jsonify({'error': 'Phone number missing in token'}), 400
-
-        # Check if user exists
-        user = User.query.filter_by(firebase_uid=firebase_uid).first()
-
-        if not user:
-            # Check if phone number is already registered
-            existing_user = User.query.filter_by(phone=phone_number).first()
-
-            if existing_user:
-                # Link Firebase UID to existing user
-                existing_user.firebase_uid = firebase_uid
-                db.session.commit()
-                login_user(existing_user)
-                return jsonify({
-                    'success': True,
-                    'isNewUser': False,
-                    'redirect': url_for('main.index')
-                })
-
-            # If name is provided in the token, we can create a new user
-            name = decoded_token.get('name', 'User')
-
-            # Store token info in session for registration completion
-            session['firebase_uid'] = firebase_uid
-            session['phone_number'] = phone_number
-            session['name'] = name
-
-            # Redirect to complete registration
-            return jsonify({
-                'success': True,
-                'isNewUser': True,
-                'redirect': url_for('auth.complete_registration')
-            })
-        else:
-            # User exists, log them in
-            login_user(user)
-            return jsonify({
-                'success': True,
-                'isNewUser': False,
-                'redirect': url_for('main.index')
-            })
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    """توجيه للنظام الحديث"""
+    return jsonify({'error': 'هذا النظام لم يعد مستخدماً، يرجى استخدام النظام الحديث'}), 410
 
 @auth_bp.route('/complete-registration', methods=['GET', 'POST'])
 def complete_registration():
-    # Check if we have the firebase data in session
-    if not session.get('firebase_uid') or not session.get('phone_number'):
-        flash('معلومات غير كافية', 'danger')
-        return redirect(url_for('auth.register'))
+    """توجيه للنظام الحديث"""
+    flash('يرجى استخدام نظام التسجيل الحديث', 'info')
+    return redirect(url_for('auth.register'))
 
-    if request.method == 'POST':
-        name = request.form.get('name', session.get('name', 'User'))
-        role = request.form.get('role')
-
-        # Validate role
-        if role not in [Role.STUDENT, Role.TEACHER, Role.ASSISTANT]:
-            flash('دور المستخدم غير صالح', 'danger')
-            return redirect(url_for('auth.complete_registration'))
-
-        # Create new user with Firebase data
-        new_user = User(
-            name=name,
-            phone=session.get('phone_number'),
-            role=role,
-            firebase_uid=session.get('firebase_uid')
+"""
+مسارات Google Sign-In
+"""
+@auth_bp.route('/google-signin', methods=['POST'])
+@csrf_exempt
+def google_signin():
+    """معالجة تسجيل الدخول بـ Google"""
+    try:
+        data = request.get_json()
+        if not data or 'credential' not in data:
+            return jsonify({'success': False, 'message': 'بيانات غير صالحة'})
+        
+        # التحقق من الرمز المميز
+        current_google_client_id = get_google_client_id()
+        if not current_google_client_id:
+            return jsonify({'success': False, 'message': 'تسجيل الدخول بـ جوجل غير متاح حالياً'})
+        
+        idinfo = id_token.verify_oauth2_token(
+            data['credential'], 
+            google_requests.Request(), 
+            current_google_client_id
         )
-
-        # Save user first to get ID
-        db.session.add(new_user)
-        db.session.flush()  # Get ID without committing
-
-        # If the user is a teacher, create a free trial subscription
-        if role == Role.TEACHER:
-            # Get the premium plan (highest level)
-            premium_plan = SubscriptionPlan.query.order_by(SubscriptionPlan.price.desc()).first()
-
-            # If no plan exists yet, create one
-            if not premium_plan:
-                premium_plan = SubscriptionPlan(
-                    name="الباقة التجريبية",
-                    description="جميع المميزات متاحة",
-                    price=0,
-                    duration_days=trial_days,
-                    max_classrooms=1,
-                    has_chat=True,
-                    allow_assistant=True,
-                    advanced_analytics=True
-                )
-                db.session.add(premium_plan)
-                db.session.flush()  # Get ID without committing
-
-            # Create trial subscription with explicit user_id
-            trial_days = SystemSettings.get_setting('trial_days', 7)  # 1 weeks trial
-            trial_subscription = Subscription(
-                user_id=new_user.id,  # Set user_id explicitly
-                plan_id=premium_plan.id,
-                start_date=datetime.utcnow(),
-                end_date=datetime.utcnow() + timedelta(days=trial_days),
-                is_active=True,
-                is_trial=True
-            )
-            db.session.add(trial_subscription)
-
-        # Finally commit all changes
-        db.session.commit()
-
-        # Clear session data
-        session.pop('firebase_uid', None)
-        session.pop('phone_number', None)
-        session.pop('name', None)
-
-        # Log in the new user
-        login_user(new_user)
-
-        flash('تم إنشاء الحساب بنجاح', 'success')
-        return redirect(url_for('main.index'))
-    
-    # الحصول على قيم الألوان من إعدادات النظام
-    primary_color = SystemSettings.get_setting('primary_color', '#3498db')  # اللون الافتراضي
-    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')  # اللون الافتراضي
-
-
-    return render_template('auth/complete_registration.html',
-                          primary_color=primary_color,
-                          secondary_color=secondary_color, 
-                          name=session.get('name', ''),
-                          phone=session.get('phone_number', ''))
+        
+        # استخراج معلومات المستخدم
+        google_id = idinfo['sub']
+        email = idinfo.get('email')
+        name = idinfo.get('name')
+        picture = idinfo.get('picture')
+        
+        if not email:
+            return jsonify({'success': False, 'message': 'لم يتم العثور على البريد الإلكتروني'})
+        
+        # البحث عن مستخدم موجود بنفس البريد الإلكتروني
+        user = User.query.filter_by(email=email).first()
+        
+        if user:
+            # تحديث معلومات Google إذا لم تكن موجودة
+            if not user.google_id:
+                user.google_id = google_id
+            if not user.profile_picture and picture:
+                user.profile_picture = picture
+            
+            db.session.commit()
+            
+            # تسجيل دخول المستخدم
+            login_user(user, remember=True, duration=timedelta(days=7))
+            
+            # التأكد من تحديث الجلسة
+            session.permanent = True
+            session['user_id'] = user.id
+            session['user_role'] = user.role
+            session['user_name'] = user.name
+            session.modified = True
+            
+            # فرض حفظ الجلسة
+            db.session.commit()
+            
+            # تحديد وجهة التوجيه حسب الدور
+            redirect_urls = {
+                'admin': url_for('admin.dashboard'),
+                'teacher': url_for('teacher.dashboard'),
+                'student': url_for('student.dashboard'),
+                'assistant': url_for('assistant.dashboard')
+            }
+            
+            redirect_url = redirect_urls.get(user.role, url_for('main.index'))
+            
+            # إضافة flash message للترحيب
+            flash(f'مرحباً بعودتك {user.name}! 👋', 'success')
+            
+            return jsonify({
+                'success': True,
+                'message': f'تم تسجيل الدخول بنجاح',
+                'redirect_url': redirect_url,
+                'user': {
+                    'name': user.name,
+                    'role': user.role,
+                    'id': user.id
+                },
+                'direct_redirect': True  # إشارة للفرونت إند للتوجه فوراً
+            })
+        else:
+            # إذا لم يكن المستخدم موجود، توجيهه للتسجيل
+            return jsonify({
+                'success': False, 
+                'message': 'لم يتم العثور على حساب مرتبط بهذا البريد الإلكتروني. يرجى إنشاء حساب جديد أولاً.',
+                'require_registration': True
+            })
+            
+    except ValueError as e:
+        current_app.logger.error(f"Google Sign-In token verification error: {str(e)}")
+        return jsonify({'success': False, 'message': 'رمز Google غير صالح'})
+    except Exception as e:
+        current_app.logger.error(f"Google Sign-In error: {str(e)}")
+        return jsonify({'success': False, 'message': 'حدث خطأ أثناء تسجيل الدخول بـ جوجل'})
 
 """
 مسار تسجيل الخروج (Logout)
@@ -453,26 +417,51 @@ def profile():
                            secondary_color=secondary_color,
                            active_subscription=active_subscription)
 
-# ============================================
-# Firebase Phone Authentication Routes
-# ============================================
+@auth_bp.route('/change-password', methods=['POST'])
+@login_required
+def change_password():
+    """تغيير كلمة المرور للمستخدم الحالي"""
+    try:
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # التحقق من أن جميع الحقول مملوءة
+        if not all([current_password, new_password, confirm_password]):
+            flash('يرجى ملء جميع الحقول', 'danger')
+            return redirect(url_for('auth.profile'))
+        
+        # التحقق من كلمة المرور الحالية
+        if not current_user.check_password(current_password):
+            flash('كلمة المرور الحالية غير صحيحة', 'danger')
+            return redirect(url_for('auth.profile'))
+        
+        # التحقق من تطابق كلمة المرور الجديدة
+        if new_password != confirm_password:
+            flash('كلمة المرور الجديدة وتأكيدها غير متطابقين', 'danger')
+            return redirect(url_for('auth.profile'))
+        
+        # التحقق من طول كلمة المرور الجديدة
+        if len(new_password) < 8:
+            flash('يجب أن تكون كلمة المرور الجديدة 8 أحرف على الأقل', 'danger')
+            return redirect(url_for('auth.profile'))
+        
+        # تحديث كلمة المرور
+        current_user.set_password(new_password)
+        current_user.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        flash('تم تغيير كلمة المرور بنجاح', 'success')
+        return redirect(url_for('auth.profile'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ أثناء تغيير كلمة المرور', 'danger')
+        return redirect(url_for('auth.profile'))
 
-def validate_phone_number(phone):
-    """التحقق من صحة رقم الهاتف"""
-    # إزالة المسافات والرموز
-    phone = re.sub(r'[^\d+]', '', phone)
-    
-    # التحقق من التنسيق السعودي
-    if phone.startswith('+20'):
-        return phone
-    elif phone.startswith('20'):
-        return '+' + phone
-    elif phone.startswith('01'):
-        return '+20' + phone[1:]
-    elif phone.startswith('1') and len(phone) == 9:
-        return '+20' + phone
-    
-    return None
+# ============================================
+# تنظيف النظام - إزالة المسارات القديمة
+# ============================================
 
 @auth_bp.route('/verify-phone', methods=['POST'])
 @csrf_exempt
@@ -554,21 +543,342 @@ def check_phone():
         if not phone:
             return jsonify({'success': False, 'message': 'رقم الهاتف مطلوب'})
         
-        # تنسيق رقم الهاتف
-        formatted_phone = validate_phone_number(phone)
-        
-        if not formatted_phone:
+        # التحقق من تنسيق رقم الهاتف المصري
+        if not re.match(r'^01[0-9]{9}$', phone):
             return jsonify({'success': False, 'message': 'رقم الهاتف غير صحيح'})
         
         # البحث عن المستخدم
-        user = User.query.filter_by(phone=formatted_phone).first()
+        user = User.query.filter_by(phone=phone).first()
         
         return jsonify({
             'success': True,
             'exists': user is not None,
-            'phone': formatted_phone
+            'phone': phone
+        })
+    
+    except Exception as e:
+        current_app.logger.error(f"خطأ في التحقق من رقم الهاتف: {str(e)}")
+        return jsonify({'success': False, 'message': 'حدث خطأ أثناء التحقق'})
+
+
+"""
+Google OAuth Routes
+"""
+
+@auth_bp.route('/google/login')
+def google_login():
+    """توجيه المستخدم إلى Google للمصادقة"""
+    # بناء URL للمصادقة مع Google
+    current_google_client_id = get_google_client_id()
+    current_redirect_uri = get_google_redirect_uri()
+    
+    if not current_google_client_id or not current_redirect_uri:
+        flash('تسجيل الدخول بـ جوجل غير متاح حالياً', 'error')
+        return redirect(url_for('auth.login'))
+    
+    params = {
+        'client_id': current_google_client_id,
+        'redirect_uri': current_redirect_uri,
+        'scope': 'openid email profile',
+        'response_type': 'code',
+        'state': 'login'  # للتمييز بين تسجيل الدخول والتسجيل
+    }
+    
+    google_auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode(params)}"
+    return redirect(google_auth_url)
+
+@auth_bp.route('/google/register')
+def google_register():
+    """توجيه للنظام الحديث"""
+    return redirect(url_for('auth.register'))
+
+@auth_bp.route('/google/callback')
+def google_callback():
+    """توجيه للنظام الحديث"""
+    flash('يرجى استخدام نظام التسجيل الحديث', 'info')
+    return redirect(url_for('auth.register'))
+
+@auth_bp.route('/complete-google-registration', methods=['POST'])
+@csrf_exempt
+def complete_google_registration():
+    """توجيه للنظام الحديث"""
+    flash('يرجى استخدام نظام التسجيل الحديث', 'info')
+    return redirect(url_for('auth.register'))
+
+
+# Registration routes for the step-by-step system
+
+@auth_bp.route('/register-step', methods=['POST'])
+@csrf_exempt
+def register_step():
+    """معالجة التسجيل بالخطوات (رقم الهاتف)"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'لا توجد بيانات في الطلب'})
+        
+        phone = data.get('phone', '').strip()
+        name = data.get('name', '').strip()
+        role = data.get('role', 'student')
+        password = data.get('password', '')
+        
+        # التحقق من صحة البيانات
+        if not phone or not name or not password:
+            return jsonify({'success': False, 'message': 'جميع الحقول مطلوبة'})
+        
+        # التحقق من تنسيق رقم الهاتف
+        if not re.match(r'^01[0-9]{9}$', phone):
+            return jsonify({'success': False, 'message': 'رقم الهاتف غير صحيح'})
+        
+        # التحقق من عدم وجود المستخدم مسبقاً
+        existing_user = User.query.filter_by(phone=phone).first()
+        if existing_user:
+            return jsonify({'success': False, 'message': 'رقم الهاتف مستخدم بالفعل'})
+        
+        # إنشاء المستخدم الجديد
+        new_user = User(
+            name=name,
+            phone=phone,
+            role=role,
+            is_active=True,
+            is_verified=True,
+            created_at=datetime.utcnow()
+        )
+        
+        # تعيين كلمة المرور
+        new_user.set_password(password)
+        
+        db.session.add(new_user)
+        db.session.flush()  # للحصول على ID للمستخدم الجديد
+        
+        # إنشاء اشتراك تجريبي للمعلمين (يوم واحد)
+        if role == 'teacher':
+            # البحث عن باقة تجريبية أو إنشاؤها
+            trial_plan = SubscriptionPlan.query.filter_by(
+                name='الباقة التجريبية',
+                price=0
+            ).first()
+            
+            if not trial_plan:
+                # إنشاء باقة تجريبية جديدة
+                trial_plan = SubscriptionPlan(
+                    name='الباقة التجريبية',
+                    description='باقة تجريبية مجانية لمدة يوم واحد',
+                    price=0,
+                    duration_days=1,
+                    max_classrooms=2,
+                    has_chat=True,
+                    allow_assistant=False,
+                    advanced_analytics=False
+                )
+                db.session.add(trial_plan)
+                db.session.flush()  # للحصول على ID
+            
+            # إنشاء الاشتراك التجريبي
+            trial_subscription = Subscription(
+                user_id=new_user.id,
+                plan_id=trial_plan.id,
+                start_date=datetime.utcnow(),
+                end_date=datetime.utcnow() + timedelta(days=1),
+                is_active=True,
+                is_trial=True
+            )
+            db.session.add(trial_subscription)
+        
+        # إنشاء إشعار ترحيب للمستخدم الجديد
+        welcome_title = "مرحباً بك في منصة الحصة! 🎉"
+        
+        if role == 'teacher':
+            welcome_message = f"أهلاً وسهلاً بك {name}! نحن سعداء لانضمامك كمعلم في منصة الحصة. يمكنك الآن إنشاء فصولك الدراسية وبدء رحلة التعليم الرقمي. تم منحك باقة تجريبية مجانية لمدة يوم واحد للاستمتاع بجميع المميزات."
+        elif role == 'student':
+            welcome_message = f"أهلاً وسهلاً بك {name}! نحن سعداء لانضمامك كطالب في منصة الحصة. يمكنك الآن الانضمام للفصول الدراسية والاستفادة من المحتوى التعليمي المتميز."
+        else:
+            welcome_message = f"أهلاً وسهلاً بك {name}! نحن سعداء لانضمامك في منصة الحصة. استمتع بتجربة تعليمية متميزة."
+        
+        welcome_notification = Notification(
+            user_id=new_user.id,
+            title=welcome_title,
+            message=welcome_message
+        )
+        db.session.add(welcome_notification)
+        
+        db.session.commit()
+        
+        # تسجيل دخول المستخدم مع ضمان استمرار الجلسة
+        login_user(new_user, remember=True, duration=timedelta(days=7))
+        
+        # التأكد من تحديث الجلسة
+        session.permanent = True
+        session['user_id'] = new_user.id
+        session['user_role'] = role
+        session['user_name'] = name
+        session.modified = True
+        
+        # تحديد وجهة التوجيه حسب الدور
+        redirect_urls = {
+            'admin': url_for('admin.dashboard'),
+            'teacher': url_for('teacher.dashboard'),
+            'student': url_for('student.dashboard'),
+            'assistant': url_for('assistant.dashboard')
+        }
+        
+        redirect_url = redirect_urls.get(role, url_for('main.index'))
+        
+        return jsonify({
+            'success': True,
+            'message': '🎉 تم إنشاء حسابك بنجاح!',
+            'redirect_url': redirect_url,
+            'is_teacher': role == 'teacher',
+            'needs_wallet_setup': role == 'teacher'  # المعلمون الجدد يحتاجون إعداد المحفظة
         })
         
     except Exception as e:
-        print(f"Check phone error: {e}")
-        return jsonify({'success': False, 'message': 'حدث خطأ في التحقق'})
+        db.session.rollback()
+        current_app.logger.error(f"خطأ في التسجيل: {str(e)}")
+        return jsonify({'success': False, 'message': 'حدث خطأ أثناء إنشاء الحساب'})
+
+
+@auth_bp.route('/google-auth', methods=['POST'])
+@csrf_exempt
+def google_auth():
+    """معالجة تسجيل الدخول/التسجيل بـ Google"""
+    try:
+        data = request.get_json()
+        credential = data.get('credential')
+        
+        if not credential:
+            return jsonify({'success': False, 'message': 'بيانات Google غير صحيحة'})
+        
+        # التحقق من صحة Google ID Token
+        try:
+            idinfo = id_token.verify_oauth2_token(
+                credential, google_requests.Request(), GOOGLE_CLIENT_ID
+            )
+            
+            google_id = idinfo['sub']
+            email = idinfo['email']
+            name = idinfo.get('name', '')
+            picture = idinfo.get('picture', '')
+            
+        except ValueError:
+            return jsonify({'success': False, 'message': 'بيانات Google غير صالحة'})
+        
+        # التحقق من وجود المستخدم
+        existing_user = User.query.filter_by(google_id=google_id).first()
+        if existing_user:
+            # تسجيل دخول المستخدم الموجود
+            login_user(existing_user)
+            
+            redirect_urls = {
+                'admin': url_for('admin.dashboard'),
+                'teacher': url_for('teacher.dashboard'),
+                'student': url_for('student.dashboard'),
+                'assistant': url_for('assistant.dashboard')
+            }
+            
+            redirect_url = redirect_urls.get(existing_user.role, url_for('main.index'))
+            
+            return jsonify({
+                'success': True,
+                'existing_user': True,
+                'redirect_url': redirect_url
+            })
+        
+        # مستخدم جديد - إرجاع البيانات لإكمال التسجيل
+        return jsonify({
+            'success': True,
+            'existing_user': False,
+            'user': {
+                'google_id': google_id,
+                'email': email,
+                'name': name,
+                'picture': picture
+            }
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"خطأ في Google Auth: {str(e)}")
+        return jsonify({'success': False, 'message': 'حدث خطأ في التسجيل بـ Google'})
+
+
+@auth_bp.route('/complete-google-registration-api', methods=['POST'])
+@csrf_exempt
+def complete_google_registration_api():
+    """توجيه للنظام الحديث"""
+    return jsonify({'success': False, 'message': 'يرجى استخدام نظام التسجيل الحديث'})
+
+
+@auth_bp.route('/update-wallet-numbers', methods=['POST'])
+@login_required
+@csrf_exempt
+def update_wallet_numbers():
+    """تحديث أرقام المحافظ الإلكترونية للمعلم"""
+    try:
+        # التحقق من أن المستخدم معلم
+        if current_user.role != 'teacher':
+            return jsonify({'success': False, 'message': 'هذه الميزة متاحة للمعلمين فقط'})
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'لا توجد بيانات في الطلب'})
+        
+        ewallet_number_1 = data.get('ewallet_number_1', '').strip()
+        ewallet_number_2 = data.get('ewallet_number_2', '').strip()
+        
+        # التحقق من وجود رقم واحد على الأقل
+        if not ewallet_number_1:
+            return jsonify({'success': False, 'message': 'يجب إدخال رقم المحفظة الأول'})
+        
+        # التحقق من تنسيق الأرقام
+        phone_regex = r'^01[0-9]{9}$'
+        if not re.match(phone_regex, ewallet_number_1):
+            return jsonify({'success': False, 'message': 'رقم المحفظة الأول غير صحيح. يجب أن يبدأ بـ 01 ويتكون من 11 رقم'})
+        
+        if ewallet_number_2 and not re.match(phone_regex, ewallet_number_2):
+            return jsonify({'success': False, 'message': 'رقم المحفظة الثاني غير صحيح. يجب أن يبدأ بـ 01 ويتكون من 11 رقم'})
+        
+        # تحديث أرقام المحافظ
+        current_user.ewallet_number_1 = ewallet_number_1
+        current_user.ewallet_number_2 = ewallet_number_2 if ewallet_number_2 else None
+        current_user.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'تم حفظ أرقام المحافظ بنجاح! يمكن للطلاب الآن دفع رسوم الاشتراك في فصولك.'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"خطأ في تحديث أرقام المحافظ: {str(e)}")
+        return jsonify({'success': False, 'message': 'حدث خطأ أثناء حفظ أرقام المحافظ'})
+
+
+@auth_bp.route('/check-wallet-status')
+@login_required
+def check_wallet_status():
+    """فحص حالة المحفظة للمستخدم الحالي"""
+    try:
+        is_teacher = current_user.role == 'teacher'
+        has_wallet = current_user.has_ewallet_numbers() if is_teacher else True
+        
+        return jsonify({
+            'success': True,
+            'is_teacher': is_teacher,
+            'has_wallet': has_wallet
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"خطأ في فحص حالة المحفظة: {str(e)}")
+        return jsonify({'success': False, 'message': 'حدث خطأ'})
+
+
+@auth_bp.route('/components/wallet-modal')
+def wallet_modal_component():
+    """إرجاع HTML الخاص بنافذة المحفظة"""
+    try:
+        return render_template('components/wallet_modal.html')
+    except Exception as e:
+        current_app.logger.error(f"خطأ في تحميل نافذة المحفظة: {str(e)}")
+        return "حدث خطأ في تحميل النافذة", 500

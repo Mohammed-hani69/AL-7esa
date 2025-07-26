@@ -7,107 +7,184 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
-    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/unified-notifications.css') }}">
+
     <style>
         :root {
-            --accent-color: {{ primary_color }};
-            --accent-gradient: linear-gradient(120deg, {{ primary_color }}, {{ secondary_color }});
-            --surface-color: #FFFFFF;
-            --background-color: #F4F7FE;
-            --text-primary: #2D3748;
-            --text-secondary: #718096;
-            --border-radius-lg: 20px;
-            --border-radius-md: 16px;
-            --border-radius-sm: 8px;
-            --box-shadow: 0 8px 20px rgba(108, 99, 255, 0.15);
+            --primary-color: #6C63FF;
+            --secondary-color: #FF6CAB;
+            --success-color: #28A745;
+            --warning-color: #FFC107;
+            --danger-color: #DC3545;
+            --card-bg: #FFFFFF;
+            --text-color: #2D3748;
+            --text-muted: #718096;
+            --border-color: #E2E8F0;
+            --bg-color: #F4F7FE;
         }
 
         body {
             font-family: 'Tajawal', sans-serif;
-            background: var(--background-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            padding-bottom: 70px;
         }
 
         .mobile-header {
-            position: fixed;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
             top: 0;
-            right: 0;
-            left: 0;
             z-index: 1000;
-            background: var(--accent-gradient);
-            padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
         }
 
-        .mobile-header-title {
-            font-size: 1.2rem;
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .header-title {
+            color: white;
+            font-size: 1.5rem;
             font-weight: 600;
             margin: 0;
-            color: white;
         }
 
-        .main-content {
-            margin-top: 70px;
-            padding: 20px;
+        .mobile-container {
+            padding: 2rem 1.5rem;
+            max-width: 400px;
+            margin: 0 auto;
         }
 
-        .auth-card {
-            background: var(--surface-color);
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--box-shadow);
-            margin-bottom: 15px;
+        .mobile-card {
+            background: var(--card-bg);
+            border-radius: 2rem;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            position: relative;
             overflow: hidden;
         }
 
-        .auth-header {
-            padding: 20px;
+        .mobile-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 2rem 2rem 0 0;
+        }
+
+        .app-logo {
             text-align: center;
+            margin-bottom: 2rem;
         }
 
-        .auth-logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 15px;
-            background: white;
-            border-radius: 20px;
-            padding: 10px;
-            box-shadow: var(--box-shadow);
+        .app-logo i {
+            font-size: 4rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .auth-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+        .app-title {
+            text-align: center;
+            color: var(--text-color);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
         }
 
-        .auth-tabs {
+        .app-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .step-indicator {
             display: flex;
-            background: var(--background-color);
-            padding: 5px;
-            border-radius: var(--border-radius-sm);
-            margin-bottom: 20px;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
         }
 
-        .auth-tab {
-            flex: 1;
-            padding: 12px;
-            text-align: center;
-            color: var(--text-secondary);
-            border-radius: var(--border-radius-sm);
+        .step {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
             transition: all 0.3s ease;
-            text-decoration: none;
+            border: 2px solid var(--border-color);
+            background: white;
+            color: var(--text-muted);
         }
 
-        .auth-tab.active {
-            background: var(--accent-gradient);
+        .step.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
             color: white;
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .step.completed {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+
+        .form-step {
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-title {
+            text-align: center;
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
         }
 
         .form-group {
@@ -115,242 +192,776 @@
         }
 
         .form-label {
-            color: var(--text-primary);
-            font-weight: 500;
+            font-weight: 600;
+            color: var(--text-color);
             margin-bottom: 0.5rem;
             display: block;
         }
 
         .form-control {
-            border: 2px solid #E2E8F0;
-            border-radius: var(--border-radius-sm);
-            padding: 0.75rem;
-            width: 100%;
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            font-size: 1rem;
             transition: all 0.3s ease;
+            background: #F8F9FA;
+            width: 100%;
         }
 
         .form-control:focus {
-            border-color: var(--accent-color);
+            border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+            background: white;
+            outline: none;
         }
 
-        .btn-primary {
-            background: var(--accent-gradient);
+        .form-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .btn-next, .btn-back-step {
+            background: var(--primary-color);
             border: none;
-            padding: 0.8rem 2rem;
-            border-radius: var(--border-radius-sm);
             color: white;
-            font-weight: 500;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
             width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        .btn-primary:hover {
+        .btn-next:hover, .btn-back-step:hover {
+            background: #5A52D5;
             transform: translateY(-2px);
-            box-shadow: var(--box-shadow);
+            box-shadow: 0 12px 30px rgba(108, 99, 255, 0.3);
         }
 
-        .btn-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            display: block;
+        .btn-back-step {
+            background: #6C757D;
+            margin-bottom: 1rem;
+        }
+
+        .btn-back-step:hover {
+            background: #5A6268;
+        }
+
+        .btn-google {
+            background: #fff;
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-google::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(66, 133, 244, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .btn-google:hover::before {
+            left: 100%;
+        }
+
+        .btn-google:hover {
+            border-color: #4285f4;
+            background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
+            color: #4285f4;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(66, 133, 244, 0.2);
+        }
+
+        .method-button {
+            background: #fff;
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .method-button:hover {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(108, 99, 255, 0.2);
+        }
+
+        .google-logo {
+            width: 20px;
+            height: 20px;
+        }
+
+        .auth-divider {
             text-align: center;
-            margin-top: 15px;
+            margin: 1.5rem 0;
+            position: relative;
         }
 
-        .btn-link i {
-            margin-left: 5px;
+        .auth-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--border-color);
         }
 
-        .create-account-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: var(--text-secondary);
-        }
-
-        .create-account-link a {
-            color: var(--accent-color);
-            text-decoration: none;
+        .auth-divider span {
+            background: var(--card-bg);
+            padding: 0 1rem;
+            color: var(--text-muted);
             font-weight: 500;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        .text-center a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .text-center a:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+
+        .flash-messages {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 10000;
+            max-width: 300px;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            border: none;
+        }
+
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+            border-left: 4px solid var(--success-color);
+        }
+
+        /* Success Modal Styles */
+        .success-modal {
+            border: none;
+            border-radius: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            background: linear-gradient(135deg, #fff 0%, #f8fff8 100%);
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--success-color);
+            animation: bounceIn 0.8s ease;
+        }
+
+        .success-title {
+            color: var(--text-color);
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .success-message {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+            border: none;
+            font-weight: 600;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(40, 167, 69, 0.3);
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
     </style>
 </head>
+
 <body>
-    <!-- هيدر الموبايل -->
+    <!-- منطقة الإشعارات -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">جارٍ تسجيل الدخول...</div>
+        </div>
+    </div>
+
+    <!-- نافذة نجاح تسجيل الدخول -->
+    <div class="modal fade" id="loginSuccessModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="loginSuccessModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content success-modal">
+                <div class="modal-body text-center p-4">
+                    <div class="success-icon mb-3">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="success-title mb-3">🎉 تم تسجيل الدخول بنجاح!</h3>
+                    <p class="success-message mb-4">مرحباً بعودتك! سيتم توجيهك الآن إلى لوحة التحكم</p>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-success btn-lg" id="goToDashboardBtn">
+                            <i class="fas fa-tachometer-alt me-2"></i>الانتقال إلى لوحة التحكم
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
     <header class="mobile-header">
-        <h1 class="mobile-header-title">تسجيل الدخول</h1>
+        <button type="button" class="btn-back" onclick="window.history.back()">
+            <i class="fas fa-arrow-right"></i>
+        </button>
+        <h1 class="header-title">تسجيل الدخول</h1>
+        <div style="width: 3rem;"></div>
     </header>
 
-    <!-- المحتوى الرئيسي -->
-    <main class="main-content">
-        <div class="auth-card">
-            <div class="auth-header">
-                <div class="auth-logo">
-                    <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
-                </div>
-                <p class="text-muted">أهلاً بك في منصة الحصة</p>
+    <!-- Main Content -->
+    <main class="mobile-container">
+        <div class="mobile-card">
+            <!-- شعار التطبيق -->
+            <div class="app-logo">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h2 class="app-title">الحصة</h2>
+            <p class="app-subtitle">مرحباً بعودتك! سجل دخولك للمتابعة</p>
+
+            <!-- مؤشر الخطوات -->
+            <div class="step-indicator">
+                <div class="step active" id="step1">1</div>
+                <div class="step" id="step2">2</div>
             </div>
 
-            <div class="auth-tabs">
-                <a href="#password-auth" class="auth-tab active" data-bs-toggle="tab">
-                    <i class="fas fa-key me-2"></i>كلمة المرور
-                </a>
-                <a href="#phone-auth" class="auth-tab" data-bs-toggle="tab">
-                    <i class="fas fa-mobile-alt me-2"></i>رقم الهاتف
-                </a>
-            </div>
+            <!-- اختيار طريقة تسجيل الدخول -->
+            <div class="form-step active" id="method-selection">
+                <h3 class="step-title">اختر طريقة تسجيل الدخول</h3>
                 
-            <div class="tab-content p-4">
-                <!-- تسجيل الدخول بكلمة المرور -->
-                <div class="tab-pane fade show active" id="password-auth">
-                    <form method="POST" action="{{ url_for('auth.login', auth_type='password') }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="form-group">
-                            <label class="form-label" for="login-phone">
-                                <i class="fas fa-phone me-2"></i>رقم الهاتف
-                            </label>
-                            <input type="tel" id="login-phone" name="phone" class="form-control" required dir="ltr">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="login-password">
-                                <i class="fas fa-lock me-2"></i>كلمة المرور
-                            </label>
-                            <input type="password" id="login-password" name="password" class="form-control" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
-                        </button>
-                    </form>
+                <!-- تسجيل الدخول بـ Google -->
+                <button type="button" class="btn-google" onclick="signInWithGoogle()">
+                    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" class="google-logo">
+                    تسجيل الدخول بـ Google
+                </button>
+                
+                <!-- زر Google البديل (مخفي افتراضياً) -->
+                <div id="google-signin-button" style="display: none; margin: 1rem 0; text-align: center;"></div>
+
+                <div class="auth-divider">
+                    <span>أو</span>
                 </div>
-                
+
                 <!-- تسجيل الدخول برقم الهاتف -->
-                <div class="tab-pane fade" id="phone-auth">
-                    <div id="phone-auth-step-1">
-                        <form id="phone-form" method="POST" action="{{ url_for('auth.login', auth_type='phone') }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="form-group">
-                                <label class="form-label" for="phone">
-                                    <i class="fas fa-phone me-2"></i>رقم الهاتف
-                                </label>
-                                <input type="tel" id="phone" class="form-control" placeholder="+20xxxxxxxx" dir="ltr">
-                                <small class="form-text">سيتم إرسال رمز التحقق إلى هذا الرقم</small>
-                            </div>
-                            
-                            <div id="recaptcha-container" class="mb-3"></div>
-                            
-                            <button id="auth-submit-btn" class="btn btn-primary">
-                                <i class="fas fa-paper-plane me-2"></i>إرسال رمز التحقق
-                            </button>
-                        </form>
+                <button type="button" class="method-button" onclick="startPhoneLogin()">
+                    <i class="fas fa-mobile-alt"></i>
+                    تسجيل الدخول برقم الهاتف
+                </button>
+
+                <div class="text-center mt-3">
+                    <p class="text-muted">ليس لديك حساب؟ 
+                        <a href="{{ url_for('auth.register') }}" class="text-decoration-none">إنشاء حساب جديد</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- الخطوة 1: رقم الهاتف -->
+            <div class="form-step" id="phone-step">
+                <h3 class="step-title">أدخل رقم الهاتف</h3>
+                <form id="phone-form">
+                    <div class="form-group">
+                        <label class="form-label" for="phone">
+                            <i class="fas fa-mobile-alt me-2"></i>رقم الهاتف
+                        </label>
+                        <input type="tel" id="phone" name="phone" class="form-control" 
+                               placeholder="01xxxxxxxxx" required dir="ltr">
+                        <small class="form-text text-muted">مثال: 01012345678</small>
                     </div>
                     
-                    <div id="phone-auth-step-2" class="d-none">
-                        <div class="form-group">
-                            <label class="form-label" for="verification-code">
-                                <i class="fas fa-shield-alt me-2"></i>رمز التحقق
-                            </label>
-                            <input type="text" id="verification-code" class="form-control" placeholder="أدخل الرمز">
-                            <small class="form-text">أدخل الرمز المرسل إلى هاتفك</small>
-                        </div>
-                        
-                        <button id="verify-code-btn" class="btn btn-primary mb-3">
-                            <i class="fas fa-check-circle me-2"></i>تحقق
-                        </button>
-                        
-                        <button class="btn btn-link" onclick="showPhoneStep1()">
-                            <i class="fas fa-arrow-right"></i>العودة للخلف
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- تسجيل الدخول بكلمة المرور -->
-                <div class="tab-pane fade" id="password-auth">
-                    <form method="POST" action="{{ url_for('auth.login', auth_type='password') }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="form-group">
-                            <label class="form-label" for="login-phone">
-                                <i class="fas fa-phone me-2"></i>رقم الهاتف
-                            </label>
-                            <input type="tel" id="login-phone" name="phone" class="form-control" required dir="ltr">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="login-password">
-                                <i class="fas fa-lock me-2"></i>كلمة المرور
-                            </label>
-                            <input type="password" id="login-password" name="password" class="form-control" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
-                        </button>
-                    </form>                    </div>
-                </div>
-                
-                <!-- تسجيل الدخول بكلمة المرور -->
-                <div class="tab-pane fade" id="password-auth">
-                    <form method="POST" action="{{ url_for('auth.login', auth_type='password') }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="form-group">
-                            <label class="form-label" for="login-phone">
-                                <i class="fas fa-phone me-2"></i>رقم الهاتف
-                            </label>
-                            <input type="tel" id="login-phone" name="phone" class="form-control" required dir="ltr">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="login-password">
-                                <i class="fas fa-lock me-2"></i>كلمة المرور
-                            </label>
-                            <input type="password" id="login-password" name="password" class="form-control" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
-                        </button>
-                    </form>
+                    <button type="button" class="btn-back-step" onclick="goToMethodSelection()">
+                        <i class="fas fa-arrow-right me-2"></i>العودة
+                    </button>
+                    <button type="button" class="btn-next" onclick="nextToPasswordStep()">
+                        <i class="fas fa-arrow-left me-2"></i>التالي
+                    </button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <p class="text-muted">ليس لديك حساب؟ 
+                        <a href="{{ url_for('auth.register') }}" class="text-decoration-none">إنشاء حساب جديد</a>
+                    </p>
                 </div>
             </div>
 
-        <div class="create-account-link">
-            ليس لديك حساب؟ <a href="{{ url_for('auth.register') }}">إنشاء حساب جديد</a>
+            <!-- الخطوة 2: كلمة المرور -->
+            <div class="form-step" id="password-step">
+                <h3 class="step-title">أدخل كلمة المرور</h3>
+                <form id="password-form">
+                    <div class="form-group">
+                        <label class="form-label" for="password">
+                            <i class="fas fa-lock me-2"></i>كلمة المرور
+                        </label>
+                        <input type="password" id="password" name="password" class="form-control" 
+                               placeholder="أدخل كلمة المرور" required>
+                    </div>
+                    
+                    <button type="button" class="btn-back-step" onclick="backToPhoneStep()">
+                        <i class="fas fa-arrow-right me-2"></i>السابق
+                    </button>
+                    <button type="button" class="btn-next" onclick="submitLogin()">
+                        <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
+                    </button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <p class="text-muted">ليس لديك حساب؟ 
+                        <a href="{{ url_for('auth.register') }}" class="text-decoration-none">إنشاء حساب جديد</a>
+                    </p>
+                </div>
+            </div>
         </div>
     </main>
 
     <!-- JavaScript -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="{{ url_for('static', filename='js/unified-notifications.js') }}"></script>
+
     <script>
-        function showPhoneStep1() {
-            document.getElementById('phone-auth-step-1').classList.remove('d-none');
-            document.getElementById('phone-auth-step-2').classList.add('d-none');
+        // ===== متغيرات عامة =====
+        let currentStep = 'method-selection';
+
+        // ===== دوال التنقل بين الخطوات =====
+        function showStep(stepId) {
+            // إخفاء جميع الخطوات
+            document.querySelectorAll('.form-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // إظهار الخطوة المطلوبة
+            document.getElementById(stepId).classList.add('active');
+            
+            // تحديث مؤشر الخطوات
+            updateStepIndicator(stepId);
+            currentStep = stepId;
         }
 
-        // التبديل بين علامات التبويب
-        document.querySelectorAll('.auth-tab').forEach(tab => {
-            tab.addEventListener('click', function(e) {
-                e.preventDefault();
-                // إزالة الكلاس النشط من جميع علامات التبويب
-                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-                // إضافة الكلاس النشط للعلامة المحددة
-                this.classList.add('active');
-                // إظهار المحتوى المطلوب
-                const target = this.getAttribute('href');
-                document.querySelectorAll('.tab-pane').forEach(pane => {
-                    pane.classList.remove('show', 'active');
-                });
-                document.querySelector(target).classList.add('show', 'active');
+        function updateStepIndicator(stepId) {
+            const steps = document.querySelectorAll('.step');
+            steps.forEach(step => {
+                step.classList.remove('active', 'completed');
             });
-        });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Firebase initialization code should be here
-            if (window.initPhoneAuth) {
-                window.initPhoneAuth('phone', 'recaptcha-container', 'auth-submit-btn');
+            if (stepId === 'method-selection' || stepId === 'phone-step') {
+                document.getElementById('step1').classList.add('active');
+            } else if (stepId === 'password-step') {
+                document.getElementById('step1').classList.add('completed');
+                document.getElementById('step2').classList.add('active');
             }
-        });
+        }
+
+        // ===== دوال التنقل بين الشاشات =====
+        function startPhoneLogin() {
+            showStep('phone-step');
+        }
+
+        function goToMethodSelection() {
+            showStep('method-selection');
+        }
+
+        function backToPhoneStep() {
+            showStep('phone-step');
+        }
+
+        // ===== دوال التحقق من البيانات =====
+        function validatePhone(phone) {
+            if (!phone) {
+                showNotification('يرجى إدخال رقم الهاتف', 'error');
+                return false;
+            }
+
+            const phoneRegex = /^01[0-9]{9}$/;
+            if (!phoneRegex.test(phone)) {
+                showNotification('رقم الهاتف غير صحيح. يجب أن يبدأ بـ 01 ويتكون من 11 رقم', 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateLoginData(phone, password) {
+            if (!phone || !password) {
+                showNotification('يرجى ملء جميع الحقول المطلوبة', 'error');
+                return false;
+            }
+
+            return validatePhone(phone);
+        }
+
+        function nextToPasswordStep() {
+            const phone = document.getElementById('phone').value.trim();
+            
+            if (validatePhone(phone)) {
+                showStep('password-step');
+            }
+        }
+
+        // ===== دالة تسجيل الدخول برقم الهاتف =====
+        async function submitLogin() {
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            // التحقق من البيانات
+            if (!validateLoginData(phone, password)) {
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                const response = await fetch('/auth/login-step', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone: phone,
+                        password: password
+                    }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                handleLoginResponse(data);
+
+            } catch (error) {
+                handleLoginError(error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        
+
+        // ===== دوال مساعدة =====
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.display = show ? 'flex' : 'none';
+            }
+        }
+
+        function showNotification(message, type) {
+            if (typeof window.showNotification === 'function') {
+                window.showNotification(message, type);
+            } else {
+                alert(message);
+            }
+        }
+
+        // ===== دوال معالجة الاستجابات =====
+        function handleLoginResponse(data) {
+            if (data.success) {
+                showLoading(false);
+                
+                // إظهار نافذة النجاح
+                const successModal = new bootstrap.Modal(document.getElementById('loginSuccessModal'));
+                successModal.show();
+                
+                // حفظ رابط التوجه
+                document.getElementById('goToDashboardBtn').setAttribute('data-redirect-url', data.redirect_url || '/');
+                
+                // التوجه التلقائي بعد 3 ثواني
+                setTimeout(() => {
+                    window.location.href = data.redirect_url || '/';
+                }, 3000);
+            } else {
+                showNotification(data.message, 'error');
+            }
+        }
+
+        function handleLoginError(error) {
+            console.error('Login error:', error);
+            
+            if (error.name === 'AbortError') {
+                showNotification('انتهت مهلة الطلب. يرجى المحاولة مرة أخرى.', 'error');
+            } else {
+                showNotification('حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.', 'error');
+            }
+        }
+
+        // ===== إعداد Google Sign-In =====
+        window.onload = function() {
+            initializeGoogleSignIn();
+            setupEventListeners();
+            hideFlashMessages();
+        };
+
+        function initializeGoogleSignIn() {
+            if (typeof google !== 'undefined' && '{{ google_client_id }}') {
+                try {
+                    google.accounts.id.initialize({
+                        client_id: '{{ google_client_id }}',
+                        callback: handleGoogleSignIn,
+                        auto_select: false,
+                        cancel_on_tap_outside: true
+                    });
+
+                    google.accounts.id.renderButton(
+                        document.getElementById('google-signin-button'),
+                        {
+                            theme: 'outline',
+                            size: 'large',
+                            text: 'signin_with',
+                            shape: 'rectangular',
+                            width: '100%'
+                        }
+                    );
+                } catch (error) {
+                    console.error('Google Sign-In initialization error:', error);
+                }
+            }
+        }
+
+        function signInWithGoogle() {
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.prompt();
+            } else {
+                showNotification('Google Sign-In غير متاح حالياً', 'error');
+            }
+        }
+
+        // ===== معالجة تسجيل الدخول بـ Google =====
+        async function handleGoogleSignIn(response) {
+            showLoading(true);
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                const result = await fetch('/auth/google-signin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        credential: response.credential
+                    }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!result.ok) {
+                    throw new Error(`HTTP error! status: ${result.status}`);
+                }
+
+                const data = await result.json();
+                handleGoogleLoginResponse(data);
+
+            } catch (error) {
+                handleLoginError(error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function handleGoogleLoginResponse(data) {
+            if (data.success) {
+                showLoading(false);
+                showNotification(data.message, 'success');
+                
+                // التوجه المباشر والفوري للوحة التحكم
+                if (data.direct_redirect && data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    // fallback للأنظمة القديمة
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1000);
+                }
+            } else {
+                showNotification(data.message, 'error');
+                
+                if (data.require_registration) {
+                    setTimeout(() => {
+                        window.location.href = '/auth/register';
+                    }, 2000);
+                }
+            }
+        }
+
+        // ===== إعداد Event Listeners =====
+        function setupEventListeners() {
+            // التعامل مع Enter key
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    switch(currentStep) {
+                        case 'phone-step':
+                            nextToPasswordStep();
+                            break;
+                        case 'password-step':
+                            submitLogin();
+                            break;
+                    }
+                }
+            });
+
+            // معالج زر الانتقال للوحة التحكم
+            document.getElementById('goToDashboardBtn').addEventListener('click', function() {
+                const redirectUrl = this.getAttribute('data-redirect-url') || '/';
+                window.location.href = redirectUrl;
+            });
+        }
+
+        // ===== إخفاء رسائل التنبيه =====
+        function hideFlashMessages() {
+            setTimeout(() => {
+                document.querySelectorAll('.alert').forEach(alert => {
+                    alert.style.animation = 'slideOut 0.3s ease forwards';
+                    setTimeout(() => alert.remove(), 300);
+                });
+            }, 5000);
+        }
     </script>
 </body>
 </html>

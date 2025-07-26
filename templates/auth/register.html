@@ -3,538 +3,1214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>تسجيل حساب جديد - الحصة</title>
+    <!-- CSRF disabled for registration -->
+    <title>إنشاء حساب جديد - الحصة</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/unified-notifications.css') }}">
 
-<style>
-:root {
-    --primary-color: #6C63FF;
-    --secondary-color: #FF6CAB;
-    --card-bg: #FFFFFF;
-    --text-color: #2D3748;
-    --text-muted: #718096;
-    --border-color: #E2E8F0;
-    --bg-color: #F4F7FE;
-}
+    <style>
+        :root {
+            --primary-color: #6C63FF;
+            --secondary-color: #FF6CAB;
+            --success-color: #28A745;
+            --warning-color: #FFC107;
+            --danger-color: #DC3545;
+            --card-bg: #FFFFFF;
+            --text-color: #2D3748;
+            --text-muted: #718096;
+            --border-color: #E2E8F0;
+            --bg-color: #F4F7FE;
+        }
 
-body {
-    font-family: 'Tajawal', sans-serif;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-}
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
 
-.auth-wrapper {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-}
+        .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
 
-.auth-card {
-    width: 100%;
-    max-width: 500px;
-    background-color: var(--card-bg);
-    border-radius: 1rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    overflow: hidden;
-}
+        .auth-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: 2rem;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 600px;
+        }
 
-.auth-header {
-    padding: 2rem;
-    text-align: center;
-    background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
-    color: white;
-}
+        .auth-sidebar {
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.9) 0%, rgba(255, 108, 171, 0.9) 100%);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+        }
 
-.auth-title {
-    margin-bottom: 0.5rem;
-    font-weight: 700;
-}
+        .auth-sidebar h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
 
-.auth-subtitle {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.875rem;
-}
+        .auth-sidebar p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
 
-.auth-body {
-    padding: 2rem;
-}
+        .auth-sidebar .logo {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
 
-.nav-tabs {
-    border: none;
-    margin-bottom: 2rem;
-}
+        .auth-content {
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
 
-.nav-tabs .nav-link {
-    border: none;
-    color: var(--text-muted);
-    font-weight: 500;
-    padding: 1rem;
-    transition: all 0.3s ease;
-}
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
 
-.nav-tabs .nav-link.active {
-    color: var(--primary-color);
-    background: none;
-    position: relative;
-}
+        .step {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #E2E8F0;
+            color: #718096;
+            font-weight: 600;
+            position: relative;
+            transition: all 0.3s ease;
+            margin: 0 0.5rem;
+        }
 
-.nav-tabs .nav-link.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
-}
+        .step.active {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.1);
+        }
 
-.form-group {
-    margin-bottom: 1.5rem;
-}
+        .step.completed {
+            background: var(--success-color);
+            color: white;
+        }
 
-.form-label {
-    color: var(--text-color);
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    display: block;
-}
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 3px;
+            background: #E2E8F0;
+            transition: all 0.3s ease;
+        }
 
-.form-control {
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-color);
-    transition: all 0.2s ease;
-}
+        .step.completed:not(:last-child)::after {
+            background: var(--success-color);
+        }
 
-.form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(108, 99, 255, 0.25);
-}
+        .form-step {
+            display: none;
+            animation: fadeInUp 0.3s ease;
+        }
 
-.btn-primary {
-    background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
-    border: none;
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    border-radius: 0.5rem;
-    width: 100%;
-    color: white;
-    transition: all 0.3s ease;
-}
+        .form-step.active {
+            display: block;
+        }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
-}
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-.text-primary {
-    color: var(--primary-color) !important;
-}
+        .step-title {
+            text-align: center;
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-a {
-    color: var(--primary-color);
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
 
-a:hover {
-    color: var(--secondary-color);
-}
+        .form-label {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
 
-.form-text {
-    color: var(--text-muted);
-    font-size: 0.875rem;
-}
+        .form-control {
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #F8F9FA;
+            width: 100%;
+        }
 
-@media (max-width: 576px) {
-    .auth-wrapper {
-        padding: 1rem;
-    }
-    
-    .auth-card {
-        border-radius: 0.5rem;
-    }
-    
-    .auth-header,
-    .auth-body {
-        padding: 1.5rem;
-    }
-}
-</style>
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+            background: white;
+            outline: none;
+        }
+
+        .btn-next, .btn-finish {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+
+        .btn-next:hover, .btn-finish:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 99, 255, 0.3);
+            color: white;
+        }
+
+        .btn-back-step {
+            background: #6c757d;
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-back-step:hover {
+            background: #5a6268;
+            color: white;
+        }
+
+        .role-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .role-option {
+            background: #F8F9FA;
+            border: 2px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-option:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .role-option.active {
+            border-color: var(--primary-color);
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        .role-option i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .role-option span {
+            display: block;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 1.1rem;
+        }
+
+        .auth-divider {
+            text-align: center;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .auth-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .auth-divider span {
+            background: var(--card-bg);
+            padding: 0 1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn-google {
+            background: #fff;
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-google::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(66, 133, 244, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .btn-google:hover::before {
+            left: 100%;
+        }
+
+        .btn-google:hover {
+            border-color: #4285f4;
+            background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
+            color: #4285f4;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(66, 133, 244, 0.2);
+        }
+
+        .btn-google:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .btn-google img {
+            width: 24px;
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-google:hover img {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .teacher-info {
+            background: rgba(108, 99, 255, 0.1);
+            border: 1px solid rgba(108, 99, 255, 0.2);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .teacher-info h6 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .teacher-info p {
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        .registration-methods {
+            text-align: center;
+        }
+
+        .method-button {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .method-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 99, 255, 0.3);
+            color: white;
+        }
+
+        /* Notifications */
+        .flash-messages {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            max-width: 450px;
+            width: 90%;
+            pointer-events: none;
+        }
+
+        .flash-message {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.2);
+            border-right: 5px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transform: scale(0.8) translateY(-20px);
+            opacity: 0;
+            animation: popUpNotification 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+            pointer-events: all;
+            font-size: 1.1rem;
+            line-height: 1.4;
+        }
+
+        @keyframes popUpNotification {
+            0% {
+                transform: scale(0.8) translateY(-20px);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .flash-message.success { 
+            border-right-color: var(--success-color);
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.05) 0%, rgba(255, 255, 255, 0.98) 100%);
+        }
+        .flash-message.error, .flash-message.danger { 
+            border-right-color: var(--danger-color);
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.05) 0%, rgba(255, 255, 255, 0.98) 100%);
+        }
+        .flash-message.warning { 
+            border-right-color: var(--warning-color);
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 255, 255, 0.98) 100%);
+        }
+
+        @keyframes slideInRight {
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .flash-message-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(108, 99, 255, 0.4);
+            animation: iconPulseEnhanced 2.5s infinite;
+        }
+
+        @keyframes iconPulseEnhanced {
+            0%, 100% { transform: scale(1) rotateZ(0deg); }
+            25% { transform: scale(1.08) rotateZ(2deg); }
+            50% { transform: scale(1.05) rotateZ(-1deg); }
+            75% { transform: scale(1.08) rotateZ(1deg); }
+        }
+
+        .flash-message.success .flash-message-icon { 
+            background: var(--success-color); 
+            box-shadow: 0 8px 24px rgba(40, 167, 69, 0.4);
+        }
+        .flash-message.error .flash-message-icon,
+        .flash-message.danger .flash-message-icon { 
+            background: var(--danger-color); 
+            box-shadow: 0 8px 24px rgba(220, 53, 69, 0.4);
+        }
+        .flash-message.warning .flash-message-icon { 
+            background: var(--warning-color); 
+            box-shadow: 0 8px 24px rgba(255, 193, 7, 0.4);
+        }
+
+        .flash-message-content {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .flash-message-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--text-muted);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .flash-message-close:hover {
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 4px 16px rgba(220, 53, 69, 0.3);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .auth-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+
+            .auth-sidebar {
+                padding: 2rem;
+            }
+
+            .auth-content {
+                padding: 2rem;
+            }
+
+            .role-options {
+                grid-template-columns: 1fr;
+            }
+
+            .step {
+                width: 40px;
+                height: 40px;
+                margin: 0 0.25rem;
+            }
+
+            .step:not(:last-child)::after {
+                width: 30px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h3 class="auth-title">إنشاء حساب جديد</h3>
-                <p class="auth-subtitle">انضم إلى منصة الحصة</p>
-            </div>
-            <div class="auth-body">
-                <ul class="nav nav-tabs nav-justified mb-4" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link active" data-bs-toggle="tab" href="#password-auth">
-                            <i class="fas fa-key me-2"></i>كلمة المرور
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#phone-auth">
-                            <i class="fas fa-mobile-alt me-2"></i>رقم الهاتف
-                        </a>
-                    </li>
-                </ul>
-                
-                <div class="tab-content">
-                    <!-- تسجيل حساب بكلمة المرور -->
-                    <div class="tab-pane fade show active" id="password-auth">
-                        <form method="POST" action="{{ url_for('auth.register') }}" class="needs-validation" novalidate id="registerForm">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="form-group">
-                                <label class="form-label" for="name">
-                                    <i class="fas fa-user me-2"></i>الاسم الكامل
-                                </label>
-                                <input type="text" id="name" name="name" class="form-control" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="register-phone">
-                                    <i class="fas fa-phone me-2"></i>رقم الهاتف
-                                </label>
-                                <input type="tel" id="register-phone" name="phone" class="form-control" placeholder="+20xxxxxxxx" required dir="ltr">
-                                <small class="form-text">مثال:+20123456789</small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="register-password">
-                                    <i class="fas fa-lock me-2"></i>كلمة المرور
-                                </label>
-                                <input type="password" id="register-password" name="password" class="form-control" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-user-tag me-2"></i>نوع الحساب
-                                </label>
-                                <div class="d-flex justify-content-between">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="role" id="role-student" value="student" checked>
-                                        <label class="form-check-label" for="role-student">طالب</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="role" id="role-teacher" value="teacher">
-                                        <label class="form-check-label" for="role-teacher">معلم</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="role" id="role-assistant" value="assistant">
-                                        <label class="form-check-label" for="role-assistant">مساعد</label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary" id="registerSubmit">
-                                <i class="fas fa-user-plus me-2"></i>إنشاء حساب
-                            </button>
-                        </form>
+    <!-- منطقة الإشعارات -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }} auto-hide-flash" role="alert">
+                        <div class="flash-message-icon">
+                            <i class="{% if category == 'success' %}fas fa-check{% elif category == 'error' or category == 'danger' %}fas fa-times{% elif category == 'warning' %}fas fa-exclamation{% else %}fas fa-info{% endif %}"></i>
+                        </div>
+                        <div class="flash-message-content">{{ message }}</div>
+                        <button class="flash-message-close" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="auth-wrapper">
+        <div class="auth-container">
+            <!-- الشريط الجانبي -->
+            <div class="auth-sidebar">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h2>مرحباً بك في الحصة</h2>
+                <p>انضم إلى أفضل منصة تعليمية في الوطن العربي وابدأ رحلة التعلم والتعليم معنا</p>
+            </div>
+
+            <!-- محتوى التسجيل -->
+            <div class="auth-content">
+                <!-- مؤشر الخطوات -->
+                <div class="step-indicator">
+                    <div class="step active" id="step-1">1</div>
+                    <div class="step" id="step-2">2</div>
+                    <div class="step" id="step-3">3</div>
+                    <div class="step" id="step-4">4</div>
+                </div>
+
+                <!-- طرق التسجيل -->
+                <div class="form-step active" id="registration-methods">
+                    <h3 class="step-title">اختر طريقة التسجيل</h3>
                     
-                    <!-- تسجيل حساب برقم الهاتف (Firebase) -->
-                    <div class="tab-pane fade" id="phone-auth">
-                        <div id="firebase-phone-auth-step-1">
-                            <form id="firebase-register-form">
-                                <div class="form-group">
-                                    <label class="form-label" for="firebase-name">
-                                        <i class="fas fa-user me-2"></i>الاسم الكامل
-                                    </label>
-                                    <input type="text" id="firebase-name" class="form-control" placeholder="أدخل اسمك الكامل" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label" for="firebase-phone">
-                                        <i class="fas fa-phone me-2"></i>رقم الهاتف
-                                    </label>
-                                    <input type="tel" id="firebase-phone" class="form-control" placeholder="+20xxxxxxxx" dir="ltr" required>
-                                    <small class="form-text">سيتم إرسال رمز التحقق إلى هذا الرقم</small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">نوع الحساب</label>
-                                    <div class="d-flex gap-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="firebase-userType" id="firebase-student" value="student" checked>
-                                            <label class="form-check-label" for="firebase-student">
-                                                <i class="fas fa-user-graduate me-1"></i>طالب
-                                            </label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="firebase-userType" id="firebase-teacher" value="teacher">
-                                            <label class="form-check-label" for="firebase-teacher">
-                                                <i class="fas fa-chalkboard-teacher me-1"></i>مدرس
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="firebase-recaptcha-container" class="mb-3"></div>
-                                
-                                <button type="submit" id="firebase-send-code-btn" class="btn btn-primary">
-                                    <span class="btn-text">
-                                        <i class="fas fa-paper-plane me-2"></i>إرسال رمز التحقق
-                                    </span>
-                                    <span class="loading d-none">
-                                        <i class="fas fa-spinner fa-spin me-2"></i>جاري الإرسال...
-                                    </span>
-                                </button>
-                            </form>
+                    <div class="registration-methods">
+                        <!-- تنبيه للتطوير المحلي -->
+                        <div id="local-dev-notice" style="display: none;" class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>ملاحظة:</strong> أثناء التطوير المحلي، تسجيل Google غير متاح. يرجى استخدام التسجيل برقم الهاتف.
                         </div>
                         
-                        <div id="firebase-phone-auth-step-2" class="d-none">
-                            <div class="form-group">
-                                <label class="form-label" for="firebase-verification-code">
-                                    <i class="fas fa-shield-alt me-2"></i>رمز التحقق
-                                </label>
-                                <input type="text" id="firebase-verification-code" class="form-control" placeholder="أدخل الرمز" maxlength="6">
-                                <small class="form-text">أدخل الرمز المرسل إلى هاتفك</small>
-                            </div>
-                            
-                            <button id="firebase-verify-code-btn" class="btn btn-primary mb-3">
-                                <span class="btn-text">
-                                    <i class="fas fa-check-circle me-2"></i>تحقق وإنشاء الحساب
-                                </span>
-                                <span class="loading d-none">
-                                    <i class="fas fa-spinner fa-spin me-2"></i>جاري التحقق...
-                                </span>
-                            </button>
-                            
-                            <button class="btn btn-link w-100" onclick="showFirebaseRegisterStep1()">
-                                <i class="fas fa-arrow-right me-2"></i>العودة
-                            </button>
+                        <!-- التسجيل بـ Google -->
+                        <button type="button" class="btn-google" onclick="signUpWithGoogle()">
+                            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
+                            التسجيل باستخدام Google
+                        </button>
+                        
+                        <!-- زر Google البديل (مخفي افتراضياً) -->
+                        <div id="google-signin-button" style="display: none; margin: 1rem 0; text-align: center;"></div>
+                        
+                        <!-- زر Google البديل -->
+                        <div id="google-signin-button" style="display: none; margin: 10px auto;"></div>
+
+                        <div class="auth-divider">
+                            <span>أو</span>
                         </div>
+
+                        <!-- التسجيل برقم الهاتف -->
+                        <button type="button" class="method-button" onclick="startPhoneRegistration()">
+                            <i class="fas fa-mobile-alt"></i>
+                            التسجيل برقم الهاتف
+                        </button>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <p class="text-muted">لديك حساب بالفعل؟ 
+                            <a href="{{ url_for('auth.login') }}" class="text-decoration-none" style="color: var(--primary-color);">تسجيل الدخول</a>
+                        </p>
                     </div>
                 </div>
-                
-                <div class="text-center mt-4">
-                    <p>لديك حساب بالفعل؟ <a href="{{ url_for('auth.login') }}">تسجيل الدخول</a></p>
+
+                <!-- الخطوة 1: رقم الهاتف -->
+                <div class="form-step" id="phone-step">
+                    <h3 class="step-title">أدخل رقم الهاتف</h3>
+                    <form id="phone-form">
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="phone">
+                                <i class="fas fa-mobile-alt me-2"></i>رقم الهاتف
+                            </label>
+                            <input type="tel" id="phone" name="phone" class="form-control" 
+                                   placeholder="01xxxxxxxxx" required dir="ltr">
+                            <small class="form-text text-muted">مثال: 01012345678</small>
+                        </div>
+                        <button type="button" class="btn-back-step" onclick="goToRegistrationMethods()">
+                            <i class="fas fa-arrow-right me-2"></i>العودة
+                        </button>
+                        <button type="button" class="btn-next" onclick="nextToNameStep()">
+                            <i class="fas fa-arrow-left me-2"></i>التالي
+                        </button>
+                    </form>
+                </div>
+
+                <!-- الخطوة 2: الاسم -->
+                <div class="form-step" id="name-step">
+                    <h3 class="step-title">ما اسمك؟</h3>
+                    <form id="name-form">
+                        <div class="form-group">
+                            <label class="form-label" for="name">
+                                <i class="fas fa-user me-2"></i>الاسم الكامل
+                            </label>
+                            <input type="text" id="name" name="name" class="form-control" 
+                                   placeholder="أدخل اسمك الكامل" required>
+                        </div>
+                        <button type="button" class="btn-back-step" onclick="backToPhoneStep()">
+                            <i class="fas fa-arrow-right me-2"></i>السابق
+                        </button>
+                        <button type="button" class="btn-next" onclick="nextToRoleStep()">
+                            <i class="fas fa-arrow-left me-2"></i>التالي
+                        </button>
+                    </form>
+                </div>
+
+                <!-- الخطوة 3: اختيار الدور -->
+                <div class="form-step" id="role-step">
+                    <h3 class="step-title">حدد دورك</h3>
+                    <div class="role-options">
+                        <div class="role-option active" data-role="student">
+                            <i class="fas fa-user-graduate"></i>
+                            <span>طالب</span>
+                        </div>
+                        <div class="role-option" data-role="teacher">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <span>معلم</span>
+                        </div>
+                        <div class="role-option" data-role="assistant">
+                            <i class="fas fa-user-tie"></i>
+                            <span>مساعد</span>
+                        </div>
+                    </div>
+                    
+                    <div class="teacher-info d-none">
+                        <h6>معلومات للمعلمين:</h6>
+                        <p>ستحصل على فترة تجريبية مجانية لمدة 1 يوم تشمل جميع مميزات المنصة.</p>
+                    </div>
+
+                    <button type="button" class="btn-back-step" onclick="backToNameStep()">
+                        <i class="fas fa-arrow-right me-2"></i>السابق
+                    </button>
+                    <button type="button" class="btn-next" onclick="nextToPasswordStep()">
+                        <i class="fas fa-arrow-left me-2"></i>التالي
+                    </button>
+                </div>
+
+                <!-- الخطوة 4: كلمة المرور -->
+                <div class="form-step" id="password-step">
+                    <h3 class="step-title">أدخل كلمة المرور</h3>
+                    <form id="password-form">
+                        <div class="form-group">
+                            <label class="form-label" for="password">
+                                <i class="fas fa-lock me-2"></i>كلمة المرور
+                            </label>
+                            <input type="password" id="password" name="password" class="form-control" 
+                                   placeholder="أدخل كلمة مرور قوية" required>
+                            <small class="form-text text-muted">يجب أن تكون كلمة المرور 6 أحرف على الأقل</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="confirm-password">
+                                <i class="fas fa-lock me-2"></i>تأكيد كلمة المرور
+                            </label>
+                            <input type="password" id="confirm-password" name="confirm_password" class="form-control" 
+                                   placeholder="أعد إدخال كلمة المرور" required>
+                        </div>
+
+                        <button type="button" class="btn-back-step" onclick="backToRoleStep()">
+                            <i class="fas fa-arrow-right me-2"></i>السابق
+                        </button>
+                        <button type="button" class="btn-finish" onclick="completeRegistration()">
+                            <i class="fas fa-check me-2"></i>إنهاء التسجيل
+                        </button>
+                    </form>
+                </div>
+
+                <!-- خطوة Google (بعد تسجيل الدخول بـ Google) -->
+                <div class="form-step" id="google-completion-step">
+                    <h3 class="step-title">إكمال البيانات</h3>
+                    <form id="google-completion-form">
+                        <div class="form-group">
+                            <label class="form-label" for="google-phone">
+                                <i class="fas fa-mobile-alt me-2"></i>رقم الهاتف
+                            </label>
+                            <input type="tel" id="google-phone" name="phone" class="form-control" 
+                                   placeholder="01xxxxxxxxx" required dir="ltr">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="google-name">
+                                <i class="fas fa-user me-2"></i>الاسم الكامل
+                            </label>
+                            <input type="text" id="google-name" name="name" class="form-control" 
+                                   placeholder="أدخل اسمك الكامل" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">اختر دورك</label>
+                            <div class="role-options">
+                                <div class="role-option active" data-role="student">
+                                    <i class="fas fa-user-graduate"></i>
+                                    <span>طالب</span>
+                                </div>
+                                <div class="role-option" data-role="teacher">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                    <span>معلم</span>
+                                </div>
+                                <div class="role-option" data-role="assistant">
+                                    <i class="fas fa-user-tie"></i>
+                                    <span>مساعد</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-finish" onclick="completeGoogleRegistration()">
+                            <i class="fas fa-check me-2"></i>إنهاء التسجيل
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- تضمين Loading Indicators -->
-    {% include 'components/loading_indicators.html' %}
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-    
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="{{ url_for('static', filename='js/unified-notifications.js') }}"></script>
+
     <script>
-    // دالة للحصول على CSRF token
-    function getCSRFToken() {
-        const metaTag = document.querySelector('meta[name="csrf-token"]');
-        if (metaTag) {
-            return metaTag.getAttribute('content');
-        }
-        
-        // كحل بديل، البحث في النماذج
-        const csrfInput = document.querySelector('input[name="csrf_token"]');
-        if (csrfInput) {
-            return csrfInput.value;
-        }
-        
-        return null;
-    }
+        let currentStep = 0;
+        let registrationData = {};
+        let selectedRole = 'student';
 
-    // Initialize Firebase when DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Firebase
-        if (typeof firebase !== 'undefined') {
-            window.initFirebase();
-        }
-        
-        // تهيئة Firebase للمصادقة برقم الهاتف
-        if (window.initPhoneAuth) {
-            window.initPhoneAuth('phone', 'recaptcha-container', 'auth-submit-btn');
+        // Initialize Google Sign-In
+        function initializeGoogleSignIn() {
+            if (typeof google === 'undefined' || !google.accounts) {
+                console.warn('Google Sign-In library not loaded');
+                return;
+            }
+            
+            try {
+                google.accounts.id.initialize({
+                    client_id: "{{ google_client_id }}",
+                    callback: handleGoogleSignIn,
+                    auto_select: false,
+                    cancel_on_tap_outside: true
+                });
+                console.log('Google Sign-In initialized successfully');
+            } catch (error) {
+                console.error('Error initializing Google Sign-In:', error);
+                showNotification('خطأ في تهيئة Google Sign-In', 'error');
+            }
         }
 
-        // إعداد زر التحقق من الكود
-        const verifyBtn = document.getElementById('verify-code-btn');
-        if (verifyBtn) {
-            verifyBtn.addEventListener('click', async function() {
-                const codeInput = document.getElementById('verification-code');
-                const code = codeInput ? codeInput.value.trim() : '';
-                
-                if (!code) {
-                    showAlert('يرجى إدخال رمز التحقق', 'danger');
-                    return;
+        // Handle Google Sign-In response
+        function handleGoogleSignIn(response) {
+            fetch('{{ url_for("auth.google_auth") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    credential: response.credential
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    registrationData.google_id = data.user.google_id;
+                    registrationData.email = data.user.email;
+                    document.getElementById('google-name').value = data.user.name || '';
+                    
+                    showGoogleCompletionStep();
+                } else {
+                    showNotification(data.message, 'error');
                 }
-                
-                if (!window.confirmationResult) {
-                    showAlert('حدث خطأ. يرجى المحاولة مرة أخرى', 'danger');
-                    return;
-                }
-                
+            })
+            .catch(error => {
+                showNotification('حدث خطأ في التسجيل بـ Google', 'error');
+            });
+        }
+
+        // Start Google registration
+        function signUpWithGoogle() {
+            console.log('Starting Google Sign-In...');
+            
+            if (typeof google === 'undefined' || !google.accounts) {
+                console.error('Google Sign-In library not available');
+                showNotification('Google Sign-In غير متاح حالياً. يرجى التحقق من الاتصال بالإنترنت أو استخدام التسجيل برقم الهاتف', 'warning');
+                return;
+            }
+            
+            // التحقق من النطاق الحالي
+            const currentOrigin = window.location.origin;
+            console.log('Current origin:', currentOrigin);
+            
+            try {
+                console.log('Prompting Google Sign-In...');
+                google.accounts.id.prompt((notification) => {
+                    console.log('Google prompt result:', notification);
+                    if (notification.isNotDisplayed()) {
+                        console.log('Google Sign-In was not displayed');
+                        showNotification('لم تتمكن من فتح نافذة Google. يرجى التأكد من عدم حجب النوافذ المنبثقة', 'warning');
+                        // Fallback: try rendering a button
+                        renderGoogleButton();
+                    } else if (notification.isSkippedMoment()) {
+                        console.log('Google Sign-In was skipped');
+                        showNotification('تم تخطي تسجيل الدخول بـ Google. يمكنك المحاولة مرة أخرى أو استخدام التسجيل برقم الهاتف', 'info');
+                    }
+                });
+            } catch (error) {
+                console.error('Google Sign-In Error:', error);
+                showNotification('حدث خطأ في تسجيل الدخول بـ Google. يرجى المحاولة مرة أخرى أو استخدام التسجيل برقم الهاتف', 'error');
+                // محاولة عرض زر Google البديل في حالة الخطأ
+                renderGoogleButton();
+            }
+        }
+        
+        // Render Google Sign-In button as fallback
+        function renderGoogleButton() {
+            const buttonDiv = document.getElementById('google-signin-button');
+            const mainButton = document.querySelector('.btn-google');
+            
+            if (buttonDiv && typeof google !== 'undefined') {
                 try {
-                    verifyBtn.disabled = true;
-                    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+                    // إخفاء الزر الأساسي وإظهار الزر البديل
+                    if (mainButton) mainButton.style.display = 'none';
+                    buttonDiv.style.display = 'block';
                     
-                    // Verify the code
-                    const result = await window.confirmationResult.confirm(code);
-                    const user = result.user;
-                    const idToken = await user.getIdToken();
-                    
-                    // Send to backend
-                    const csrfToken = getCSRFToken();
-                    const response = await fetch('/verify-phone', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrfToken
-                        },
-                        body: JSON.stringify({
-                            idToken: idToken,
-                            name: document.getElementById('name') ? document.getElementById('name').value : '',
-                            userType: 'student' // default
-                        })
+                    google.accounts.id.renderButton(buttonDiv, {
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'signup_with',
+                        width: 300,
+                        locale: 'ar'
                     });
-
-                    const data = await response.json();
                     
-                    if (data.success) {
-                        showAlert(data.message, 'success');
-                        setTimeout(() => {
-                            window.location.href = data.redirect || '/';
-                        }, 1000);
-                    } else {
-                        showAlert(data.message, 'danger');
-                    }
-                    
+                    showNotification('تم تحميل زر Google البديل', 'success');
                 } catch (error) {
-                    console.error('Error verifying code:', error);
-                    showAlert('رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى', 'danger');
-                } finally {
-                    verifyBtn.disabled = false;
-                    verifyBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>تحقق';
+                    console.error('Error rendering Google button:', error);
+                    showNotification('لم نتمكن من تحميل زر Google. يرجى استخدام التسجيل برقم الهاتف', 'warning');
+                }
+            }
+        }
+
+        // Show Google completion step
+        function showGoogleCompletionStep() {
+            document.querySelectorAll('.form-step').forEach(step => step.classList.remove('active'));
+            document.getElementById('google-completion-step').classList.add('active');
+            updateStepIndicator(2);
+        }
+
+        // Start phone registration
+        function startPhoneRegistration() {
+            showStep('phone-step');
+            updateStepIndicator(1);
+        }
+
+        // Go back to registration methods
+        function goToRegistrationMethods() {
+            showStep('registration-methods');
+            updateStepIndicator(0);
+        }
+
+        // Navigation functions
+        function nextToNameStep() {
+            const phone = document.getElementById('phone').value.trim();
+            if (!validatePhone(phone)) {
+                showNotification('يرجى إدخال رقم هاتف صحيح', 'error');
+                return;
+            }
+            registrationData.phone = phone;
+            showStep('name-step');
+            updateStepIndicator(2);
+        }
+
+        function backToPhoneStep() {
+            showStep('phone-step');
+            updateStepIndicator(1);
+        }
+
+        function nextToRoleStep() {
+            const name = document.getElementById('name').value.trim();
+            if (!name) {
+                showNotification('يرجى إدخال الاسم', 'error');
+                return;
+            }
+            registrationData.name = name;
+            showStep('role-step');
+            updateStepIndicator(3);
+        }
+
+        function backToNameStep() {
+            showStep('name-step');
+            updateStepIndicator(2);
+        }
+
+        function nextToPasswordStep() {
+            registrationData.role = selectedRole;
+            showStep('password-step');
+            updateStepIndicator(4);
+        }
+
+        function backToRoleStep() {
+            showStep('role-step');
+            updateStepIndicator(3);
+        }
+
+        // Show specific step
+        function showStep(stepId) {
+            document.querySelectorAll('.form-step').forEach(step => step.classList.remove('active'));
+            document.getElementById(stepId).classList.add('active');
+        }
+
+        // Update step indicator
+        function updateStepIndicator(step) {
+            const steps = document.querySelectorAll('.step');
+            steps.forEach((stepEl, index) => {
+                stepEl.classList.remove('active', 'completed');
+                if (index < step) {
+                    stepEl.classList.add('completed');
+                } else if (index === step) {
+                    stepEl.classList.add('active');
                 }
             });
         }
 
-        // تنسيق رقم الهاتف
-        const phoneInputs = document.querySelectorAll('input[type="tel"]');
-        phoneInputs.forEach(input => {
-            input.addEventListener('blur', function() {
-                let phone = this.value.trim();
-                // Format Saudi phone number
-                if (phone && !phone.startsWith('+')) {
-                    if (phone.startsWith('05')) {
-                        phone = '+966' + phone.substring(1);
-                    } else if (phone.startsWith('5') && phone.length === 9) {
-                        phone = '+966' + phone;
-                    } else if (phone.startsWith('966')) {
-                        phone = '+' + phone;
+        // Complete phone registration
+        function completeRegistration() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (!validatePassword(password, confirmPassword)) {
+                return;
+            }
+
+            registrationData.password = password;
+
+            fetch('{{ url_for("auth.register_step") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(registrationData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('🎉 تم إنشاء حسابك بنجاح!', 'success');
+                    
+                    // فحص إذا كان المستخدم معلم جديد يحتاج إعداد المحفظة
+                    if (data.is_teacher && data.needs_wallet_setup) {
+                        setTimeout(() => {
+                            loadWalletModal();
+                            // التوجه للوحة التحكم بعد 3 ثواني إضافية
+                            setTimeout(() => {
+                                window.location.href = data.redirect_url;
+                            }, 3000);
+                        }, 2000);
+                    } else {
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 2000);
                     }
-                    this.value = phone;
+                } else {
+                    showNotification(data.message, 'error');
                 }
-            });
-        });
-        
-        const registerForm = document.getElementById('registerForm');
-        const submitBtn = document.getElementById('registerSubmit');
-        
-        // تطبيق loading على نموذج التسجيل
-        if (registerForm) {
-            registerForm.addEventListener('submit', function(e) {
-                if (window.enhancedLoading) {
-                    window.enhancedLoading.showButtonLoading(submitBtn, {
-                        text: 'جاري إنشاء الحساب...',
-                        type: 'spinner'
-                    });
-                    
-                    // إظهار loading للصفحة كاملة
-                    setTimeout(() => {
-                        window.enhancedLoading.showPageLoading({
-                            text: 'جاري إنشاء حسابك...',
-                            type: 'dots'
-                    });
-                }, 500);
-                }
+            })
+            .catch(error => {
+                showNotification('حدث خطأ في إنشاء الحساب', 'error');
             });
         }
-        
-        // تطبيق loading على روابط تسجيل الدخول
-        document.querySelectorAll('a[href*="login"]').forEach(link => {
-            link.setAttribute('data-loading', 'true');
-            link.setAttribute('data-loading-text', 'جاري تحميل صفحة تسجيل الدخول...');
-        });
-        
-        // تطبيق loading على اختيار نوع المستخدم
-        document.querySelectorAll('input[name="user_type"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const form = document.querySelector('.auth-card');
-                if (window.enhancedLoading && form) {
-                    window.enhancedLoading.showSectionLoading(form, {
-                        text: 'جاري تحديث النموذج...',
-                        type: 'pulse'
-                    });
-                    
-                    setTimeout(() => {
-                        window.enhancedLoading.hideSectionLoading(form);
-                    }, 800);
-                }
-            });
-        });
-    });
 
-    // Show alert function
-    function showAlert(message, type = 'info') {
-        // Create alert container if it doesn't exist
-        let alertsContainer = document.getElementById('alerts-container');
-        if (!alertsContainer) {
-            alertsContainer = document.createElement('div');
-            alertsContainer.id = 'alerts-container';
-            alertsContainer.style.position = 'fixed';
-            alertsContainer.style.top = '20px';
-            alertsContainer.style.right = '20px';
-            alertsContainer.style.zIndex = '9999';
-            alertsContainer.style.maxWidth = '400px';
-            document.body.appendChild(alertsContainer);
+        // تحميل نافذة المحفظة
+        function loadWalletModal() {
+            if (!document.getElementById('walletModal')) {
+                fetch('/')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.body.insertAdjacentHTML('beforeend', html);
+                        showWalletModal();
+                    })
+                    .catch(error => {
+                        console.error('Error loading wallet modal:', error);
+                    });
+            } else {
+                showWalletModal();
+            }
         }
-        
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show`;
-        alert.style.marginBottom = '10px';
-        alert.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        
-        alertsContainer.appendChild(alert);
-        
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            alert.classList.remove('show');
+
+        // Complete Google registration
+        function completeGoogleRegistration() {
+            const phone = document.getElementById('google-phone').value.trim();
+            const name = document.getElementById('google-name').value.trim();
+
+            if (!validatePhone(phone)) {
+                showNotification('يرجى إدخال رقم هاتف صحيح', 'error');
+                return;
+            }
+
+            if (!name) {
+                showNotification('يرجى إدخال الاسم', 'error');
+                return;
+            }
+
+            const googleData = {
+                ...registrationData,
+                phone: phone,
+                name: name,
+                role: selectedRole,
+                auth_method: 'google'
+            };
+
+            fetch('{{ url_for("auth.complete_google_registration_api") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(googleData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('🎉 تم إنشاء حسابك بنجاح!', 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 2000);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('حدث خطأ في إنشاء الحساب', 'error');
+            });
+        }
+
+        // Validation functions
+        function validatePhone(phone) {
+            const phoneRegex = /^01[0-9]{9}$/;
+            return phoneRegex.test(phone);
+        }
+
+        function validatePassword(password, confirmPassword) {
+            if (password.length < 6) {
+                showNotification('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
+                return false;
+            }
+
+            if (password !== confirmPassword) {
+                showNotification('كلمات المرور غير متطابقة', 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Utility functions
+        // CSRF token function disabled for registration/login
+        // function getCSRFToken() {
+        //     return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        // }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `flash-message ${type}`;
+            notification.innerHTML = `
+                <div class="flash-message-icon">
+                    <i class="fas ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-times' : 'fa-info'}"></i>
+                </div>
+                <div class="flash-message-content">${message}</div>
+                <button class="flash-message-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            document.querySelector('.flash-messages').appendChild(notification);
+
             setTimeout(() => {
-                if (alert.parentNode) {
-                    alert.remove();
+                if (notification.parentElement) {
+                    notification.style.animation = 'slideOutRight 0.3s ease forwards';
+                    setTimeout(() => notification.remove(), 300);
                 }
-            }, 150);
-        }, 5000);
-    }
+            }, 5000);
+        }
 
-    function showPhoneStep1() {
-        document.getElementById('phone-auth-step-1').classList.remove('d-none');
-        document.getElementById('phone-auth-step-2').classList.add('d-none');
-    }
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // التحقق من النطاق وإظهار التنبيه إذا لزم الأمر
+            const currentOrigin = window.location.origin;
+            if (currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1')) {
+                const notice = document.getElementById('local-dev-notice');
+                if (notice) notice.style.display = 'block';
+            }
+            
+            // Initialize Google Sign-In when page loads
+            window.addEventListener('load', function() {
+                if (typeof google !== 'undefined' && google.accounts) {
+                    initializeGoogleSignIn();
+                } else {
+                    console.warn('Google Sign-In library not loaded');
+                }
+            });
+
+            // Role selection handlers
+            const roleOptions = document.querySelectorAll('.role-option');
+            const teacherInfo = document.querySelector('.teacher-info');
+
+            roleOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove active class from all options in the same container
+                    const container = this.closest('.form-step');
+                    const siblingOptions = container.querySelectorAll('.role-option');
+                    siblingOptions.forEach(opt => opt.classList.remove('active'));
+                    
+                    // Add active class to clicked option
+                    this.classList.add('active');
+                    
+                    selectedRole = this.dataset.role;
+                    
+                    // Show/hide teacher info
+                    if (selectedRole === 'teacher' && teacherInfo) {
+                        teacherInfo.classList.remove('d-none');
+                    } else if (teacherInfo) {
+                        teacherInfo.classList.add('d-none');
+                    }
+                });
+            });
+
+            // Auto-hide flash messages
+            setTimeout(() => {
+                document.querySelectorAll('.auto-hide-flash').forEach(msg => {
+                    msg.style.animation = 'slideOutRight 0.3s ease forwards';
+                    setTimeout(() => msg.remove(), 300);
+                });
+            }, 5000);
+        });
     </script>
 </body>
 </html>

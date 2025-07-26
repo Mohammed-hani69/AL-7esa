@@ -296,7 +296,7 @@
                     </div>
 
                     {% if current_user.role == 'teacher' %}
-                    <div class="alert alert-info">
+                    <div id="wallet-section" class="alert alert-info">
                         <i class="fas fa-wallet me-2"></i>
                         <strong>أرقام المحافظ الإلكترونية:</strong> يمكنك إضافة رقمين للمحفظة الإلكترونية لاستقبال المدفوعات
                     </div>
@@ -330,11 +330,49 @@
                     </div>                    <button type="submit" class="btn btn-primary mb-4">
                         <i class="fas fa-save me-2"></i>حفظ التغييرات
                     </button>
-
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">
-                        <i class="fas fa-sign-out-alt me-2"></i>تسجيل الخروج
-                    </a>
                 </form>
+
+                <!-- قسم تغيير كلمة المرور -->
+                <div class="profile-card mt-4">
+                    <h5 class="mb-4">
+                        <i class="fas fa-lock me-2"></i>تغيير كلمة المرور
+                    </h5>
+                    <form method="POST" action="{{ url_for('auth.change_password') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="mobile_current_password">
+                                <i class="fas fa-unlock me-2"></i>كلمة المرور الحالية
+                            </label>
+                            <input type="password" class="form-control" id="mobile_current_password" name="current_password" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="mobile_new_password">
+                                <i class="fas fa-key me-2"></i>كلمة المرور الجديدة
+                            </label>
+                            <input type="password" class="form-control" id="mobile_new_password" name="new_password" 
+                                   minlength="8" required>
+                            <small class="text-muted">يجب أن تكون 8 أحرف على الأقل</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="mobile_confirm_password">
+                                <i class="fas fa-check-circle me-2"></i>تأكيد كلمة المرور الجديدة
+                            </label>
+                            <input type="password" class="form-control" id="mobile_confirm_password" name="confirm_password" 
+                                   minlength="8" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning mb-4">
+                            <i class="fas fa-lock me-2"></i>تغيير كلمة المرور
+                        </button>
+                    </form>
+                </div>
+
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">
+                    <i class="fas fa-sign-out-alt me-2"></i>تسجيل الخروج
+                </a>
             </div>
         </div>
     </main>
@@ -342,5 +380,35 @@
     <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Auto-scroll to wallet section if section parameter is present
+        function scrollToWalletSection() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('section') === 'wallet') {
+                const walletSection = document.getElementById('wallet-section');
+                if (walletSection) {
+                    setTimeout(() => {
+                        walletSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                        
+                        // Add highlight effect
+                        walletSection.style.boxShadow = '0 0 15px rgba(0, 123, 255, 0.3)';
+                        walletSection.style.transition = 'box-shadow 0.3s ease';
+                        
+                        // Remove highlight after 3 seconds
+                        setTimeout(() => {
+                            walletSection.style.boxShadow = '';
+                        }, 3000);
+                    }, 500);
+                }
+            }
+        }
+        
+        // Call function when page loads
+        document.addEventListener('DOMContentLoaded', scrollToWalletSection);
+    </script>
 </body>
 </html>

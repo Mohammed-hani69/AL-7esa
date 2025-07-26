@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from models import ChatMessage, Payment, QuizAnswer, QuizAttempt, User, Role, Classroom, ClassroomEnrollment, ClassroomContent, ContentType
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizQuestionOption
 from models import Subscription, SubscriptionPlan, ChatSettings, ChatParticipant, SubscriptionPayment, SubscriptionPayment
-from models import SystemSettings, LiveStream, Notification
+from models import SystemSettings, LiveStream, Notification, Banner
 
 from models import db
 
@@ -24,15 +24,16 @@ from models import db
 teacher_bp = Blueprint('teacher', __name__)
 
 # Allowed file extensions for uploads
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'mp4', 'mp3', 'wav'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'mp4', 'mp3', 'wav', 'webm', 'mov', 'ogg', 'ppt', 'pptx'}
 
 def allowed_file(filename):
-    # Get extension and convert to lowercase
+    """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def get_file_size_limit(content_type):
+    """Get file size limit based on content type - بدون حدود للحجم"""
+    # إزالة قيود الحجم لمنع خطأ 413
+    return float('inf')  # بدون حد أقصى
 
 
 def is_mobile():
@@ -214,16 +215,46 @@ def dashboard():
     
     # جلب الإشعارات غير المقروءة
     unread_notifications_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+    unread_notifications = Notification.query.filter_by(
+        user_id=current_user.id, 
+        is_read=False
+    ).order_by(Notification.created_at.desc()).limit(5).all()
+    
+    # فحص حالة المحفظة الإلكترونية
+    has_wallet_numbers = current_user.has_ewallet_numbers()
+    
+    # جلب البانرات النشطة للمعلمين
+    active_banners = Banner.query.filter(
+        Banner.is_active == True,
+        (Banner.start_date.is_(None)) | (Banner.start_date <= datetime.utcnow()),
+        (Banner.end_date.is_(None)) | (Banner.end_date >= datetime.utcnow())
+    ).filter(
+        (Banner.target_roles == 'all') |
+        (Banner.target_roles.like('%teacher%'))
+    ).order_by(Banner.priority.desc()).all()
+    
+    # فلترة البانرات للمعلمين
+    teacher_banners = [banner for banner in active_banners if banner.is_valid_for_user('teacher')]
+    
+    # حساب إجمالي عدد الطلاب المنضمين في جميع الفصول
+    total_enrolled_students = db.session.query(db.func.count(ClassroomEnrollment.id))\
+        .join(Classroom)\
+        .filter(Classroom.teacher_id == current_user.id)\
+        .scalar() or 0
     
     return render_template(template,
                          classrooms=classrooms,
                          total_students=total_students,
+                         total_enrolled_students=total_enrolled_students,
                          active_assignments=active_assignments,
                          active_quizzes=active_quizzes,
                          has_active_subscription=has_active_sub,
                          subscription_days_left=subscription_days_left,
                          can_create_classroom=can_create_classroom(),
                          unread_notifications_count=unread_notifications_count,
+                         unread_notifications=unread_notifications,
+                         has_wallet_numbers=has_wallet_numbers,
+                         banners=teacher_banners,
                          primary_color=primary_color,
                          secondary_color=secondary_color)
 
@@ -540,6 +571,81 @@ def create_classroom():
                            primary_color=primary_color,
                            secondary_color=secondary_color)
 
+@teacher_bp.route('/classroom/<int:classroom_id>/edit', methods=['GET', 'POST'])
+@login_required
+@teacher_required
+def edit_classroom(classroom_id):
+    classroom = Classroom.query.get_or_404(classroom_id)
+
+    # Ensure the teacher owns this classroom
+    if classroom.teacher_id != current_user.id:
+        flash('غير مصرح لك بتعديل هذا الفصل', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        subject = request.form.get('subject')
+        grade = request.form.get('grade')
+        academic_year = request.form.get('academic_year')
+        description = request.form.get('description', '')
+        color = request.form.get('color', '#3498db')
+        is_free = 'is_free' in request.form
+
+        # Validation
+        if not name or not subject or not grade or not academic_year:
+            flash('جميع الحقول الأساسية مطلوبة', 'danger')
+            return redirect(url_for('teacher.edit_classroom', classroom_id=classroom.id))
+
+        # Handle paid classroom details
+        price = None
+        duration_days = None
+        if not is_free:
+            # التحقق من وجود أرقام المحافظ الإلكترونية للمعلم قبل تحويل فصل إلى مدفوع
+            if not current_user.has_ewallet_numbers():
+                flash('يجب إضافة رقم محفظة إلكترونية في ملفك الشخصي قبل تحويل الفصل إلى مدفوع', 'warning')
+                return redirect(url_for('teacher.edit_classroom', classroom_id=classroom.id))
+            
+            try:
+                price = float(request.form.get('price', 0))
+                duration_days = int(request.form.get('duration_days', 30))
+                
+                if price <= 0:
+                    flash('يجب أن يكون سعر الفصل أكبر من صفر', 'danger')
+                    return redirect(url_for('teacher.edit_classroom', classroom_id=classroom.id))
+                    
+                if duration_days <= 0:
+                    flash('يجب أن تكون مدة الفصل أكبر من صفر', 'danger')
+                    return redirect(url_for('teacher.edit_classroom', classroom_id=classroom.id))
+            except (ValueError, TypeError):
+                flash('قيم السعر والمدة يجب أن تكون أرقام صحيحة', 'danger')
+                return redirect(url_for('teacher.edit_classroom', classroom_id=classroom.id))
+
+        # Update classroom
+        classroom.name = name
+        classroom.subject = subject
+        classroom.grade = grade
+        classroom.academic_year = academic_year
+        classroom.description = description
+        classroom.color = color
+        classroom.is_free = is_free
+        classroom.price = price
+        classroom.duration_days = duration_days
+
+        db.session.commit()
+        flash('تم تحديث بيانات الفصل بنجاح', 'success')
+        return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')
+
+    template = 'teacher/mobile-theme/edit_classroom.html' if is_mobile() else 'teacher/edit_classroom.html'
+
+    return render_template(template,
+                         classroom=classroom,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color)
+
 @teacher_bp.route('/classroom/<int:classroom_id>')
 @login_required
 @teacher_required
@@ -703,8 +809,7 @@ def live_classroom(classroom_id):
 @login_required
 @teacher_required
 def add_content(classroom_id):
-
-     
+    """Add content to classroom with enhanced file handling"""
     classroom = Classroom.query.get_or_404(classroom_id)
 
     # Ensure the teacher owns this classroom
@@ -712,81 +817,104 @@ def add_content(classroom_id):
         flash('غير مصرح لك بالوصول إلى هذا الفصل', 'danger')
         return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
-    title = request.form.get('title')
-    description = request.form.get('description', '')
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
     content_type = request.form.get('content_type')
 
+    # Validate required fields
     if not title:
         flash('يجب إدخال عنوان المحتوى', 'danger')
         return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
-    if content_type not in [ContentType.FILE, ContentType.IMAGE, ContentType.AUDIO, ContentType.VIDEO, ContentType.TEXT]:
+    # Validate content type
+    valid_types = [ContentType.FILE, ContentType.IMAGE, ContentType.AUDIO, ContentType.VIDEO, ContentType.TEXT]
+    if content_type not in valid_types:
         flash('نوع المحتوى غير صالح', 'danger')
         return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
-    # Handle different content types
     content_url = None
     content_text = None
 
-    if content_type == ContentType.TEXT:
-        content_text = request.form.get('content_text', '')
-        if not content_text.strip():
-            flash('يجب إدخال محتوى نصي', 'danger')
-            return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
-    else:
-        # Handle file upload
-        if content_type != ContentType.TEXT:
+    try:
+        if content_type == ContentType.TEXT:
+            # Handle text content
+            content_text = request.form.get('content_text', '').strip()
+            if not content_text:
+                flash('يجب إدخال محتوى نصي', 'danger')
+                return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+        else:
+            # Handle file upload
             if 'content_file' not in request.files:
                 flash('لم يتم تحديد ملف', 'danger')
                 return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
             file = request.files['content_file']
 
-            if file.filename == '':
-                flash('لم يتم اختيار ملف. الرجاء اختيار ملف صالح', 'danger')
+            if not file or file.filename == '':
+                flash('لم يتم اختيار ملف صالح', 'danger')
                 return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
-        if file and allowed_file(file.filename):
+            # Validate file extension
+            if not allowed_file(file.filename):
+                flash('نوع الملف غير مدعوم', 'danger')
+                return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+
+            # Get file size for logging (بدون فحص القيود)
+            file.seek(0, 2)  # Seek to end to get size
+            file_size = file.tell()
+            file.seek(0)  # Reset file pointer
+            
+            current_app.logger.info(f"Processing file upload: {file.filename} ({file_size} bytes)")
+
+            # Create upload directory
+            upload_dir = os.path.join('static', 'uploads', 'classroom_content', str(classroom_id))
+            abs_upload_dir = os.path.join(current_app.root_path, upload_dir)
+            
             try:
-                # طباعة معلومات تصحيح للملف
-                print(f"محاولة تحميل ملف: {file.filename}, النوع: {file.content_type}")
-                # Create upload directory if it doesn't exist
-                upload_dir = os.path.join('static', 'uploads', 'classroom_content', str(classroom_id))
-                abs_upload_dir = os.path.join(current_app.root_path, upload_dir)
-                if not os.path.exists(abs_upload_dir):
-                    try:
-                        os.makedirs(abs_upload_dir, exist_ok=True)
-                        print(f"تم إنشاء مجلد التحميل بنجاح: {abs_upload_dir}")
-                    except Exception as e:
-                        print(f"خطأ في إنشاء مجلد التحميل: {e}")
-
-                # Generate a secure filename with timestamp and original extension
-                timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-                _, file_extension = os.path.splitext(secure_filename(file.filename))
-                saved_filename = f"{timestamp}{file_extension}"
-                
-                # Save file and create content URL
-                file_path = os.path.join(abs_upload_dir, saved_filename)
-                file.save(file_path)
-                
-                # Verify file was saved successfully
-                if os.path.exists(file_path):
-                    print(f"تم حفظ الملف بنجاح في: {file_path}")
-                    print(f"حجم الملف: {os.path.getsize(file_path)} بايت")
-                    # Store relative URL for database without 'static/' prefix since it's already in the template
-                    content_url = f"/static/uploads/classroom_content/{classroom_id}/{saved_filename}"
-                else:
-                    raise Exception("فشل في حفظ الملف")
+                os.makedirs(abs_upload_dir, exist_ok=True)
             except Exception as e:
-                print(f"خطأ في تحميل الملف: {e}")
-                flash(f'حدث خطأ أثناء تحميل الملف: {e}', 'danger')
+                current_app.logger.error(f"Error creating upload directory: {e}")
+                flash('خطأ في إنشاء مجلد التحميل', 'danger')
                 return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
-        else:
-            flash('الملف غير صالح', 'danger')
-            return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 
-    try:
-        # Create content
+            # Generate secure filename
+            timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-3]  # Include milliseconds
+            _, file_extension = os.path.splitext(secure_filename(file.filename))
+            saved_filename = f"{timestamp}_{secure_filename(os.path.splitext(file.filename)[0])}{file_extension}"
+            
+            # Save file
+            file_path = os.path.join(abs_upload_dir, saved_filename)
+            
+            try:
+                # Save file in chunks for large files
+                with open(file_path, 'wb') as f:
+                    while True:
+                        chunk = file.read(8192)  # 8KB chunks
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                
+                # Verify file was saved
+                if not os.path.exists(file_path) or os.path.getsize(file_path) != file_size:
+                    raise Exception("فشل في حفظ الملف بشكل صحيح")
+                
+                # Create URL for database
+                content_url = f"/static/uploads/classroom_content/{classroom_id}/{saved_filename}"
+                
+                current_app.logger.info(f"File uploaded successfully: {file_path} ({file_size} bytes)")
+                
+            except Exception as e:
+                current_app.logger.error(f"Error saving file: {e}")
+                # Clean up partial file if exists
+                if os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                    except:
+                        pass
+                flash(f'حدث خطأ أثناء حفظ الملف: {str(e)}', 'danger')
+                return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
+
+        # Create content record
         new_content = ClassroomContent(
             classroom_id=classroom.id,
             title=title,
@@ -800,9 +928,11 @@ def add_content(classroom_id):
         db.session.commit()
 
         flash('تم إضافة المحتوى بنجاح', 'success')
+        
     except Exception as e:
-        print(f"خطأ في حفظ المحتوى في قاعدة البيانات: {e}")
-        flash(f'حدث خطأ أثناء حفظ المحتوى: {e}', 'danger')
+        db.session.rollback()
+        current_app.logger.error(f"Error adding content: {e}")
+        flash(f'حدث خطأ أثناء إضافة المحتوى: {str(e)}', 'danger')
 
     return redirect(url_for('teacher.classroom', classroom_id=classroom.id))
 

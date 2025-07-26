@@ -1,0 +1,335 @@
+<!-- نافذة إضافة رقم المحفظة للمعلمين -->
+<div class="modal fade" id="walletModal" tabindex="-1" aria-labelledby="walletModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="walletModalLabel">
+                    <i class="fas fa-wallet me-2"></i>
+                    إضافة رقم المحفظة الإلكترونية
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>مطلوب:</strong> يجب إضافة رقم محفظة إلكترونية واحد على الأقل لتمكين الطلاب من دفع رسوم الاشتراك في الفصول الخاصة بك.
+                </div>
+                
+                <form id="walletForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="ewallet_number_1">
+                            <i class="fas fa-mobile-alt me-2"></i>
+                            رقم المحفظة الأول <span class="text-danger">*</span>
+                        </label>
+                        <input type="tel" 
+                               class="form-control" 
+                               id="ewallet_number_1" 
+                               name="ewallet_number_1" 
+                               placeholder="01xxxxxxxxx"
+                               required
+                               dir="ltr">
+                        <small class="form-text text-muted">مثال: 01012345678</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="ewallet_number_2">
+                            <i class="fas fa-mobile-alt me-2"></i>
+                            رقم المحفظة الثاني (اختياري)
+                        </label>
+                        <input type="tel" 
+                               class="form-control" 
+                               id="ewallet_number_2" 
+                               name="ewallet_number_2" 
+                               placeholder="01xxxxxxxxx"
+                               dir="ltr">
+                        <small class="form-text text-muted">رقم إضافي (اختياري)</small>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>هام:</strong> تأكد من صحة أرقام المحافظ لأن الطلاب سيقومون بالتحويل إليها.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" onclick="skipWalletSetup()">
+                    <i class="fas fa-clock me-2"></i>
+                    تذكيرني لاحقاً
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveWalletNumbers()">
+                    <i class="fas fa-save me-2"></i>
+                    حفظ أرقام المحافظ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة التأكيد للتخطي -->
+<div class="modal fade" id="skipConfirmModal" tabindex="-1" aria-labelledby="skipConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title" id="skipConfirmModalLabel">
+                    <i class="fas fa-question-circle me-2"></i>
+                    تأكيد التخطي
+                </h6>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">هل أنت متأكد من تخطي إضافة أرقام المحافظ؟ لن يتمكن الطلاب من الدفع لفصولك.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    إلغاء
+                </button>
+                <button type="button" class="btn btn-warning" onclick="confirmSkip()">
+                    نعم، تخطي
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary-color, #6C63FF) 0%, var(--secondary-color, #FF6CAB) 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        border-bottom: none;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    
+    .modal-title {
+        font-weight: 600;
+    }
+    
+    .form-control {
+        border: 2px solid #E2E8F0;
+        border-radius: 10px;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color, #6C63FF);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--text-color, #2D3748);
+        margin-bottom: 8px;
+    }
+    
+    .alert {
+        border-radius: 10px;
+        border: none;
+    }
+    
+    .btn {
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color, #6C63FF) 0%, var(--secondary-color, #FF6CAB) 100%);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(108, 99, 255, 0.3);
+    }
+    
+    .btn-outline-secondary {
+        border: 2px solid #6C757D;
+        color: #6C757D;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: #6C757D;
+        border-color: #6C757D;
+        transform: translateY(-2px);
+    }
+    
+    .btn-warning {
+        background: #FFC107;
+        border: none;
+        color: #212529;
+    }
+    
+    .btn-warning:hover {
+        background: #FFB300;
+        transform: translateY(-2px);
+    }
+
+    /* حركات مخصصة */
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .modal.show .modal-dialog {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    /* تحسينات للموبايل */
+    @media (max-width: 768px) {
+        .modal-dialog {
+            margin: 1rem;
+            max-width: calc(100vw - 2rem);
+        }
+        
+        .modal-content {
+            border-radius: 20px;
+        }
+        
+        .modal-header {
+            padding: 1rem;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal-footer {
+            padding: 1rem;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .modal-footer .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+// إظهار نافذة المحفظة
+function showWalletModal() {
+    const walletModal = new bootstrap.Modal(document.getElementById('walletModal'));
+    walletModal.show();
+}
+
+// حفظ أرقام المحافظ
+async function saveWalletNumbers() {
+    const form = document.getElementById('walletForm');
+    const formData = new FormData(form);
+    
+    const ewallet1 = formData.get('ewallet_number_1').trim();
+    const ewallet2 = formData.get('ewallet_number_2').trim();
+    
+    // التحقق من البيانات
+    if (!ewallet1) {
+        showNotification('يرجى إدخال رقم المحفظة الأول', 'error');
+        return;
+    }
+    
+    // التحقق من تنسيق رقم المحفظة
+    const phoneRegex = /^01[0-9]{9}$/;
+    if (!phoneRegex.test(ewallet1)) {
+        showNotification('رقم المحفظة الأول غير صحيح. يجب أن يبدأ بـ 01 ويتكون من 11 رقم', 'error');
+        return;
+    }
+    
+    if (ewallet2 && !phoneRegex.test(ewallet2)) {
+        showNotification('رقم المحفظة الثاني غير صحيح. يجب أن يبدأ بـ 01 ويتكون من 11 رقم', 'error');
+        return;
+    }
+    
+    // إرسال البيانات
+    try {
+        const response = await fetch('/auth/update-wallet-numbers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ewallet_number_1: ewallet1,
+                ewallet_number_2: ewallet2
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(data.message, 'success');
+            
+            // إخفاء النافذة
+            const walletModal = bootstrap.Modal.getInstance(document.getElementById('walletModal'));
+            walletModal.hide();
+            
+            // تحديث حالة المحفظة في الصفحة
+            if (typeof updateWalletStatus === 'function') {
+                updateWalletStatus(true);
+            }
+        } else {
+            showNotification(data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Wallet update error:', error);
+        showNotification('حدث خطأ أثناء حفظ أرقام المحافظ', 'error');
+    }
+}
+
+// تخطي إعداد المحفظة
+function skipWalletSetup() {
+    const skipModal = new bootstrap.Modal(document.getElementById('skipConfirmModal'));
+    skipModal.show();
+}
+
+// تأكيد التخطي
+function confirmSkip() {
+    // إخفاء نافذة التأكيد
+    const skipModal = bootstrap.Modal.getInstance(document.getElementById('skipConfirmModal'));
+    skipModal.hide();
+    
+    // إخفاء نافذة المحفظة
+    setTimeout(() => {
+        const walletModal = bootstrap.Modal.getInstance(document.getElementById('walletModal'));
+        walletModal.hide();
+        
+        showNotification('تم تخطي إعداد المحفظة. يمكنك إضافة أرقام المحافظ لاحقاً من إعدادات الحساب', 'info');
+    }, 300);
+}
+
+// دالة عرض الإشعارات (في حالة عدم وجودها)
+function showNotification(message, type) {
+    if (typeof window.showNotification === 'function') {
+        window.showNotification(message, type);
+    } else {
+        // Fallback لعرض الرسالة
+        alert(message);
+    }
+}
+</script>

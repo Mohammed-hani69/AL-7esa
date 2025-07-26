@@ -224,6 +224,33 @@
         box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
     }
 
+    /* تنسيق خاص لنموذج تغيير كلمة المرور */
+    .form-control.is-valid {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 12px 30px;
+        border-radius: var(--border-radius-sm);
+        transition: all 0.3s ease;
+    }
+
+    .btn-warning:hover {
+        background: linear-gradient(135deg, #e67e22, #d35400);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(243, 156, 18, 0.3);
+    }
+
     .mobile-toggle {
         display: none;
         position: fixed;
@@ -277,7 +304,7 @@
         <!-- السايدبار -->
         <aside class="innovative-sidebar">
             <div class="sidebar-brand">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
                 <h1 class="brand-text">الحصة</h1>
             </div>
 
@@ -417,7 +444,7 @@
                                 </div>
 
                                 {% if current_user.role == 'teacher' %}
-                                <div class="row">
+                                <div class="row" id="wallet-section">
                                     <div class="col-12">
                                         <div class="alert alert-info">
                                             <i class="fas fa-wallet me-2"></i>
@@ -435,7 +462,6 @@
                                             <input type="tel" class="form-control" id="ewallet_number_1" name="ewallet_number_1" 
                                                    value="{{ current_user.ewallet_number_1 or '' }}" dir="ltr" 
                                                    placeholder="01xxxxxxxxx">
-                                            <small class="text-muted">مثال: 01145425207</small>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -462,6 +488,48 @@
                                 <div class="text-center mt-4">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save me-2"></i>حفظ التغييرات
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- قسم تغيير كلمة المرور -->
+                    <div class="profile-card mt-4">
+                        <div class="card-body p-4">
+                            <h5 class="mb-4">
+                                <i class="fas fa-lock me-2"></i>تغيير كلمة المرور
+                            </h5>
+                            <form method="POST" action="{{ url_for('auth.change_password') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                
+                                <div class="form-group">
+                                    <label class="form-label" for="current_password">
+                                        <i class="fas fa-unlock me-2"></i>كلمة المرور الحالية
+                                    </label>
+                                    <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="new_password">
+                                        <i class="fas fa-key me-2"></i>كلمة المرور الجديدة
+                                    </label>
+                                    <input type="password" class="form-control" id="new_password" name="new_password" 
+                                           minlength="8" required>
+                                    <small class="text-muted">يجب أن تكون 8 أحرف على الأقل</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="confirm_password">
+                                        <i class="fas fa-check-circle me-2"></i>تأكيد كلمة المرور الجديدة
+                                    </label>
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                           minlength="8" required>
+                                </div>
+
+                                <div class="text-center mt-4">
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-lock me-2"></i>تغيير كلمة المرور
                                     </button>
                                 </div>
                             </form>
@@ -494,7 +562,83 @@
                     sidebar.classList.remove('show');
                 }
             });
+
+            // التحقق من تطابق كلمات المرور
+            const newPassword = document.getElementById('new_password');
+            const confirmPassword = document.getElementById('confirm_password');
+            
+            function checkPasswordMatch() {
+                if (newPassword.value && confirmPassword.value) {
+                    if (newPassword.value === confirmPassword.value) {
+                        confirmPassword.setCustomValidity('');
+                        confirmPassword.classList.remove('is-invalid');
+                        confirmPassword.classList.add('is-valid');
+                    } else {
+                        confirmPassword.setCustomValidity('كلمات المرور غير متطابقة');
+                        confirmPassword.classList.remove('is-valid');
+                        confirmPassword.classList.add('is-invalid');
+                    }
+                } else {
+                    confirmPassword.setCustomValidity('');
+                    confirmPassword.classList.remove('is-invalid', 'is-valid');
+                }
+            }
+            
+            if (newPassword && confirmPassword) {
+                newPassword.addEventListener('input', checkPasswordMatch);
+                confirmPassword.addEventListener('input', checkPasswordMatch);
+            }
+
+            // التمرير التلقائي لقسم المحفظة عند وجود معامل في الرابط
+            function scrollToWalletSection() {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('section') === 'wallet') {
+                    const walletSection = document.getElementById('wallet-section');
+                    if (walletSection) {
+                        setTimeout(() => {
+                            walletSection.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center' 
+                            });
+                            
+                            // إضافة تأثير بصري لجذب الانتباه
+                            walletSection.style.animation = 'highlight 2s ease-in-out';
+                            
+                            // التركيز على أول حقل إدخال للمحفظة
+                            const firstWalletInput = document.getElementById('ewallet_number_1');
+                            if (firstWalletInput) {
+                                setTimeout(() => {
+                                    firstWalletInput.focus();
+                                }, 1000);
+                            }
+                        }, 500);
+                    }
+                }
+            }
+
+            // تشغيل الدالة عند تحميل الصفحة
+            scrollToWalletSection();
         });
+
+        // إضافة CSS للتأثير البصري
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes highlight {
+                0% { 
+                    background-color: transparent; 
+                    transform: scale(1);
+                }
+                50% { 
+                    background-color: rgba(108, 99, 255, 0.1); 
+                    transform: scale(1.02);
+                }
+                100% { 
+                    background-color: transparent; 
+                    transform: scale(1);
+                }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

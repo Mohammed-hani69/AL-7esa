@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced-file-upload.css') }}">
     
     <style>
         :root {
@@ -545,7 +546,7 @@
         <!-- السايدبار -->
         <aside class="innovative-sidebar">
             <div class="sidebar-brand">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
                 <h1 class="brand-text">الحصة</h1>
             </div>
             
@@ -594,6 +595,9 @@
             <div class="page-header">
                 <h1 class="page-title">{{ classroom.name }}</h1>
                 <div class="header-actions">
+                    <a href="{{ url_for('teacher.edit_classroom', classroom_id=classroom.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-1"></i>تعديل الفصل
+                    </a>
                     <a href="{{ url_for('teacher.live_classroom', classroom_id=classroom.id) }}" class="btn btn-primary">
                         <i class="fas fa-video me-1"></i>بدء البث المباشر
                     </a>
@@ -730,7 +734,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold text-primary">محتوى الفصل</h6>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addContentModal">
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addContentModal" id="add-content-btn">
                         <i class="fas fa-plus me-1"></i>إضافة محتوى
                     </button>
                 </div>
@@ -999,54 +1003,114 @@
                     <h5 class="modal-title">إضافة محتوى جديد</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="POST" action="{{ url_for('teacher.add_content', classroom_id=classroom.id) }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ url_for('teacher.add_content', classroom_id=classroom.id) }}" enctype="multipart/form-data" id="contentForm">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">عنوان المحتوى</label>
-                            <input type="text" class="form-control" name="title" required>
+                            <label class="form-label">عنوان المحتوى *</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">وصف المحتوى</label>
-                            <textarea class="form-control" name="description" rows="3"></textarea>
+                            <textarea class="form-control" name="description" rows="2" placeholder="وصف اختياري للمحتوى"></textarea>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">نوع المحتوى</label>
+                            <label class="form-label">نوع المحتوى *</label>
                             <select class="form-control" id="content_type" name="content_type" required>
                                 <option value="text">نص</option>
-                                <option value="file">ملف</option>
+                                <option value="file">ملف (PDF, DOC, PPT, XLS)</option>
                                 <option value="image">صورة</option>
                                 <option value="video">فيديو</option>
-                                <option value="audio">صوت</option>
+                                <option value="audio">ملف صوتي</option>
                             </select>
                         </div>
                         
                         <div id="text-content" class="content-input">
                             <div class="mb-3">
-                                <label class="form-label">المحتوى النصي</label>
-                                <textarea class="form-control" name="content_text" rows="5"></textarea>
+                                <label class="form-label">المحتوى النصي *</label>
+                                <textarea class="form-control" name="content_text" rows="6" placeholder="اكتب المحتوى النصي هنا..."></textarea>
                             </div>
                         </div>
                         
                         <div id="file-content" class="content-input d-none">
+                            <!-- منطقة سحب وإفلات الملفات -->
                             <div class="mb-3">
-                                <label class="form-label">الملف</label>
-                                <input type="file" class="form-control" name="content_file" id="content_file">
-                                <small class="form-text text-muted file-types-info"></small>
+                                <label class="form-label" id="file-upload-label">رفع الملف *</label>
+                                <div class="enhanced-file-upload">
+                                    <div class="file-drop-zone" id="fileDropZone">
+                                        <div class="drop-zone-content">
+                                            <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                            <h5>اسحب الملف هنا أو انقر للاختيار</h5>
+                                            <p class="text-muted mb-3">
+                                                <span class="text-muted">قم برفع الملف المطلوب</span><br>
+                                                <span id="file-size-info" class="text-primary fw-bold">حد أقصى 25MB</span>
+                                            </p>
+                                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('content_file').click()">
+                                                <i class="fas fa-folder-open me-1"></i>اختيار الملف
+                                            </button>
+                                        </div>
+                                        <input type="file" class="d-none" name="content_file" id="content_file" accept="">
+                                    </div>
+                                    <div class="file-types-info form-text text-muted mt-2 text-center"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- شريط التقدم للتحميل -->
+                            <div id="upload-progress" class="mb-3" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-muted">جاري رفع الملف...</small>
+                                    <span id="upload-percentage" class="badge bg-primary">0%</span>
+                                </div>
+                                <div class="progress" style="height: 12px;">
+                                    <div id="upload-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                                         role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div id="upload-status" class="text-center mt-2 small text-success"></div>
+                                <div id="upload-speed" class="text-center mt-1 small text-muted"></div>
+                            </div>
+                            
+                            <!-- معاينة الملف المحدد -->
+                            <div id="file-preview" class="mb-3" style="display: none;">
+                                <div class="selected-file-card border rounded p-3 bg-light">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <div id="file-icon" class="me-3">
+                                                <i class="fas fa-file fa-2x text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <h6 id="file-name" class="mb-1">اسم الملف</h6>
+                                                <small id="file-size" class="text-muted">حجم الملف</small>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearSelectedFile()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div id="preview-content" class="mt-3"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-primary">إضافة المحتوى</button>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
+                            <i class="fas fa-plus me-1"></i>إضافة المحتوى
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
+    <!-- Bootstrap & jQuery Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Enhanced File Upload Manager -->
+    <script src="{{ url_for('static', filename='js/enhanced-file-upload.js') }}"></script>
+    
     <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1264,6 +1328,21 @@
                 alert('حدث خطأ أثناء حذف الرسالة');
             });
         }
+
+ // تغيير محتوى النموذج بناءً على نوع المحتوى المحدد
+        document.getElementById('content_type').addEventListener('change', function() {
+            const value = this.value;
+            document.querySelectorAll('.content-input').forEach(div => {
+                div.classList.add('d-none');
+            });
+            if (value === 'text') {
+                document.getElementById('text-content').classList.remove('d-none');
+            } else {
+                document.getElementById('file-content').classList.remove('d-none');
+                // إظهار أنواع الملفات المدعومة بناءً على النوع المحدد
+                document.querySelector('.' + value + '-types').classList.remove('d-none');
+            }
+        });
 
     </script>
 </body>

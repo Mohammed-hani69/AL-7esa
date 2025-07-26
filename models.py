@@ -6,7 +6,9 @@
 from datetime import datetime, timedelta
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
+import hashlib
+import os
+import binascii
 
 # Initialize db here to avoid circular imports
 db = SQLAlchemy()
@@ -71,10 +73,67 @@ class User(UserMixin, db.Model):
     live_streams = db.relationship('LiveStream', back_populates='teacher')
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        """
+        يحفظ كلمة المرور مشفرة بـ scrypt
+        التنسيق: scrypt:16384:8:1$salt$hash
+        """
+        # توليد ملح عشوائي (16 بايت)
+        salt = os.urandom(16)
+        salt_b64 = binascii.b2a_base64(salt).decode('ascii').strip()
+        
+        # تشفير كلمة المرور باستخدام scrypt
+        # N=16384, r=8, p=1 - معايير آمنة مع استهلاك ذاكرة أقل
+        key = hashlib.scrypt(
+            password.encode('utf-8'), 
+            salt=salt, 
+            n=16384, 
+            r=8, 
+            p=1, 
+            dklen=32
+        )
+        key_hex = binascii.hexlify(key).decode('ascii')
+        
+        # تكوين التنسيق النهائي
+        self.password_hash = f"scrypt:16384:8:1${salt_b64}${key_hex}"
 
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        """
+        يتحقق من كلمة المرور المشفرة بـ scrypt
+        """
+        try:
+            # تحليل التنسيق
+            parts = self.password_hash.split('$')
+            if len(parts) != 3 or not parts[0].startswith('scrypt:'):
+                return False
+            
+            # استخراج المعايير
+            params = parts[0].split(':')
+            if len(params) != 4:
+                return False
+            
+            n, r, p = int(params[1]), int(params[2]), int(params[3])
+            salt_b64 = parts[1]
+            stored_key_hex = parts[2]
+            
+            # فك تشفير الملح
+            salt = binascii.a2b_base64(salt_b64.encode('ascii'))
+            
+            # تشفير كلمة المرور المدخلة بنفس المعايير
+            key = hashlib.scrypt(
+                password.encode('utf-8'),
+                salt=salt,
+                n=n,
+                r=r,
+                p=p,
+                dklen=32
+            )
+            key_hex = binascii.hexlify(key).decode('ascii')
+            
+            # مقارنة آمنة
+            return key_hex == stored_key_hex
+            
+        except Exception:
+            return False
 
     def __repr__(self):
         return f'<User {self.name}>'
@@ -658,3 +717,56 @@ class LiveStream(db.Model):
     
     def __repr__(self):
         return f'<LiveStream {self.title} - {self.classroom.name}>'
+
+
+"""
+نموذج البانرات الإعلانية (Banner)
+يمثل البانرات الإعلانية التي تظهر في أعلى الصفحات
+"""
+class Banner(db.Model):
+    __tablename__ = 'banner'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    image_url = db.Column(db.String(500), nullable=False)
+    link_url = db.Column(db.String(500), nullable=True)
+    target_roles = db.Column(db.String(100), nullable=True)  # "student,teacher,admin" or "all"
+    is_active = db.Column(db.Boolean, default=True)
+    priority = db.Column(db.Integer, default=0)  # أولوية العرض
+    start_date = db.Column(db.DateTime, nullable=True)
+    end_date = db.Column(db.DateTime, nullable=True)
+    click_count = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Relationships
+    creator = db.relationship('User', backref='created_banners')
+    
+    def is_valid_for_user(self, user_role):
+        """Check if banner is valid for user role"""
+        if not self.is_active:
+            return False
+            
+        # Check date range
+        now = datetime.utcnow()
+        if self.start_date and now < self.start_date:
+            return False
+        if self.end_date and now > self.end_date:
+            return False
+            
+        # Check role targeting
+        if not self.target_roles or self.target_roles == 'all':
+            return True
+            
+        target_roles = [role.strip() for role in self.target_roles.split(',')]
+        return user_role in target_roles
+    
+    def increment_click(self):
+        """Increment click counter"""
+        self.click_count += 1
+        db.session.commit()
+    
+    def __repr__(self):
+        return f'<Banner {self.title}>'

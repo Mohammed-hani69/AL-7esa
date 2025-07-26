@@ -26,6 +26,18 @@
         --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
     }
 
+    /* Animation للإخفاء */
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+    }
+
     /* تنسيق عام */
     body {
         font-family: 'Tajawal', sans-serif;
@@ -384,6 +396,18 @@
             height: 50px;
             box-shadow: var(--box-shadow);
         }
+
+        /* Animation for fade out */
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
     }
     </style>
 </head>
@@ -396,7 +420,7 @@
         <!-- السايدبار -->
         <aside class="innovative-sidebar">
             <div class="sidebar-brand">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة" class="brand-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
                 <h1 class="brand-text">الحصة</h1>
             </div>
             
@@ -464,6 +488,45 @@
                 {% endif %}
             </div>
 
+            {% if unread_notifications and unread_notifications|length > 0 %}
+            <!-- تنبيه الإشعارات غير المقروءة -->
+            <div class="alert alert-warning alert-dismissible" role="alert" id="notificationsAlert">
+                <h4 class="alert-heading">
+                    <i class="fas fa-bell me-2"></i>
+                    {% if unread_notifications|length == 1 %}
+                        لديك إشعار جديد غير مقروء
+                    {% else %}
+                        لديك {{ unread_notifications|length }} إشعارات جديدة غير مقروءة
+                    {% endif %}
+                </h4>
+                <div class="notification-preview">
+                    {% for notification in unread_notifications[:3] %}
+                    <div class="mb-2">
+                        <strong>{{ notification.title }}</strong>
+                        <p class="mb-1 text-muted">{{ notification.message|truncate(100) }}</p>
+                        <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                    {% if not loop.last %}<hr class="my-2">{% endif %}
+                    {% endfor %}
+                    {% if unread_notifications|length > 3 %}
+                    <div class="text-muted">
+                        <small>وإشعارات أخرى...</small>
+                    </div>
+                    {% endif %}
+                </div>
+                <hr>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('teacher.notifications') }}" class="btn btn-warning">
+                        <i class="fas fa-eye me-2"></i>عرض جميع الإشعارات
+                    </a>
+                    <button type="button" class="btn btn-outline-warning" onclick="markAllNotificationsRead()">
+                        <i class="fas fa-check-double me-2"></i>تعليم الكل كمقروء
+                    </button>
+                </div>
+                <button type="button" class="btn-close" onclick="hideNotificationsAlert()" aria-label="إغلاق"></button>
+            </div>
+            {% endif %}
+
             {% if not has_active_subscription %}
             <!-- رسالة تحذير للمعلمين بدون اشتراك نشط -->
             <div class="alert alert-warning" role="alert">
@@ -471,6 +534,21 @@
                 <p>لا يمكنك إنشاء فصول دراسية جديدة أو إدارة الفصول الحالية حتى تقوم بالاشتراك في إحدى الباقات المتاحة.</p>
                 <hr>
                 <p class="mb-0">الرجاء الاشتراك في باقة مناسبة لمتابعة استخدام جميع ميزات المنصة.</p>
+            </div>
+            {% endif %}
+
+            {% if not has_wallet_numbers %}
+            <!-- تنبيه إضافة أرقام المحافظ الإلكترونية -->
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading"><i class="fas fa-wallet me-2"></i>إضافة رقم المحفظة الإلكترونية</h4>
+                <p>لتمكين الطلاب من دفع رسوم الاشتراك في فصولك، يجب إضافة رقم محفظة إلكترونية واحد على الأقل.</p>
+                <hr>
+                <button type="button" class="btn btn-info" onclick="goToWalletSettings()">
+                    <i class="fas fa-plus me-2"></i>إضافة رقم المحفظة الآن
+                </button>
+                <button type="button" class="btn btn-outline-secondary ms-2" onclick="hideWalletAlert()">
+                    <i class="fas fa-clock me-2"></i>تذكيرني لاحقاً
+                </button>
             </div>
             {% endif %}
 
@@ -543,11 +621,80 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- كارت رقم المحفظة الإلكترونية -->
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-value" style="font-size: 1.5rem; color: #28a745;">
+                                {% if current_user.ewallet_number_1 %}
+                                    {{ current_user.ewallet_number_1 }}
+                                {% elif current_user.ewallet_number_2 %}
+                                    {{ current_user.ewallet_number_2 }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                            <div class="stat-label">رقم المحفظة الإلكترونية</div>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-wallet fa-2x" style="color: #28a745;"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- قسم التحليلات والإحصائيات -->
             <section class="analytics-section mb-5">
                 <h2 class="section-title mb-4">التحليلات والإحصائيات</h2>
+                
+                <!-- ملخص الأداء العام -->
+                <div class="row mb-4">
+                    <div class="col-lg-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">ملخص الأداء العام</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h4 class="text-primary">{{ total_students }}</h4>
+                                            <p class="mb-0">إجمالي الطلاب في جميع الفصول</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h4 class="text-success">{{ classrooms|length }}</h4>
+                                            <p class="mb-0">عدد الفصول النشطة</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            {% set avg_students_per_class = (total_students / classrooms|length)|round(1) if classrooms|length > 0 else 0 %}
+                                            <h4 class="text-info">{{ avg_students_per_class }}</h4>
+                                            <p class="mb-0">متوسط الطلاب لكل فصل</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            {% set total_active_assignments = namespace(count=0) %}
+                                            {% for classroom in classrooms %}
+                                                {% for assignment in classroom.assignments %}
+                                                    {% if assignment.due_date and assignment.due_date > now %}
+                                                        {% set total_active_assignments.count = total_active_assignments.count + 1 %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endfor %}
+                                            <h4 class="text-warning">{{ total_active_assignments.count }}</h4>
+                                            <p class="mb-0">الواجبات النشطة</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="row">
                     <!-- إجمالي التفاعل -->
@@ -784,6 +931,57 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // دالة للانتقال إلى إعدادات المحفظة في صفحة الملف الشخصي
+        function goToWalletSettings() {
+            window.location.href = '/auth/profile?section=wallet';
+        }
+        
+        // دالة إخفاء تنبيه الإشعارات
+        function hideNotificationsAlert() {
+            const alert = document.getElementById('notificationsAlert');
+            if (alert) {
+                alert.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => alert.remove(), 300);
+            }
+        }
+        
+        // دالة إخفاء تنبيه المحفظة الإلكترونية
+        function hideWalletAlert() {
+            const alert = document.querySelector('.alert.alert-info[role="alert"]');
+            if (alert && alert.textContent.includes('المحفظة')) {
+                alert.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => alert.remove(), 300);
+            }
+        }
+        
+        // دالة تعليم جميع الإشعارات كمقروءة
+        async function markAllNotificationsRead() {
+            try {
+                const response = await fetch('/teacher/notifications/mark_all_read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''
+                    }
+                });
+                
+                if (response.ok) {
+                    hideNotificationsAlert();
+                    // تحديث عداد الإشعارات في الـ sidebar
+                    const badge = document.querySelector('.notification-badge');
+                    if (badge) {
+                        badge.remove();
+                    }
+                    window.showQuickSuccess('تم تعليم جميع الإشعارات كمقروءة');
+                } else {
+                    window.showError('خطأ', 'حدث خطأ أثناء تحديث الإشعارات');
+                }
+            } catch (error) {
+                console.error('Error marking notifications as read:', error);
+                window.showError('خطأ', 'حدث خطأ أثناء تحديث الإشعارات');
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', async function() {
             // تحميل البيانات الأولية للتحليلات
             await loadGeneralAnalytics();
@@ -1139,6 +1337,8 @@
                 $('.innovative-sidebar').removeClass('show');
             }
         });
+
+
     </script>
 </body>
 </html>

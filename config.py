@@ -12,20 +12,41 @@ class Config:
     # Flask Configuration
     SECRET_KEY = os.environ.get("SESSION_SECRET", "al-hesa-default-secret")
     DEBUG = os.environ.get("FLASK_ENV", "development") == "development"
-
-    # CSRF Configuration
-    WTF_CSRF_TIME_LIMIT = None  # No time limit for CSRF tokens
-    WTF_CSRF_SSL_STRICT = False  # Allow CSRF in development without SSL
-    WTF_CSRF_ENABLED = True
     
-    # Session Configuration
+    # Environment detection
+    IS_PRODUCTION = os.environ.get("FLASK_ENV") == "production"
+
+    # CSRF Configuration - DISABLED per user request
+    # User explicitly requested: "لا اريد استخدام CSRF في التسجيل و في انشاء الحساب"
+    WTF_CSRF_TIME_LIMIT = None  # No time limit for CSRF tokens
+    WTF_CSRF_SSL_STRICT = False  # Allow HTTP in development
+    WTF_CSRF_ENABLED = False  # DISABLED for authentication endpoints
+    WTF_CSRF_CHECK_DEFAULT = False  # DISABLED for authentication endpoints
+    
+    # Session Configuration - محسن لحل مشكلة عدم استمرار الجلسة
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)  # 7 days session lifetime
-    SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+    SESSION_COOKIE_SECURE = IS_PRODUCTION  # True for HTTPS in production
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_NAME = 'al_7esa_session'  # اسم مخصص للجلسة
+    SESSION_COOKIE_PATH = '/'  # مسار الجلسة
+    SESSION_TYPE = 'filesystem'  # نوع الجلسة
+    SESSION_PERMANENT = True  # جعل الجلسة دائمة افتراضياً
+    SESSION_USE_SIGNER = True  # توقيع الجلسة للأمان
+    SESSION_KEY_PREFIX = 'al_7esa:'  # بادئة مفتاح الجلسة
+    
+    # Domain configuration based on environment
+    if IS_PRODUCTION:
+        SESSION_COOKIE_DOMAIN = '.al-7esa.com'  # Allow cookies for al-7esa.com and www.al-7esa.com
+    else:
+        SESSION_COOKIE_DOMAIN = None  # Default for localhost
 
     # CORS Configuration
-    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*").split(",") if os.environ.get("CORS_ORIGINS") else ["*"]
+    CORS_ORIGINS = [
+        "https://al-7esa.com",
+        "https://www.al-7esa.com",
+        "http://127.0.0.1:5000"  # للتطوير المحلي
+    ]
     CORS_SUPPORTS_CREDENTIALS = True
     CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'X-CSRFToken', 'X-Requested-With']
     CORS_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
@@ -80,14 +101,23 @@ class Config:
     # Application Configuration
     DEFAULT_TRIAL_DAYS = 7
     UPLOAD_FOLDER = "static/uploads"
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max upload size
-
-    # إعدادات خدمة الملفات
+    
+    # File Upload Configuration - حدود عالية جداً للملفات الكبيرة
+    MAX_CONTENT_LENGTH = None  # بدون حد أقصى للحجم نهائياً
+    
+    # File size limits by type - أحجام عالية جداً محدثة
+    FILE_SIZE_LIMITS = {
+        'image': 200 * 1024 * 1024,     # 200MB للصور
+        'video': 2048 * 1024 * 1024,    # 2GB للفيديو
+        'audio': 500 * 1024 * 1024,     # 500MB للصوت
+        'file': 500 * 1024 * 1024       # 500MB للمستندات
+    }
+    
+    # إعدادات محسنة لرفع الملفات الكبيرة
     USE_X_ACCEL_REDIRECT = True
     UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
     STATIC_FOLDER = os.path.join(basedir, 'static')
-    MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # 500 MB
-    CHUNK_SIZE = 8192  # حجم القطعة للتدفق
+    CHUNK_SIZE = 1024 * 1024  # 1MB حجم القطعة للتدفق (محسن)
 
     # المجلدات الفرعية للتحميلات
     UPLOAD_FOLDERS = {
@@ -96,26 +126,36 @@ class Config:
         'profile_pics': os.path.join(STATIC_FOLDER, 'uploads', 'profile_pics'),
     }
 
-    # أنواع الملفات المسموح بها
-    ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg']
-    ALLOWED_AUDIO_EXTENSIONS = ['mp3', 'wav', 'ogg']
-    ALLOWED_DOCUMENT_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt']
-    ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif']
+    # أنواع الملفات المسموح بها - Enhanced
+    ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov', 'avi']
+    ALLOWED_AUDIO_EXTENSIONS = ['mp3', 'wav', 'ogg', 'm4a']
+    ALLOWED_DOCUMENT_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'ppt', 'pptx']
+    ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp']
+    
+    # All allowed extensions combined
+    ALLOWED_EXTENSIONS = set(
+        ALLOWED_VIDEO_EXTENSIONS + 
+        ALLOWED_AUDIO_EXTENSIONS + 
+        ALLOWED_DOCUMENT_EXTENSIONS + 
+        ALLOWED_IMAGE_EXTENSIONS
+    )
 
 
 class DevelopmentConfig(Config):
     """تكوين بيئة التطوير"""
     DEBUG = True
-    # في بيئة التطوير، نسمح بجميع المصادر لسهولة التطوير
-    CORS_ORIGINS = ["*"]
+    # في بيئة التطوير، نسمح بالمصادر المحلية
+    CORS_ORIGINS = [
+        "http://127.0.0.1:5000", 
+        "http://localhost:5000",
+        "http://127.0.0.1:3000",  # للتطوير مع React/Next.js
+        "http://localhost:3000"
+    ]
 
 
 class ProductionConfig(Config):
     """تكوين بيئة الإنتاج مع إعدادات CORS آمنة"""
     DEBUG = False
-    
-    # في الإنتاج، يجب تحديد المصادر المسموحة بدقة
-    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "https://yourdomain.com,https://www.yourdomain.com").split(",")
     
     # إعدادات أمان إضافية للإنتاج
     CORS_SUPPORTS_CREDENTIALS = True
@@ -123,16 +163,11 @@ class ProductionConfig(Config):
     CORS_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']  # إزالة PATCH إذا لم يكن مطلوباً
     CORS_MAX_AGE = 3600  # مدة تخزين preflight requests
     
-    # منع CORS wildcards في الإنتاج
-    @property
-    def CORS_ORIGINS(self):
-        origins = os.environ.get("CORS_ORIGINS", "").split(",")
-        # تصفية وإزالة أي wildcards
-        filtered_origins = [origin.strip() for origin in origins if origin.strip() and origin.strip() != "*"]
-        if not filtered_origins:
-            # إذا لم تكن هناك مصادر محددة، استخدم localhost فقط كاحتياط آمن
-            return ["http://localhost:5000", "https://localhost:5000"]
-        return filtered_origins
+    # في الإنتاج، يجب تحديد المصادر المسموحة بدقة
+    CORS_ORIGINS = [
+        "https://al-7esa.com",
+        "https://www.al-7esa.com"
+    ]
 
 
 class TestingConfig(Config):
@@ -140,8 +175,12 @@ class TestingConfig(Config):
     DEBUG = True
     TESTING = True
     WTF_CSRF_ENABLED = False  # تعطيل CSRF للاختبارات
-    CORS_ORIGINS = ["http://localhost", "http://127.0.0.1"]
-    CORS_ORIGINS = ["http://localhost", "http://127.0.0.1"]
+    CORS_ORIGINS = [
+        "http://localhost", 
+        "http://127.0.0.1",
+        "http://localhost:5000",
+        "http://127.0.0.1:5000"
+    ]
 
 
 # معالج اختيار التكوين حسب البيئة

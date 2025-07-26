@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from functools import wraps
-from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings, SubscriptionPayment, ClassroomEnrollment
+from models import User, Role, SubscriptionPlan, Subscription, Classroom, Notification, Payment, SystemSettings, SubscriptionPayment, ClassroomEnrollment, Banner
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from models import db
 
@@ -255,12 +255,12 @@ def reset_user_password(user_id):
     user = User.query.get_or_404(user_id)
 
     # إعادة تعيين كلمة المرور لكلمة المرور الافتراضية
-    default_password = "Password123"
+    default_password = "12345678"
     user.set_password(default_password)
     
     db.session.commit()
 
-    flash(f'تم إعادة تعيين كلمة المرور للمستخدم {user.name} بنجاح', 'success')
+    flash(f'تم إعادة تعيين كلمة المرور للمستخدم {user.name} إلى: {default_password}', 'success')
     return redirect(url_for('admin.users'))
 
 
@@ -1524,3 +1524,313 @@ def export_classrooms_excel():
             'success': False,
             'error': f'حدث خطأ أثناء تصدير البيانات: {str(e)}'
         }), 500
+
+@admin_bp.route('/backup', methods=['POST'])
+@login_required
+@admin_required
+def backup_database():
+    """
+    إنشاء نسخة احتياطية من قاعدة البيانات وتنزيلها
+    """
+    return _create_database_backup()
+
+@admin_bp.route('/backup/download', methods=['GET'])
+@login_required
+@admin_required
+def backup_database_get():
+    """
+    إنشاء نسخة احتياطية من قاعدة البيانات وتنزيلها (GET request)
+    """
+    return _create_database_backup()
+
+def _create_database_backup():
+    """
+    دالة مساعدة لإنشاء النسخة الاحتياطية - تنزيل ملف قاعدة البيانات الأصلي
+    """
+    try:
+        import os
+        import shutil
+        import tempfile
+        from datetime import datetime
+        from flask import send_file, current_app, flash, redirect, url_for
+        
+        # المسار المحدد الذي ذكره المستخدم
+        specific_db_path = r'C:\Users\Hamada Salim G Trd\Desktop\AL-7esa\instance\al-7esa.db'
+        
+        # البحث عن ملف قاعدة البيانات في عدة مواقع محتملة
+        possible_db_paths = [
+            # المسار المحدد من المستخدم أولاً
+            specific_db_path,
+            # في مجلد instance
+            os.path.join(current_app.instance_path, 'al-7esa.db'),
+            # في المجلد الجذر للمشروع
+            os.path.join(os.path.dirname(current_app.root_path), 'al-7esa.db'),
+            os.path.join(current_app.root_path, 'al-7esa.db'),
+            # في المجلد الحالي
+            os.path.join(os.getcwd(), 'al-7esa.db'),
+            os.path.join(os.getcwd(), 'instance', 'al-7esa.db'),
+        ]
+        
+        # إضافة مسار من التكوين إذا كان موجوداً
+        db_uri = current_app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        if db_uri.startswith('sqlite:///'):
+            config_db_path = db_uri.replace('sqlite:///', '')
+            if not os.path.isabs(config_db_path):
+                config_db_path = os.path.join(current_app.root_path, config_db_path)
+            possible_db_paths.insert(1, config_db_path)  # إدراجه بعد المسار المحدد
+        
+        db_path = None
+        for path in possible_db_paths:
+            if path and os.path.exists(path) and os.path.getsize(path) > 0:
+                db_path = path
+                current_app.logger.info(f"تم العثور على قاعدة البيانات في: {db_path}")
+                break
+        
+        if not db_path:
+            # محاولة البحث عن أي ملف .db في المشروع
+            search_paths = [current_app.root_path, os.getcwd()]
+            for search_root in search_paths:
+                for root, dirs, files in os.walk(search_root):
+                    for file in files:
+                        if file.endswith('.db') and os.path.getsize(os.path.join(root, file)) > 0:
+                            db_path = os.path.join(root, file)
+                            current_app.logger.info(f"تم العثور على قاعدة بيانات في: {db_path}")
+                            break
+                    if db_path:
+                        break
+                if db_path:
+                    break
+        
+        if not db_path:
+            current_app.logger.error("لم يتم العثور على ملف قاعدة البيانات")
+            flash('ملف قاعدة البيانات غير موجود أو فارغ', 'error')
+            return redirect(url_for('admin.dashboard'))
+        
+        # التحقق من حجم الملف
+        db_size = os.path.getsize(db_path)
+        if db_size == 0:
+            flash('ملف قاعدة البيانات فارغ', 'error')
+            return redirect(url_for('admin.dashboard'))
+        
+        current_app.logger.info(f"حجم قاعدة البيانات: {db_size} بايت - المسار: {db_path}")
+        
+        # إنشاء اسم الملف مع التاريخ والوقت
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_filename = f'al-7esa_backup_{timestamp}.db'
+        
+        # إنشاء نسخة من ملف قاعدة البيانات الأصلي
+        try:
+            # إنشاء ملف مؤقت
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+            temp_file.close()
+            
+            # نسخ ملف قاعدة البيانات إلى الملف المؤقت
+            shutil.copy2(db_path, temp_file.name)
+            
+            # تسجيل عملية النسخ الاحتياطي
+            current_app.logger.info(f"تم إنشاء نسخة احتياطية من ملف .db بواسطة المستخدم: {current_user.name} - حجم الملف: {db_size} بايت - المسار المصدر: {db_path}")
+            
+            # إرسال ملف قاعدة البيانات الأصلي للتنزيل
+            def remove_temp_file(response):
+                try:
+                    os.unlink(temp_file.name)
+                except Exception:
+                    pass
+                return response
+            
+            response = send_file(
+                temp_file.name,
+                as_attachment=True,
+                download_name=backup_filename,
+                mimetype='application/octet-stream'
+            )
+            
+            # إضافة callback لحذف الملف المؤقت بعد الإرسال
+            response.call_on_close(lambda: os.unlink(temp_file.name) if os.path.exists(temp_file.name) else None)
+            
+            return response
+            
+        except Exception as e:
+            current_app.logger.error(f"خطأ في إنشاء النسخة الاحتياطية: {str(e)}")
+            flash(f'خطأ في إنشاء ملف النسخة الاحتياطية: {str(e)}', 'error')
+            return redirect(url_for('admin.dashboard'))
+        
+    except Exception as e:
+        current_app.logger.error(f"خطأ في إنشاء النسخة الاحتياطية: {str(e)}")
+        flash(f'حدث خطأ أثناء إنشاء النسخة الاحتياطية: {str(e)}', 'error')
+        return redirect(url_for('admin.dashboard'))
+
+@admin_bp.route('/reset_password/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def reset_password(user_id):
+    """
+    إعادة تعيين كلمة مرور المستخدم إلى كلمة المرور الافتراضية
+    """
+    try:
+        # العثور على المستخدم
+        user = User.query.get_or_404(user_id)
+        
+        # تعيين كلمة المرور الافتراضية
+        default_password = "12345678"
+        user.set_password(default_password)
+        
+        # حفظ التغييرات
+        db.session.commit()
+        
+        flash(f'تم إعادة تعيين كلمة مرور المستخدم {user.username} بنجاح إلى كلمة المرور الافتراضية (12345678)', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'خطأ في إعادة تعيين كلمة المرور: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.users'))
+
+
+# =================== مسارات إدارة البانرات ===================
+
+@admin_bp.route('/banners')
+@login_required
+@admin_required
+def banners():
+    """صفحة إدارة البانرات"""
+    page = request.args.get('page', 1, type=int)
+    banners = Banner.query.order_by(Banner.priority.desc(), Banner.created_at.desc()).paginate(
+        page=page, per_page=20
+    )
+    
+    template = 'admin/admin-mobile/banners.html' if is_mobile() else 'admin/banners.html'
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')
+    
+    return render_template(template, 
+                         banners=banners,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color)
+
+@admin_bp.route('/banner/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def new_banner():
+    """إضافة بانر جديد"""
+    if request.method == 'POST':
+        try:
+            title = request.form.get('title')
+            description = request.form.get('description')
+            image_url = request.form.get('image_url')
+            link_url = request.form.get('link_url')
+            target_roles = request.form.get('target_roles', 'all')
+            priority = int(request.form.get('priority', 0))
+            start_date = request.form.get('start_date')
+            end_date = request.form.get('end_date')
+            
+            # تحويل التواريخ
+            start_date_obj = datetime.strptime(start_date, '%Y-%m-%d') if start_date else None
+            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d') if end_date else None
+            
+            new_banner = Banner(
+                title=title,
+                description=description,
+                image_url=image_url,
+                link_url=link_url,
+                target_roles=target_roles,
+                priority=priority,
+                start_date=start_date_obj,
+                end_date=end_date_obj,
+                created_by=current_user.id
+            )
+            
+            db.session.add(new_banner)
+            db.session.commit()
+            
+            flash('تم إضافة البانر بنجاح', 'success')
+            return redirect(url_for('admin.banners'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'خطأ في إضافة البانر: {str(e)}', 'error')
+    
+    template = 'admin/admin-mobile/edit_banner.html' if is_mobile() else 'admin/edit_banner.html'
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')
+    
+    return render_template(template,
+                         banner=None,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color)
+
+@admin_bp.route('/banner/<int:banner_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_banner(banner_id):
+    """تعديل بانر"""
+    banner = Banner.query.get_or_404(banner_id)
+    
+    if request.method == 'POST':
+        try:
+            banner.title = request.form.get('title')
+            banner.description = request.form.get('description')
+            banner.image_url = request.form.get('image_url')
+            banner.link_url = request.form.get('link_url')
+            banner.target_roles = request.form.get('target_roles', 'all')
+            banner.priority = int(request.form.get('priority', 0))
+            
+            start_date = request.form.get('start_date')
+            end_date = request.form.get('end_date')
+            
+            banner.start_date = datetime.strptime(start_date, '%Y-%m-%d') if start_date else None
+            banner.end_date = datetime.strptime(end_date, '%Y-%m-%d') if end_date else None
+            
+            db.session.commit()
+            
+            flash('تم تحديث البانر بنجاح', 'success')
+            return redirect(url_for('admin.banners'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'خطأ في تحديث البانر: {str(e)}', 'error')
+    
+    template = 'admin/admin-mobile/edit_banner.html' if is_mobile() else 'admin/edit_banner.html'
+    
+    # الحصول على قيم الألوان من إعدادات النظام
+    primary_color = SystemSettings.get_setting('primary_color', '#3498db')
+    secondary_color = SystemSettings.get_setting('secondary_color', '#2ecc71')
+    
+    return render_template(template,
+                         banner=banner,
+                         primary_color=primary_color,
+                         secondary_color=secondary_color)
+
+@admin_bp.route('/banner/<int:banner_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def toggle_banner(banner_id):
+    """تفعيل/إلغاء تفعيل بانر"""
+    banner = Banner.query.get_or_404(banner_id)
+    banner.is_active = not banner.is_active
+    db.session.commit()
+    
+    status = 'تم تفعيل' if banner.is_active else 'تم إلغاء تفعيل'
+    flash(f'{status} البانر بنجاح', 'success')
+    return redirect(url_for('admin.banners'))
+
+@admin_bp.route('/banner/<int:banner_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_banner(banner_id):
+    """حذف بانر"""
+    banner = Banner.query.get_or_404(banner_id)
+    
+    try:
+        db.session.delete(banner)
+        db.session.commit()
+        flash('تم حذف البانر بنجاح', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'خطأ في حذف البانر: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.banners'))

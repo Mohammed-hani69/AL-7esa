@@ -6,7 +6,7 @@ import os
 from werkzeug.utils import secure_filename
 from models import LiveStream, Subscription, SubscriptionPlan, User, Role, Classroom, ClassroomEnrollment, ClassroomContent
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizAttempt, QuizAnswer, QuizQuestionOption
-from models import Payment, ChatParticipant, SystemSettings, Notification
+from models import Payment, ChatParticipant, SystemSettings, Notification, Banner
 
 # استيراد db بطريقة آمنة
 try:
@@ -142,6 +142,19 @@ def dashboard():
     notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(5).all()
     unread_notifications = Notification.query.filter_by(user_id=current_user.id, is_read=False).all()
 
+    # جلب البانرات النشطة للطلاب
+    active_banners = Banner.query.filter(
+        Banner.is_active == True,
+        (Banner.start_date.is_(None)) | (Banner.start_date <= datetime.utcnow()),
+        (Banner.end_date.is_(None)) | (Banner.end_date >= datetime.utcnow())
+    ).filter(
+        (Banner.target_roles == 'all') |
+        (Banner.target_roles.like('%student%'))
+    ).order_by(Banner.priority.desc()).all()
+    
+    # فلترة البانرات للطلاب
+    student_banners = [banner for banner in active_banners if banner.is_valid_for_user('student')]
+
     return render_template(template,
         enrollments=enrollments,
         primary_color=primary_color,
@@ -150,6 +163,7 @@ def dashboard():
         upcoming_quizzes=upcoming_quizzes,
         notifications=notifications,
         unread_notifications=unread_notifications,
+        banners=student_banners,
         now=datetime.utcnow(),
         # بيانات الرسوم البيانية
         assignment_dates=assignment_dates,
