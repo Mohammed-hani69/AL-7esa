@@ -15,7 +15,7 @@ def create_default_admin():
     with app.app_context():
         try:
             # التحقق من وجود حساب إداري مسبقاً
-            admin_phone = "01145425207"
+            admin_phone = "01033607749"
             existing_admin = User.query.filter_by(phone=admin_phone).first()
             
             if existing_admin:
