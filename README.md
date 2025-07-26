@@ -8,13 +8,17 @@ This is an educational platform built with Flask and Firebase integration that e
 
 ## Features | المميزات
 
-- User Authentication (Firebase) | تسجيل الدخول (Firebase)
+- User Authentication (Firebase & Google OAuth) | تسجيل الدخول (Firebase و Google OAuth)
 - Real-time Streaming | البث المباشر
 - Classroom Management | إدارة الفصول الدراسية
 - Student-Teacher Interaction | التفاعل بين الطلاب والمعلمين
 - Admin Dashboard | لوحة تحكم المسؤول
 - File Upload System | نظام رفع الملفات
 - Chat System | نظام المحادثة
+- **Attendance Management System | نظام إدارة الحضور والغياب**
+- **Student Contact Information | معلومات الاتصال بالطلاب**
+- **Parent Phone Validation | التحقق من رقم هاتف ولي الأمر**
+- **Teacher-Parent Communication | التواصل بين المعلم وولي الأمر**
 
 ## Technologies Used | التقنيات المستخدمة
 
@@ -60,7 +64,7 @@ pip install -r requirements.txt
 4. For future changes:
 ```bash
 git add .
-git commit -m "update to v 1.1.3 نظام جديد لتسجيل الدخول و اضافة مميزات جديده  "
+git commit -m "update to v 1.1.4 تحسينات جديدة ومميزات إضافية"
 git push origin main
 ```
 

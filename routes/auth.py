@@ -751,8 +751,12 @@ def google_auth():
         
         # التحقق من صحة Google ID Token
         try:
+            current_google_client_id = get_google_client_id()
+            if not current_google_client_id:
+                return jsonify({'success': False, 'message': 'خدمة Google غير متاحة حالياً'})
+                
             idinfo = id_token.verify_oauth2_token(
-                credential, google_requests.Request(), GOOGLE_CLIENT_ID
+                credential, google_requests.Request(), current_google_client_id
             )
             
             google_id = idinfo['sub']

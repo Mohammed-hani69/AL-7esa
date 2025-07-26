@@ -335,6 +335,7 @@ with app.app_context():
     from routes.student import student_bp
     from routes.assistant import assistant_bp
     from routes.chat import chat
+    from routes.attendance import attendance_bp
 
     # Import utility functions
     from utils import cleanup_expired_streams
@@ -346,6 +347,7 @@ with app.app_context():
     app.register_blueprint(teacher_bp, url_prefix='/teacher')
     app.register_blueprint(student_bp, url_prefix='/student')
     app.register_blueprint(assistant_bp, url_prefix='/assistant')
+    app.register_blueprint(attendance_bp, url_prefix='/attendance')
     app.register_blueprint(chat)
 
 # Route لاختبار Firebase

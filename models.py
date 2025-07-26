@@ -31,6 +31,7 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), unique=True, nullable=False)
     alt_phone = db.Column(db.String(20), nullable=True)
+    parent_phone = db.Column(db.String(20), nullable=True)  # رقم هاتف ولي الأمر
     email = db.Column(db.String(100), unique=True, nullable=True)
     password_hash = db.Column(db.String(256), nullable=True)
     role = db.Column(db.String(20), nullable=False)
@@ -42,6 +43,7 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)
     is_verified = db.Column(db.Boolean, default=False)
     firebase_uid = db.Column(db.String(100), unique=True, nullable=True)
+    google_id = db.Column(db.String(100), unique=True, nullable=True)  # Google ID للتسجيل بـ Google
     
     # أرقام المحافظ الإلكترونية للمعلم
     ewallet_number_1 = db.Column(db.String(50), nullable=True)  # رقم المحفظة الأول
@@ -134,6 +136,37 @@ class User(UserMixin, db.Model):
             
         except Exception:
             return False
+
+    def get_attendance_stats(self, classroom_id=None):
+        """الحصول على إحصائيات الحضور والغياب للطالب"""
+        from sqlalchemy import and_
+        
+        query = db.session.query(Attendance).filter(Attendance.student_id == self.id)
+        if classroom_id:
+            query = query.filter(Attendance.classroom_id == classroom_id)
+        
+        attendance_records = query.all()
+        
+        total_days = len(attendance_records)
+        present_days = len([r for r in attendance_records if r.status == 'present'])
+        late_days = len([r for r in attendance_records if r.status == 'late'])
+        absent_days = len([r for r in attendance_records if r.status == 'absent'])
+        excused_days = len([r for r in attendance_records if r.status == 'excused'])
+        
+        attendance_rate = round((present_days + late_days) / total_days * 100, 1) if total_days > 0 else 0
+        
+        return {
+            'total_days': total_days,
+            'present_days': present_days,
+            'late_days': late_days,
+            'absent_days': absent_days,
+            'excused_days': excused_days,
+            'attendance_rate': attendance_rate
+        }
+    
+    def has_parent_phone(self):
+        """التحقق من وجود رقم هاتف ولي الأمر"""
+        return bool(self.parent_phone and self.parent_phone.strip())
 
     def __repr__(self):
         return f'<User {self.name}>'
@@ -314,6 +347,74 @@ class ClassroomEnrollment(db.Model):
     __table_args__ = (
         db.UniqueConstraint('user_id', 'classroom_id', name='unique_enrollment'),
     )
+
+    @property 
+    def attendance_days(self):
+        """عدد أيام الحضور"""
+        from models import Attendance
+        return Attendance.query.filter_by(
+            student_id=self.user_id,
+            classroom_id=self.classroom_id,
+            status='present'
+        ).count()
+    
+    @property
+    def absent_days(self):
+        """عدد أيام الغياب"""
+        from models import Attendance
+        return Attendance.query.filter_by(
+            student_id=self.user_id,
+            classroom_id=self.classroom_id,
+            status='absent'
+        ).count()
+    
+    @property
+    def late_days(self):
+        """عدد أيام التأخير"""
+        from models import Attendance
+        return Attendance.query.filter_by(
+            student_id=self.user_id,
+            classroom_id=self.classroom_id,
+            status='late'
+        ).count()
+    
+    @property
+    def attendance_percentage(self):
+        """نسبة الحضور"""
+        from models import Attendance
+        total_days = Attendance.query.filter_by(
+            student_id=self.user_id,
+            classroom_id=self.classroom_id
+        ).count()
+        
+        if total_days == 0:
+            return 0
+            
+        present_days = self.attendance_days + self.late_days  # التأخير يحسب كحضور
+        return round((present_days / total_days) * 100, 1)
+    
+    @property
+    def average_score(self):
+        """متوسط درجات الطالب"""
+        total_score = 0
+        total_assignments = 0
+        
+        # حساب درجات الواجبات
+        for submission in self.assignment_submissions:
+            if submission.grade is not None:
+                total_score += submission.grade
+                total_assignments += 1
+        
+        # حساب درجات الاختبارات
+        for attempt in self.quiz_attempts:
+            if attempt.is_completed and attempt.score is not None:
+                total_score += attempt.score
+                total_assignments += 1
+        
+        if total_assignments == 0:
+            return 0
+            
+        return round(total_score / total_assignments, 1)
 
     def __repr__(self):
         return f'<ClassroomEnrollment {self.user.name} - {self.classroom.name}>'
@@ -770,3 +871,58 @@ class Banner(db.Model):
     
     def __repr__(self):
         return f'<Banner {self.title}>'
+
+
+"""
+نموذج الحضور والغياب (Attendance)
+يسجل حضور وغياب الطلاب في الفصول الدراسية
+"""
+class Attendance(db.Model):
+    __tablename__ = 'attendance'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
+    status = db.Column(db.String(20), nullable=False)  # 'present', 'absent', 'late', 'excused'
+    notes = db.Column(db.Text, nullable=True)  # ملاحظات إضافية
+    recorded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # المعلم أو المساعد الذي سجل الحضور
+    recorded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    classroom = db.relationship('Classroom', backref='attendance_records')
+    student = db.relationship('User', foreign_keys=[student_id], backref='attendance_records')
+    recorder = db.relationship('User', foreign_keys=[recorded_by])
+    
+    # Index للحصول على أداء أفضل
+    __table_args__ = (
+        db.Index('idx_attendance_classroom_date', 'classroom_id', 'date'),
+        db.Index('idx_attendance_student_date', 'student_id', 'date'),
+        db.UniqueConstraint('classroom_id', 'student_id', 'date', name='unique_daily_attendance'),
+    )
+    
+    @property
+    def status_arabic(self):
+        """الحصول على حالة الحضور بالعربية"""
+        status_map = {
+            'present': 'حاضر',
+            'absent': 'غائب',
+            'late': 'متأخر',
+            'excused': 'غياب بعذر'
+        }
+        return status_map.get(self.status, 'غير محدد')
+    
+    @property
+    def status_color(self):
+        """لون الحالة للعرض"""
+        color_map = {
+            'present': 'success',
+            'absent': 'danger',
+            'late': 'warning',
+            'excused': 'info'
+        }
+        return color_map.get(self.status, 'secondary')
+    
+    def __repr__(self):
+        return f'<Attendance {self.student.name} - {self.classroom.name} - {self.date}>'

@@ -483,3 +483,61 @@ function createNotification(title, message, type) {
   
   setTimeout(notification.close.bind(notification), 5000);
 }
+
+
+// التحقق من رقم هاتف ولي الأمر للطلاب
+function checkParentPhoneRequirement() {
+    if (userRole === 'student') {
+        fetch('/attendance/check-parent-phone')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && !data.has_parent_phone) {
+                showParentPhoneModal();
+            }
+        })
+        .catch(error => {
+            console.error('Error checking parent phone:', error);
+        });
+    }
+}
+
+function showParentPhoneModal() {
+    const modalHtml = `
+        <div class="modal fade" id="parentPhoneModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            إضافة رقم هاتف ولي الأمر مطلوب
+                        </h5>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-phone fa-2x mb-3"></i>
+                            <h6>يجب إضافة رقم هاتف ولي الأمر قبل الانضمام لأي فصل دراسي</h6>
+                            <p class="mb-0">هذا مطلوب للتواصل مع ولي الأمر في حالات الطوارئ أو لإبلاغه بحالة الحضور والغياب</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="/auth/profile" class="btn btn-primary">
+                            <i class="fas fa-user-edit me-2"></i>
+                            إضافة رقم هاتف ولي الأمر
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // إضافة المودال إلى الصفحة
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // إظهار المودال
+    new bootstrap.Modal(document.getElementById('parentPhoneModal')).show();
+}
+
+// تشغيل التحقق عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    checkParentPhoneRequirement();
+});
