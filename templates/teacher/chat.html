@@ -546,15 +546,62 @@
             if (messageText === '') return;
 
             try {
-                const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
-                await addDoc(messagesRef, {
+                const messageData = {
                     text: messageText,
                     senderId: currentUser.id,
                     senderName: currentUser.name,
                     senderRole: currentUser.role,
                     timestamp: serverTimestamp(),
                     type: 'text'
-                });
+                };
+
+                // محاولة Firebase أولاً
+                try {
+                    const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
+                    const docRef = await addDoc(messagesRef, messageData);
+                    console.log('✅ تم إرسال الرسالة عبر Firebase:', docRef.id);
+                    
+                    // عرض الرسالة مباشرة كـ backup
+                    setTimeout(() => {
+                        displayMessage({
+                            id: docRef.id,
+                            text: messageText,
+                            senderId: currentUser.id,
+                            senderRole: currentUser.role,
+                            senderName: currentUser.name,
+                            timestamp: { seconds: Math.floor(Date.now() / 1000) }
+                        });
+                    }, 100);
+                    
+                } catch (firebaseError) {
+                    console.warn('⚠️ Firebase فشل، استخدام البديل:', firebaseError);
+                    
+                    // البديل: إرسال عبر API
+                    const response = await fetch(`/chat/classroom/${classroomId}/send_message`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
+                        },
+                        body: JSON.stringify(messageData)
+                    });
+                    
+                    if (response.ok) {
+                        console.log('✅ تم إرسال الرسالة عبر API');
+                        
+                        // عرض الرسالة مباشرة
+                        displayMessage({
+                            id: 'api_' + Date.now(),
+                            text: messageText,
+                            senderId: currentUser.id,
+                            senderRole: currentUser.role,
+                            senderName: currentUser.name,
+                            timestamp: { seconds: Math.floor(Date.now() / 1000) }
+                        });
+                    } else {
+                        throw new Error('فشل في إرسال الرسالة عبر API');
+                    }
+                }
 
                 messageInput.value = '';
                 clearTyping();

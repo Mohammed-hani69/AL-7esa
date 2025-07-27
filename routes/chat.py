@@ -399,6 +399,57 @@ def is_mobile_device(request):
 def not_found(error):
     return jsonify({'error': 'الصفحة غير موجودة'}), 404
 
+@chat.route('/classroom/<int:classroom_id>/messages', methods=['GET'])
+@login_required  
+def get_messages(classroom_id):
+    """جلب رسائل الفصل"""
+    try:
+        classroom = Classroom.query.get_or_404(classroom_id)
+        
+        # التحقق من صلاحية الوصول
+        if not has_access_to_classroom(current_user, classroom_id):
+            return jsonify({'error': 'غير مسموح لك بالوصول'}), 403
+        
+        since = request.args.get('since')
+        
+        # بناء الاستعلام
+        query = ChatMessage.query.filter_by(
+            classroom_id=classroom_id,
+            is_deleted=False
+        ).join(User).add_columns(
+            User.name.label('user_name'),
+            User.role.label('user_role')
+        )
+        
+        if since:
+            try:
+                since_date = datetime.fromisoformat(since.replace('Z', '+00:00'))
+                query = query.filter(ChatMessage.created_at > since_date)
+            except:
+                pass
+        
+        messages = query.order_by(ChatMessage.created_at.asc()).limit(100).all()
+        
+        messages_data = []
+        for message, user_name, user_role in messages:
+            messages_data.append({
+                'id': message.id,
+                'message': message.message,
+                'user_id': message.user_id,
+                'user_name': user_name,
+                'user_role': user_role,
+                'created_at': message.created_at.isoformat()
+            })
+        
+        return jsonify({
+            'success': True,
+            'messages': messages_data
+        })
+        
+    except Exception as e:
+        logger.error(f"خطأ في جلب الرسائل: {str(e)}")
+        return jsonify({'error': 'فشل في جلب الرسائل'}), 500
+
 @chat.route('/classroom/<int:classroom_id>/send_message', methods=['POST'])
 @login_required  
 def send_message_api(classroom_id):

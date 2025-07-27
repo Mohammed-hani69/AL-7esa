@@ -17,13 +17,11 @@ if __name__ == '__main__':
         # تهيئة قاعدة البيانات وإنشاء المسؤولين
         with app.app_context():
             from models import db
-            from init_admin import create_default_admin
             
             # إنشاء الجداول إذا لم تكن موجودة
             db.create_all()
             
             # إنشاء حسابات المسؤولين
-            create_default_admin()
         
         # تشغيل التطبيق باستخدام Flask العادي
         app.run(host='0.0.0.0', port=5000, debug=True)
