@@ -64,7 +64,7 @@ pip install -r requirements.txt
 4. For future changes:
 ```bash
 git add .
-git commit -m "update to v 1.2.1 تحسينات جديدة ومميزات إضافية"
+git commit -m "update to v 1.2.2 تحسينات جديدة ومميزات إضافية"
 git push origin main
 ```
 
