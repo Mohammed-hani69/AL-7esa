@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>محادثة الفصل - {{ classroom.name }} - الحصة</title>
     
     <!-- الخطوط وملفات CSS -->
@@ -522,10 +523,24 @@
 
         // تهيئة الشات
         document.addEventListener('DOMContentLoaded', function() {
-            initializeChat();
-            loadEmojis();
-            loadParticipants();
-            checkChatSettings();
+            console.log('🚀 تهيئة شات الطالب (Desktop)...');
+            console.log('📍 معرف الفصل:', classroomId);
+            console.log('👤 المستخدم الحالي:', currentUser);
+            
+            // التأكد من وجود العناصر المطلوبة
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            
+            if (messagesContainer && messageInput && sendButton) {
+                console.log('✅ جميع العناصر المطلوبة موجودة');
+                initializeChat();
+                loadEmojis();
+                loadParticipants();
+                checkChatSettings();
+            } else {
+                console.error('❌ فشل في العثور على العناصر المطلوبة');
+            }
         });
 
         async function initializeChat() {
@@ -695,9 +710,11 @@
         }
 
         function displayMessage(messageData) {
+            console.log('📥 عرض رسالة جديدة (Student Desktop):', messageData);
+            
             const messagesContainer = document.getElementById('messagesContainer');
             if (!messagesContainer) {
-                console.error('عنصر حاوي الرسائل غير موجود');
+                console.error('❌ عنصر حاوي الرسائل غير موجود');
                 return;
             }
             
@@ -708,13 +725,14 @@
             const messageText = messageData.text || messageData.message;
             
             if (!messageText || !senderId) {
-                console.error('بيانات الرسالة غير مكتملة:', messageData);
+                console.error('❌ بيانات الرسالة غير مكتملة:', messageData);
                 return;
             }
             
             // تجنب عرض نفس الرسالة مرتين
-            const messageId = messageData.id || 'msg_' + Date.now();
+            const messageId = messageData.id || 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             if (document.querySelector(`[data-message-id="${messageId}"]`)) {
+                console.log('⚠️ الرسالة موجودة مسبقاً:', messageId);
                 return;
             }
 
@@ -738,7 +756,7 @@
 
             messageElement.innerHTML = `
                 <div class="message-avatar">
-                    ${senderName.charAt(0)}
+                    ${senderName.charAt(0).toUpperCase()}
                 </div>
                 <div class="message-content">
                     <div class="message-header">
@@ -752,6 +770,7 @@
             `;
 
             messagesContainer.appendChild(messageElement);
+            console.log('✅ تم إضافة الرسالة للواجهة (Student Desktop):', messageId);
             scrollToBottom();
         }
 

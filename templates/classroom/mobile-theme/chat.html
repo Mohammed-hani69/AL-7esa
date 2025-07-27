@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>محادثة الفصل - {{ classroom.name }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -588,6 +589,10 @@
 
         // تهيئة الشات
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 تهيئة الشات المحمول...');
+            console.log('📍 معرف الفصل:', classroomId);
+            console.log('👤 المستخدم الحالي:', currentUser);
+            
             initializeChat();
             loadEmojis();
             loadParticipants();
@@ -606,7 +611,7 @@
             // 1. تحميل الرسائل المحفوظة من السيرفر أولاً
             await loadSavedMessages();
             
-            // 2. ثم محاولة الاتصال بـ Firebase للحصول على التحديثات المباشرة
+            // 2. ثم محاولة الاتصال بـ Firebase للتحديثات المباشرة
             try {
                 const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
                 const q = query(messagesRef, orderBy('timestamp', 'asc'));
@@ -628,7 +633,6 @@
                 console.log('✅ Firebase Real-time listening initialized');
             } catch (error) {
                 console.warn('⚠️ Firebase Real-time failed, using fallback:', error);
-                // استخدام polling كبديل
                 startPollingForMessages();
             }
         }
@@ -650,7 +654,7 @@
                                 timestamp: { seconds: new Date(message.created_at).getTime() / 1000 }
                             });
                         });
-                        console.log('✅ تم تحميل الرسائل المحفوظة');
+                        console.log('✅ تم تحميل الرسائل المحفوظة للموبايل');
                     }
                 }
             } catch (error) {
@@ -658,7 +662,7 @@
             }
         }
         
-        // نظام polling كبديل عن Firebase
+        // نظام polling كبديل عن Firebase  
         function startPollingForMessages() {
             let lastMessageTime = new Date().toISOString();
             
@@ -684,7 +688,7 @@
                 } catch (error) {
                     console.warn('Polling error:', error);
                 }
-            }, 3000); // كل 3 ثوان
+            }, 3000);
         }
 
         
@@ -814,9 +818,11 @@
         }
 
         function displayMessage(messageData) {
+            console.log('📥 عرض رسالة جديدة (Classroom Mobile):', messageData);
+            
             const messagesArea = document.getElementById('messagesArea');
             if (!messagesArea) {
-                console.error('عنصر منطقة الرسائل غير موجود');
+                console.error('❌ عنصر منطقة الرسائل غير موجود');
                 return;
             }
             
@@ -827,13 +833,14 @@
             const messageText = messageData.text || messageData.message;
             
             if (!messageText || !senderId) {
-                console.error('بيانات الرسالة غير مكتملة:', messageData);
+                console.error('❌ بيانات الرسالة غير مكتملة:', messageData);
                 return;
             }
             
             // تجنب عرض نفس الرسالة مرتين
-            const messageId = messageData.id || 'msg_' + Date.now();
+            const messageId = messageData.id || 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             if (document.querySelector(`[data-message-id="${messageId}"]`)) {
+                console.log('⚠️ الرسالة موجودة مسبقاً:', messageId);
                 return;
             }
 
@@ -857,7 +864,7 @@
 
             messageElement.innerHTML = `
                 <div class="message-avatar">
-                    ${senderName.charAt(0)}
+                    ${senderName.charAt(0).toUpperCase()}
                 </div>
                 <div class="message-content">
                     <div class="message-header">
@@ -871,6 +878,7 @@
             `;
 
             messagesArea.appendChild(messageElement);
+            console.log('✅ تم إضافة الرسالة للواجهة (Classroom Mobile):', messageId);
             scrollToBottom();
         }
 

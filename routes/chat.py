@@ -11,6 +11,20 @@ chat = Blueprint('chat', __name__, url_prefix='/chat')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+@chat.route('/redirect/<int:classroom_id>')
+@login_required 
+def chat_redirect(classroom_id):
+    """توجيه تلقائي للنظام المحسن"""
+    from urllib.parse import urlencode
+    
+    # بناء رابط النظام المحسن
+    improved_url = f"/chat/classroom/{classroom_id}?use_improved=true"
+    fallback_url = f"/chat/classroom/{classroom_id}?legacy=true"
+    
+    return render_template('chat_redirect.html', 
+                         improved_url=improved_url,
+                         fallback_url=fallback_url)
+
 @chat.route('/classroom/<int:classroom_id>')
 @login_required
 def classroom_chat(classroom_id):
@@ -45,12 +59,22 @@ def classroom_chat(classroom_id):
         # تحديد القالب المناسب حسب الدور والجهاز
         is_mobile = is_mobile_device(request)
         
-        if current_user.role == 'teacher':
-            template = 'teacher/mobile-theme/chat.html' if is_mobile else 'teacher/chat.html'
-        elif current_user.role == 'assistant':
-            template = 'classroom/mobile-theme/chat.html' if is_mobile else 'classroom/chat.html'
-        else:  # student
-            template = 'student/mobile-theme/chat.html' if is_mobile else 'student/chat.html'
+        # التحقق من وجود النظام المحسن وتوجيه المستخدم إليه
+        if request.args.get('use_improved') == 'true' or not request.args.get('legacy'):
+            if current_user.role == 'teacher':
+                template = 'teacher/mobile-theme/chat_improved.html' if is_mobile else 'teacher/chat_improved.html'
+            elif current_user.role == 'assistant':
+                template = 'classroom/mobile-theme/chat_improved.html' if is_mobile else 'classroom/chat_improved.html'
+            else:  # student
+                template = 'student/mobile-theme/chat_improved.html' if is_mobile else 'student/chat_improved.html'
+        else:
+            # النظام القديم
+            if current_user.role == 'teacher':
+                template = 'teacher/mobile-theme/chat.html' if is_mobile else 'teacher/chat.html'
+            elif current_user.role == 'assistant':
+                template = 'classroom/mobile-theme/chat.html' if is_mobile else 'classroom/chat.html'
+            else:  # student
+                template = 'student/mobile-theme/chat.html' if is_mobile else 'student/chat.html'
         
         return render_template(template, 
                              classroom=classroom,
@@ -489,6 +513,194 @@ def send_message_api(classroom_id):
         logger.error(f"خطأ في إرسال الرسالة: {str(e)}")
         db.session.rollback()
         return jsonify({'error': 'فشل في إرسال الرسالة'}), 500
+
+# API endpoints للنظام الموحد
+@chat.route('/api/send', methods=['POST'])
+@login_required
+def unified_send_message():
+    """API موحد لإرسال الرسائل"""
+    try:
+        data = request.get_json()
+        classroom_id = data.get('classroomId')
+        
+        if not classroom_id:
+            return jsonify({'error': 'معرف الفصل مطلوب'}), 400
+            
+        if not data or not data.get('text'):
+            return jsonify({'error': 'نص الرسالة مطلوب'}), 400
+        
+        # التحقق من صلاحية الوصول
+        classroom = Classroom.query.get_or_404(classroom_id)
+        if not has_chat_access(current_user, classroom):
+            return jsonify({'error': 'غير مسموح لك بالدردشة في هذا الفصل'}), 403
+        
+        # إنشاء رسالة جديدة
+        message = ChatMessage(
+            classroom_id=classroom_id,
+            user_id=current_user.id,
+            message=data['text'],
+            created_at=datetime.utcnow()
+        )
+        
+        db.session.add(message)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message_id': message.id,
+            'data': {
+                'id': message.id,
+                'text': message.message,
+                'senderId': message.user_id,
+                'senderName': message.user.name,
+                'senderRole': message.user.role,
+                'timestamp': message.created_at.isoformat(),
+                'classroomId': classroom_id
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"خطأ في إرسال الرسالة الموحدة: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'فشل في إرسال الرسالة'}), 500
+
+@chat.route('/api/messages/<int:classroom_id>')
+@login_required
+def unified_get_messages(classroom_id):
+    """API موحد لجلب الرسائل"""
+    try:
+        classroom = Classroom.query.get_or_404(classroom_id)
+        if not has_chat_access(current_user, classroom):
+            return jsonify({'error': 'غير مسموح لك بالوصول'}), 403
+        
+        messages = ChatMessage.query.filter_by(classroom_id=classroom_id)\
+                                  .order_by(ChatMessage.created_at.desc())\
+                                  .limit(50).all()
+        
+        messages_data = []
+        for msg in reversed(messages):
+            messages_data.append({
+                'id': msg.id,
+                'text': msg.message,
+                'senderId': msg.user_id,
+                'senderName': msg.user.name,
+                'senderRole': msg.user.role,
+                'timestamp': msg.created_at.isoformat(),
+                'classroomId': classroom_id
+            })
+        
+        return jsonify({
+            'success': True,
+            'messages': messages_data
+        })
+        
+    except Exception as e:
+        logger.error(f"خطأ في جلب الرسائل: {str(e)}")
+        return jsonify({'error': 'فشل في جلب الرسائل'}), 500
+
+@chat.route('/api/settings', methods=['POST'])
+@login_required
+def update_chat_settings_api():
+    """تحديث إعدادات الدردشة عبر API"""
+    try:
+        data = request.get_json()
+        classroom_id = data.get('classroomId')
+        
+        if not classroom_id:
+            return jsonify({'error': 'معرف الفصل مطلوب'}), 400
+            
+        classroom = Classroom.query.get_or_404(classroom_id)
+        
+        # التحقق من الصلاحية (معلم أو مساعد فقط)
+        if current_user.role not in ['teacher', 'assistant']:
+            return jsonify({'error': 'غير مسموح لك بتعديل الإعدادات'}), 403
+            
+        if current_user.role == 'teacher' and classroom.teacher_id != current_user.id:
+            return jsonify({'error': 'غير مسموح لك بتعديل إعدادات هذا الفصل'}), 403
+            
+        if current_user.role == 'assistant' and classroom.assistant_id != current_user.id:
+            return jsonify({'error': 'غير مسموح لك بتعديل إعدادات هذا الفصل'}), 403
+        
+        # تحديث الإعدادات
+        settings = ChatSettings.query.filter_by(classroom_id=classroom_id).first()
+        if not settings:
+            settings = ChatSettings(classroom_id=classroom_id)
+            db.session.add(settings)
+        
+        # تحديث الإعدادات المختلفة
+        if 'enabled' in data:
+            settings.is_enabled = data['enabled']
+        if 'allowStudentMessages' in data:
+            settings.allow_student_messages = data['allowStudentMessages']
+        if 'moderateMessages' in data:
+            settings.moderate_messages = data['moderateMessages']
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'تم تحديث الإعدادات بنجاح'
+        })
+        
+    except Exception as e:
+        logger.error(f"خطأ في تحديث الإعدادات: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'فشل في تحديث الإعدادات'}), 500
+
+@chat.route('/api/export')
+@login_required
+def export_chat():
+    """تصدير رسائل الدردشة"""
+    try:
+        classroom_id = request.args.get('classroomId')
+        if not classroom_id:
+            return jsonify({'error': 'معرف الفصل مطلوب'}), 400
+            
+        classroom = Classroom.query.get_or_404(classroom_id)
+        
+        # التحقق من الصلاحية (معلم أو مساعد فقط)
+        if current_user.role not in ['teacher', 'assistant']:
+            return jsonify({'error': 'غير مسموح لك بتصدير الرسائل'}), 403
+        
+        messages = ChatMessage.query.filter_by(classroom_id=classroom_id)\
+                                  .order_by(ChatMessage.created_at.asc()).all()
+        
+        from flask import make_response
+        import io
+        
+        output = io.StringIO()
+        output.write(f"تصدير رسائل الدردشة - {classroom.name}\n")
+        output.write(f"تاريخ التصدير: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        output.write("="*50 + "\n\n")
+        
+        for msg in messages:
+            timestamp = msg.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            output.write(f"[{timestamp}] {msg.user.name} ({msg.user.role}): {msg.message}\n")
+        
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'text/plain; charset=utf-8'
+        response.headers['Content-Disposition'] = f'attachment; filename=chat-export-{classroom_id}.txt'
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"خطأ في تصدير الرسائل: {str(e)}")
+        return jsonify({'error': 'فشل في تصدير الرسائل'}), 500
+
+def has_chat_access(user, classroom):
+    """التحقق من صلاحية الوصول للدردشة"""
+    if user.role == 'teacher':
+        return classroom.teacher_id == user.id
+    elif user.role == 'assistant':
+        return classroom.assistant_id == user.id
+    elif user.role == 'student':
+        enrollment = ClassroomEnrollment.query.filter_by(
+            user_id=user.id,
+            classroom_id=classroom.id,
+            is_active=True
+        ).first()
+        return enrollment is not None
+    return False
 
 @chat.errorhandler(403)
 def forbidden(error):

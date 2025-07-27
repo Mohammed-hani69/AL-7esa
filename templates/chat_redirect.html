@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحويل إلى الدردشة المحسنة</title>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        .redirect-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        h2 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="redirect-container">
+        <div class="spinner"></div>
+        <h2>جاري التحويل إلى النظام المحسن</h2>
+        <p>يتم الآن تحويلك إلى نظام الدردشة الجديد والمحسن...</p>
+        
+        <div style="margin-top: 2rem;">
+            <a href="{{ improved_url }}" class="btn">انتقل الآن</a>
+            <a href="{{ fallback_url }}" class="btn" style="background: #6c757d;">النظام القديم</a>
+        </div>
+    </div>
+
+    <script>
+        // تحويل تلقائي بعد 3 ثوان
+        setTimeout(function() {
+            window.location.href = '{{ improved_url }}';
+        }, 3000);
+    </script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>محادثة الفصل - {{ classroom.name }} - الحصة</title>
     
     <!-- الخطوط وملفات CSS -->
@@ -513,30 +514,109 @@
 
         // تهيئة الشات
         document.addEventListener('DOMContentLoaded', function() {
-            initializeChat();
-            loadEmojis();
-            loadParticipants();
+            console.log('🚀 تهيئة شات المعلم (Desktop)...');
+            console.log('📍 معرف الفصل:', classroomId);
+            console.log('👤 المستخدم الحالي:', currentUser);
+            
+            // التأكد من وجود العناصر المطلوبة
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            
+            if (messagesContainer && messageInput && sendButton) {
+                console.log('✅ جميع العناصر المطلوبة موجودة');
+                initializeChat();
+                loadEmojis();
+                loadParticipants();
+            } else {
+                console.error('❌ فشل في العثور على العناصر المطلوبة');
+            }
         });
 
         async function initializeChat() {
-            // الاستماع للرسائل الجديدة
-            const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
-            const q = query(messagesRef, orderBy('timestamp', 'asc'));
+            // 1. تحميل الرسائل المحفوظة من السيرفر أولاً
+            await loadSavedMessages();
+            
+            // 2. ثم محاولة الاتصال بـ Firebase للتحديثات المباشرة
+            try {
+                // الاستماع للرسائل الجديدة
+                const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
+                const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
-            onSnapshot(q, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === 'added') {
-                        displayMessage(change.doc.data());
-                    }
+                onSnapshot(q, (snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'added') {
+                            displayMessage(change.doc.data());
+                        }
+                    });
+                    scrollToBottom();
                 });
-                scrollToBottom();
-            });
 
-            // الاستماع لحالة الكتابة
-            const typingRef = collection(db, 'classrooms', classroomId, 'typing');
-            onSnapshot(typingRef, (snapshot) => {
-                handleTypingIndicator(snapshot);
-            });
+                // الاستماع لحالة الكتابة
+                const typingRef = collection(db, 'classrooms', classroomId, 'typing');
+                onSnapshot(typingRef, (snapshot) => {
+                    handleTypingIndicator(snapshot);
+                });
+                
+                console.log('✅ Firebase Real-time listening initialized');
+            } catch (error) {
+                console.warn('⚠️ Firebase Real-time failed, using fallback:', error);
+                startPollingForMessages();
+            }
+        }
+        
+        // تحميل الرسائل المحفوظة من السيرفر
+        async function loadSavedMessages() {
+            try {
+                const response = await fetch(`/chat/classroom/${classroomId}/messages`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.messages && Array.isArray(data.messages)) {
+                        data.messages.forEach(message => {
+                            displayMessage({
+                                id: message.id,
+                                text: message.message,
+                                senderId: message.user_id,
+                                senderName: message.user_name,
+                                senderRole: message.user_role,
+                                timestamp: { seconds: new Date(message.created_at).getTime() / 1000 }
+                            });
+                        });
+                        console.log('✅ تم تحميل الرسائل المحفوظة');
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ فشل في تحميل الرسائل المحفوظة:', error);
+            }
+        }
+        
+        // نظام polling كبديل عن Firebase  
+        function startPollingForMessages() {
+            let lastMessageTime = new Date().toISOString();
+            
+            setInterval(async () => {
+                try {
+                    const response = await fetch(`/chat/classroom/${classroomId}/messages?since=${lastMessageTime}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.messages && data.messages.length > 0) {
+                            data.messages.forEach(message => {
+                                displayMessage({
+                                    id: message.id,
+                                    text: message.message,
+                                    senderId: message.user_id,
+                                    senderName: message.user_name,
+                                    senderRole: message.user_role,
+                                    timestamp: { seconds: new Date(message.created_at).getTime() / 1000 }
+                                });
+                                lastMessageTime = message.created_at;
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Polling error:', error);
+                }
+            }, 3000);
         }
 
         async function sendMessage() {
@@ -546,6 +626,8 @@
             if (messageText === '') return;
 
             try {
+                console.log('📤 محاولة إرسال رسالة (Teacher Desktop):', messageText);
+                
                 const messageData = {
                     text: messageText,
                     senderId: currentUser.id,
@@ -606,38 +688,74 @@
                 messageInput.value = '';
                 clearTyping();
             } catch (error) {
-                console.error('خطأ في إرسال الرسالة:', error);
+                console.error('❌ خطأ في إرسال الرسالة:', error);
                 alert('فشل في إرسال الرسالة');
             }
         }
 
         function displayMessage(messageData) {
+            console.log('📥 عرض رسالة جديدة (Teacher Desktop):', messageData);
+            
             const messagesContainer = document.getElementById('messagesContainer');
-            const isOwnMessage = messageData.senderId === currentUser.id;
+            if (!messagesContainer) {
+                console.error('❌ عنصر حاوي الرسائل غير موجود');
+                return;
+            }
+            
+            // التعامل مع البيانات المختلفة
+            const senderId = messageData.senderId || messageData.userId;
+            const senderName = messageData.senderName || messageData.userName;
+            const senderRole = messageData.senderRole || messageData.userRole;
+            const messageText = messageData.text || messageData.message;
+            
+            if (!messageText || !senderId) {
+                console.error('❌ بيانات الرسالة غير مكتملة:', messageData);
+                return;
+            }
+            
+            // تجنب عرض نفس الرسالة مرتين
+            const messageId = messageData.id || 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            if (document.querySelector(`[data-message-id="${messageId}"]`)) {
+                console.log('⚠️ الرسالة موجودة مسبقاً:', messageId);
+                return;
+            }
+
+            const isOwnMessage = senderId === currentUser.id;
 
             const messageElement = document.createElement('div');
             messageElement.className = `message ${isOwnMessage ? 'own' : ''}`;
+            messageElement.setAttribute('data-message-id', messageId);
 
             const timestamp = messageData.timestamp ? 
-                new Date(messageData.timestamp.seconds * 1000).toLocaleTimeString('ar-EG', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }) : 'الآن';
+                (messageData.timestamp.seconds ? 
+                    new Date(messageData.timestamp.seconds * 1000).toLocaleTimeString('ar-EG', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 
+                    new Date(messageData.timestamp).toLocaleTimeString('ar-EG', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })
+                ) : 'الآن';
 
             messageElement.innerHTML = `
                 <div class="message-avatar">
-                    ${messageData.senderName.charAt(0)}
+                    ${senderName.charAt(0).toUpperCase()}
                 </div>
                 <div class="message-content">
                     <div class="message-header">
-                        <span class="message-sender">${messageData.senderName}</span>
+                        <span class="message-sender">${senderName}</span>
+                        ${senderRole === 'teacher' ? '<span class="badge bg-danger">معلم</span>' : ''}
+                        ${senderRole === 'assistant' ? '<span class="badge bg-warning">مساعد</span>' : ''}
                         <span class="message-time">${timestamp}</span>
                     </div>
-                    <div class="message-text">${messageData.text}</div>
+                    <div class="message-text">${messageText}</div>
                 </div>
             `;
 
             messagesContainer.appendChild(messageElement);
+            console.log('✅ تم إضافة الرسالة للواجهة (Teacher Desktop):', messageId);
+            scrollToBottom();
         }
 
         async function handleTyping() {

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>محادثة الفصل - {{ classroom.name }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -415,6 +416,7 @@
         }
     </style>
     <script src="/static/js/firebase_fix.js"></script>
+    <script src="/static/js/unified_chat_system.js"></script>
 </head>
 <body>
     <div class="mobile-chat-container">
@@ -581,10 +583,34 @@
 
         // تهيئة الشات
         document.addEventListener('DOMContentLoaded', function() {
-            initializeChat();
-            loadEmojis();
-            loadParticipants();
-            setupAutoResize();
+            console.log('🚀 تهيئة شات المعلم المحمول...');
+            console.log('📍 معرف الفصل:', classroomId);
+            console.log('👤 المستخدم الحالي:', currentUser);
+            
+            // التأكد من وجود العناصر المطلوبة
+            const messagesArea = document.getElementById('messagesArea');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            
+            console.log('🔍 فحص العناصر:');
+            console.log('- منطقة الرسائل:', messagesArea ? '✅ موجود' : '❌ غير موجود');
+            console.log('- حقل الرسالة:', messageInput ? '✅ موجود' : '❌ غير موجود');
+            console.log('- زر الإرسال:', sendButton ? '✅ موجود' : '❌ غير موجود');
+            
+            if (messagesArea && messageInput && sendButton) {
+                console.log('✅ جميع العناصر المطلوبة موجودة');
+                initializeChat();
+                loadEmojis();
+                loadParticipants();
+                setupAutoResize();
+            } else {
+                console.error('❌ فشل في العثور على العناصر المطلوبة');
+                console.error('العناصر المفقودة:', {
+                    messagesArea: !messagesArea,
+                    messageInput: !messageInput,
+                    sendButton: !sendButton
+                });
+            }
         });
 
         function setupAutoResize() {
@@ -596,22 +622,111 @@
         }
 
         async function initializeChat() {
-            const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
-            const q = query(messagesRef, orderBy('timestamp', 'asc'));
+            console.log('🔄 بدء تهيئة نظام الشات...');
+            
+            // 1. تحميل الرسائل المحفوظة من السيرفر أولاً
+            await loadSavedMessages();
+            
+            // 2. ثم محاولة الاتصال بـ Firebase للتحديثات المباشرة
+            try {
+                await ensureAuthenticated();
+                
+                // الاستماع للرسائل الجديدة
+                const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
+                const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
-            onSnapshot(q, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === 'added') {
-                        displayMessage(change.doc.data());
-                    }
+                onSnapshot(q, (snapshot) => {
+                    console.log('🔥 Firebase: تغييرات في الرسائل detected');
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'added') {
+                            const messageData = change.doc.data();
+                            messageData.id = change.doc.id;
+                            console.log('📨 رسالة جديدة من Firebase:', messageData);
+                            displayMessage(messageData);
+                        }
+                    });
+                    scrollToBottom();
                 });
-                scrollToBottom();
-            });
 
-            const typingRef = collection(db, 'classrooms', classroomId, 'typing');
-            onSnapshot(typingRef, (snapshot) => {
-                handleTypingIndicator(snapshot);
-            });
+                // الاستماع لحالة الكتابة
+                const typingRef = collection(db, 'classrooms', classroomId, 'typing');
+                onSnapshot(typingRef, (snapshot) => {
+                    handleTypingIndicator(snapshot);
+                });
+                
+                console.log('✅ Firebase Real-time listening initialized (Teacher Mobile)');
+            } catch (error) {
+                console.warn('⚠️ Firebase Real-time failed, using fallback:', error);
+                startPollingForMessages();
+            }
+        }
+        
+        // تحميل الرسائل المحفوظة من السيرفر
+        async function loadSavedMessages() {
+            try {
+                console.log('📂 تحميل الرسائل المحفوظة...');
+                const response = await fetch(`/chat/classroom/${classroomId}/messages`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.messages && Array.isArray(data.messages)) {
+                        console.log(`📄 تم العثور على ${data.messages.length} رسالة محفوظة`);
+                        
+                        // مسح الرسائل الموجودة أولاً
+                        const messagesArea = document.getElementById('messagesArea');
+                        if (messagesArea) {
+                            messagesArea.innerHTML = '';
+                        }
+                        
+                        data.messages.forEach(message => {
+                            displayMessage({
+                                id: message.id,
+                                text: message.message,
+                                senderId: message.user_id,
+                                senderName: message.user_name,
+                                senderRole: message.user_role,
+                                timestamp: { seconds: new Date(message.created_at).getTime() / 1000 }
+                            });
+                        });
+                        console.log('✅ تم تحميل الرسائل المحفوظة (Teacher Mobile)');
+                    }
+                } else {
+                    console.warn('⚠️ فشل في تحميل الرسائل:', response.status);
+                }
+            } catch (error) {
+                console.warn('⚠️ خطأ في تحميل الرسائل المحفوظة:', error);
+            }
+        }
+        
+        // نظام polling كبديل عن Firebase  
+        function startPollingForMessages() {
+            let lastMessageTime = new Date().toISOString();
+            
+            console.log('🔄 بدء نظام Polling للرسائل...');
+            
+            setInterval(async () => {
+                try {
+                    const response = await fetch(`/chat/classroom/${classroomId}/messages?since=${lastMessageTime}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.messages && data.messages.length > 0) {
+                            console.log(`📬 تم العثور على ${data.messages.length} رسالة جديدة`);
+                            data.messages.forEach(message => {
+                                displayMessage({
+                                    id: message.id,
+                                    text: message.message,
+                                    senderId: message.user_id,
+                                    senderName: message.user_name,
+                                    senderRole: message.user_role,
+                                    timestamp: { seconds: new Date(message.created_at).getTime() / 1000 }
+                                });
+                                lastMessageTime = message.created_at;
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.warn('⚠️ Polling error:', error);
+                }
+            }, 3000);
         }
 
         
@@ -639,36 +754,57 @@
             const messageText = messageInput.value.trim();
             
             if (!messageText) {
+                console.log('⚠️ لا يوجد نص للإرسال');
                 return;
             }
             
+            console.log('📤 بدء إرسال الرسالة:', messageText);
+            
             // تعطيل الزر مؤقتاً
             const sendButton = document.getElementById('sendButton');
-            sendButton.disabled = true;
+            if (sendButton) {
+                sendButton.disabled = true;
+                sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
             
             try {
-                console.log('📤 محاولة إرسال رسالة:', messageText);
-                
                 const messageData = {
                     text: messageText,
-                    userId: currentUser.id,
-                    userRole: currentUser.role,
-                    userName: currentUser.name,
+                    senderId: currentUser.id,
+                    senderRole: currentUser.role,
+                    senderName: currentUser.name,
                     timestamp: serverTimestamp(),
                     classroomId: classroomId
                 };
                 
-                // محاولة الإرسال الأصلي
+                // محاولة Firebase أولاً
+                let messageSent = false;
                 try {
+                    console.log('🔥 محاولة إرسال عبر Firebase...');
+                    await ensureAuthenticated();
                     const messagesRef = collection(db, 'classrooms', classroomId, 'messages');
                     const docRef = await addDoc(messagesRef, messageData);
-                    console.log('✅ تم إرسال الرسالة بنجاح:', docRef.id);
+                    console.log('✅ تم إرسال الرسالة عبر Firebase:', docRef.id);
+                    messageSent = true;
+                    
+                    // إضافة الرسالة مباشرة كـ backup
+                    setTimeout(() => {
+                        displayMessage({
+                            id: docRef.id,
+                            text: messageText,
+                            senderId: currentUser.id,
+                            senderRole: currentUser.role,
+                            senderName: currentUser.name,
+                            timestamp: { seconds: Math.floor(Date.now() / 1000) }
+                        });
+                    }, 100);
                     
                 } catch (firebaseError) {
-                    console.warn('⚠️ فشل Firebase، استخدام البديل:', firebaseError);
+                    console.warn('⚠️ Firebase فشل، استخدام البديل:', firebaseError);
                     
                     // البديل: إرسال عبر API الخادم
                     try {
+                        console.log('🌐 محاولة إرسال عبر API...');
                         const response = await fetch(`/chat/classroom/${classroomId}/send_message`, {
                             method: 'POST',
                             headers: {
@@ -680,71 +816,121 @@
                         
                         if (response.ok) {
                             console.log('✅ تم إرسال الرسالة عبر API');
+                            messageSent = true;
+                            
+                            // عرض الرسالة مباشرة
+                            displayMessage({
+                                id: 'api_' + Date.now(),
+                                text: messageText,
+                                senderId: currentUser.id,
+                                senderRole: currentUser.role,
+                                senderName: currentUser.name,
+                                timestamp: { seconds: Math.floor(Date.now() / 1000) }
+                            });
                         } else {
                             throw new Error('فشل في إرسال الرسالة عبر API');
                         }
                         
                     } catch (apiError) {
                         console.error('❌ فشل في جميع محاولات الإرسال:', apiError);
-                        
-                        // عرض الرسالة محلياً كحل أخير
-                        displayMessage({
-                            id: 'local_' + Date.now(),
-                            text: messageText,
-                            userId: currentUser.id,
-                            userRole: currentUser.role,
-                            userName: currentUser.name + ' (محلي)',
-                            timestamp: new Date(),
-                            classroomId: classroomId
-                        });
-                        
-                        alert('تم عرض الرسالة محلياً - قد تحتاج لتحديث الصفحة');
                     }
+                }
+                
+                // إذا لم تنجح أي طريقة، اعرض الرسالة محلياً
+                if (!messageSent) {
+                    console.log('💾 عرض الرسالة محلياً كحل أخير');
+                    displayMessage({
+                        id: 'local_' + Date.now(),
+                        text: messageText,
+                        senderId: currentUser.id,
+                        senderRole: currentUser.role,
+                        senderName: currentUser.name + ' (محلي)',
+                        timestamp: { seconds: Math.floor(Date.now() / 1000) }
+                    });
+                    
+                    alert('تم عرض الرسالة محلياً - قد تحتاج لتحديث الصفحة');
                 }
                 
                 // مسح الحقل
                 messageInput.value = '';
                 messageInput.style.height = 'auto';
+                clearTyping();
                 
             } catch (error) {
                 console.error('❌ خطأ في إرسال الرسالة:', error);
                 alert('حدث خطأ في إرسال الرسالة. يرجى المحاولة مرة أخرى.');
             } finally {
                 // إعادة تفعيل الزر
-                sendButton.disabled = false;
+                if (sendButton) {
+                    sendButton.disabled = false;
+                    sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                }
             }
         }
 
         function displayMessage(messageData) {
+            console.log('📥 عرض رسالة جديدة (Teacher Mobile):', messageData);
+            
             const messagesArea = document.getElementById('messagesArea');
-            const isOwnMessage = messageData.senderId === currentUser.id;
-            const senderRole = messageData.senderRole;
+            if (!messagesArea) {
+                console.error('❌ عنصر منطقة الرسائل غير موجود');
+                return;
+            }
+            
+            // التعامل مع البيانات المختلفة
+            const senderId = messageData.senderId || messageData.userId;
+            const senderName = messageData.senderName || messageData.userName;
+            const senderRole = messageData.senderRole || messageData.userRole;
+            const messageText = messageData.text || messageData.message;
+            
+            if (!messageText || !senderId) {
+                console.error('❌ بيانات الرسالة غير مكتملة:', messageData);
+                return;
+            }
+            
+            // تجنب عرض نفس الرسالة مرتين
+            const messageId = messageData.id || 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            if (document.querySelector(`[data-message-id="${messageId}"]`)) {
+                console.log('⚠️ الرسالة موجودة مسبقاً:', messageId);
+                return;
+            }
+
+            const isOwnMessage = senderId === currentUser.id;
 
             const messageElement = document.createElement('div');
             messageElement.className = `message ${isOwnMessage ? 'own' : ''} ${senderRole}`;
+            messageElement.setAttribute('data-message-id', messageId);
 
             const timestamp = messageData.timestamp ? 
-                new Date(messageData.timestamp.seconds * 1000).toLocaleTimeString('ar-EG', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }) : 'الآن';
+                (messageData.timestamp.seconds ? 
+                    new Date(messageData.timestamp.seconds * 1000).toLocaleTimeString('ar-EG', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 
+                    new Date(messageData.timestamp).toLocaleTimeString('ar-EG', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })
+                ) : 'الآن';
 
             messageElement.innerHTML = `
                 <div class="message-avatar">
-                    ${messageData.senderName.charAt(0)}
+                    ${senderName.charAt(0).toUpperCase()}
                 </div>
                 <div class="message-content">
                     <div class="message-header">
-                        <span class="message-sender">${messageData.senderName}</span>
+                        <span class="message-sender">${senderName}</span>
                         ${senderRole === 'teacher' ? '<span class="badge bg-danger">معلم</span>' : ''}
                         ${senderRole === 'assistant' ? '<span class="badge bg-warning">مساعد</span>' : ''}
                         <span class="message-time">${timestamp}</span>
                     </div>
-                    <div class="message-text">${messageData.text}</div>
+                    <div class="message-text">${messageText}</div>
                 </div>
             `;
 
             messagesArea.appendChild(messageElement);
+            console.log('✅ تم إضافة الرسالة للواجهة (Teacher Mobile):', messageId);
+            scrollToBottom();
         }
 
         async function handleTyping() {
@@ -809,7 +995,10 @@
 
         function scrollToBottom() {
             const messagesArea = document.getElementById('messagesArea');
-            messagesArea.scrollTop = messagesArea.scrollHeight;
+            if (messagesArea) {
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+                console.log('📜 تم التمرير لأسفل');
+            }
         }
 
         function handleMessageKeydown(event) {
@@ -944,12 +1133,19 @@
         }
 
         // البحث عن الطلاب
-        document.getElementById('studentSearch').addEventListener('input', function() {
-            const searchTerm = this.value.trim();
-            if (searchTerm.length > 2) {
-                searchStudents(searchTerm);
+        function initializeStudentSearch() {
+            const studentSearchInput = document.getElementById('studentSearch');
+            if (studentSearchInput) {
+                studentSearchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.trim();
+                    if (searchTerm.length > 1) {
+                        searchStudents(searchTerm);
+                    } else {
+                        document.getElementById('studentSearchResults').innerHTML = '';
+                    }
+                });
             }
-        });
+        }
 
         function searchStudents(searchTerm) {
             fetch(`/teacher/search_students?q=${encodeURIComponent(searchTerm)}`)
@@ -968,16 +1164,14 @@
 
             students.forEach(student => {
                 const studentElement = document.createElement('div');
-                studentElement.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
+                studentElement.className = 'list-group-item list-group-item-action';
                 studentElement.innerHTML = `
-                    <div>
-                        <small><strong>${student.name}</strong></small>
-                        <br>
-                        <small class="text-muted">${student.phone}</small>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>${student.name}</span>
+                        <button class="btn btn-sm btn-primary" onclick="addStudentToChat(${student.id})">
+                            إضافة
+                        </button>
                     </div>
-                    <button class="btn btn-sm btn-primary" onclick="addStudentToChat(${student.id})">
-                        إضافة
-                    </button>
                 `;
                 resultsContainer.appendChild(studentElement);
             });
@@ -995,11 +1189,11 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    loadParticipants();
                     const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
                     modal.hide();
-                    loadParticipants();
                 } else {
-                    alert(data.message || 'فشل في إضافة الطالب');
+                    alert('فشل في إضافة الطالب');
                 }
             });
         }
@@ -1020,12 +1214,6 @@
         window.toggleParticipants = toggleParticipants;
         window.toggleEmojiPicker = toggleEmojiPicker;
         window.insertEmoji = insertEmoji;
-        window.addStudent = addStudent;
-        window.removeStudent = removeStudent;
-        window.muteAll = muteAll;
-        window.clearChat = clearChat;
-        window.openChatSettings = openChatSettings;
-        window.addStudentToChat = addStudentToChat;
     </script>
 
     <!-- JavaScript Libraries -->
