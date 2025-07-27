@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير الحضور - {{ classroom.name }} - موبايل</title>
+    
+    <!-- خطوط وCSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+
+    <style>
+    /* متغيرات التصميم - مرتبطة بإعدادات النظام */
+    :root {
+        --primary-color: {{ primary_color or '#6366f1' }};
+        --secondary-color: {{ secondary_color or '#8b5cf6' }};
+        --accent-color: {{ primary_color or '#6366f1' }};
+        --accent-gradient: linear-gradient(135deg, {{ primary_color or '#2d2e3bff' }}, {{ secondary_color or '#8b5cf6' }});
+        --surface-color: #FFFFFF;
+        --background-color: #F8FAFC;
+        --text-primary: #1E293B;
+        --text-secondary: #64748B;
+        --border-color: #E2E8F0;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+        --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+        --shadow-lg: 0 10px 25px 0 rgba(0, 0, 0, 0.2);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 24px;
+    }
+
+    body {
+        font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--background-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    .mobile-header {
+        background: var(--accent-gradient);
+        color: white;
+        padding: 1rem;
+        box-shadow: var(--shadow-md);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .back-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:active {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(0.95);
+    }
+
+    .header-title h1 {
+        font-size: 1.3rem;
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .header-title p {
+        font-size: 0.9rem;
+        margin: 0;
+        opacity: 0.9;
+    }
+
+    .mobile-content {
+        padding: 1rem;
+    }
+
+    .report-card {
+        background: var(--surface-color);
+        border-radius: var(--radius-lg);
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        border: 2px solid transparent;
+    }
+
+    .student-header {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    }
+
+    .student-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
+    }
+
+    .student-placeholder {
+        width: 50px;
+        height: 50px;
+        background: var(--accent-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+
+    .student-info h4 {
+        font-size: 1.1rem;
+        margin: 0 0 0.25rem 0;
+        color: var(--text-primary);
+    }
+
+    .student-phone {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        border-radius: var(--radius-md);
+        border: 2px solid transparent;
+    }
+
+    .stat-item.present {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: var(--success-color);
+        color: var(--success-color);
+    }
+
+    .stat-item.late {
+        background: rgba(245, 158, 11, 0.1);
+        border-color: var(--warning-color);
+        color: var(--warning-color);
+    }
+
+    .stat-item.absent {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: var(--danger-color);
+        color: var(--danger-color);
+    }
+
+    .stat-item.excused {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+
+    .progress-section {
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--success-color);
+        transition: width 0.3s ease;
+    }
+
+    .search-section {
+        background: var(--surface-color);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        background: var(--surface-color);
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .no-students {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .floating-action {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 56px;
+        height: 56px;
+        background: var(--accent-gradient);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        font-size: 1.5rem;
+        box-shadow: var(--shadow-lg);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 100;
+    }
+
+    .floating-action:active {
+        transform: scale(0.95);
+    }
+    </style>
+</head>
+<body>
+    <!-- هيدر التطبيق -->
+    <div class="mobile-header">
+        <div class="header-content">
+            <button class="back-button" onclick="goBack()">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <div class="header-title">
+                <h1>تقرير الحضور</h1>
+                <p>{{ classroom.name }} - {{ classroom.subject }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- محتوى التقرير -->
+    <div class="mobile-content">
+        <!-- منطقة البحث -->
+        <div class="search-section">
+            <input type="text" id="studentSearch" class="search-input" placeholder="البحث عن طالب...">
+        </div>
+
+        <!-- قائمة الطلاب -->
+        {% if students_data %}
+            {% for data in students_data %}
+            {% set student = data.student %}
+            {% set stats = data.attendance_stats %}
+            <div class="report-card" data-student-name="{{ student.name }}">
+                <div class="student-header">
+                    {% if student.profile_picture %}
+                    <img src="{{ url_for('static', filename='uploads/profile_pictures/' + student.profile_picture) }}" 
+                         class="student-avatar" alt="{{ student.name }}">
+                    {% else %}
+                    <div class="student-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="student-info">
+                        <h4>{{ student.name }}</h4>
+                        <div class="student-phone">
+                            <i class="fas fa-phone"></i>
+                            {{ student.phone or 'غير محدد' }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item present">
+                        <div class="stat-number">{{ stats.present_days or 0 }}</div>
+                        <div class="stat-label">حاضر</div>
+                    </div>
+                    <div class="stat-item late">
+                        <div class="stat-number">{{ stats.late_days or 0 }}</div>
+                        <div class="stat-label">متأخر</div>
+                    </div>
+                    <div class="stat-item absent">
+                        <div class="stat-number">{{ stats.absent_days or 0 }}</div>
+                        <div class="stat-label">غائب</div>
+                    </div>
+                    <div class="stat-item excused">
+                        <div class="stat-number">{{ stats.excused_days or 0 }}</div>
+                        <div class="stat-label">معذور</div>
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-label">
+                        <span>نسبة الحضور</span>
+                        <span>{{ stats.attendance_percentage or 0 }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ stats.attendance_percentage or 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-students">
+                <i class="fas fa-users fa-3x" style="opacity: 0.3; margin-bottom: 1rem;"></i>
+                <h3>لا يوجد طلاب مسجلين</h3>
+                <p>لم يتم العثور على طلاب في هذا الفصل</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- زر إضافة عائم -->
+    <button class="floating-action" onclick="markAttendance()">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+    // البحث عن الطلاب
+    document.getElementById('studentSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const reportCards = document.querySelectorAll('.report-card');
+        
+        reportCards.forEach(card => {
+            const studentName = card.dataset.studentName.toLowerCase();
+            if (studentName.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+
+    // العودة للخلف
+    function goBack() {
+        window.history.back();
+    }
+
+    // الانتقال لصفحة تسجيل الحضور
+    function markAttendance() {
+        window.location.href = '/attendance/mark/{{ classroom.id }}';
+    }
+
+    // تهيئة الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('تقرير الحضور محمل بنجاح');
+    });
+    </script>
+</body>
+</html>

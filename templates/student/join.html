@@ -440,5 +440,241 @@
             });
         });
     </script>
+
+    <!-- Modal إضافة رقم هاتف ولي الأمر -->
+    <div class="modal fade" id="parentPhoneModal" tabindex="-1" aria-labelledby="parentPhoneModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-warning text-dark border-0">
+                    <h5 class="modal-title fw-bold" id="parentPhoneModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        إضافة رقم هاتف ولي الأمر مطلوب
+                    </h5>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0 mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle fa-2x text-info me-3"></i>
+                            <div>
+                                <h6 class="alert-heading mb-1">لا يمكن الانضمام للفصل</h6>
+                                <p class="mb-0">يجب إضافة رقم هاتف ولي الأمر أولاً قبل الانضمام للفصول الدراسية</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <i class="fas fa-phone fa-3x text-warning mb-3"></i>
+                        <h6 class="fw-bold">لماذا نحتاج رقم هاتف ولي الأمر؟</h6>
+                        <ul class="list-unstyled text-start mt-3">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>إشعارات الحضور والغياب</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>التواصل في حالات الطوارئ</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>إشعارات الدرجات والواجبات</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>المتابعة الأكاديمية المستمرة</li>
+                        </ul>
+                    </div>
+
+                    {% if current_user.parent_phone and current_user.parent_phone.strip() != '' %}
+                    <div class="alert alert-success border-0">
+                        <i class="fas fa-check-circle me-2"></i>
+                        رقم هاتف ولي الأمر الحالي: {{ current_user.parent_phone }}
+                    </div>
+                    {% endif %}
+                    
+                    <form id="parentPhoneForm">
+                        <div class="mb-3">
+                            <label for="parent_phone" class="form-label fw-bold">رقم هاتف ولي الأمر <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-phone text-muted"></i></span>
+                                <input type="tel" class="form-control form-control-lg" id="parent_phone" name="parent_phone" 
+                                       placeholder="01xxxxxxxxx" maxlength="11" required
+                                       value="{{ current_user.parent_phone if current_user.parent_phone else '' }}">
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb text-warning me-1"></i>
+                                يجب أن يبدأ الرقم بـ 01 ويتكون من 11 رقم
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" disabled id="cancelBtn">
+                        <i class="fas fa-times me-2"></i>إلغاء
+                    </button>
+                    <button type="button" class="btn btn-warning fw-bold" id="saveParentPhone">
+                        <i class="fas fa-save me-2"></i>حفظ والمتابعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // التحقق من وجود رقم هاتف ولي الأمر
+        {% if not current_user.parent_phone or current_user.parent_phone.strip() == '' %}
+            // إظهار النافذة المنبثقة تلقائياً إذا لم يكن هناك رقم هاتف لولي الأمر
+            document.addEventListener('DOMContentLoaded', function() {
+                const parentPhoneModal = new bootstrap.Modal(document.getElementById('parentPhoneModal'), {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                parentPhoneModal.show();
+                
+                // إضافة تأثير تنبيه للحقل
+                setTimeout(() => {
+                    document.getElementById('parent_phone').focus();
+                }, 500);
+            });
+        {% endif %}
+
+        // التعامل مع حفظ رقم هاتف ولي الأمر
+        document.getElementById('saveParentPhone').addEventListener('click', function() {
+            const saveBtn = this;
+            const form = document.getElementById('parentPhoneForm');
+            const parentPhone = document.getElementById('parent_phone').value.trim();
+            
+            // إزالة الرسائل السابقة
+            const existingAlerts = form.querySelectorAll('.alert-danger');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // التحقق من صحة الرقم
+            if (!parentPhone) {
+                showFormError('يرجى إدخال رقم هاتف ولي الأمر');
+                return;
+            }
+            
+            const phoneRegex = /^01[0-9]{9}$/;
+            if (!phoneRegex.test(parentPhone)) {
+                showFormError('رقم الهاتف غير صحيح. يجب أن يبدأ بـ 01 ويتكون من 11 رقم');
+                return;
+            }
+            
+            // تعطيل الزر وإظهار التحميل
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الحفظ...';
+            
+            // إرسال البيانات للخادم
+            const formData = new FormData();
+            formData.append('parent_phone', parentPhone);
+            
+            fetch('{{ url_for("student.update_parent_phone") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // إظهار رسالة نجاح مع تأثير
+                    showSuccessMessage('تم حفظ رقم هاتف ولي الأمر بنجاح! يمكنك الآن الانضمام للفصول.');
+                    
+                    // إخفاء النافذة والسماح بالإغلاق
+                    setTimeout(() => {
+                        const parentPhoneModal = bootstrap.Modal.getInstance(document.getElementById('parentPhoneModal'));
+                        parentPhoneModal.hide();
+                        // إعادة تحميل الصفحة لتحديث الحالة
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showFormError(data.message || 'حدث خطأ أثناء حفظ البيانات');
+                    // إعادة تفعيل الزر
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>حفظ والمتابعة';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFormError('حدث خطأ أثناء حفظ البيانات. يرجى المحاولة مرة أخرى.');
+                // إعادة تفعيل الزر
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>حفظ والمتابعة';
+            });
+        });
+
+        // منع إغلاق النافذة بالنقر خارجها أو بالضغط على Escape للطلاب بدون رقم
+        document.getElementById('parentPhoneModal').addEventListener('hide.bs.modal', function (event) {
+            {% if not current_user.parent_phone or current_user.parent_phone.strip() == '' %}
+                // فقط السماح بالإغلاق إذا تم حفظ الرقم بنجاح
+                if (!this.dataset.allowClose) {
+                    event.preventDefault();
+                    showFormError('يجب إضافة رقم هاتف ولي الأمر للمتابعة');
+                }
+            {% endif %}
+        });
+
+        // التحقق من محاولة إرسال نموذج الانضمام
+        document.querySelector('form[action="{{ url_for("student.join_classroom") }}"]').addEventListener('submit', function(event) {
+            {% if not current_user.parent_phone or current_user.parent_phone.strip() == '' %}
+                event.preventDefault();
+                const parentPhoneModal = new bootstrap.Modal(document.getElementById('parentPhoneModal'), {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                parentPhoneModal.show();
+                showFormError('يجب إضافة رقم هاتف ولي الأمر أولاً للانضمام للفصول');
+            {% endif %}
+        });
+        
+        // دالة إظهار رسائل الخطأ
+        function showFormError(message) {
+            const form = document.getElementById('parentPhoneForm');
+            const existingAlert = form.querySelector('.alert-danger');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger border-0 mt-3';
+            alertDiv.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${message}`;
+            form.appendChild(alertDiv);
+            
+            // إضافة تأثير اهتزاز للحقل
+            const phoneInput = document.getElementById('parent_phone');
+            phoneInput.classList.add('is-invalid');
+            phoneInput.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                const alert = form.querySelector('.alert-danger');
+                if (alert) alert.remove();
+            }, { once: true });
+        }
+        
+        // دالة إظهار رسائل النجاح
+        function showSuccessMessage(message) {
+            const form = document.getElementById('parentPhoneForm');
+            const existingAlerts = form.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success border-0 mt-3';
+            alertDiv.innerHTML = `<i class="fas fa-check-circle me-2"></i>${message}`;
+            form.appendChild(alertDiv);
+            
+            // السماح بإغلاق النافذة
+            document.getElementById('parentPhoneModal').dataset.allowClose = 'true';
+            document.getElementById('cancelBtn').disabled = false;
+        }
+        
+        // تحسين تجربة إدخال رقم الهاتف
+        document.getElementById('parent_phone').addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, ''); // إزالة كل شيء عدا الأرقام
+            if (value.length > 11) {
+                value = value.slice(0, 11); // تحديد الطول الأقصى
+            }
+            this.value = value;
+            
+            // تحديث لون الحقل حسب الصحة
+            const phoneRegex = /^01[0-9]{9}$/;
+            if (value.length === 11 && phoneRegex.test(value)) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else if (value.length > 0) {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-valid', 'is-invalid');
+            }
+        });
+    </script>
 </body>
 </html>

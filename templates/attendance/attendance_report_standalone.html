@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>تقرير الحضور والغياب - {{ classroom.name }} - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
+
+    <style>
+    /* متغيرات التصميم المخصص - مرتبطة بإعدادات النظام */
+    :root {
+        --primary-color: {{ primary_color or '#6366f1' }};
+        --secondary-color: {{ secondary_color or '#8b5cf6' }};
+        --accent-color: {{ primary_color or '#6366f1' }};
+        --accent-gradient: linear-gradient(120deg, {{ primary_color or '#6366f1' }}, {{ secondary_color or '#8b5cf6' }});
+        --surface-color: #FFFFFF;
+        --background-color: #F4F7FE;
+        --text-primary: #2D3748;
+        --text-secondary: #718096;
+        --border-radius-lg: 24px;
+        --border-radius-md: 16px;
+        --border-radius-sm: 8px;
+        --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+    }
+
+    /* تنسيق عام */
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background: var(--background-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    /* تخطيط الصفحة */
+    .app-container {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    /* تصميم السايدبار */
+    .innovative-sidebar {
+        background: var(--accent-gradient);
+        padding: 2rem;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        position: sticky;
+        top: 2rem;
+        height: calc(100vh - 4rem);
+        color: var(--surface-color);
+    }
+
+    .sidebar-brand {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .brand-logo {
+        width: 60px;
+        height: 60px;
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 10px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+
+    .brand-text {
+        color: var(--surface-color);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .nav-item {
+        margin-bottom: 1rem;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        color: rgba(255,255,255,0.8);
+        padding: 1rem;
+        border-radius: var(--border-radius-md);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        gap: 1rem;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        background: rgba(255,255,255,0.2);
+        color: var(--surface-color);
+        transform: translateX(-5px);
+    }
+
+    .nav-link i {
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    /* تصميم المحتوى الرئيسي */
+    .main-content {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow);
+        padding: 2rem;
+        animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* تصميم هيدر الصفحة */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--background-color);
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .page-subtitle {
+        color: var(--text-secondary);
+        margin: 0.5rem 0 0 0;
+    }
+
+    .filter-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--background-color);
+        border-radius: var(--border-radius-sm);
+        background: var(--surface-color);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    /* لوحة الإحصائيات */
+    .stats-dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card-enhanced {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        box-shadow: var(--box-shadow);
+    }
+
+    .stat-card-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--accent-gradient);
+    }
+
+    .stat-card-enhanced:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(99, 102, 241, 0.2);
+    }
+
+    .stat-number-large {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label-large {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .stat-icon-large {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 40px;
+        height: 40px;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-color);
+        font-size: 1.2rem;
+    }
+
+    /* تصميم الرسوم البيانية */
+    .charts-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-container {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+    }
+
+    .chart-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .chart-canvas {
+        height: 300px;
+        width: 100%;
+    }
+
+    /* جدول التفاصيل */
+    .details-section {
+        margin-top: 2rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-export {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-export:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .btn-export.excel {
+        background: #16a34a;
+        color: white;
+    }
+
+    .btn-export.pdf {
+        background: #dc2626;
+        color: white;
+    }
+
+    .btn-export.print {
+        background: var(--text-secondary);
+        color: white;
+    }
+
+    .table-container {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        box-shadow: var(--box-shadow);
+    }
+
+    .attendance-table-detailed {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .attendance-table-detailed thead th {
+        background: var(--background-color);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 1rem;
+        text-align: center;
+        border: none;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .attendance-table-detailed tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid var(--background-color);
+    }
+
+    .attendance-table-detailed tbody tr:hover {
+        background: rgba(99, 102, 241, 0.05);
+        transform: scale(1.01);
+    }
+
+    .attendance-table-detailed td {
+        padding: 1rem;
+        vertical-align: middle;
+        text-align: center;
+        border: none;
+    }
+
+    /* معلومات الطالب في الجدول */
+    .student-info-table {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-align: right;
+    }
+
+    .student-avatar-table {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--accent-color);
+    }
+
+    .student-placeholder-table {
+        width: 50px;
+        height: 50px;
+        background: var(--accent-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+
+    .student-details-table h6 {
+        margin: 0 0 0.25rem 0;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .student-details-table small {
+        color: var(--text-secondary);
+        display: block;
+    }
+
+    /* حالات الحضور */
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .status-present {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+        border: 1px solid var(--success-color);
+    }
+
+    .status-late {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning-color);
+        border: 1px solid var(--warning-color);
+    }
+
+    .status-absent {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+        border: 1px solid var(--danger-color);
+    }
+
+    .status-excused {
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--accent-color);
+        border: 1px solid var(--accent-color);
+    }
+
+    /* نسبة الحضور */
+    .attendance-rate {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .rate-bar {
+        width: 80px;
+        height: 8px;
+        background: var(--background-color);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .rate-fill {
+        height: 100%;
+        background: var(--success-color);
+        transition: width 0.3s ease;
+    }
+
+    /* تصميم التاريخ */
+    .date-cell {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    /* أزرار العمليات */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+    }
+
+    .btn-view {
+        background: linear-gradient(120deg, #06b6d4, #0891b2);
+        color: white;
+    }
+
+    .btn-view:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+    }
+
+    .btn-contact {
+        background: linear-gradient(120deg, #16a34a, #15803d);
+        color: white;
+    }
+
+    .btn-contact:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+    }
+
+    /* الأزرار الرئيسية */
+    .btn-custom {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: var(--border-radius-sm);
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-primary-custom {
+        background: var(--accent-gradient);
+        color: white;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        color: white;
+    }
+
+    .btn-secondary-custom {
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--accent-color);
+        border: 2px solid var(--accent-color);
+    }
+
+    .btn-secondary-custom:hover {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    /* ملاحظات */
+    .notes-cell {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    /* تحسينات التجاوب */
+    @media (max-width: 1200px) {
+        .app-container {
+            grid-template-columns: 250px 1fr;
+            padding: 1rem;
+        }
+
+        .charts-section {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .app-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .innovative-sidebar {
+            position: fixed;
+            right: -300px;
+            z-index: 1000;
+            transition: 0.3s ease;
+            height: 100vh;
+            border-radius: 0;
+        }
+        
+        .innovative-sidebar.show {
+            right: 0;
+        }
+        
+        .mobile-toggle {
+            display: block;
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            z-index: 1001;
+            background: var(--surface-color);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: var(--box-shadow);
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+
+        .page-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .filter-controls {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .filter-select {
+            width: 100%;
+        }
+
+        .export-buttons {
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-dashboard {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .attendance-table-detailed {
+            font-size: 0.875rem;
+        }
+
+        .student-info-table {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+        }
+
+        .btn-custom {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+        }
+    }
+
+    /* تنسيق أزرار التواصل في نافذة تفاصيل الطالب */
+    .contact-buttons .btn {
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .contact-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .contact-buttons .btn-outline-primary:hover {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .contact-buttons .btn-outline-success:hover {
+        background-color: #198754;
+        border-color: #198754;
+    }
+
+    .contact-buttons .btn-outline-info:hover {
+        background-color: #0dcaf0;
+        border-color: #0dcaf0;
+    }
+
+    .contact-buttons small {
+        display: block;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+    }
+
+    .mobile-toggle {
+        display: none;
+    }
+    </style>
+</head>
+<body>
+    <button class="mobile-toggle d-lg-none">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <!-- السايدبار -->
+        <aside class="innovative-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <i class="fas fa-chart-line" style="color: var(--accent-color); font-size: 2rem;"></i>
+                </div>
+                <h3 class="brand-text">تقرير الحضور</h3>
+            </div>
+
+            <nav class="nav-menu">
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#overview" class="nav-link active">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>نظرة عامة</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#statistics" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>الإحصائيات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#details" class="nav-link">
+                            <i class="fas fa-table"></i>
+                            <span>التفاصيل</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#export" class="nav-link">
+                            <i class="fas fa-download"></i>
+                            <span>التصدير</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="javascript:history.back()" class="nav-link">
+                            <i class="fas fa-arrow-right"></i>
+                            <span>العودة</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <div class="page-header" id="overview">
+                <div>
+                    <h1 class="page-title">تقرير الحضور والغياب</h1>
+                    <p class="page-subtitle">{{ classroom.name }} - {{ classroom.subject }} - {{ classroom.grade }}</p>
+                </div>
+                <div class="filter-controls">
+                    <select class="filter-select" id="dateRangeFilter" onchange="filterByDateRange()">
+                        <option value="all">كامل الفترة</option>
+                        <option value="week">آخر أسبوع</option>
+                        <option value="month">آخر شهر</option>
+                        <option value="quarter">آخر ربع</option>
+                    </select>
+                    <select class="filter-select" id="statusFilter" onchange="filterByStatus()">
+                        <option value="all">جميع الحالات</option>
+                        <option value="present">حاضر</option>
+                        <option value="late">متأخر</option>
+                        <option value="absent">غائب</option>
+                        <option value="excused">معذور</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- لوحة الإحصائيات -->
+            <div class="stats-dashboard" id="statistics">
+                <div class="stat-card-enhanced">
+                    <div class="stat-icon-large">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number-large">{{ students_data|length }}</div>
+                    <div class="stat-label-large">إجمالي الطلاب</div>
+                </div>
+
+                <div class="stat-card-enhanced">
+                    <div class="stat-icon-large">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    {% set present_avg = students_data|map(attribute='attendance_stats.attendance_rate')|sum / students_data|length if students_data else 0 %}
+                    <div class="stat-number-large">{{ "%.1f"|format(present_avg) }}%</div>
+                    <div class="stat-label-large">متوسط نسبة الحضور</div>
+                </div>
+
+                <div class="stat-card-enhanced">
+                    <div class="stat-icon-large">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    {% set total_present = students_data|map(attribute='attendance_stats.present_days')|sum %}
+                    <div class="stat-number-large">{{ total_present }}</div>
+                    <div class="stat-label-large">إجمالي أيام الحضور</div>
+                </div>
+
+                <div class="stat-card-enhanced">
+                    <div class="stat-icon-large">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    {% set total_absent = students_data|map(attribute='attendance_stats.absent_days')|sum %}
+                    <div class="stat-number-large">{{ total_absent }}</div>
+                    <div class="stat-label-large">إجمالي أيام الغياب</div>
+                </div>
+            </div>
+
+            <!-- الرسوم البيانية -->
+            <div class="charts-section">
+                <div class="chart-container">
+                    <h3 class="chart-title">توزيع حالات الحضور</h3>
+                    <canvas id="attendanceDistributionChart" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3 class="chart-title">اتجاه الحضور خلال الفترة</h3>
+                    <canvas id="attendanceTrendChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
+
+            <!-- جدول التفاصيل -->
+            <div class="details-section" id="details">
+                <div class="section-header">
+                    <h2 class="section-title">تفاصيل حضور الطلاب</h2>
+                    <div class="export-buttons" id="export">
+                        <button onclick="exportToExcel()" class="btn-export excel">
+                            <i class="fas fa-file-excel"></i>
+                            Excel
+                        </button>
+                        <button onclick="exportToPDF()" class="btn-export pdf">
+                            <i class="fas fa-file-pdf"></i>
+                            PDF
+                        </button>
+                        <button onclick="printReport()" class="btn-export print">
+                            <i class="fas fa-print"></i>
+                            طباعة
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="attendance-table-detailed" id="attendanceReportTable">
+                        <thead>
+                            <tr>
+                                <th>الطالب</th>
+                                <th>رقم الهاتف</th>
+                                <th>رقم ولي الأمر</th>
+                                <th>أيام الحضور</th>
+                                <th>أيام الغياب</th>
+                                <th>أيام التأخير</th>
+                                <th>نسبة الحضور</th>
+                                <th>متوسط الدرجات</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in students_data %}
+                            {% set student = data.student %}
+                            {% set stats = data.attendance_stats %}
+                            <tr>
+                                <td>
+                                    <div class="student-info-table">
+                                        {% if student.profile_picture %}
+                                        <img src="{{ url_for('static', filename='uploads/profile_pictures/' + student.profile_picture) }}" 
+                                             class="student-avatar-table" alt="{{ student.name }}">
+                                        {% else %}
+                                        <div class="student-placeholder-table">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div class="student-details-table">
+                                            <h6>{{ student.name }}</h6>
+                                            <small>{{ student.email or 'غير محدد' }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ student.phone or 'غير محدد' }}</td>
+                                <td>
+                                    {{ student.alt_phone or student.parent_phone or 'غير محدد' }}
+                                </td>
+                                <td>
+                                    <span class="status-badge status-present">
+                                        <i class="fas fa-check"></i>
+                                        {{ stats.present_days or 0 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-absent">
+                                        <i class="fas fa-times"></i>
+                                        {{ stats.absent_days or 0 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-late">
+                                        <i class="fas fa-clock"></i>
+                                        {{ stats.late_days or 0 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="attendance-rate">
+                                        <span>{{ stats.attendance_rate or 0 }}%</span>
+                                        <div class="rate-bar">
+                                            <div class="rate-fill" style="width: {{ stats.attendance_rate or 0 }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>{{ stats.average_grade or '-' }}</strong>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button onclick="viewStudentDetails({{ student.id }})" class="btn-action btn-view" title="عرض التفاصيل">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button onclick="contactStudent({{ student.id }})" class="btn-action btn-contact" title="التواصل">
+                                            <i class="fas fa-phone"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- أزرار العمليات -->
+            <div class="text-center mt-4">
+                <a href="/attendance/mark/{{ classroom.id }}" class="btn-custom btn-primary-custom">
+                    <i class="fas fa-plus-circle"></i>
+                    تسجيل حضور جديد
+                </a>
+                <a href="/teacher/classroom/{{ classroom.id }}" class="btn-custom btn-secondary-custom">
+                    <i class="fas fa-arrow-right"></i>
+                    العودة للفصل
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <!-- نافذة تفاصيل الطالب -->
+    <div class="modal fade" id="studentDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header" style="background: var(--accent-gradient); color: white;">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-graduate me-2"></i>
+                        تفاصيل حضور الطالب
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="studentDetailsContent">
+                    <!-- سيتم تحميل المحتوى هنا -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+
+    <script>
+    // بيانات الرسوم البيانية
+    const attendanceData = {
+        distribution: {{ stats.distribution_data|tojson if stats else '{}' }},
+        trend: {{ stats.trend_data|tojson if stats else '{}' }}
+    };
+
+    // إعداد الرسوم البيانية
+    function setupCharts() {
+        // رسم بياني دائري لتوزيع الحضور
+        const distributionCtx = document.getElementById('attendanceDistributionChart').getContext('2d');
+        new Chart(distributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['حاضر', 'متأخر', 'غائب', 'معذور'],
+                datasets: [{
+                    data: [
+                        attendanceData.distribution.present || 0,
+                        attendanceData.distribution.late || 0,
+                        attendanceData.distribution.absent || 0,
+                        attendanceData.distribution.excused || 0
+                    ],
+                    backgroundColor: [
+                        '#10b981',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#6366f1'
+                    ],
+                    borderWidth: 0,
+                    cutout: '60%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                family: 'Tajawal',
+                                size: 14
+                            },
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+
+        // رسم بياني خطي لاتجاه الحضور
+        const trendCtx = document.getElementById('attendanceTrendChart').getContext('2d');
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: attendanceData.trend.dates || [],
+                datasets: [{
+                    label: 'نسبة الحضور',
+                    data: attendanceData.trend.rates || [],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#6366f1',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        },
+                        ticks: {
+                            font: {
+                                family: 'Tajawal'
+                            },
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        },
+                        ticks: {
+                            font: {
+                                family: 'Tajawal'
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    }
+
+    // تصفية حسب النطاق الزمني
+    function filterByDateRange() {
+        const range = document.getElementById('dateRangeFilter').value;
+        // تنفيذ التصفية - يمكن إضافة منطق الفلترة هنا
+        console.log('Filter by date range:', range);
+        // إعادة تحميل البيانات أو تصفيتها
+    }
+
+    // تصفية حسب الحالة
+    function filterByStatus() {
+        const status = document.getElementById('statusFilter').value;
+        const table = document.getElementById('attendanceReportTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        
+        for (let row of rows) {
+            if (status === 'all') {
+                row.style.display = '';
+            } else {
+                // منطق التصفية حسب الحالة
+                row.style.display = '';
+            }
+        }
+    }
+
+    // عرض تفاصيل الطالب
+    function viewStudentDetails(studentId) {
+        fetch(`/attendance/student-details/${studentId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const student = data.student;
+                const attendanceHistory = data.attendance_history;
+                const stats = data.stats;
+                
+                const content = `
+                    <div class="row mb-4">
+                        <div class="col-md-4 text-center">
+                            ${student.profile_picture ? 
+                                `<img src="/static/uploads/profile_pictures/${student.profile_picture}" 
+                                     class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">` :
+                                `<div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                                     style="width: 120px; height: 120px; font-size: 3rem; color: white;">
+                                    <i class="fas fa-user"></i>
+                                 </div>`
+                            }
+                            <h4>${student.name}</h4>
+                            <p class="text-muted">${student.email || 'لا يوجد بريد إلكتروني'}</p>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="fas fa-phone me-2"></i>معلومات الاتصال
+                                    </h6>
+                                    <div class="contact-buttons d-flex flex-wrap gap-2">
+                                        ${student.phone ? 
+                                            `<a href="tel:${student.phone}" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-phone me-1"></i>
+                                                <small>هاتف الطالب</small>
+                                            </a>` : ''
+                                        }
+                                        ${student.phone ? 
+                                            `<a href="https://wa.me/2${student.phone}" target="_blank" class="btn btn-outline-success btn-sm">
+                                                <i class="fab fa-whatsapp me-1"></i>
+                                                <small>واتساب الطالب</small>
+                                            </a>` : ''
+                                        }
+                                        ${(student.alt_phone || student.parent_phone) ? 
+                                            `<a href="tel:${student.alt_phone || student.parent_phone}" class="btn btn-outline-info btn-sm">
+                                                <i class="fas fa-phone me-1"></i>
+                                                <small>هاتف ولي الأمر</small>
+                                            </a>` : ''
+                                        }
+                                        ${(student.alt_phone || student.parent_phone) ? 
+                                            `<a href="https://wa.me/2${student.alt_phone || student.parent_phone}" target="_blank" class="btn btn-outline-success btn-sm">
+                                                <i class="fab fa-whatsapp me-1"></i>
+                                                <small>واتساب ولي الأمر</small>
+                                            </a>` : ''
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-center border-success">
+                                <div class="card-body">
+                                    <h3 class="text-success">${stats.present_days || 0}</h3>
+                                    <p class="card-text">أيام الحضور</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center border-warning">
+                                <div class="card-body">
+                                    <h3 class="text-warning">${stats.late_days || 0}</h3>
+                                    <p class="card-text">أيام التأخير</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center border-danger">
+                                <div class="card-body">
+                                    <h3 class="text-danger">${stats.absent_days || 0}</h3>
+                                    <p class="card-text">أيام الغياب</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center border-primary">
+                                <div class="card-body">
+                                    <h3 class="text-primary">${stats.attendance_rate || 0}%</h3>
+                                    <p class="card-text">نسبة الحضور</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('studentDetailsContent').innerHTML = content;
+                new bootstrap.Modal(document.getElementById('studentDetailsModal')).show();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ في جلب بيانات الطالب');
+        });
+    }
+
+    // التواصل مع الطالب
+    function contactStudent(studentId) {
+        // يمكن إضافة منطق التواصل هنا
+        console.log('Contact student:', studentId);
+    }
+
+    // تصدير إلى Excel
+    function exportToExcel() {
+        console.log('Export to Excel');
+        // يمكن إضافة منطق التصدير هنا
+    }
+
+    // تصدير إلى PDF
+    function exportToPDF() {
+        console.log('Export to PDF');
+        // يمكن إضافة منطق التصدير هنا
+    }
+
+    // طباعة التقرير
+    function printReport() {
+        window.print();
+    }
+
+    // تفعيل التنقل السلس
+    document.querySelectorAll('.nav-link[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                // تحديث الـ active state
+                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            }
+        });
+    });
+
+    // تهيئة الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        setupCharts();
+        
+        // تفعيل زر القائمة للموبايل
+        $('.mobile-toggle').on('click', function() {
+            $('.innovative-sidebar').toggleClass('show');
+        });
+
+        // إغلاق السايدبار عند النقر خارجه
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.innovative-sidebar, .mobile-toggle').length) {
+                $('.innovative-sidebar').removeClass('show');
+            }
+        });
+    });
+    </script>
+</body>
+</html>

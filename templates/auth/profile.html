@@ -431,9 +431,20 @@
 
                                 <div class="form-group">
                                     <label class="form-label" for="alt_phone">
-                                        <i class="fas fa-phone-alt me-2"></i>رقم هاتف بديل (اختياري)
+                                        <i class="fas fa-phone-alt me-2"></i>
+                                        {% if current_user.role == 'student' %}
+                                            رقم هاتف ولي الأمر (مطلوب)
+                                        {% else %}
+                                            رقم هاتف بديل (اختياري)
+                                        {% endif %}
                                     </label>
-                                    <input type="tel" class="form-control" id="alt_phone" name="alt_phone" value="{{ current_user.alt_phone or '' }}" dir="ltr">
+                                    <input type="tel" class="form-control" id="alt_phone" name="alt_phone" 
+                                           value="{{ current_user.alt_phone or '' }}" 
+                                           {% if current_user.role == 'student' %}required{% endif %}
+                                           dir="ltr">
+                                    {% if current_user.role == 'student' %}
+                                        <small class="text-muted">رقم هاتف ولي الأمر مطلوب للتواصل في حالات الطوارئ وإرسال تقارير الحضور والغياب</small>
+                                    {% endif %}
                                 </div>
 
                                 <div class="form-group">

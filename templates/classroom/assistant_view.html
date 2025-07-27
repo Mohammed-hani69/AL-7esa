@@ -420,6 +420,40 @@
                 </div>
             </div>
 
+            <!-- البنرات الإعلانية -->
+            {% if banners %}
+            <div class="banners-container mb-4">
+                <div id="bannersCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                    <div class="carousel-inner">
+                        {% for banner in banners %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <div class="banner-image-container">
+                                {% if banner.link_url %}
+                                <a href="{{ banner.link_url }}" {% if banner.is_external %}target="_blank"{% endif %}>
+                                    <img src="{{ banner.image_url }}" alt="{{ banner.title }}" class="banner-full-image">
+                                </a>
+                                {% else %}
+                                <img src="{{ banner.image_url }}" alt="{{ banner.title }}" class="banner-full-image">
+                                {% endif %}
+                                <button type="button" class="btn-close btn-close-white" onclick="dismissBanner({{ banner.id }})" aria-label="إغلاق"></button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if banners|length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#bannersCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">السابق</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#bannersCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">التالي</span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
             <!-- معلومات الفصل -->
             <div class="row mb-4">
                 <div class="col-xl-8">
@@ -703,6 +737,138 @@
                 }, 2000);
             }
         }
+
+        // وظائف البنرات
+        window.dismissBanner = function(bannerId) {
+            // إخفاء البنر محلياً
+            const bannerElement = event.target.closest('.carousel-item');
+            if (bannerElement) {
+                bannerElement.style.display = 'none';
+            }
+            
+            // إرسال طلب إلى الخادم لتسجيل الإخفاء
+            fetch(`/api/banners/${bannerId}/dismiss`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                credentials: 'same-origin'
+            }).catch(error => {
+                console.error('Error dismissing banner:', error);
+            });
+        };
+
+        function getCsrfToken() {
+            const token = document.querySelector('meta[name="csrf-token"]');
+            return token ? token.getAttribute('content') : '';
+        }
+
+        // تفعيل دوران البنرات التلقائي
+        const carousel = document.getElementById('bannersCarousel');
+        if (carousel) {
+            // بدء الدوران التلقائي كل 5 ثواني
+            const bsCarousel = new bootstrap.Carousel(carousel, {
+                interval: 5000,
+                wrap: true
+            });
+        }
     </script>
+
+    <style>
+    .banners-container {
+        margin: 2rem 0;
+    }
+
+    .banner-image-container {
+        position: relative;
+        width: 100%;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+    }
+
+    .banner-image-container:hover {
+        transform: translateY(-2px);
+    }
+
+    .banner-full-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.3s ease;
+    }
+
+    .banner-full-image:hover {
+        transform: scale(1.02);
+    }
+
+    .banner-image-container a {
+        display: block;
+        text-decoration: none;
+    }
+
+    .banner-image-container .btn-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 3;
+        opacity: 0.8;
+        transition: all 0.3s ease;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+    }
+
+    .banner-image-container .btn-close:hover {
+        opacity: 1;
+        transform: scale(1.1);
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 5%;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .carousel-control-prev:hover,
+    .carousel-control-next:hover {
+        color: white;
+    }
+
+    .carousel-indicators {
+        bottom: -50px;
+    }
+
+    .carousel-indicators button {
+        background-color: #667eea;
+        border: none;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin: 0 5px;
+    }
+
+    .carousel-indicators button.active {
+        background-color: #764ba2;
+    }
+
+    @media (max-width: 768px) {
+        .banner-full-image {
+            height: 150px;
+        }
+        
+        .banner-image-container .btn-close {
+            width: 28px;
+            height: 28px;
+            top: 10px;
+            right: 10px;
+        }
+    }
+    </style>
 </body>
 </html>

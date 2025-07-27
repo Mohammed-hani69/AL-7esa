@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- CSRF disabled for registration -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- CSRF enabled for registration -->
     <title>إنشاء حساب جديد - الحصة</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -637,11 +638,7 @@
             <div class="form-step active" id="registration-methods">
                 <h4 class="step-title">اختر طريقة التسجيل</h4>
                 
-                <!-- تنبيه للتطوير المحلي -->
-                <div id="local-dev-notice" style="display: none;" class="alert alert-info mb-3">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>ملاحظة:</strong> أثناء التطوير المحلي، تسجيل Google غير متاح. يرجى استخدام التسجيل برقم الهاتف.
-                </div>
+                
                 
                 <!-- التسجيل بـ Google -->
                 <button type="button" class="btn-google" onclick="signUpWithGoogle()">
@@ -855,17 +852,28 @@
             })
             .then(response => response.json())
             .then(data => {
+            .then(data => {
                 if (data.success) {
-                    // Store Google user data
-                    registrationData.google_id = data.user.google_id;
-                    registrationData.email = data.user.email;
-                    document.getElementById('google-name').value = data.user.name || '';
-                    
-                    // Show Google completion step
-                    showGoogleCompletionStep();
+                    if (data.existing_user) {
+                        // المستخدم موجود، توجيه مباشر
+                        showNotification(data.message, 'success');
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1500);
+                    } else {
+                        // مستخدم جديد، حفظ البيانات وإظهار نموذج الإكمال
+                        registrationData.google_id = data.user.google_id;
+                        registrationData.email = data.user.email;
+                        registrationData.picture = data.user.picture; // إضافة الصورة
+                        document.getElementById('google-name').value = data.user.name || '';
+                        
+                        // Show Google completion step
+                        showGoogleCompletionStep();
+                    }
                 } else {
                     showNotification(data.message, 'error');
                 }
+            })
             })
             .catch(error => {
                 showNotification('حدث خطأ في التسجيل بـ Google', 'error');

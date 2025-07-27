@@ -98,12 +98,13 @@ def get_participants(classroom_id):
         ).join(User).all()
         
         for enrollment in enrollments:
-            participants.append({
-                'id': ClassroomEnrollment.student.id,
-                'name': ClassroomEnrollment.student.name,
-                'role': 'student',
-                'avatar': ClassroomEnrollment.student.name[0].upper()
-            })
+            if enrollment.user.role == 'student':  # التأكد من أن المستخدم طالب
+                participants.append({
+                    'id': enrollment.user.id,
+                    'name': enrollment.user.name,
+                    'role': 'student',
+                    'avatar': enrollment.user.name[0].upper()
+                })
         
         return jsonify({'participants': participants})
     
@@ -212,7 +213,7 @@ def remove_student_from_chat(classroom_id):
             return jsonify({'error': 'الطالب غير مسجل في الفصل'}), 404
         
         # إلغاء تفعيل التسجيل بدلاً من الحذف
-        ClassroomEnrollment.status = 'inactive'
+        enrollment.is_active = False
         db.session.commit()
         
         return jsonify({
@@ -418,8 +419,8 @@ def send_message_api(classroom_id):
         message = ChatMessage(
             classroom_id=classroom_id,
             user_id=current_user.id,
-            content=data['text'],
-            message_type='text'
+            message=data['text'],
+            created_at=datetime.utcnow()
         )
         
         db.session.add(message)

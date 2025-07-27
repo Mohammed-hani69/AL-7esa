@@ -159,6 +159,40 @@
             {% endwith %}
         </div>
 
+        <!-- البنرات الإعلانية -->
+        {% if banners %}
+        <div class="banners-container mb-4">
+            <div id="bannersCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                <div class="carousel-inner">
+                    {% for banner in banners %}
+                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                        <div class="banner-image-container">
+                            {% if banner.link_url %}
+                            <a href="{{ banner.link_url }}" {% if banner.is_external %}target="_blank"{% endif %}>
+                                <img src="{{ banner.image_url }}" alt="{{ banner.title }}" class="banner-full-image">
+                            </a>
+                            {% else %}
+                            <img src="{{ banner.image_url }}" alt="{{ banner.title }}" class="banner-full-image">
+                            {% endif %}
+                            <button type="button" class="btn-close btn-close-white" onclick="dismissBanner({{ banner.id }})" aria-label="إغلاق"></button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if banners|length > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#bannersCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">السابق</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#bannersCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">التالي</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
         <!-- محتوى عرض الفصل -->
         <div class="classroom-content">
             <div class="container-fluid">
@@ -254,6 +288,9 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab">الطلاب</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance" type="button" role="tab">الحضور والغياب</button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="assignments-tab" data-bs-toggle="tab" data-bs-target="#assignments" type="button" role="tab">الواجبات</button>
@@ -485,7 +522,98 @@
                                                     </tr>
                                                     {% endfor %}
                                                 </tbody>
-                                            </table>
+                                </div>
+                            </div>
+
+                            <!-- قسم الحضور والغياب -->
+                            <div class="tab-pane fade" id="attendance" role="tabpanel" aria-labelledby="attendance-tab">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5>نظام الحضور والغياب</h5>
+                                    <div>
+                                        <a href="{{ url_for('attendance.mark_attendance', classroom_id=classroom.id) }}" class="btn btn-primary me-2">
+                                            <i class="fas fa-calendar-check me-1"></i>تسجيل حضور جديد
+                                        </a>
+                                        <a href="{{ url_for('attendance.attendance_report', classroom_id=classroom.id) }}" class="btn btn-info">
+                                            <i class="fas fa-chart-bar me-1"></i>تقرير الحضور
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="m-0">آخر تسجيلات الحضور</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>التاريخ</th>
+                                                                <th>عدد الحاضرين</th>
+                                                                <th>عدد الغائبين</th>
+                                                                <th>نسبة الحضور</th>
+                                                                <th>الإجراءات</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <!-- سيتم تحميل البيانات هنا -->
+                                                            <tr>
+                                                                <td colspan="5" class="text-center text-muted">
+                                                                    <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                                                    <p>لا توجد تسجيلات حضور بعد</p>
+                                                                    <a href="{{ url_for('attendance.mark_attendance', classroom_id=classroom.id) }}" class="btn btn-primary btn-sm">
+                                                                        ابدأ تسجيل الحضور
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="m-0">إحصائيات الحضور</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="text-center">
+                                                    <div class="mb-3">
+                                                        <h4 class="text-success mb-1">85%</h4>
+                                                        <small class="text-muted">متوسط نسبة الحضور</small>
+                                                    </div>
+                                                    <div class="progress mb-3" style="height: 10px;">
+                                                        <div class="progress-bar bg-success" style="width: 85%"></div>
+                                                    </div>
+                                                    <div class="row text-center">
+                                                        <div class="col-6">
+                                                            <div class="border-end">
+                                                                <h6 class="text-primary mb-0">12</h6>
+                                                                <small class="text-muted">أيام الحضور</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <h6 class="text-danger mb-0">3</h6>
+                                                            <small class="text-muted">أيام الغياب</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="card mt-3">
+                                            <div class="card-header">
+                                                <h6 class="m-0">طلاب يحتاجون متابعة</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="text-center text-muted py-3">
+                                                    <i class="fas fa-user-check fa-2x mb-2"></i>
+                                                    <p class="mb-0">جميع الطلاب يحضرون بانتظام</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -495,6 +623,9 @@
                             <div class="tab-pane fade" id="assignments" role="tabpanel" aria-labelledby="assignments-tab">
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <h5>الواجبات ({{ assignments|length }})</h5>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAssignmentModal">
+                                        <i class="fas fa-plus me-1"></i> إضافة واجب جديد
+                                    </button>بات ({{ assignments|length }})</h5>
                                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAssignmentModal">
                                         <i class="fas fa-plus me-1"></i> إضافة واجب جديد
                                     </button>
@@ -646,6 +777,102 @@
 <!-- نماذج (modals) -->
 <!-- يمكن إضافة النماذج مثل إضافة إعلان، دعوة طلاب، الخ هنا -->
 
+<style>
+.banners-container {
+    margin: 2rem 0;
+}
+
+.banner-image-container {
+    position: relative;
+    width: 100%;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.banner-image-container:hover {
+    transform: translateY(-2px);
+}
+
+.banner-full-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.banner-full-image:hover {
+    transform: scale(1.02);
+}
+
+.banner-image-container a {
+    display: block;
+    text-decoration: none;
+}
+
+.banner-image-container .btn-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 3;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+}
+
+.banner-image-container .btn-close:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    width: 5%;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    color: white;
+}
+
+.carousel-indicators {
+    bottom: -50px;
+}
+
+.carousel-indicators button {
+    background-color: #667eea;
+    border: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 0 5px;
+}
+
+.carousel-indicators button.active {
+    background-color: #764ba2;
+}
+
+@media (max-width: 768px) {
+    .banner-full-image {
+        height: 150px;
+    }
+    
+    .banner-image-container .btn-close {
+        width: 28px;
+        height: 28px;
+        top: 10px;
+        right: 10px;
+    }
+}
+</style>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -703,6 +930,44 @@
                 language: {
                     url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
                 }
+            });
+        }
+    });
+
+    // وظائف البنرات
+    function dismissBanner(bannerId) {
+        // إخفاء البنر محلياً
+        const bannerElement = event.target.closest('.carousel-item');
+        if (bannerElement) {
+            bannerElement.style.display = 'none';
+        }
+        
+        // إرسال طلب إلى الخادم لتسجيل الإخفاء
+        fetch(`/api/banners/${bannerId}/dismiss`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            credentials: 'same-origin'
+        }).catch(error => {
+            console.error('Error dismissing banner:', error);
+        });
+    }
+
+    function getCsrfToken() {
+        const token = document.querySelector('meta[name="csrf-token"]');
+        return token ? token.getAttribute('content') : '';
+    }
+
+    // تفعيل دوران البنرات التلقائي
+    document.addEventListener('DOMContentLoaded', function() {
+        const carousel = document.getElementById('bannersCarousel');
+        if (carousel) {
+            // بدء الدوران التلقائي كل 5 ثواني
+            const bsCarousel = new bootstrap.Carousel(carousel, {
+                interval: 5000,
+                wrap: true
             });
         }
     });

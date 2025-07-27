@@ -717,7 +717,7 @@ def classroom(classroom_id):
 @teacher_bp.route('/classrooms')
 @login_required
 @teacher_required
-def list_classrooms():
+def classrooms():
     # التحقق من وجود اشتراك نشط للمعلم
     has_subscription = has_active_subscription()
     if not has_subscription:

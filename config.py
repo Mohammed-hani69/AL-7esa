@@ -16,12 +16,11 @@ class Config:
     # Environment detection
     IS_PRODUCTION = os.environ.get("FLASK_ENV") == "production"
 
-    # CSRF Configuration - DISABLED per user request
-    # User explicitly requested: "لا اريد استخدام CSRF في التسجيل و في انشاء الحساب"
+    # CSRF Configuration - ENABLED for security
     WTF_CSRF_TIME_LIMIT = None  # No time limit for CSRF tokens
     WTF_CSRF_SSL_STRICT = False  # Allow HTTP in development
-    WTF_CSRF_ENABLED = False  # DISABLED for authentication endpoints
-    WTF_CSRF_CHECK_DEFAULT = False  # DISABLED for authentication endpoints
+    WTF_CSRF_ENABLED = True  # ENABLED for security
+    WTF_CSRF_CHECK_DEFAULT = True  # ENABLED for security
     
     # Session Configuration - محسن لحل مشكلة عدم استمرار الجلسة
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)  # 7 days session lifetime
@@ -156,6 +155,18 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """تكوين بيئة الإنتاج مع إعدادات CORS آمنة"""
     DEBUG = False
+    
+    # إعادة تفعيل CSRF في الإنتاج للأمان
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_TIME_LIMIT = 3600  # ساعة واحدة
+    WTF_CSRF_SSL_STRICT = True  # HTTPS only in production
+    WTF_CSRF_CHECK_DEFAULT = True
+    
+    # إعدادات Session للإنتاج
+    SESSION_COOKIE_SECURE = True  # HTTPS only
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_DOMAIN = '.al-7esa.com'
     
     # إعدادات أمان إضافية للإنتاج
     CORS_SUPPORTS_CREDENTIALS = True

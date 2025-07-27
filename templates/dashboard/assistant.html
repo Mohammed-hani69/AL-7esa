@@ -213,6 +213,51 @@
 
         <!-- المحتوى الرئيسي -->
         <main class="main-content">
+            <!-- البنرات الإعلانية -->
+            {% if banners %}
+            <div class="banners-container mb-4">
+                <div id="bannersCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                    <div class="carousel-inner">
+                        {% for banner in banners %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <div class="banner-image-container">
+                                {% if banner.link_url %}
+                                <a href="{{ banner.link_url }}" {% if banner.is_external %}target="_blank"{% endif %}>
+                                    <img src="{{ banner.image_url }}" alt="{{ banner.title }}" class="banner-full-image">
+                                </a>
+                                {% else %}
+                                <img src="{{ banner.image_url }}" alt="{{ banner.title }}" class="banner-full-image">
+                                {% endif %}
+                                <button type="button" class="btn-close btn-close-white" onclick="dismissBanner({{ banner.id }})" aria-label="إغلاق"></button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if banners|length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#bannersCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">السابق</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#bannersCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">التالي</span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+                            <a href="{{ banner.link_url }}" class="btn btn-light btn-sm" style="color: {{ primary_color or '#6C63FF' }};" onclick="incrementBannerClick({{ banner.id }})">
+                                <i class="fas fa-external-link-alt me-1"></i>اعرض المزيد
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" onclick="dismissBanner({{ banner.id }})" aria-label="إغلاق"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <div class="page-header">
                 <h1 class="h3 mb-4 text-gray-800">لوحة تحكم المساعد</h1>
             </div>

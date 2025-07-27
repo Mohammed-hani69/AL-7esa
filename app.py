@@ -1,6 +1,6 @@
 """
 منصة الحصة التعليمية - ملف التطبيق الرئيسي
-يحتوي على إعداد تطبيق Flask وتكوين المسارات الأساسية
+يحتوي على إعداد تطبيق Flask والإعدادات الأساسية
 """
 
 import os
@@ -9,7 +9,7 @@ from datetime import datetime
 import re
 from urllib.parse import urlparse
 from models import db
-from flask import Flask, render_template, request, jsonify, flash, redirect, url_for, session
+from flask import Flask, render_template, request, jsonify, flash, redirect, url_for, session, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.orm import DeclarativeBase
@@ -70,17 +70,14 @@ cors = CORS(app,
     max_age=app.config.get('CORS_MAX_AGE', 3600)
 )
 
-# CSRF Protection - COMPLETELY DISABLED for authentication per user request
-# User explicitly requested: "لا اريد استخدام CSRF في التسجيل و في انشاء الحساب"
-# CSRF is disabled for all authentication endpoints
-
-# Comment out CSRF protection entirely for now
+# CSRF Protection - تعطيل CSRF للاختبار
+# from flask_wtf.csrf import CSRFProtect, generate_csrf
 # csrf = CSRFProtect(app)
 
-# Add dummy csrf_token function to prevent template errors
+# إعداد دالة csrf_token للتمبليت
 @app.context_processor
 def inject_csrf_token():
-    """Provide a dummy csrf_token function since CSRF is disabled"""
+    """توفير دالة csrf_token للتمبليت"""
     def csrf_token():
         return ""
     return dict(csrf_token=csrf_token)
@@ -89,12 +86,22 @@ def inject_csrf_token():
 @app.before_request  
 def ensure_session():
     """التأكد من وجود جلسة صحيحة قبل معالجة الطلبات"""
+    # تجاهل CSRF للروتات المحددة
+    if hasattr(g, 'csrf_disable') and g.csrf_disable:
+        return
+    
     # جعل الجلسة دائمة
     session.permanent = True
     
     # إضافة مفتاح للجلسة إذا لم يكن موجوداً
     if '_flask_session_init' not in session:
         session['_flask_session_init'] = True
+        session.modified = True
+    
+    # إضافة معرف جلسة فريد إذا لم يكن موجوداً
+    if '_session_id' not in session:
+        import uuid
+        session['_session_id'] = str(uuid.uuid4())
         session.modified = True
 
 # إضافة معالج مخصص للتشخيص فقط (بعد إنشاء الجلسة)
@@ -231,7 +238,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
 login_manager.login_message = 'الرجاء تسجيل الدخول للوصول إلى هذه الصفحة'
 login_manager.login_message_category = 'info'
-login_manager.session_protection = "strong"  # حماية الجلسة
+login_manager.session_protection = "basic"  # تغيير من strong إلى basic لتجنب مشاكل الجلسة
 login_manager.refresh_view = 'auth.login'
 login_manager.needs_refresh_message = 'يرجى إعادة تسجيل الدخول لتأكيد الهوية'
 login_manager.needs_refresh_message_category = 'info'

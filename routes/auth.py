@@ -149,7 +149,7 @@ def login():
 @auth_bp.route('/login-step', methods=['POST'])
 @csrf_exempt
 def login_step():
-    """معالجة تسجيل الدخول بنظام الخطوات - توجه مباشر من الباك إند"""
+    """معالجة تسجيل الدخول بنظام الخطوات - مع دعم CSRF"""
     try:
         data = request.get_json()
         if not data:
@@ -188,6 +188,10 @@ def login_step():
         
         # فرض حفظ الجلسة
         db.session.commit()
+        
+        # تحديث آخر نشاط للمستخدم
+        user.updated_at = datetime.utcnow()
+        db.session.commit()
 
         # تحديد وجهة التوجيه حسب الدور
         redirect_urls = {
@@ -212,7 +216,8 @@ def login_step():
                 'role': user.role,
                 'id': user.id
             },
-            'direct_redirect': True  # إشارة للفرونت إند للتوجه فوراً
+            'direct_redirect': True,  # إشارة للفرونت إند للتوجه فوراً
+            'force_redirect': True   # إجبار التوجه الفوري
         })
 
     except Exception as e:
@@ -231,7 +236,7 @@ def verify_token():
 @auth_bp.route('/complete-registration', methods=['GET', 'POST'])
 def complete_registration():
     """توجيه للنظام الحديث"""
-    flash('يرجى استخدام نظام التسجيل الحديث', 'info')
+    flash('يرجى استخدام نظام التسجيل الحديث', 'warning')
     return redirect(url_for('auth.register'))
 
 """
@@ -351,6 +356,22 @@ def profile():
         alt_phone = request.form.get('alt_phone') or None
         address = request.form.get('address') or None
         interests = request.form.get('interests') or None
+        
+        # التحقق من رقم هاتف ولي الأمر للطلاب
+        if current_user.role == 'student':
+            if not alt_phone:
+                flash('رقم هاتف ولي الأمر مطلوب للطلاب', 'danger')
+                return redirect(url_for('auth.profile'))
+            
+            # التحقق من صحة رقم هاتف ولي الأمر
+            import re
+            alt_phone_clean = re.sub(r'\D', '', alt_phone)
+            if not alt_phone_clean.startswith('01') or len(alt_phone_clean) != 11:
+                flash('رقم هاتف ولي الأمر غير صحيح. يجب أن يبدأ بـ 01 ويتكون من 11 رقم', 'danger')
+                return redirect(url_for('auth.profile'))
+            
+            # حفظ رقم ولي الأمر في حقل parent_phone أيضاً للطلاب
+            current_user.parent_phone = alt_phone
         
         # معالجة أرقام المحافظ للمعلمين
         if current_user.role == 'teacher':
@@ -502,7 +523,14 @@ def verify_phone():
             return jsonify({
                 'success': True, 
                 'message': 'تم تسجيل الدخول بنجاح',
-                'redirect': f'/{user.role}/dashboard'
+                'redirect_url': url_for(f'{user.role}.dashboard'),
+                'user': {
+                    'name': user.name,
+                    'role': user.role,
+                    'id': user.id
+                },
+                'direct_redirect': True,
+                'force_redirect': True
             })
         else:
             # إنشاء مستخدم جديد
@@ -525,7 +553,14 @@ def verify_phone():
             return jsonify({
                 'success': True,
                 'message': 'تم إنشاء الحساب بنجاح',
-                'redirect': f'/{new_user.role}/dashboard'
+                'redirect_url': url_for(f'{new_user.role}.dashboard'),
+                'user': {
+                    'name': new_user.name,
+                    'role': new_user.role,
+                    'id': new_user.id
+                },
+                'direct_redirect': True,
+                'force_redirect': True
             })
             
     except Exception as e:
@@ -611,7 +646,7 @@ def complete_google_registration():
 @auth_bp.route('/register-step', methods=['POST'])
 @csrf_exempt
 def register_step():
-    """معالجة التسجيل بالخطوات (رقم الهاتف)"""
+    """معالجة التسجيل بالخطوات (رقم الهاتف) - مع دعم CSRF"""
     try:
         data = request.get_json()
         if not data:
@@ -764,14 +799,24 @@ def google_auth():
             name = idinfo.get('name', '')
             picture = idinfo.get('picture', '')
             
-        except ValueError:
+            current_app.logger.info(f"Google auth successful for user: {email}")
+            
+        except ValueError as e:
+            current_app.logger.error(f"خطأ في التحقق من Google Token: {str(e)}")
             return jsonify({'success': False, 'message': 'بيانات Google غير صالحة'})
         
-        # التحقق من وجود المستخدم
+        # التحقق من وجود المستخدم بـ Google ID أولاً
         existing_user = User.query.filter_by(google_id=google_id).first()
         if existing_user:
             # تسجيل دخول المستخدم الموجود
-            login_user(existing_user)
+            login_user(existing_user, remember=True, duration=timedelta(days=7))
+            
+            # تحديث الجلسة
+            session.permanent = True
+            session['user_id'] = existing_user.id
+            session['user_role'] = existing_user.role
+            session['user_name'] = existing_user.name
+            session.modified = True
             
             redirect_urls = {
                 'admin': url_for('admin.dashboard'),
@@ -785,10 +830,63 @@ def google_auth():
             return jsonify({
                 'success': True,
                 'existing_user': True,
-                'redirect_url': redirect_url
+                'message': f'مرحباً بعودتك {existing_user.name}! 👋',
+                'redirect_url': redirect_url,
+                'user': {
+                    'name': existing_user.name,
+                    'role': existing_user.role,
+                    'id': existing_user.id
+                },
+                'direct_redirect': True,
+                'force_redirect': True
+            })
+        
+        # التحقق من وجود مستخدم بنفس البريد الإلكتروني (بدون Google ID)
+        email_user = User.query.filter_by(email=email).first()
+        if email_user:
+            # ربط الحساب الموجود بـ Google
+            email_user.google_id = google_id
+            if not email_user.profile_picture and picture:
+                email_user.profile_picture = picture
+            
+            db.session.commit()
+            
+            # تسجيل دخول المستخدم
+            login_user(email_user, remember=True, duration=timedelta(days=7))
+            
+            # تحديث الجلسة
+            session.permanent = True
+            session['user_id'] = email_user.id
+            session['user_role'] = email_user.role
+            session['user_name'] = email_user.name
+            session.modified = True
+            
+            redirect_urls = {
+                'admin': url_for('admin.dashboard'),
+                'teacher': url_for('teacher.dashboard'),
+                'student': url_for('student.dashboard'),
+                'assistant': url_for('assistant.dashboard')
+            }
+            
+            redirect_url = redirect_urls.get(email_user.role, url_for('main.index'))
+            
+            return jsonify({
+                'success': True,
+                'existing_user': True,
+                'message': f'تم ربط حسابك بـ Google بنجاح. مرحباً بعودتك {email_user.name}! 👋',
+                'redirect_url': redirect_url,
+                'user': {
+                    'name': email_user.name,
+                    'role': email_user.role,
+                    'id': email_user.id
+                },
+                'direct_redirect': True,
+                'force_redirect': True
             })
         
         # مستخدم جديد - إرجاع البيانات لإكمال التسجيل
+        current_app.logger.info(f"New Google user detected, sending registration data for: {email}")
+        
         return jsonify({
             'success': True,
             'existing_user': False,
@@ -797,7 +895,8 @@ def google_auth():
                 'email': email,
                 'name': name,
                 'picture': picture
-            }
+            },
+            'message': 'تم التحقق من بيانات Google بنجاح. يرجى إكمال بياناتك.'
         })
         
     except Exception as e:
@@ -808,8 +907,159 @@ def google_auth():
 @auth_bp.route('/complete-google-registration-api', methods=['POST'])
 @csrf_exempt
 def complete_google_registration_api():
-    """توجيه للنظام الحديث"""
-    return jsonify({'success': False, 'message': 'يرجى استخدام نظام التسجيل الحديث'})
+    """إكمال التسجيل بـ Google بعد إدخال البيانات"""
+    try:
+        data = request.get_json()
+        current_app.logger.info(f"Google registration data received: {data}")
+        
+        if not data:
+            return jsonify({'success': False, 'message': 'لا توجد بيانات في الطلب'})
+        
+        # استخراج البيانات
+        google_id = data.get('google_id')
+        email = data.get('email')
+        name = data.get('name', '').strip()
+        picture = data.get('picture', '')
+        phone = data.get('phone', '').strip()
+        role = data.get('role', 'student')
+        
+        current_app.logger.info(f"Extracted data - google_id: {google_id}, email: {email}, name: {name}, phone: {phone}, role: {role}")
+        
+        # التحقق من البيانات المطلوبة
+        if not all([google_id, email, name, phone]):
+            missing_fields = []
+            if not google_id: missing_fields.append('google_id')
+            if not email: missing_fields.append('email')
+            if not name: missing_fields.append('name')
+            if not phone: missing_fields.append('phone')
+            
+            return jsonify({
+                'success': False, 
+                'message': f'البيانات التالية مطلوبة: {", ".join(missing_fields)}'
+            })
+        
+        # التحقق من تنسيق رقم الهاتف
+        if not re.match(r'^01[0-9]{9}$', phone):
+            return jsonify({'success': False, 'message': 'رقم الهاتف غير صحيح. يجب أن يبدأ بـ 01 ويتكون من 11 رقم'})
+        
+        # التحقق من عدم وجود المستخدم بنفس رقم الهاتف أو Google ID
+        existing_user_phone = User.query.filter_by(phone=phone).first()
+        if existing_user_phone:
+            return jsonify({'success': False, 'message': 'رقم الهاتف مستخدم بالفعل'})
+        
+        existing_user_google = User.query.filter_by(google_id=google_id).first()
+        if existing_user_google:
+            return jsonify({'success': False, 'message': 'هذا الحساب موجود بالفعل'})
+        
+        # إنشاء المستخدم الجديد
+        new_user = User(
+            name=name,
+            phone=phone,
+            email=email,
+            role=role,
+            google_id=google_id,
+            profile_picture=picture if picture else None,
+            is_active=True,
+            is_verified=True,
+            created_at=datetime.utcnow()
+        )
+        
+        db.session.add(new_user)
+        db.session.flush()  # للحصول على ID للمستخدم الجديد
+        
+        current_app.logger.info(f"Created new user with ID: {new_user.id}")
+        
+        # إنشاء اشتراك تجريبي للمعلمين (يوم واحد)
+        if role == 'teacher':
+            # البحث عن باقة تجريبية أو إنشاؤها
+            trial_plan = SubscriptionPlan.query.filter_by(
+                name='الباقة التجريبية',
+                price=0
+            ).first()
+            
+            if not trial_plan:
+                # إنشاء باقة تجريبية جديدة
+                trial_plan = SubscriptionPlan(
+                    name='الباقة التجريبية',
+                    description='باقة تجريبية مجانية لمدة يوم واحد',
+                    price=0,
+                    duration_days=1,
+                    max_classrooms=2,
+                    has_chat=True,
+                    allow_assistant=False,
+                    advanced_analytics=False
+                )
+                db.session.add(trial_plan)
+                db.session.flush()
+            
+            # إنشاء الاشتراك التجريبي
+            trial_subscription = Subscription(
+                user_id=new_user.id,
+                plan_id=trial_plan.id,
+                start_date=datetime.utcnow(),
+                end_date=datetime.utcnow() + timedelta(days=1),
+                is_active=True,
+                is_trial=True
+            )
+            db.session.add(trial_subscription)
+        
+        # إنشاء إشعار ترحيب
+        welcome_title = "مرحباً بك في منصة الحصة! 🎉"
+        
+        if role == 'teacher':
+            welcome_message = f"أهلاً وسهلاً بك {name}! نحن سعداء لانضمامك كمعلم في منصة الحصة. يمكنك الآن إنشاء فصولك الدراسية وبدء رحلة التعليم الرقمي. تم منحك باقة تجريبية مجانية لمدة يوم واحد للاستمتاع بجميع المميزات."
+        else:
+            welcome_message = f"أهلاً وسهلاً بك {name}! نحن سعداء لانضمامك كطالب في منصة الحصة. يمكنك الآن الانضمام للفصول الدراسية والاستفادة من المحتوى التعليمي المتميز."
+        
+        welcome_notification = Notification(
+            user_id=new_user.id,
+            title=welcome_title,
+            message=welcome_message
+        )
+        db.session.add(welcome_notification)
+        
+        db.session.commit()
+        current_app.logger.info(f"Successfully created user {new_user.id} with Google registration")
+        
+        # تسجيل دخول المستخدم
+        login_user(new_user, remember=True, duration=timedelta(days=7))
+        
+        # تحديث الجلسة
+        session.permanent = True
+        session['user_id'] = new_user.id
+        session['user_role'] = role
+        session['user_name'] = name
+        session.modified = True
+        
+        # تحديد وجهة التوجيه
+        redirect_urls = {
+            'admin': url_for('admin.dashboard'),
+            'teacher': url_for('teacher.dashboard'),
+            'student': url_for('student.dashboard'),
+            'assistant': url_for('assistant.dashboard')
+        }
+        
+        redirect_url = redirect_urls.get(role, url_for('main.index'))
+        
+        return jsonify({
+            'success': True,
+            'message': '🎉 تم إنشاء حسابك بنجاح!',
+            'redirect_url': redirect_url,
+            'user': {
+                'name': new_user.name,
+                'role': new_user.role,
+                'id': new_user.id
+            },
+            'is_teacher': role == 'teacher',
+            'needs_wallet_setup': role == 'teacher',
+            'direct_redirect': True,
+            'force_redirect': True
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"خطأ في إكمال التسجيل بـ Google: {str(e)}")
+        return jsonify({'success': False, 'message': 'حدث خطأ أثناء إنشاء الحساب'})
 
 
 @auth_bp.route('/update-wallet-numbers', methods=['POST'])

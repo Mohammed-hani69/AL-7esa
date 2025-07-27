@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if banner %}تعديل البنر{% else %}إضافة بنر جديد{% endif %} - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+    /* متغيرات التصميم المخصص */
+    :root {
+        --accent-color: {{ primary_color or '#6366f1' }};
+        --accent-gradient: linear-gradient(120deg, {{ primary_color or '#6366f1' }}, {{ secondary_color or '#8b5cf6' }});
+        --surface-color: #FFFFFF;
+        --background-color: #F4F7FE;
+        --text-primary: #2D3748;
+        --text-secondary: #718096;
+        --border-radius-lg: 24px;
+        --border-radius-md: 16px;
+        --border-radius-sm: 8px;
+        --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+    }
+
+    /* تنسيق عام للموبايل */
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background: var(--background-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 70px;
+    }
+
+    /* هيدر الموبايل */
+    .mobile-header {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 0;
+        z-index: 1000;
+        background: var(--accent-gradient);
+        padding: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: white;
+    }
+
+    .mobile-header-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        text-decoration: none;
+    }
+
+    .mobile-header-logo {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        background: white;
+        padding: 5px;
+        object-fit: contain;
+    }
+
+    .mobile-header-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .mobile-back-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .mobile-back-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+        color: white;
+    }
+
+    /* المحتوى الرئيسي */
+    .main-content {
+        margin-top: 70px;
+        padding: 15px;
+    }
+
+    /* نموذج البيانات */
+    .form-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 20px;
+        box-shadow: var(--box-shadow);
+        margin-bottom: 20px;
+    }
+
+    .form-section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--accent-color);
+        position: relative;
+    }
+
+    .form-section-title::before {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        right: 0;
+        width: 50px;
+        height: 2px;
+        background: var(--accent-gradient);
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    .form-label .required {
+        color: var(--danger-color);
+        margin-right: 4px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: var(--border-radius-sm);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: var(--border-radius-sm);
+        font-size: 1rem;
+        background: white;
+        transition: all 0.3s ease;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 6px;
+    }
+
+    /* معاينة البنر */
+    .preview-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 20px;
+        box-shadow: var(--box-shadow);
+        margin-bottom: 20px;
+    }
+
+    .preview-image {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: var(--border-radius-sm);
+        border: 2px solid #e2e8f0;
+    }
+
+    .preview-placeholder {
+        width: 100%;
+        height: 180px;
+        background: #f8fafc;
+        border: 2px dashed #e2e8f0;
+        border-radius: var(--border-radius-sm);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+    }
+
+    .preview-placeholder i {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        opacity: 0.5;
+    }
+
+    .preview-content {
+        margin-top: 15px;
+    }
+
+    .preview-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .preview-description {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* إحصائيات البنر */
+    .stats-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 20px;
+        box-shadow: var(--box-shadow);
+        margin-bottom: 20px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 15px;
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: var(--border-radius-sm);
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--accent-color);
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .stats-details {
+        border-top: 1px solid #e2e8f0;
+        padding-top: 15px;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+    }
+
+    .detail-label {
+        color: var(--text-secondary);
+    }
+
+    .detail-value {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: white;
+    }
+
+    .status-active {
+        background: linear-gradient(135deg, var(--success-color), #22c55e);
+    }
+
+    .status-inactive {
+        background: linear-gradient(135deg, #9ca3af, #6b7280);
+    }
+
+    /* أزرار العمل */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+        flex-direction: column;
+    }
+
+    .btn-action {
+        padding: 15px 20px;
+        border: none;
+        border-radius: var(--border-radius-sm);
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background: var(--accent-gradient);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #6b7280, #9ca3af);
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(107, 114, 128, 0.3);
+    }
+
+    /* صندوق الاختيار */
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+        padding: 15px;
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: var(--border-radius-sm);
+    }
+
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent-color);
+    }
+
+    .form-check-label {
+        color: var(--text-primary);
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    /* تحسينات شبكة التخطيط */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 576px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .mobile-header-title {
+            font-size: 1rem;
+        }
+    }
+
+    /* تحسينات للمدخلات */
+    .input-group {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        z-index: 2;
+    }
+
+    .form-control.has-icon {
+        padding-left: 45px;
+    }
+
+    /* رسائل التحقق */
+    .validation-message {
+        display: none;
+        font-size: 0.85rem;
+        margin-top: 5px;
+        padding: 8px 12px;
+        border-radius: var(--border-radius-sm);
+    }
+
+    .validation-message.error {
+        color: var(--danger-color);
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .validation-message.success {
+        color: var(--success-color);
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    /* تنسيق رفع الصور */
+    .file-upload-container {
+        position: relative;
+        margin-bottom: 10px;
+    }
+
+    .file-input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .file-upload-preview {
+        position: relative;
+        width: 100%;
+        height: 200px;
+        border: 2px dashed #e2e8f0;
+        border-radius: var(--border-radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .file-upload-preview:hover {
+        border-color: var(--accent-color);
+        background-color: rgba(108, 99, 255, 0.02);
+    }
+
+    .file-upload-preview.dragover {
+        border-color: var(--accent-color);
+        background-color: rgba(108, 99, 255, 0.05);
+        transform: scale(1.02);
+    }
+
+    .upload-placeholder {
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 20px;
+    }
+
+    .upload-placeholder i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        color: var(--accent-color);
+        opacity: 0.7;
+    }
+
+    .upload-placeholder span {
+        display: block;
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
+
+    .upload-placeholder small {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .preview-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: var(--border-radius-sm);
+    }
+
+    .preview-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        color: white;
+    }
+
+    .file-upload-preview:hover .preview-overlay {
+        opacity: 1;
+    }
+
+    .preview-overlay i {
+        font-size: 2rem;
+        margin-bottom: 8px;
+    }
+
+    .preview-overlay span {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* تحسين شريط التقدم */
+    .upload-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border-radius: 0 0 var(--border-radius-sm) var(--border-radius-sm);
+        display: none;
+    }
+
+    .upload-progress-bar {
+        height: 100%;
+        background: var(--accent-gradient);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    /* رسائل حالة الرفع */
+    .upload-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: none;
+    }
+
+    .upload-status.success {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .upload-status.error {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .upload-status.uploading {
+        background: var(--accent-color);
+        color: white;
+    }
+    </style>
+</head>
+<body>
+    <!-- هيدر الموبايل -->
+    <header class="mobile-header">
+        <a href="{{ url_for('admin.banners') }}" class="mobile-back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <h1 class="mobile-header-title">
+            {% if banner %}تعديل البنر{% else %}إضافة بنر جديد{% endif %}
+        </h1>
+        <div style="width: 40px;"></div> <!-- مساحة فارغة للتوازن -->
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <!-- نموذج البيانات -->
+        <div class="form-card">
+            <h2 class="form-section-title">
+                <i class="fas fa-{% if banner %}edit{% else %}plus{% endif %} me-2"></i>
+                بيانات البنر
+            </h2>
+            
+            <form method="POST" action="{% if banner %}{{ url_for('admin.edit_banner', banner_id=banner.id) }}{% else %}{{ url_for('admin.new_banner') }}{% endif %}" id="bannerForm" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <!-- العنوان -->
+                <div class="form-group">
+                    <label class="form-label" for="title">
+                        العنوان <span class="required">*</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="title" name="title" 
+                               value="{% if banner %}{{ banner.title }}{% endif %}" 
+                               required placeholder="أدخل عنوان البنر">
+                        <i class="fas fa-heading input-icon"></i>
+                    </div>
+                    <div class="validation-message" id="title-validation"></div>
+                </div>
+
+                <!-- الوصف -->
+                <div class="form-group">
+                    <label class="form-label" for="description">الوصف</label>
+                    <textarea class="form-control" id="description" name="description" 
+                              rows="3" placeholder="وصف مختصر للبنر">{% if banner %}{{ banner.description or '' }}{% endif %}</textarea>
+                    <div class="form-text">وصف مختصر يظهر مع البنر</div>
+                </div>
+
+                <!-- رفع صورة البنر -->
+                <div class="form-group">
+                    <label class="form-label" for="banner_image">
+                        صورة البنر <span class="required">*</span>
+                    </label>
+                    <div class="file-upload-container">
+                        <input type="file" class="form-control file-input" id="banner_image" name="banner_image" 
+                               accept="image/*" {% if not banner %}required{% endif %}>
+                        <div class="file-upload-preview" id="image-preview">
+                            {% if banner and banner.image_url %}
+                            <img src="{{ banner.image_url }}" alt="{{ banner.title }}" class="preview-img">
+                            <div class="preview-overlay">
+                                <i class="fas fa-edit"></i>
+                                <span>تغيير الصورة</span>
+                            </div>
+                            {% else %}
+                            <div class="upload-placeholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>اضغط لاختيار صورة البنر</span>
+                                <small>PNG, JPG, JPEG, GIF, WEBP (أقل من 5MB)</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-text">يُفضل أبعاد 1200x300 بكسل لأفضل جودة عرض</div>
+                    <div class="validation-message" id="image-validation"></div>
+                </div>
+
+                <!-- رابط الهدف -->
+                <div class="form-group">
+                    <label class="form-label" for="link_url">رابط الهدف</label>
+                    <div class="input-group">
+                        <input type="url" class="form-control has-icon" id="link_url" name="link_url" 
+                               value="{% if banner %}{{ banner.link_url or '' }}{% endif %}" 
+                               placeholder="https://example.com/target">
+                        <i class="fas fa-link input-icon"></i>
+                    </div>
+                    <div class="form-text">الرابط الذي يتم التوجه إليه عند النقر (اختياري)</div>
+                </div>
+
+                <!-- الفئة المستهدفة والأولوية -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="target_roles">الفئة المستهدفة</label>
+                        <select class="form-select" id="target_roles" name="target_roles">
+                            <option value="all" {% if banner and banner.target_roles == 'all' %}selected{% endif %}>جميع المستخدمين</option>
+                            <option value="student" {% if banner and banner.target_roles == 'student' %}selected{% endif %}>الطلاب فقط</option>
+                            <option value="teacher" {% if banner and banner.target_roles == 'teacher' %}selected{% endif %}>المعلمين فقط</option>
+                            <option value="assistant" {% if banner and banner.target_roles == 'assistant' %}selected{% endif %}>المساعدين فقط</option>
+                            <option value="admin" {% if banner and banner.target_roles == 'admin' %}selected{% endif %}>المديرين فقط</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="priority">الأولوية</label>
+                        <input type="number" class="form-control" id="priority" name="priority" 
+                               value="{% if banner %}{{ banner.priority }}{% else %}0{% endif %}" 
+                               min="0" placeholder="0">
+                        <div class="form-text">أرقام أعلى تظهر أولاً</div>
+                    </div>
+                </div>
+
+                <!-- تواريخ البداية والانتهاء -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="start_date">تاريخ البداية</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                               value="{% if banner and banner.start_date %}{{ banner.start_date.strftime('%Y-%m-%d') }}{% endif %}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="end_date">تاريخ الانتهاء</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                               value="{% if banner and banner.end_date %}{{ banner.end_date.strftime('%Y-%m-%d') }}{% endif %}">
+                    </div>
+                </div>
+
+                <!-- حالة التفعيل (للتعديل فقط) -->
+                {% if banner %}
+                <div class="checkbox-container">
+                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                           {% if banner.is_active %}checked{% endif %}>
+                    <label class="form-check-label" for="is_active">
+                        البنر نشط ومُفعل
+                    </label>
+                </div>
+                {% endif %}
+
+                <!-- أزرار العمل -->
+                <div class="action-buttons">
+                    <button type="submit" class="btn-action btn-primary">
+                        <i class="fas fa-save"></i>
+                        {% if banner %}حفظ التغييرات{% else %}إضافة البنر{% endif %}
+                    </button>
+                    <a href="{{ url_for('admin.banners') }}" class="btn-action btn-secondary">
+                        <i class="fas fa-times"></i>
+                        إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- معاينة البنر -->
+        <div class="preview-card">
+            <h2 class="form-section-title">
+                <i class="fas fa-eye me-2"></i>
+                معاينة البنر
+            </h2>
+            
+            <div id="banner-preview">
+                {% if banner and banner.image_url %}
+                <img src="{{ banner.image_url }}" alt="{{ banner.title }}" class="preview-image" id="preview-img">
+                {% else %}
+                <div class="preview-placeholder" id="preview-placeholder">
+                    <i class="fas fa-image"></i>
+                    <p>معاينة الصورة ستظهر هنا</p>
+                </div>
+                {% endif %}
+                
+                <div class="preview-content">
+                    <h3 class="preview-title" id="preview-title">
+                        {% if banner %}{{ banner.title }}{% else %}عنوان البنر{% endif %}
+                    </h3>
+                    <p class="preview-description" id="preview-description">
+                        {% if banner and banner.description %}{{ banner.description }}{% else %}وصف البنر سيظهر هنا{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- إحصائيات البنر (للتعديل فقط) -->
+        {% if banner %}
+        <div class="stats-card">
+            <h2 class="form-section-title">
+                <i class="fas fa-chart-bar me-2"></i>
+                إحصائيات البنر
+            </h2>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">{{ banner.click_count }}</div>
+                    <div class="stat-label">النقرات</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ banner.priority }}</div>
+                    <div class="stat-label">الأولوية</div>
+                </div>
+            </div>
+            
+            <div class="stats-details">
+                <div class="detail-row">
+                    <span class="detail-label">تاريخ الإنشاء:</span>
+                    <span class="detail-value">{{ banner.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">آخر تحديث:</span>
+                    <span class="detail-value">{{ banner.updated_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">الحالة:</span>
+                    <span class="detail-value">
+                        <span class="status-badge {% if banner.is_active %}status-active{% else %}status-inactive{% endif %}">
+                            {% if banner.is_active %}نشط{% else %}معطل{% endif %}
+                        </span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- نصائح -->
+        <div class="preview-card">
+            <h2 class="form-section-title">
+                <i class="fas fa-lightbulb me-2"></i>
+                نصائح مهمة
+            </h2>
+            
+            <div style="color: var(--text-secondary); line-height: 1.6;">
+                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                    <i class="fas fa-image" style="color: var(--accent-color); margin-left: 10px; width: 20px;"></i>
+                    <span>استخدم صور عالية الجودة بأبعاد 1200x300 بكسل</span>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                    <i class="fas fa-palette" style="color: var(--info-color); margin-left: 10px; width: 20px;"></i>
+                    <span>اختر ألوان تتناسب مع تصميم الموقع</span>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                    <i class="fas fa-target" style="color: var(--success-color); margin-left: 10px; width: 20px;"></i>
+                    <span>حدد الفئة المستهدفة بدقة لضمان الوصول الصحيح</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <i class="fas fa-clock" style="color: var(--warning-color); margin-left: 10px; width: 20px;"></i>
+                    <span>استخدم تواريخ البداية والانتهاء للعروض المؤقتة</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // عناصر النموذج
+            const bannerImageInput = document.getElementById('banner_image');
+            const titleInput = document.getElementById('title');
+            const descriptionInput = document.getElementById('description');
+            const startDateInput = document.getElementById('start_date');
+            const endDateInput = document.getElementById('end_date');
+            const form = document.getElementById('bannerForm');
+            const imagePreview = document.getElementById('image-preview');
+
+            // عناصر المعاينة
+            const previewImg = document.getElementById('preview-img');
+            const previewPlaceholder = document.getElementById('preview-placeholder');
+            const previewTitle = document.getElementById('preview-title');
+            const previewDescription = document.getElementById('preview-description');
+
+            // معالجة رفع الصور
+            if (bannerImageInput && imagePreview) {
+                bannerImageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        handleImageUpload(file);
+                    }
+                });
+
+                // دعم السحب والإفلات
+                imagePreview.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
+                });
+
+                imagePreview.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                });
+
+                imagePreview.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        if (file.type.startsWith('image/')) {
+                            bannerImageInput.files = files;
+                            handleImageUpload(file);
+                        } else {
+                            showValidation(document.getElementById('image-validation'), 'يرجى اختيار ملف صورة صحيح', 'error');
+                        }
+                    }
+                });
+            }
+
+            // معالجة رفع الصورة
+            function handleImageUpload(file) {
+                // التحقق من حجم الملف (5MB)
+                const maxSize = 5 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    showValidation(document.getElementById('image-validation'), 'حجم الملف كبير جداً (أقل من 5MB)', 'error');
+                    return;
+                }
+
+                // التحقق من نوع الملف
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    showValidation(document.getElementById('image-validation'), 'نوع الملف غير مدعوم', 'error');
+                    return;
+                }
+
+                // قراءة الملف وعرض المعاينة
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    updateImagePreview(e.target.result);
+                    hideValidation(document.getElementById('image-validation'));
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // تحديث معاينة الصورة
+            function updateImagePreview(imageSrc) {
+                imagePreview.innerHTML = `
+                    <img src="${imageSrc}" alt="معاينة البنر" class="preview-img">
+                    <div class="preview-overlay">
+                        <i class="fas fa-edit"></i>
+                        <span>تغيير الصورة</span>
+                    </div>
+                    <div class="upload-status success">تم اختيار الصورة</div>
+                `;
+                
+                // إخفاء رسالة النجاح بعد 2 ثانية
+                setTimeout(() => {
+                    const status = imagePreview.querySelector('.upload-status');
+                    if (status) status.style.display = 'none';
+                }, 2000);
+
+                // تحديث المعاينة الرئيسية
+                updateMainPreview();
+            }
+
+            // تحديث المعاينة المباشرة
+            function updateMainPreview() {
+                const title = titleInput.value.trim();
+                const description = descriptionInput.value.trim();
+
+                // تحديث العنوان
+                if (previewTitle) {
+                    previewTitle.textContent = title || 'عنوان البنر';
+                }
+
+                // تحديث الوصف
+                if (previewDescription) {
+                    previewDescription.textContent = description || 'وصف البنر سيظهر هنا';
+                }
+            }
+
+            // ربط الأحداث للمعاينة المباشرة
+            if (titleInput) {
+                titleInput.addEventListener('input', updateMainPreview);
+                titleInput.addEventListener('blur', validateTitle);
+            }
+            
+            if (descriptionInput) {
+                descriptionInput.addEventListener('input', updateMainPreview);
+            }
+
+            // التحقق من صحة العنوان
+            function validateTitle() {
+                const title = titleInput.value.trim();
+                const validation = document.getElementById('title-validation');
+                
+                if (title.length < 3) {
+                    showValidation(validation, 'العنوان يجب أن يكون 3 أحرف على الأقل', 'error');
+                } else if (title.length > 100) {
+                    showValidation(validation, 'العنوان طويل جداً (100 حرف كحد أقصى)', 'error');
+                } else {
+                    showValidation(validation, 'العنوان مناسب', 'success');
+                    setTimeout(() => hideValidation(validation), 2000);
+                }
+            }
+
+            // عرض رسائل التحقق
+            function showValidation(element, message, type) {
+                if (element) {
+                    element.textContent = message;
+                    element.className = `validation-message ${type}`;
+                    element.style.display = 'block';
+                }
+            }
+
+            // إخفاء رسائل التحقق
+            function hideValidation(element) {
+                if (element) {
+                    element.style.display = 'none';
+                }
+            }
+
+            // التحقق من صحة التواريخ
+            if (startDateInput && endDateInput) {
+                startDateInput.addEventListener('change', function() {
+                    const startDate = this.value;
+                    if (startDate) {
+                        endDateInput.min = startDate;
+                        if (endDateInput.value && endDateInput.value < startDate) {
+                            endDateInput.value = '';
+                        }
+                    }
+                });
+            }
+
+            // التحقق من صحة النموذج قبل الإرسال
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    let isValid = true;
+                    
+                    // التحقق من العنوان
+                    const title = titleInput.value.trim();
+                    if (title.length < 3) {
+                        e.preventDefault();
+                        isValid = false;
+                        titleInput.focus();
+                        showValidation(document.getElementById('title-validation'), 'يجب إدخال عنوان صحيح', 'error');
+                    }
+                    
+                    // التحقق من وجود صورة (للبنرات الجديدة فقط)
+                    const isNewBanner = !{{ 'true' if banner else 'false' }};
+                    if (isNewBanner && (!bannerImageInput.files || bannerImageInput.files.length === 0)) {
+                        e.preventDefault();
+                        isValid = false;
+                        showValidation(document.getElementById('image-validation'), 'يجب اختيار صورة للبنر', 'error');
+                    }
+                    
+                    if (isValid) {
+                        // إضافة تأثير التحميل
+                        const submitBtn = form.querySelector('button[type="submit"]');
+                        if (submitBtn) {
+                            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+                            submitBtn.disabled = true;
+                        }
+                    }
+                });
+            }
+
+            // تحسين تجربة المستخدم
+            document.querySelectorAll('.form-control, .form-select').forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = '';
+                });
+            });
+
+            // تهيئة المعاينة عند تحميل الصفحة
+            updateMainPreview();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>تسجيل الحضور - {{ classroom.name }} - موبايل</title>
+    
+    <!-- خطوط وCSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+
+    <style>
+    /* متغيرات التصميم - مرتبطة بإعدادات النظام */
+    :root {
+        --primary-color: {{ current_user.primary_color or '#6366f1' }};
+        --secondary-color: {{ current_user.secondary_color or '#8b5cf6' }};
+        --accent-color: {{ current_user.primary_color or '#6366f1' }};
+        --accent-gradient: linear-gradient(135deg, {{ current_user.primary_color or '#2d2e3bff' }}, {{ current_user.secondary_color or '#8b5cf6' }});
+        --surface-color: #FFFFFF;
+        --background-color: #F8FAFC;
+        --text-primary: #1E293B;
+        --text-secondary: #64748B;
+        --border-color: #E2E8F0;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+        --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+        --shadow-lg: 0 10px 25px 0 rgba(0, 0, 0, 0.2);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 24px;
+    }
+
+    /* تنسيق عام للموبايل */
+    * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--background-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        font-size: 16px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* شريط الحالة العلوي */
+    .mobile-status-bar {
+        background: var(--accent-gradient);
+        color: white;
+        padding: 0.5rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        font-size: 0.9rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    .status-left {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .status-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    /* هيدر التطبيق */
+    .mobile-header {
+        background: var(--surface-color);
+        padding: 1rem 1rem 0.5rem;
+        margin-top: 40px;
+        box-shadow: var(--shadow-sm);
+        position: sticky;
+        top: 40px;
+        z-index: 100;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .back-button {
+        background: rgba(99, 102, 241, 0.1);
+        border: none;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:active {
+        background: var(--primary-color);
+        color: white;
+        transform: scale(0.95);
+    }
+
+    .header-title {
+        flex: 1;
+        text-align: center;
+        margin: 0 1rem;
+    }
+
+    .header-title h1 {
+        font-size: 1.3rem;
+        color: var(--text-primary);
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .header-title p {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .menu-button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        cursor: pointer;
+        padding: 0.5rem;
+    }
+
+    /* الإحصائيات السريعة */
+    .mobile-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        padding: 0.5rem 1rem 1rem;
+        background: var(--surface-color);
+    }
+
+    .stat-card-mobile {
+        background: var(--background-color);
+        border-radius: var(--radius-md);
+        padding: 0.75rem 0.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .stat-card-mobile.present {
+        border-color: var(--success-color);
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .stat-card-mobile.late {
+        border-color: var(--warning-color);
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .stat-card-mobile.absent {
+        border-color: var(--danger-color);
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .stat-card-mobile.total {
+        border-color: var(--primary-color);
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .stat-number-mobile {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label-mobile {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    /* منطقة البحث الموبايل */
+    .mobile-search-section {
+        background: var(--surface-color);
+        padding: 1rem;
+        margin: 1rem;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .mobile-search-container {
+        position: relative;
+    }
+
+    .mobile-search-input {
+        width: 100%;
+        padding: 1rem 3rem 1rem 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        background: var(--surface-color);
+        transition: all 0.3s ease;
+        color: var(--text-primary);
+    }
+
+    .mobile-search-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .mobile-search-icon {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        pointer-events: none;
+    }
+
+    .mobile-clear-search {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+    }
+
+    .mobile-clear-search:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+    }
+
+    /* تمييز نتائج البحث في الموبايل */
+    .student-card.mobile-search-highlight .student-name-mobile {
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+    }
+
+    .student-card.mobile-search-no-match {
+        display: none !important;
+    }
+
+    /* تحسينات منطقة المحتوى */
+    .mobile-content {
+        padding: 1rem;
+        margin-bottom: 100px; /* مساحة للشريط السفلي */
+    }
+
+    /* كروت الطلاب */
+    .student-card {
+        background: var(--surface-color);
+        border-radius: var(--radius-lg);
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .student-card:active {
+        transform: scale(0.98);
+        box-shadow: var(--shadow-md);
+    }
+
+    .student-card.marked {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .student-header {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    }
+
+    .student-avatar-mobile {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .student-placeholder-mobile {
+        width: 60px;
+        height: 60px;
+        background: var(--accent-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .student-info-mobile {
+        flex: 1;
+    }
+
+    .student-name-mobile {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.25rem 0;
+    }
+
+    .student-details-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .student-phone-mobile {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-button-mobile {
+        background: var(--info-color);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .info-button-mobile:active {
+        transform: scale(0.9);
+        box-shadow: var(--shadow-md);
+    }
+
+    /* أزرار الحضور */
+    .attendance-controls-mobile {
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .attendance-options-mobile {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .attendance-btn-mobile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem 0.5rem;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        background: var(--surface-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-height: 70px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .attendance-btn-mobile::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, transparent, rgba(255,255,255,0.2));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .attendance-btn-mobile:active::before {
+        opacity: 1;
+    }
+
+    .attendance-btn-mobile.present {
+        border-color: var(--success-color);
+        color: var(--success-color);
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .attendance-btn-mobile.present.active {
+        background: var(--success-color);
+        color: white;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+    }
+
+    .attendance-btn-mobile.late {
+        border-color: var(--warning-color);
+        color: var(--warning-color);
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .attendance-btn-mobile.late.active {
+        background: var(--warning-color);
+        color: white;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+    }
+
+    .attendance-btn-mobile.absent {
+        border-color: var(--danger-color);
+        color: var(--danger-color);
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .attendance-btn-mobile.absent.active {
+        background: var(--danger-color);
+        color: white;
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+    }
+
+    .attendance-btn-mobile.excused {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .attendance-btn-mobile.excused.active {
+        background: var(--primary-color);
+        color: white;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+    }
+
+    .attendance-icon-mobile {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .attendance-label-mobile {
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    /* حقل الملاحظات */
+    .notes-section-mobile {
+        margin-top: 1rem;
+    }
+
+    .notes-input-mobile {
+        width: 100%;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 0.75rem;
+        font-size: 1rem;
+        background: var(--surface-color);
+        transition: all 0.3s ease;
+        resize: none;
+        min-height: 60px;
+    }
+
+    .notes-input-mobile:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    /* الشريط السفلي الثابت */
+    .mobile-bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--surface-color);
+        border-top: 1px solid var(--border-color);
+        padding: 1rem;
+        z-index: 100;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .save-button-mobile {
+        width: 100%;
+        background: var(--accent-gradient);
+        border: none;
+        border-radius: var(--radius-lg);
+        padding: 1rem;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    .save-button-mobile:active {
+        transform: translateY(2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .save-button-mobile:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Modal للموبايل */
+    .mobile-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        display: none;
+        align-items: flex-end;
+    }
+
+    .mobile-modal.show {
+        display: flex;
+    }
+
+    .modal-content-mobile {
+        background: var(--surface-color);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        padding: 1.5rem;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+    }
+
+    .mobile-modal.show .modal-content-mobile {
+        transform: translateY(0);
+    }
+
+    .modal-header-mobile {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .modal-title-mobile {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .modal-close-mobile {
+        background: rgba(239, 68, 68, 0.1);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--danger-color);
+        font-size: 1.2rem;
+        cursor: pointer;
+    }
+
+    /* تنبيهات مخصصة للموبايل */
+    .mobile-alert {
+        position: fixed;
+        top: 60px;
+        left: 1rem;
+        right: 1rem;
+        z-index: 1500;
+        padding: 1rem;
+        border-radius: var(--radius-lg);
+        color: white;
+        font-weight: 500;
+        transform: translateY(-100px);
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .mobile-alert.show {
+        transform: translateY(0);
+    }
+
+    .mobile-alert.success {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .mobile-alert.error {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    /* تحسينات إضافية للتفاعل */
+    .ripple {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ripple::after {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        pointer-events: none;
+    }
+
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+
+    /* تحميل Skeleton */
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
+    /* تحسينات الأداء */
+    .will-change {
+        will-change: transform;
+    }
+
+    /* حماية من التكبير غير المرغوب */
+    input, textarea, select {
+        font-size: 16px !important;
+    }
+
+    /* إخفاء scrollbar في بعض المتصفحات */
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    </style>
+</head>
+<body>
+    <!-- شريط الحالة العلوي -->
+    <div class="mobile-status-bar">
+        <div class="status-left">
+            <i class="fas fa-wifi"></i>
+            <span id="currentTime"></span>
+        </div>
+        <div class="status-right">
+            <span id="batteryLevel">85%</span>
+            <i class="fas fa-battery-three-quarters"></i>
+        </div>
+    </div>
+
+    <!-- هيدر التطبيق -->
+    <div class="mobile-header">
+        <div class="header-content">
+            <button class="back-button" onclick="goBack()">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <div class="header-title">
+                <h1>تسجيل الحضور</h1>
+                <p>{{ classroom.name }} - {{ classroom.subject }}</p>
+            </div>
+            <button class="menu-button" onclick="showMenu()">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+        </div>
+
+        <!-- الإحصائيات السريعة -->
+        <div class="mobile-stats">
+            <div class="stat-card-mobile total">
+                <div class="stat-number-mobile" id="totalMobile">{{ enrollments|length }}</div>
+                <p class="stat-label-mobile">إجمالي</p>
+            </div>
+            <div class="stat-card-mobile present">
+                <div class="stat-number-mobile" id="presentMobile">0</div>
+                <p class="stat-label-mobile">حاضر</p>
+            </div>
+            <div class="stat-card-mobile late">
+                <div class="stat-number-mobile" id="lateMobile">0</div>
+                <p class="stat-label-mobile">متأخر</p>
+            </div>
+            <div class="stat-card-mobile absent">
+                <div class="stat-number-mobile" id="absentMobile">0</div>
+                <p class="stat-label-mobile">غائب</p>
+            </div>
+        </div>
+
+        <!-- منطقة البحث الموبايل -->
+        <div class="mobile-search-section">
+            <div class="mobile-search-container">
+                <i class="fas fa-search mobile-search-icon"></i>
+                <input type="text" id="mobileStudentSearch" class="mobile-search-input" placeholder="البحث عن طالب...">
+                <button type="button" class="mobile-clear-search" id="mobileClearSearch" style="display: none;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- محتوى الطلاب -->
+    <div class="mobile-content">
+        <input type="hidden" id="classroomIdMobile" value="{{ classroom.id }}">
+        <input type="hidden" id="attendanceDateMobile" value="">
+
+        {% for enrollment in enrollments %}
+        {% set student = enrollment.user %}
+        {% set attendance = today_attendance.get(student.id) %}
+        <div class="student-card" data-student-id="{{ student.id }}">
+            <div class="student-header">
+                {% if student.profile_picture %}
+                <img src="{{ url_for('static', filename='uploads/profile_pictures/' + student.profile_picture) }}" 
+                     class="student-avatar-mobile" alt="{{ student.name }}">
+                {% else %}
+                <div class="student-placeholder-mobile">
+                    <i class="fas fa-user"></i>
+                </div>
+                {% endif %}
+                
+                <div class="student-info-mobile">
+                    <h3 class="student-name-mobile">{{ student.name }}</h3>
+                    <div class="student-details-mobile">
+                        <div class="student-phone-mobile">
+                            <i class="fas fa-phone"></i>
+                            {{ student.phone }}
+                        </div>
+                        {% if student.email %}
+                        <div class="student-phone-mobile">
+                            <i class="fas fa-envelope"></i>
+                            {{ student.email }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <button class="info-button-mobile" onclick="showStudentInfoMobile({{ student.id }})">
+                    <i class="fas fa-info"></i>
+                </button>
+            </div>
+
+            <div class="attendance-controls-mobile">
+                <div class="attendance-options-mobile">
+                    <button class="attendance-btn-mobile present {% if attendance and attendance.status == 'present' %}active{% endif %}" 
+                            onclick="selectAttendance({{ student.id }}, 'present', this)">
+                        <i class="fas fa-check attendance-icon-mobile"></i>
+                        <span class="attendance-label-mobile">حاضر</span>
+                    </button>
+                    
+                    <button class="attendance-btn-mobile late {% if attendance and attendance.status == 'late' %}active{% endif %}" 
+                            onclick="selectAttendance({{ student.id }}, 'late', this)">
+                        <i class="fas fa-clock attendance-icon-mobile"></i>
+                        <span class="attendance-label-mobile">متأخر</span>
+                    </button>
+                    
+                    <button class="attendance-btn-mobile absent {% if attendance and attendance.status == 'absent' %}active{% endif %}" 
+                            onclick="selectAttendance({{ student.id }}, 'absent', this)">
+                        <i class="fas fa-times attendance-icon-mobile"></i>
+                        <span class="attendance-label-mobile">غائب</span>
+                    </button>
+                    
+                    <button class="attendance-btn-mobile excused {% if attendance and attendance.status == 'excused' %}active{% endif %}" 
+                            onclick="selectAttendance({{ student.id }}, 'excused', this)">
+                        <i class="fas fa-user-check attendance-icon-mobile"></i>
+                        <span class="attendance-label-mobile">بعذر</span>
+                    </button>
+                </div>
+
+                <div class="notes-section-mobile">
+                    <textarea class="notes-input-mobile" 
+                              id="notesMobile_{{ student.id }}" 
+                              placeholder="إضافة ملاحظة..."
+                              maxlength="150">{% if attendance %}{{ attendance.notes or '' }}{% endif %}</textarea>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- الشريط السفلي الثابت -->
+    <div class="mobile-bottom-bar">
+        <button class="save-button-mobile ripple" onclick="saveAttendanceMobile()">
+            <i class="fas fa-save"></i>
+            حفظ الحضور
+        </button>
+    </div>
+
+    <!-- Modal معلومات الطالب -->
+    <div class="mobile-modal" id="studentModalMobile">
+        <div class="modal-content-mobile">
+            <div class="modal-header-mobile">
+                <h5 class="modal-title-mobile">معلومات الطالب</h5>
+                <button class="modal-close-mobile" onclick="closeStudentModalMobile()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="studentInfoContentMobile">
+                <!-- سيتم تحميل المحتوى هنا -->
+            </div>
+        </div>
+    </div>
+
+    <!-- منطقة التنبيهات -->
+    <div id="mobileAlertContainer"></div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+    // متغيرات عامة
+    let attendanceDataMobile = {};
+    let attendanceStatsMobile = {
+        present: 0,
+        late: 0,
+        absent: 0,
+        excused: 0
+    };
+
+    // تحديث الوقت
+    function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('ar-EG', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: false 
+        });
+        document.getElementById('currentTime').textContent = timeString;
+    }
+
+    // اختيار حالة الحضور
+    function selectAttendance(studentId, status, button) {
+        // إزالة التحديد السابق
+        const studentCard = button.closest('.student-card');
+        studentCard.querySelectorAll('.attendance-btn-mobile').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // تحديد الزر الجديد
+        button.classList.add('active');
+        studentCard.classList.add('marked');
+
+        // حفظ البيانات
+        attendanceDataMobile[studentId] = {
+            status: status,
+            notes: document.getElementById(`notesMobile_${studentId}`).value
+        };
+
+        // تحديث الإحصائيات
+        updateStatsMobile();
+
+        // إضافة تأثير الاهتزاز
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
+
+        // تأثير الريبل
+        addRippleEffect(button, event);
+    }
+
+    // تحديث الإحصائيات
+    function updateStatsMobile() {
+        attendanceStatsMobile = { present: 0, late: 0, absent: 0, excused: 0 };
+        
+        Object.values(attendanceDataMobile).forEach(data => {
+            if (attendanceStatsMobile.hasOwnProperty(data.status)) {
+                attendanceStatsMobile[data.status]++;
+            }
+        });
+        
+        document.getElementById('presentMobile').textContent = attendanceStatsMobile.present;
+        document.getElementById('lateMobile').textContent = attendanceStatsMobile.late;
+        document.getElementById('absentMobile').textContent = attendanceStatsMobile.absent;
+    }
+
+    // وظائف البحث للموبايل
+    function initializeMobileSearch() {
+        const searchInput = document.getElementById('mobileStudentSearch');
+        const clearButton = document.getElementById('mobileClearSearch');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            const studentCards = document.querySelectorAll('.student-card');
+            
+            if (searchTerm === '') {
+                clearButton.style.display = 'none';
+                studentCards.forEach(card => {
+                    card.style.display = '';
+                    card.classList.remove('mobile-search-highlight', 'mobile-search-no-match');
+                });
+                return;
+            }
+            
+            clearButton.style.display = 'block';
+            
+            studentCards.forEach(card => {
+                const studentName = card.querySelector('.student-name-mobile').textContent.toLowerCase();
+                const studentPhone = card.querySelector('.student-phone-mobile').textContent.toLowerCase();
+                
+                if (studentName.includes(searchTerm) || studentPhone.includes(searchTerm)) {
+                    card.style.display = '';
+                    card.classList.add('mobile-search-highlight');
+                    card.classList.remove('mobile-search-no-match');
+                } else {
+                    card.classList.add('mobile-search-no-match');
+                    card.classList.remove('mobile-search-highlight');
+                }
+            });
+        });
+        
+        clearButton.addEventListener('click', function() {
+            searchInput.value = '';
+            this.style.display = 'none';
+            const studentCards = document.querySelectorAll('.student-card');
+            studentCards.forEach(card => {
+                card.style.display = '';
+                card.classList.remove('mobile-search-highlight', 'mobile-search-no-match');
+            });
+        });
+    }
+
+    // حفظ الحضور مع CSRF token
+    function saveAttendanceMobile() {
+        const classroomId = document.getElementById('classroomIdMobile').value;
+        const attendanceDate = document.getElementById('attendanceDateMobile').value;
+        
+        // جمع الملاحظات المحدثة
+        Object.keys(attendanceDataMobile).forEach(studentId => {
+            const notesField = document.getElementById(`notesMobile_${studentId}`);
+            if (notesField) {
+                attendanceDataMobile[studentId].notes = notesField.value;
+            }
+        });
+        
+        if (Object.keys(attendanceDataMobile).length === 0) {
+            showMobileAlert('يرجى تحديد حالة الحضور لطالب واحد على الأقل', 'error');
+            return;
+        }
+
+        // تعطيل الزر وإظهار التحميل
+        const saveBtn = document.querySelector('.save-button-mobile');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+        saveBtn.disabled = true;
+        
+        // الحصول على CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // إرسال البيانات
+        fetch('/attendance/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                classroom_id: parseInt(classroomId),
+                attendance_data: attendanceDataMobile,
+                date: attendanceDate
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMobileAlert('تم حفظ الحضور بنجاح ✅', 'success');
+                // اهتزاز نجاح
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+                // إعادة تحميل الصفحة بعد ثانيتين
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showMobileAlert(data.message || 'حدث خطأ في حفظ البيانات', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMobileAlert('حدث خطأ في الاتصال بالخادم', 'error');
+        })
+        .finally(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        });
+    }
+
+    // عرض معلومات الطالب
+    function showStudentInfoMobile(studentId) {
+        fetch(`/attendance/student-info/${studentId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const student = data.student;
+                const contactInfo = data.contact_info;
+                const attendanceStats = data.attendance_stats;
+                
+                const content = `
+                    <div class="student-info-detailed">
+                        <div class="text-center mb-4">
+                            ${student.profile_picture ? 
+                                `<img src="/static/uploads/profile_pictures/${student.profile_picture}" 
+                                     style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--primary-color);">` :
+                                `<div class="student-placeholder-mobile mx-auto" style="width: 100px; height: 100px; font-size: 2rem;">
+                                    <i class="fas fa-user"></i>
+                                </div>`
+                            }
+                            <h4 class="mt-3 mb-1">${student.name}</h4>
+                            <p class="text-muted">${student.email || 'لا يوجد بريد إلكتروني'}</p>
+                        </div>
+                        
+                        <div class="contact-section mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-phone me-2"></i>معلومات الاتصال
+                            </h6>
+                            <div class="d-grid gap-2">
+                                ${contactInfo.student_phone ? 
+                                    `<a href="tel:${contactInfo.student_phone}" 
+                                       class="btn btn-outline-primary btn-lg">
+                                        <i class="fas fa-phone me-2"></i>${contactInfo.student_phone}
+                                    </a>` : ''
+                                }
+                                ${contactInfo.whatsapp_student ? 
+                                    `<a href="${contactInfo.whatsapp_student}" target="_blank" 
+                                       class="btn btn-outline-success btn-lg">
+                                        <i class="fab fa-whatsapp me-2"></i>واتساب الطالب
+                                    </a>` : ''
+                                }
+                                ${contactInfo.parent_phone ? 
+                                    `<a href="tel:${contactInfo.parent_phone}" 
+                                       class="btn btn-outline-info btn-lg">
+                                        <i class="fas fa-phone me-2"></i>ولي الأمر: ${contactInfo.parent_phone}
+                                    </a>` : ''
+                                }
+                                ${contactInfo.whatsapp_parent ? 
+                                    `<a href="${contactInfo.whatsapp_parent}" target="_blank" 
+                                       class="btn btn-outline-success btn-lg">
+                                        <i class="fab fa-whatsapp me-2"></i>واتساب ولي الأمر
+                                    </a>` : ''
+                                }
+                            </div>
+                        </div>
+                        
+                        <div class="stats-section">
+                            <h6 class="text-success mb-3">
+                                <i class="fas fa-chart-bar me-2"></i>إحصائيات الحضور
+                            </h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="card text-white" style="background: var(--success-color);">
+                                        <div class="card-body text-center p-3">
+                                            <h4>${attendanceStats.present_days}</h4>
+                                            <small>حضور</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="card text-white" style="background: var(--danger-color);">
+                                        <div class="card-body text-center p-3">
+                                            <h4>${attendanceStats.absent_days}</h4>
+                                            <small>غياب</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="card text-white" style="background: var(--warning-color);">
+                                        <div class="card-body text-center p-3">
+                                            <h4>${attendanceStats.late_days}</h4>
+                                            <small>تأخير</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="card text-white" style="background: var(--primary-color);">
+                                        <div class="card-body text-center p-3">
+                                            <h4>${attendanceStats.attendance_rate}%</h4>
+                                            <small>نسبة الحضور</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('studentInfoContentMobile').innerHTML = content;
+                document.getElementById('studentModalMobile').classList.add('show');
+            } else {
+                showMobileAlert(data.message || 'حدث خطأ في تحميل معلومات الطالب', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMobileAlert('حدث خطأ في تحميل معلومات الطالب', 'error');
+        });
+    }
+
+    // إغلاق modal معلومات الطالب
+    function closeStudentModalMobile() {
+        document.getElementById('studentModalMobile').classList.remove('show');
+    }
+
+    // عرض التنبيهات للموبايل
+    function showMobileAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `mobile-alert ${type}`;
+        alertDiv.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2"></i>
+            ${message}
+        `;
+        
+        document.getElementById('mobileAlertContainer').appendChild(alertDiv);
+        
+        // إظهار التنبيه
+        setTimeout(() => alertDiv.classList.add('show'), 100);
+        
+        // إزالة التنبيه تلقائياً
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            setTimeout(() => alertDiv.remove(), 300);
+        }, 4000);
+    }
+
+    // إضافة تأثير الريبل
+    function addRippleEffect(element, event) {
+        const circle = document.createElement('span');
+        const diameter = Math.max(element.clientWidth, element.clientHeight);
+        const radius = diameter / 2;
+        
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${event.clientX - element.offsetLeft - radius}px`;
+        circle.style.top = `${event.clientY - element.offsetTop - radius}px`;
+        circle.classList.add('ripple');
+        
+        const ripple = element.getElementsByClassName('ripple')[0];
+        if (ripple) {
+            ripple.remove();
+        }
+        
+        element.appendChild(circle);
+    }
+
+    // العودة للخلف
+    function goBack() {
+        window.history.back();
+    }
+
+    // إظهار القائمة
+    function showMenu() {
+        // يمكن إضافة وظائف القائمة هنا
+        showMobileAlert('القائمة قيد التطوير', 'error');
+    }
+
+    // إغلاق Modal عند النقر خارجه
+    document.getElementById('studentModalMobile').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeStudentModalMobile();
+        }
+    });
+
+    // تهيئة الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        // تعيين التاريخ الحالي
+        const now = new Date();
+        document.getElementById('attendanceDateMobile').value = now.toISOString().split('T')[0];
+        
+        // تحديث الوقت كل دقيقة
+        updateTime();
+        setInterval(updateTime, 60000);
+        
+        // تهيئة وظائف البحث
+        initializeMobileSearch();
+        
+        // تحديد الحضور المحفوظ مسبقاً
+        document.querySelectorAll('.attendance-btn-mobile.active').forEach(btn => {
+            const studentCard = btn.closest('.student-card');
+            const studentId = studentCard.dataset.studentId;
+            const status = btn.classList.contains('present') ? 'present' :
+                          btn.classList.contains('late') ? 'late' :
+                          btn.classList.contains('absent') ? 'absent' : 'excused';
+            
+            attendanceDataMobile[studentId] = {
+                status: status,
+                notes: document.getElementById(`notesMobile_${studentId}`).value
+            };
+            
+            studentCard.classList.add('marked');
+        });
+        
+        // تحديث الإحصائيات الأولية
+        updateStatsMobile();
+        
+        // تحسين الأداء - تأجيل تحميل الصور
+        const images = document.querySelectorAll('img[data-src]');
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.classList.remove('skeleton');
+                    observer.unobserve(img);
+                }
+            });
+        });
+        
+        images.forEach(img => imageObserver.observe(img));
+    });
+
+    // منع التكبير عند double tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+
+    // تحسين الأداء عند التمرير
+    let ticking = false;
+    function updateScrollPerformance() {
+        // يمكن إضافة تحسينات أداء إضافية هنا
+        ticking = false;
+    }
+
+    document.addEventListener('scroll', function() {
+        if (!ticking) {
+            requestAnimationFrame(updateScrollPerformance);
+            ticking = true;
+        }
+    });
+    </script>
+</body>
+</html>

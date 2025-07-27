@@ -1,8 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, current_app, session
 from flask_login import login_required, current_user
+from flask_wtf.csrf import validate_csrf, CSRFError
 from functools import wraps
 from datetime import datetime, timedelta
 import os
+import re
 from werkzeug.utils import secure_filename
 from models import LiveStream, Subscription, SubscriptionPlan, User, Role, Classroom, ClassroomEnrollment, ClassroomContent
 from models import Assignment, AssignmentSubmission, Quiz, QuizQuestion, QuizAttempt, QuizAnswer, QuizQuestionOption
@@ -33,9 +35,9 @@ def is_mobile():
 def student_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role != Role.STUDENT:
+        if not current_user.is_authenticated or current_user.role != 'student':
             flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'danger')
-            return redirect(url_for('index'))
+            return redirect(url_for('main.index'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -213,6 +215,11 @@ def join_classroom():
             flash('الرجاء إدخال كود الفصل', 'danger')
             return redirect(url_for('student.join_classroom'))
 
+        # التحقق من وجود رقم هاتف ولي الأمر
+        if not current_user.parent_phone or current_user.parent_phone.strip() == '':
+            flash('يجب إضافة رقم هاتف ولي الأمر أولاً قبل الانضمام للفصل. يرجى إضافة الرقم في النافذة المنبثقة التي ستظهر.', 'warning')
+            return redirect(url_for('student.join_classroom'))
+
         code = classroom_code.strip().upper()
 
         # Check if classroom exists
@@ -264,7 +271,55 @@ def join_classroom():
 
     return render_template(template,
                            primary_color=primary_color,
-                           secondary_color=secondary_color,)
+                           secondary_color=secondary_color,
+                           current_user=current_user)
+
+@student_bp.route('/update_parent_phone', methods=['POST'])
+@login_required
+@student_required
+def update_parent_phone():
+    """تحديث رقم هاتف ولي الأمر"""
+    try:
+        # التحقق من CSRF token
+        try:
+            csrf_token = request.headers.get('X-CSRFToken') or request.form.get('csrf_token')
+            if csrf_token:
+                validate_csrf(csrf_token)
+        except CSRFError:
+            return jsonify({'success': False, 'message': 'انتهت صلاحية الجلسة، يرجى إعادة تحميل الصفحة'})
+        
+        parent_phone = request.form.get('parent_phone', '').strip()
+        
+        if not parent_phone:
+            return jsonify({'success': False, 'message': 'يرجى إدخال رقم هاتف ولي الأمر'})
+        
+        # التحقق من صحة رقم الهاتف
+        phone_pattern = r'^01[0-9]{9}$'
+        if not re.match(phone_pattern, parent_phone):
+            return jsonify({
+                'success': False, 
+                'message': 'رقم الهاتف غير صحيح. يجب أن يبدأ بـ 01 ويتكون من 11 رقم'
+            })
+        
+        # تحديث رقم هاتف ولي الأمر في كلا الحقلين للتوافق
+        current_user.parent_phone = parent_phone
+        current_user.alt_phone = parent_phone  # للتوافق مع الحقول القديمة
+        current_user.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': 'تم حفظ رقم هاتف ولي الأمر بنجاح'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating parent phone: {str(e)}")
+        return jsonify({
+            'success': False, 
+            'message': 'حدث خطأ أثناء حفظ البيانات. يرجى المحاولة مرة أخرى.'
+        })
 
 @student_bp.route('/payment/<int:classroom_id>')
 @login_required

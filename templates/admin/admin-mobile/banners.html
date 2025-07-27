@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة البنرات والعروض - الحصة</title>
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+    /* متغيرات التصميم المخصص */
+    :root {
+        --accent-color: {{ primary_color or '#6366f1' }};
+        --accent-gradient: linear-gradient(120deg, {{ primary_color or '#6366f1' }}, {{ secondary_color or '#8b5cf6' }});
+        --surface-color: #FFFFFF;
+        --background-color: #F4F7FE;
+        --text-primary: #2D3748;
+        --text-secondary: #718096;
+        --border-radius-lg: 24px;
+        --border-radius-md: 16px;
+        --border-radius-sm: 8px;
+        --box-shadow: 0 10px 30px -5px rgba(108, 99, 255, 0.1);
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+    }
+
+    /* تنسيق عام للموبايل */
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background: var(--background-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        padding-bottom: 70px;
+    }
+
+    /* هيدر الموبايل */
+    .mobile-header {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 0;
+        z-index: 1000;
+        background: var(--accent-gradient);
+        padding: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: white;
+    }
+
+    .mobile-header-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        text-decoration: none;
+    }
+
+    .mobile-header-logo {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        background: white;
+        padding: 5px;
+        object-fit: contain;
+    }
+
+    .mobile-header-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .mobile-toggle {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .mobile-toggle:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+    }
+
+    /* قائمة التنقل الموبايل */
+    .mobile-nav {
+        position: fixed;
+        top: 60px;
+        right: 0;
+        left: 0;
+        background: white;
+        padding: 10px 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 999;
+        transform: translateY(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .mobile-nav.show {
+        transform: translateY(0);
+    }
+
+    .mobile-nav-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .mobile-nav-item {
+        margin: 0;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .mobile-nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .mobile-nav-link i {
+        width: 24px;
+        margin-left: 15px;
+        font-size: 1.2rem;
+        color: var(--accent-color);
+    }
+
+    .mobile-nav-link.active {
+        background: var(--accent-gradient);
+        color: white;
+    }
+
+    .mobile-nav-link.active i {
+        color: white;
+    }
+
+    /* المحتوى الرئيسي */
+    .main-content {
+        margin-top: 70px;
+        padding: 15px;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: var(--text-primary);
+        text-align: center;
+        position: relative;
+    }
+
+    .page-title::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        right: 50%;
+        transform: translateX(50%);
+        width: 50px;
+        height: 3px;
+        background: var(--accent-gradient);
+        border-radius: 2px;
+    }
+
+    /* البطاقات الإحصائية */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        padding: 15px;
+        text-align: center;
+        box-shadow: var(--box-shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        color: white;
+    }
+
+    .stat-icon.primary { background: var(--accent-gradient); }
+    .stat-icon.success { background: linear-gradient(135deg, var(--success-color), #22c55e); }
+    .stat-icon.warning { background: linear-gradient(135deg, var(--warning-color), #fbbf24); }
+    .stat-icon.info { background: linear-gradient(135deg, var(--info-color), #0ea5e9); }
+
+    .stat-title {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 5px;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    /* بطاقات البنرات */
+    .banner-card {
+        background: var(--surface-color);
+        border-radius: var(--border-radius-md);
+        margin-bottom: 15px;
+        box-shadow: var(--box-shadow);
+        overflow: hidden;
+    }
+
+    .banner-header {
+        padding: 15px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .banner-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .banner-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        border-radius: 12px;
+        color: white;
+    }
+
+    .badge-active {
+        background: linear-gradient(120deg, #00B5B5, #00D68F);
+    }
+
+    .badge-inactive {
+        background: linear-gradient(120deg, #9CA3AF, #6B7280);
+    }
+
+    .banner-body {
+        padding: 15px;
+    }
+
+    .banner-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .banner-detail {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .banner-detail i {
+        width: 18px;
+        color: var(--accent-color);
+    }
+
+    .banner-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        border-radius: var(--border-radius-sm);
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .btn-primary {
+        background: var(--accent-gradient);
+        color: white;
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, var(--warning-color), #fbbf24);
+        color: white;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, var(--success-color), #22c55e);
+        color: white;
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, var(--danger-color), #f87171);
+        color: white;
+    }
+
+    /* زر الإضافة الثابت */
+    .floating-btn {
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 28px;
+        background: var(--accent-gradient);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+        border: none;
+        z-index: 99;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .floating-btn:hover {
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(108, 99, 255, 0.4);
+    }
+
+    /* القائمة السفلية */
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+    }
+
+    .bottom-nav-item.active {
+        color: var(--accent-color);
+    }
+
+    .bottom-nav-item i {
+        font-size: 1.2rem;
+        margin-bottom: 4px;
+    }
+
+    /* حالة عدم وجود بيانات */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* التباعد المحسن */
+    .banner-thumbnail {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: var(--border-radius-sm);
+        margin-bottom: 10px;
+    }
+
+    /* تحسينات التجاوب */
+    @media (max-width: 576px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .banner-actions {
+            flex-direction: column;
+        }
+
+        .btn-sm {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    </style>
+</head>
+<body>
+    <!-- هيدر الموبايل -->
+    <header class="mobile-header">
+        <a href="{{ url_for('admin.dashboard') }}" class="mobile-header-brand">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="الحصة" class="mobile-header-logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'50\' font-size=\'24\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ELogo%3C/text%3E%3C/svg%3E'">
+            <h1 class="mobile-header-title">البنرات والعروض</h1>
+        </a>
+        <button class="mobile-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- قائمة الموبايل -->
+    <nav class="mobile-nav">
+        <ul class="mobile-nav-list">
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.dashboard') }}" class="mobile-nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.users') }}" class="mobile-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>المستخدمين</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.classrooms') }}" class="mobile-nav-link">
+                    <i class="fas fa-school"></i>
+                    <span>الفصول الدراسية</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.subscriptions') }}" class="mobile-nav-link">
+                    <i class="fas fa-money-check"></i>
+                    <span>الاشتراكات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.banners') }}" class="mobile-nav-link active">
+                    <i class="fas fa-images"></i>
+                    <span>البنرات والعروض</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.notifications') }}" class="mobile-nav-link">
+                    <i class="fas fa-bell"></i>
+                    <span>الإشعارات</span>
+                </a>
+            </li>
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('admin.settings') }}" class="mobile-nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span>الإعدادات</span>
+                </a>
+            </li>
+            
+            <li class="mobile-nav-item">
+                <a href="{{ url_for('auth.logout') }}" class="mobile-nav-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>تسجيل خروج</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <h1 class="page-title">إدارة البنرات والعروض</h1>
+
+        <!-- البطاقات الإحصائية -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-images fa-lg"></i>
+                </div>
+                <div class="stat-title">إجمالي البنرات</div>
+                <div class="stat-value">{{ banners.total }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-eye fa-lg"></i>
+                </div>
+                <div class="stat-title">البنرات النشطة</div>
+                <div class="stat-value">{{ banners.items|selectattr('is_active')|list|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-pause fa-lg"></i>
+                </div>
+                <div class="stat-title">البنرات المعطلة</div>
+                <div class="stat-value">{{ banners.items|rejectattr('is_active')|list|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-mouse-pointer fa-lg"></i>
+                </div>
+                <div class="stat-title">إجمالي النقرات</div>
+                <div class="stat-value">{{ banners.items|sum(attribute='click_count') }}</div>
+            </div>
+        </div>
+
+        <!-- قائمة البنرات -->
+        {% if banners.items %}
+            {% for banner in banners.items %}
+            <div class="banner-card">
+                <div class="banner-header">
+                    <h3 class="banner-title">{{ banner.title }}</h3>
+                    {% if banner.is_active %}
+                    <span class="banner-badge badge-active">نشط</span>
+                    {% else %}
+                    <span class="banner-badge badge-inactive">معطل</span>
+                    {% endif %}
+                </div>
+                <div class="banner-body">
+                    {% if banner.image_url %}
+                    <img src="{{ banner.image_url }}" alt="{{ banner.title }}" class="banner-thumbnail">
+                    {% endif %}
+                    
+                    {% if banner.description %}
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">
+                        {{ banner.description|truncate(100) }}
+                    </p>
+                    {% endif %}
+                    
+                    <div class="banner-info">
+                        <div class="banner-detail">
+                            <i class="fas fa-users"></i>
+                            <span>الجمهور: 
+                                {% if banner.target_roles == 'all' %}جميع المستخدمين
+                                {% elif banner.target_roles == 'student' %}الطلاب
+                                {% elif banner.target_roles == 'teacher' %}المعلمين
+                                {% elif banner.target_roles == 'assistant' %}المساعدين
+                                {% else %}{{ banner.target_roles }}{% endif %}
+                            </span>
+                        </div>
+                        <div class="banner-detail">
+                            <i class="fas fa-sort-numeric-up"></i>
+                            <span>الأولوية: {{ banner.priority }}</span>
+                        </div>
+                        <div class="banner-detail">
+                            <i class="fas fa-mouse-pointer"></i>
+                            <span>النقرات: {{ banner.click_count }}</span>
+                        </div>
+                        {% if banner.end_date %}
+                        <div class="banner-detail">
+                            <i class="fas fa-calendar-times"></i>
+                            <span>ينتهي في: {{ banner.end_date.strftime('%Y-%m-%d') }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="banner-actions">
+                        <a href="{{ url_for('admin.edit_banner', banner_id=banner.id) }}" class="btn-sm btn-primary">
+                            <i class="fas fa-edit"></i> تعديل
+                        </a>
+                        
+                        <form method="POST" action="{{ url_for('admin.toggle_banner', banner_id=banner.id) }}" class="d-inline-block">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-sm {% if banner.is_active %}btn-warning{% else %}btn-success{% endif %}">
+                                <i class="fas {% if banner.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
+                                {% if banner.is_active %}تعطيل{% else %}تفعيل{% endif %}
+                            </button>
+                        </form>
+
+                        <form method="POST" action="{{ url_for('admin.delete_banner', banner_id=banner.id) }}" class="d-inline-block" onsubmit="return confirm('هل أنت متأكد من حذف هذا البنر؟');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-sm btn-danger">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            {% if banners.pages > 1 %}
+            <nav aria-label="التنقل بين الصفحات" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if not banners.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.banners', page=banners.prev_num) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% for page_num in banners.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != banners.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.banners', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not banners.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.banners', page=banners.next_num) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-images"></i>
+                <h5>لا توجد بنرات متاحة</h5>
+                <p>انقر على زر الإضافة لإنشاء أول بنر</p>
+            </div>
+        {% endif %}
+    </main>
+
+    <!-- زر الإضافة الثابت -->
+    <a href="{{ url_for('admin.new_banner') }}" class="floating-btn">
+        <i class="fas fa-plus fa-lg"></i>
+    </a>
+
+    <!-- القائمة السفلية -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('admin.dashboard') }}" class="bottom-nav-item">
+            <i class="fas fa-chart-line"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('admin.users') }}" class="bottom-nav-item">
+            <i class="fas fa-users"></i>
+            <span>المستخدمين</span>
+        </a>
+        <a href="{{ url_for('admin.classrooms') }}" class="bottom-nav-item">
+            <i class="fas fa-school"></i>
+            <span>الفصول</span>
+        </a>
+        <a href="{{ url_for('admin.banners') }}" class="bottom-nav-item active">
+            <i class="fas fa-images"></i>
+            <span>البنرات</span>
+        </a>
+        <a href="{{ url_for('admin.settings') }}" class="bottom-nav-item">
+            <i class="fas fa-cog"></i>
+            <span>الإعدادات</span>
+        </a>
+    </nav>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // تفعيل زر القائمة للموبايل
+            const menuToggle = document.querySelector('.mobile-toggle');
+            const mobileNav = document.querySelector('.mobile-nav');
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    mobileNav.classList.toggle('show');
+                    this.querySelector('i').classList.toggle('fa-bars');
+                    this.querySelector('i').classList.toggle('fa-times');
+                });
+            }
+
+            // إغلاق القائمة عند النقر خارجها
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.mobile-nav') && 
+                    !e.target.closest('.mobile-toggle') &&
+                    mobileNav.classList.contains('show')) {
+                    mobileNav.classList.remove('show');
+                    menuToggle.querySelector('i').classList.add('fa-bars');
+                    menuToggle.querySelector('i').classList.remove('fa-times');
+                }
+            });
+
+            // تحسين تفاعل الأزرار
+            document.querySelectorAll('.btn-sm').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    // إضافة تأثير النقر
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+
+            // تحسين عرض الصور المصغرة
+            document.querySelectorAll('.banner-thumbnail').forEach(img => {
+                img.addEventListener('error', function() {
+                    this.src = 'data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 60\'%3E%3Crect width=\'100\' height=\'60\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50\' y=\'30\' font-size=\'12\' fill=\'%23999\' text-anchor=\'middle\' dy=\'.3em\'%3ENo Image%3C/text%3E%3C/svg%3E';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

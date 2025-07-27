@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import os
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from functools import wraps
@@ -1719,12 +1720,43 @@ def new_banner():
         try:
             title = request.form.get('title')
             description = request.form.get('description')
-            image_url = request.form.get('image_url')
             link_url = request.form.get('link_url')
             target_roles = request.form.get('target_roles', 'all')
             priority = int(request.form.get('priority', 0))
             start_date = request.form.get('start_date')
             end_date = request.form.get('end_date')
+            
+            # معالجة رفع الصورة
+            image_url = None
+            if 'banner_image' in request.files:
+                file = request.files['banner_image']
+                if file and file.filename:
+                    from werkzeug.utils import secure_filename
+                    import uuid
+                    
+                    # التحقق من نوع الملف
+                    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+                    if '.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
+                        # إنشاء اسم ملف فريد
+                        unique_filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+                        
+                        # إنشاء مجلد البنرات
+                        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'banners')
+                        os.makedirs(upload_folder, exist_ok=True)
+                        
+                        # حفظ الملف
+                        filepath = os.path.join(upload_folder, unique_filename)
+                        file.save(filepath)
+                        
+                        # تعيين رابط الصورة
+                        image_url = f"/static/uploads/banners/{unique_filename}"
+                    else:
+                        flash('نوع الملف غير مدعوم. يرجى اختيار صورة بصيغة PNG, JPG, JPEG, GIF, أو WEBP', 'error')
+                        return redirect(request.url)
+            
+            if not image_url:
+                flash('يرجى اختيار صورة للبنر', 'error')
+                return redirect(request.url)
             
             # تحويل التواريخ
             start_date_obj = datetime.strptime(start_date, '%Y-%m-%d') if start_date else None
@@ -1774,16 +1806,54 @@ def edit_banner(banner_id):
         try:
             banner.title = request.form.get('title')
             banner.description = request.form.get('description')
-            banner.image_url = request.form.get('image_url')
             banner.link_url = request.form.get('link_url')
             banner.target_roles = request.form.get('target_roles', 'all')
             banner.priority = int(request.form.get('priority', 0))
+            
+            # معالجة رفع صورة جديدة
+            if 'banner_image' in request.files:
+                file = request.files['banner_image']
+                if file and file.filename:
+                    from werkzeug.utils import secure_filename
+                    import uuid
+                    
+                    # التحقق من نوع الملف
+                    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+                    if '.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
+                        # حذف الصورة القديمة إذا كانت موجودة
+                        if banner.image_url and banner.image_url.startswith('/static/uploads/banners/'):
+                            old_filepath = os.path.join(current_app.root_path, banner.image_url.lstrip('/'))
+                            if os.path.exists(old_filepath):
+                                try:
+                                    os.remove(old_filepath)
+                                except:
+                                    pass  # لا بأس إذا لم نتمكن من حذف الملف القديم
+                        
+                        # إنشاء اسم ملف فريد
+                        unique_filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+                        
+                        # إنشاء مجلد البنرات
+                        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'banners')
+                        os.makedirs(upload_folder, exist_ok=True)
+                        
+                        # حفظ الملف
+                        filepath = os.path.join(upload_folder, unique_filename)
+                        file.save(filepath)
+                        
+                        # تحديث رابط الصورة
+                        banner.image_url = f"/static/uploads/banners/{unique_filename}"
+                    else:
+                        flash('نوع الملف غير مدعوم. يرجى اختيار صورة بصيغة PNG, JPG, JPEG, GIF, أو WEBP', 'error')
+                        return redirect(request.url)
             
             start_date = request.form.get('start_date')
             end_date = request.form.get('end_date')
             
             banner.start_date = datetime.strptime(start_date, '%Y-%m-%d') if start_date else None
             banner.end_date = datetime.strptime(end_date, '%Y-%m-%d') if end_date else None
+            
+            # تحديث حالة التفعيل
+            banner.is_active = 'is_active' in request.form
             
             db.session.commit()
             

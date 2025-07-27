@@ -457,6 +457,25 @@
 
         <!-- المحتوى الرئيسي -->
         <main class="main-content">
+            <!-- تنبيه رقم هاتف ولي الأمر -->
+            {% if not current_user.parent_phone or current_user.parent_phone.strip() == '' %}
+            <div class="alert alert-warning border-0 shadow-sm mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="alert-heading mb-1">إضافة رقم هاتف ولي الأمر مطلوب</h6>
+                        <p class="mb-2">يجب إضافة رقم هاتف ولي الأمر في ملفك الشخصي لتتمكن من الانضمام للفصول الدراسية الجديدة.</p>
+                        <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-user-edit me-1"></i>تحديث الملف الشخصي
+                        </a>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+            {% endif %}
+            
             <div class="page-header">
                 <h1 class="page-title">الفصول الدراسية</h1>
                 <a href="{{ url_for('student.join_classroom') }}" class="btn-join">
@@ -529,6 +548,67 @@
                 !$(e.target).closest('.innovative-sidebar').length && 
                 !$(e.target).closest('.mobile-toggle').length) {
                 $('.innovative-sidebar').removeClass('show');
+            }
+        });
+
+        // التحقق من رقم هاتف ولي الأمر عند محاولة الانضمام لفصل
+        {% if not current_user.parent_phone or current_user.parent_phone.strip() == '' %}
+        $(document).ready(function() {
+            // تحسين مظهر التنبيه
+            $('.alert-warning').on('closed.bs.alert', function () {
+                // يمكن إضافة منطق إضافي عند إغلاق التنبيه
+                localStorage.setItem('parent_phone_alert_dismissed', 'true');
+            });
+
+            // فحص إذا كان المستخدم قد أغلق التنبيه من قبل
+            if (localStorage.getItem('parent_phone_alert_dismissed') === 'true') {
+                $('.alert-warning').hide();
+            }
+
+            // منع الانضمام للفصل إذا لم يتم إضافة رقم ولي الأمر
+            $('.btn-join').on('click', function(e) {
+                e.preventDefault();
+                showParentPhoneWarning();
+            });
+        });
+
+        function showParentPhoneWarning() {
+            // إنشاء modal تحذيري
+            const warningModal = `
+                <div class="modal fade" id="parentPhoneWarningModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header bg-warning text-dark border-0">
+                                <h5 class="modal-title fw-bold">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    إضافة رقم هاتف ولي الأمر مطلوب
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4 text-center">
+                                <i class="fas fa-phone fa-3x text-warning mb-3"></i>
+                                <h6 class="fw-bold mb-3">لا يمكن الانضمام للفصول</h6>
+                                <p class="text-muted mb-4">يجب إضافة رقم هاتف ولي الأمر في ملفك الشخصي أولاً قبل الانضمام لأي فصل دراسي جديد.</p>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('auth.profile') }}" class="btn btn-warning fw-bold">
+                                        <i class="fas fa-user-edit me-2"></i>تحديث الملف الشخصي
+                                    </a>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // إزالة أي modal سابق وإضافة الجديد
+            $('#parentPhoneWarningModal').remove();
+            $('body').append(warningModal);
+            
+            // إظهار المودال
+            new bootstrap.Modal(document.getElementById('parentPhoneWarningModal')).show();
+        }
+        {% endif %}
             }
         });
 
