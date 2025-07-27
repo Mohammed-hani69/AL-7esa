@@ -202,9 +202,9 @@
         }
 
         .auth-logo img {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 1rem;
+            width: 180px;
+            height: 180px;
+            margin-bottom: -4.5rem;
         }
 
         .step-indicator {
@@ -852,7 +852,6 @@
             })
             .then(response => response.json())
             .then(data => {
-            .then(data => {
                 if (data.success) {
                     if (data.existing_user) {
                         // المستخدم موجود، توجيه مباشر
@@ -873,7 +872,6 @@
                 } else {
                     showNotification(data.message, 'error');
                 }
-            })
             })
             .catch(error => {
                 showNotification('حدث خطأ في التسجيل بـ Google', 'error');

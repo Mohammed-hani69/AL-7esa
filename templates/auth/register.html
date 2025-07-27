@@ -1108,11 +1108,6 @@
             };
 
             console.log('Sending Google registration data:', googleData);
-                phone: phone,
-                name: name,
-                role: selectedRole,
-                auth_method: 'google'
-            };
 
             fetch('{{ url_for("auth.complete_google_registration_api") }}', {
                 method: 'POST',
